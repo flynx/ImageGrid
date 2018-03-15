@@ -16,14 +16,13 @@ var core = require('features/core')
 
 /*********************************************************************/
 // XXX TODO:
-// 		- key syntax (path) (DONE)
-// 			<store>:<path>
-// 		- path variables
+// 		- path variables syntax
 // 			$VAR or ${VAR}
-// 		- ability to store/load only a specific key from a specific store (DONE)
-// 			Q: path patterns??
-// 				localstorage:*		- save/load everything on localstorage
-// 				*:config			- save load config from all stores...
+// 		- general path variables:
+// 			${INSTANCE}		(DONE)
+// 			...
+// 		- specific path variables
+// 			... 
 
 // XXX should we unify this with the save/load API
 var StoreActions = actions.Actions({
