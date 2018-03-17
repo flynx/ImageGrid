@@ -22,6 +22,7 @@ var core = require('features/core')
 // 			${INSTANCE}		(DONE)
 // 			...
 // 		- specific path variables
+// 			fs -> system env variables
 // 			... 
 
 // XXX should we unify this with the save/load API
