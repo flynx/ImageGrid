@@ -438,6 +438,7 @@ module.GLOBAL_KEYBOARD = {
 		// filters...
 		';': 'togglePreviewFilter: "Show shadows" -- Preview shadows',
 		':': 'togglePreviewFilter: "Show highlights" -- Preview highlights',
+		'caps+:': ':',
 		//'ctrl-;': 'togglePreviewFilter: "Show highlights" -- Preview highlights',
 		"'": 'togglePreviewFilter: "Black and white" -- Preview black and white',
 
