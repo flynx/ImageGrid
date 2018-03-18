@@ -927,15 +927,16 @@ module.Cursor = core.ImageGridFeatures.Feature({
 						var handler 
 							= this.__cursor_show_handler 
 							= (this.__cursor_show_handler 
-								|| function(){
+								|| function(evt){
+									evt = window.event || evt
 									var threshold = that.config['cursor-show-threshold'] || 0
-									x = x || event.clientX
-									y = y || event.clientY
+									x = x || evt.clientX
+									y = y || evt.clientY
 
 									// show only if cursor moved outside of threshold...
 									if(threshold > 0){ 
-										if(Math.max(Math.abs(x - event.clientX), 
-												Math.abs(y - event.clientY)) > threshold){
+										if(Math.max(Math.abs(x - evt.clientX), 
+												Math.abs(y - evt.clientY)) > threshold){
 											x = y = null
 											that.toggleHiddenCursor('off')
 										}
@@ -1418,13 +1419,14 @@ var ControlActions = actions.Actions({
 						&& (y >= dh && y <= H-dh)
 				}
 				var makeImageHandler = function(outerBlockEvt, blockEvt, imageEvt, focus){
-					return function(){
-						var img = img || $(event.target)
+					return function(evt){
+						evt = window.event || evt
+						var img = img || $(evt.target)
 						var gid = that.ribbons.elemGID(img)
-						var x = event.offsetX
-						var y = event.offsetY
+						var x = evt.offsetX
+						var y = evt.offsetY
 
-						var clicked_image = isImageClicked(event, img)
+						var clicked_image = isImageClicked(evt, img)
 
 						var inner = function(){
 							focus ?
@@ -1863,8 +1865,9 @@ var ControlActions = actions.Actions({
 							})
 
 						// horizontal scroll...
-						r.on('wheel', function(){
-							event.preventDefault()
+						r.on('wheel', function(evt){
+							evt = window.event || evt
+							evt.preventDefault()
 
 							var s = that.config['mouse-wheel-scale'] || 1
 							var vmin = Math.min(document.body.offsetWidth, document.body.offsetHeight)
@@ -1889,7 +1892,7 @@ var ControlActions = actions.Actions({
 
 							// do the actual move...
 							r.transform({
-								x: ((left - (event.deltaX * s)) / vmin * 100) + 'vmin',
+								x: ((left - (evt.deltaX * s)) / vmin * 100) + 'vmin',
 							})
 						})
 

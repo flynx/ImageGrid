@@ -61,8 +61,9 @@ function(context, cls, data){
 	// make container...
 	var controls = $('<div>')
 		.addClass('buttons '+ cls.join('.'))
-		.on('mouseover', function(){
-			var t = $(event.target)
+		.on('mouseover', function(evt){
+			evt = window.event || evt
+			var t = $(evt.target)
 
 			var info = t.attr('info') || t.parents('[info]').attr('info') || ''
 
@@ -1931,6 +1932,7 @@ module.ContextActionMenu = core.ImageGridFeatures.Feature({
 	}),
 
 	handlers: [
+		// XXX FireFox: get actual event...
 		['imageMenu.pre',
 			function(gid){
 				event.preventDefault()
@@ -1940,6 +1942,7 @@ module.ContextActionMenu = core.ImageGridFeatures.Feature({
 					.focusImage(gid)
 					.browseActions('/Image/')
 			}],
+		// XXX FireFox: get actual event...
 		['imageOuterBlockMenu.pre',
 			function(gid){
 				// only show image menu in ribbon mode...
@@ -1966,9 +1969,10 @@ module.ContextActionMenu = core.ImageGridFeatures.Feature({
 				!viewer.data('context-menu') 
 					&& viewer
 						.data('context-menu', true)
-						.on('contextmenu', function(){
-							event.preventDefault()
-							event.stopPropagation()
+						.on('contextmenu', function(evt){
+							evt = window.event || evt
+							evt.preventDefault()
+							evt.stopPropagation()
 
 							that.browseActions()
 						})

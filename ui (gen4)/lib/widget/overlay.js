@@ -19,21 +19,25 @@ var OverlayClassPrototype = {
 		var that = this
 		var overlay = $('<div>')
 			.addClass('overlay-widget modal-widget')
-			.on(options.nonPropagatedEvents.join(' '), function(){
-				event.stopPropagation()
+			.on(options.nonPropagatedEvents.join(' '), function(evt){
+				evt = window.event || evt
+				evt.stopPropagation()
 			})
-			.on('contextmenu', function(){
-				event.preventDefault()
-				event.stopPropagation()
+			.on('contextmenu', function(evt){
+				evt = window.event || evt
+				evt.preventDefault()
+				evt.stopPropagation()
 			})
 			.append($('<div>')
 				.addClass('content')
-				.click(function(){
-					event.stopPropagation()
+				.click(function(evt){
+					evt = window.event || evt
+					evt.stopPropagation()
 				})
-				.on('contextmenu', function(){
-					event.preventDefault()
-					event.stopPropagation()
+				.on('contextmenu', function(evt){
+					evt = window.event || evt
+					evt.preventDefault()
+					evt.stopPropagation()
 				})
 				.append(client))
 

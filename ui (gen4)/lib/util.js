@@ -516,13 +516,14 @@ if(typeof(jQuery) != typeof(undefined)){
 				.attr('tabindex', '0')
 				.addClass('editable-field')
 				.keydown(events.keydown = function(evt){ 
+					evt = window.event || evt
 					if(!that.prop('contenteditable')){
 						return
 					}
 
-					event.stopPropagation() 
+					evt.stopPropagation() 
 
-					var n = keyboard.code2key(event.keyCode)
+					var n = keyboard.code2key(evt.keyCode)
 
 					// abort...
 					if((options.abort_keys || ['Esc']).indexOf(n) >= 0){
@@ -531,15 +532,15 @@ if(typeof(jQuery) != typeof(undefined)){
 					// done -- single line...
 					} else if(n == 'Enter' 
 							&& !options.multiline){
-						event.preventDefault()
+						evt.preventDefault()
 
 						that.trigger('edit-commit', that.text())
 
 					// done -- multi-line...
 					} else if(n == 'Enter' 
-							&& (event.ctrlKey || event.metaKey) 
+							&& (evt.ctrlKey || evt.metaKey) 
 							&& options.multiline){
-						event.preventDefault()
+						evt.preventDefault()
 
 						that.trigger('edit-commit', that.text())
 

@@ -233,7 +233,7 @@ function parseActionCall(txt, context){
 var event2key =
 module.event2key =
 function event2key(evt){
-	evt = evt || event
+	evt = evt || window.event
 	// NOTE: we do not care about the jQuery wrapper here...
 	evt = evt.originalEvent || evt
 
@@ -1159,7 +1159,7 @@ function makeKeyboardHandler(keyboard, unhandled, actions){
 	return function(key, no_match){
 		no_match = no_match || unhandled
 		var did_handling = false
-		var evt = event
+		var evt = window.event
 		var res
 
 		//if(key instanceof Event || key instanceof $.Event){
