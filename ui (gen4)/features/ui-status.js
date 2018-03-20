@@ -430,6 +430,7 @@ var StatusBarActions = actions.Actions({
 			return item
 		},
 		// XXX show menu in the appropriate corner...
+		// XXX remove the type+ed class...
 		mark: function(item, gid, img){
 			// cleanup...
 			if(item == null){
@@ -442,7 +443,7 @@ var StatusBarActions = actions.Actions({
 			if(typeof(item) == typeof('str')){
 				var type = item
 				item = $('<span>')
-					.addClass(type + 'ed')
+					.addClass(type + 'ed '+ type)
 					.attr('info', 'Image '
 						+(type == 'mark' ? 'selection' : 'bookmark')
 						+' status (click to toggle)')
@@ -475,22 +476,10 @@ var StatusBarActions = actions.Actions({
 					'removeClass' 
 					: 'addClass']('on')
 
-			// blink the indicator on...
-			// XXX need to do this on change only and not on navigation...
-			if(!on 
-					&& item.hasClass('on') 
-					&& this.config['status-bar-blink'].indexOf(this.toggleStatusBar('?')) >= 0){
-				item
-					.removeClass('blink')
-					.addClass('blink')
-					.on('animationend', function(){ item.removeClass('blink') })
-			}
-
 			return item
 		},
 		bookmark: 'mark', 
 	},
-
 
 	toggleStatusBar: ['Interface/Status bar mode',
 		core.doc`
@@ -662,6 +651,26 @@ var StatusBarActions = actions.Actions({
 			this.toggleStatusBar(mode)
 		}],
 
+	// XXX should this blink the on state only???
+	statusItemBlink: ['- Interface/',
+		core.doc`
+		
+		NOTE: type is the same as in .__statusbar_elements__`,
+		function(type){
+			if(type == null){
+				return
+			}
+
+			var gid = this.current
+			var item = this.dom.find(`.state-indicator-container.global-info .${type}`) 
+
+			// blink the indicator...
+			item
+				.removeClass('blink')
+				.addClass('blink')
+				.on('animationend', function(){ item.removeClass('blink') })
+		}],
+
 	// XXX should these be here???
 	// XXX should this show a dialog???
 	editStatusBarIndex: ['- Interface/Edit image focus position in statusbar',
@@ -753,6 +762,16 @@ module.StatusBar = core.ImageGridFeatures.Feature({
 			function(_, gid){
 				gid == this.data.getRibbon() && this.updateStatusBar()
 			}],
+
+		// blink status mark indicators on toggle...
+		['toggleMark',
+			function(){
+				this.toggleStatusBar('?') == 'hidden'
+					&& this.statusItemBlink('mark') }],
+		['toggleBookmark',
+			function(){
+				this.toggleStatusBar('?') == 'hidden'
+					&& this.statusItemBlink('bookmark') }],
 
 		// Workspace...
 		['saveWorkspace',
