@@ -1942,7 +1942,6 @@ module.ContextActionMenu = core.ImageGridFeatures.Feature({
 					.focusImage(gid)
 					.browseActions('/Image/')
 			}],
-		// XXX FireFox: get actual event...
 		['imageOuterBlockMenu.pre',
 			function(gid){
 				// only show image menu in ribbon mode...
@@ -2039,7 +2038,7 @@ var ButtonsActions = actions.Actions({
 		},
 
 		'app-buttons': {
-			[SETTINGS_ICON]: ['ui-settings', [
+			[SETTINGS_ICON]: ['ui-settings allways-shown', [
 				'browseActions: "Interface/" -- Interface settings...',
 				'toggleSideButtons -- Toggle touch controls',
 			]],

@@ -559,7 +559,7 @@ var AppButtonsActions = actions.Actions({
 			{
 				'_': ['minimize', 
 					'minimize -- Minimize'],
-				'&#8601;': ['fullscreen', 
+				'&#8601;': ['fullscreen allways-shown', 
 					'toggleFullScreen -- Toggle fullscreen'],
 				'&times;': ['close', 
 					'close -- Quit'],

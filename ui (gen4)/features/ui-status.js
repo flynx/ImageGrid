@@ -443,7 +443,7 @@ var StatusBarActions = actions.Actions({
 			if(typeof(item) == typeof('str')){
 				var type = item
 				item = $('<span>')
-					.addClass(type + 'ed '+ type)
+					.addClass(type + 'ed')
 					.attr('info', 'Image '
 						+(type == 'mark' ? 'selection' : 'bookmark')
 						+' status (click to toggle)')
@@ -662,7 +662,7 @@ var StatusBarActions = actions.Actions({
 			}
 
 			var gid = this.current
-			var item = this.dom.find(`.state-indicator-container.global-info .${type}`) 
+			var item = this.dom.find(`.state-indicator-container.global-info [type=${type}]`) 
 
 			// blink the indicator...
 			item
