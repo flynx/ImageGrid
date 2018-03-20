@@ -519,7 +519,13 @@ var KeyboardActions = actions.Actions({
 						return
 					}
 
+					// XXX we should also check if code is a key (i.e. alias)...
+
 					var a = keyboard.parseActionCall(code, that)
+					// skip aliases that look like actions (namely ':') and bad actions...
+					if(a.action == ''){
+						return
+					}
 					var doc = a.doc 
 						|| (that.getDocTitle && that.getDocTitle(a.action)) 
 						|| null

@@ -2219,7 +2219,7 @@ var BrowserPrototype = {
 	//		// 
 	//		// These are the sugar for commonly used events in the events
 	//		// section below...
-	//		// NOTE: these are defined in .options.itmeOptionsEventShorthands
+	//		// NOTE: these are defined in .options.itemOptionsEventShorthands
 	//		open: <handler>,
 	//		menu: <handler>,
 	//		update: <handler>,

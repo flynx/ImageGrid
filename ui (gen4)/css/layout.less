@@ -192,6 +192,19 @@
 	cursor: none !important;
 }
 
+.blink{
+	animation: blink 200ms;
+}
+@keyframes blink {
+	from { 
+		opacity: 1; 
+	}
+	to { 
+		opacity: 0; 
+	}
+};
+
+
 
 /*********************************************************************/
 
@@ -1345,11 +1358,18 @@ stretching in width... */
 	background: red;
 }
 
+.overlay-info.hidden,
 .overlay-info.full,
 .overlay-info.minimal {
 	display: block;
 	/* XXX is this correct??? */
 	z-index: 1000,
+}
+.overlay-info.hidden {
+	background: transparent;
+}
+.overlay-info.hidden>* {
+	opacity: 0 !important;
 }
 
 .overlay-info.minimal {

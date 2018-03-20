@@ -44,33 +44,36 @@ var makeStateIndicatorItem = function(container, type, text){
 // XXX revise how/where info is displayed...
 var StatusBarActions = actions.Actions({
 	config: {
-		'status-bar-mode': 'full',
-		'status-bar-modes': [
-			'none',
-			'minimal',
-			'full',
-		],
-		// XXX make different configurations for different modes instead 
-		// 		of hiding some items... (???)
-		'status-bar-items': [
-			'index',
-			'ribbon',
-			'changes',
-			'gid',
-			'path',
-
-			// separates left/right aligned elements...
-			'---',
-
-			'edit-mode',
-			'mark',
-			'bookmark',
-		],
-
-		// XXX not sure about this...
-		'status-bar-full-only': [
-			'gid',
-			'path',
+		'status-bar': 'full',
+		'status-bars': {
+			hidden: [
+				'---',
+				'mark',
+				'bookmark',
+			],
+			minimal: [
+				'index',
+				'ribbon',
+				'changes',
+				'---',
+				'edit-mode',
+				'mark',
+				'bookmark',
+			],
+			full: [
+				'index',
+				'ribbon',
+				'changes',
+				'gid',
+				'path',
+				'---',
+				'edit-mode',
+				'mark',
+				'bookmark',
+			],
+		},
+		'status-bar-blink': [
+			'hidden',
 		],
 
 		'status-bar-index': {
@@ -448,9 +451,10 @@ var StatusBarActions = actions.Actions({
 					})
 					// toggle action menu...
 					// XXX show this in the appropriate corner...
-					.on('contextmenu', function(){
-						event.preventDefault()
-						event.stopPropagation()
+					.on('contextmenu', function(evt){
+						evt = window.event || evt
+						evt.preventDefault()
+						evt.stopPropagation()
 
 						that.browseActions('/'+ type.capitalize() +'/')
 					})
@@ -466,21 +470,37 @@ var StatusBarActions = actions.Actions({
 			// 		special toggler args in the handler...
 			var tags = this.data ? this.data.getTags(gid) : []
 			var tag = type == 'mark' ? 'selected' : 'bookmark'
+			var on = item.hasClass('on')
 			item[tags.indexOf(tag) < 0 ?
 					'removeClass' 
 					: 'addClass']('on')
+
+			// blink the indicator on...
+			// XXX need to do this on change only and not on navigation...
+			if(!on 
+					&& item.hasClass('on') 
+					&& this.config['status-bar-blink'].indexOf(this.toggleStatusBar('?')) >= 0){
+				item
+					.removeClass('blink')
+					.addClass('blink')
+					.on('animationend', function(){ item.removeClass('blink') })
+			}
 
 			return item
 		},
 		bookmark: 'mark', 
 	},
 
-	// NOTE: to reset the status bar cycle through 'none' mode to 
-	// 		reconstruct all the items.
+
 	toggleStatusBar: ['Interface/Status bar mode',
+		core.doc`
+
+		NOTE: this will skip 'none' state if it is not present in 
+			.config['status-bars'], but setting this to 'none' will clear
+			the status bar completely before switching to the top state.
+		`,
 		toggler.CSSClassToggler(
 			// get/construct status bar...
-			// XXX change class...
 			function(){ 
 				// no viewer yet...
 				if(!this.ribbons || !this.dom){
@@ -490,11 +510,12 @@ var StatusBarActions = actions.Actions({
 				var bar = this.dom.find('.state-indicator-container.global-info') 
 				if(bar.length == 0){
 					bar = makeStateIndicator('global-info overlay-info statusbar') 
-						.addClass(this.config['status-bar-mode'] 
-							|| this.config['status-bar-modes'][0] 
+						.addClass(this.config['status-bar']
+							|| Object.keys(this.config['status-bars'])[0] 
 							|| '')
-						.on('mouseover', function(){
-							var t = $(event.target)
+						.on('mouseover', function(evt){
+							evt = window.event || evt
+							var t = $(evt.target)
 							
 							var info = t.attr('info') 
 								|| t.parents('.overlay-info, [info]').first().attr('info')
@@ -510,7 +531,7 @@ var StatusBarActions = actions.Actions({
 				}
 				return bar
 			}, 
-			function(){ return this.config['status-bar-modes'] },
+			function(){ return Object.keys(this.config['status-bars']).concat(['none']) },
 			// XXX check if we will be getting gid reliably...
 			function(state, bar, gid){ 
 				// do not do anything unless the status bar exists...
@@ -518,7 +539,7 @@ var StatusBarActions = actions.Actions({
 					return
 				}
 				var that = this
-				this.config['status-bar-mode'] = state 
+				this.config['status-bar'] = state 
 
 				var _getHandler = function(key){
 					var elems = that.__statusbar_elements__ || {}
@@ -546,8 +567,8 @@ var StatusBarActions = actions.Actions({
 					return handler
 				}
 
-				// destroy...
-				if(state == 'none'){
+				// clear...
+				if(state == 'none' || !bar.hasClass(state)){
 					// notify items that they are removed...
 					bar.children()
 						.each(function(i, item){
@@ -565,69 +586,72 @@ var StatusBarActions = actions.Actions({
 							}
 						})
 					bar.empty()
+				}
+
+				if(state == 'none'){
+					!('none' in this.config['status-bars'])
+						// XXX this feels like a hack...
+						&& setTimeout(function(){ this.toggleStatusBar(0) }.bind(this), 0)
+					//return Object.keys(this.config['status-bars'])[0]
+					return
+				}
 
 				// build/update...
+				gid = gid || this.current
+				var img = this.images && this.images[gid]
+
+				// build...
+				if(bar.children().length <= 0){
+					var items = this.config['status-bars'][state].slice()
+
+					// rearrange the tail section...
+					// NOTE: this is here as we need to push the floated
+					// 		right items in reverse order...
+					var i = items.indexOf('---')
+					items = i >= 0 ? 
+						items.concat(items.splice(i+1, items.length).reverse())
+						: items
+
+					items.forEach(function(item){
+						// spacer...
+						if(item == '---'){
+							//item = $('<span class="spacer">')
+							item = $('<span class="spacer info">')
+
+						// info items...
+						} else {
+							var handler = _getHandler(item)
+
+							var type = item
+							item = (handler ? 
+									handler.call(that, item, gid, img) 
+									: $('<span>'))
+								.attr('type', item)
+						}
+
+						bar.append(item)
+					})
+
+				// update...
 				} else {
-					gid = gid || this.current
-					var img = this.images && this.images[gid]
+					var items = bar.children()
+						.each(function(i, item){
+							item = $(item)
+							var type = item.attr('type') 
 
-					// build...
-					if(bar.children().length <= 0){
-						var items = this.config['status-bar-items'].slice()
-
-						// rearrange the tail section...
-						// NOTE: this is here as we need to push the floated
-						// 		right items in reverse order...
-						var i = items.indexOf('---')
-						items = i >= 0 ? 
-							items.concat(items.splice(i+1, items.length).reverse())
-							: items
-
-						items.forEach(function(item){
-							// spacer...
-							if(item == '---'){
-								//item = $('<span class="spacer">')
-								item = $('<span class="spacer info">')
-
-							// info items...
-							} else {
-								var handler = _getHandler(item)
-
-								var type = item
-								item = (handler ? 
-										handler.call(that, item, gid, img) 
-										: $('<span>'))
-									.attr('type', item)
-
-								if('status-bar-full-only' in that.config 
-										&& that.config['status-bar-full-only'].indexOf(type) >= 0){
-									item.addClass('full-only')
-								}
+							if(type == null){
+								return
 							}
 
-							bar.append(item)
+							var handler = _getHandler(type)
+
+							if(handler != null){
+								handler.call(that, item, gid, img) 
+							}
 						})
-
-					// update...
-					} else {
-						var items = bar.children()
-							.each(function(i, item){
-								item = $(item)
-								var type = item.attr('type') 
-
-								if(type == null){
-									return
-								}
-
-								var handler = _getHandler(type)
-
-								if(handler != null){
-									handler.call(that, item, gid, img) 
-								}
-							})
-					}
 				}
-			})],	
+			},
+			null)],	
 	updateStatusBar: ['- Interface/Update satus bar',
 		function(){ this.toggleStatusBar('!') }],
 
@@ -705,7 +729,7 @@ module.StatusBar = core.ImageGridFeatures.Feature({
 	handlers: [
 		['start',
 			function(){
-				this.toggleStatusBar(this.config['status-bar-mode'])
+				this.toggleStatusBar(this.config['status-bar'])
 			}],
 		['focusImage clear markChanged',
 			function(){
@@ -745,8 +769,8 @@ module.StatusBar = core.ImageGridFeatures.Feature({
 
 					} else {
 						'status-bar-mode' in workspace ?
-							this.toggleStatusBar(workspace['status-bar-mode'])
-							: this.toggleStatusBar(this.config['status-bar-mode'])
+							this.toggleStatusBar(workspace['status-bar'])
+							: this.toggleStatusBar(this.config['status-bar'])
 					}
 				})],
 	],
