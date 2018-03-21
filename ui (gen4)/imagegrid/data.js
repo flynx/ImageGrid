@@ -319,6 +319,7 @@ var DataPrototype = {
 		target = target == null ? [] : target
 
 		order = this.order
+		var order_idx = order.toKeys()
 
 		var rest = []
 
@@ -333,7 +334,8 @@ var DataPrototype = {
 			}
 
 			// try and avoid the expensive .indexOf(..) as much as possible...
-			var j = e != order[i] ? order.indexOf(e) : i
+			//var j = e != order[i] ? order.indexOf(e) : i
+			var j = order_idx[e]
 
 			if(j >= 0){
 				// save overwritten target items if keep_target_items 
@@ -1095,15 +1097,15 @@ var DataPrototype = {
 		// normalize target and build the source list...
 
 		// 'current' ribbon...
-		target = target == 'current' ? this.current : target
+		target = target === 'current' ? this.current : target
 
 		// get all gids...
-		if(target == 'all'){
+		if(target === 'all'){
 			list = this.order
 			target = null
 
 		// get loaded only gids...
-		} else if(target == 'loaded'){
+		} else if(target === 'loaded'){
 			var res = []
 			var ribbons = this.ribbons
 			for(var k in ribbons){
@@ -1113,24 +1115,36 @@ var DataPrototype = {
 			target = null
 
 		// filter out the unloaded gids from given list...
-		} else if(target != null && target instanceof Array){
-			var loaded = count == 'current' ? 
-					this.getImages('current')
-				: count == 'all' || count == 'global' ? 
-					this.getImages('all')
-				: count in this.ribbons ? 
-					this.ribbons[count].compact()
-				: typeof(count) == typeof(123) ? 
-					this.ribbons[this.getRibbon(count)].compact()
-				: this.getImages('loaded')
+		} else if(target instanceof Array){
+			var loaded = (count == 'current' ? 
+						this.getImages('current')
+					: count == 'all' || count == 'global' ? 
+						this.getImages('all')
+					: count in this.ribbons ? 
+						this.ribbons[count].compact()
+					: typeof(count) == typeof(123) ? 
+						this.ribbons[this.getRibbon(count)].compact()
+					: this.getImages('loaded'))
+				// index the loaded gids for fast lookup...
+				.toKeys()
 
 			list = target
 				.map(function(e){
-					return count == 'all' || count == 'global' ?
+					// primary path -- gids...
+					// NOTE: this is the most probable path...
+					if(loaded[e]){
+						return e
+					}
+
+					// in case we are not dealing with a gid...
+					// NOTE: this is a less likely path so it is secondary...
+					e = count == 'all' || count == 'global' ?
 						that.getImage(e, 'global')
-						: that.getImage(e) })
-				.filter(function(e){
-					return loaded.indexOf(e) >= 0 })
+						: that.getImage(e)
+
+					return loaded[e] ? e : null
+				})
+				.filter(function(e){ return e !== null })
 
 			count = null 
 			target = null 
@@ -3032,14 +3046,13 @@ var DataWithTagsPrototype = {
 
 		var that = this
 		var tagset = this.tags
-		var order = this.order
+		var order = this.order.toKeys()
 		tags.forEach(function(tag){
+			var t = tagset[tag] = tagset[tag] || []
 			gids.forEach(function(gid){
-				gid = that.getImage(gid)
-				if(tagset[tag] == null){
-					tagset[tag] = []
-				}
-				tagset[tag][order.indexOf(gid)] = gid
+				var i = order[gid]
+				gid = i != null ? gid : that.getImage(gid)
+				t[i != null ? i : order[gid]] = gid
 			})
 		})
 
@@ -3056,15 +3069,14 @@ var DataWithTagsPrototype = {
 
 		var that = this
 		var tagset = this.tags
-		var order = this.order
+		var order = this.order.toKeys()
 		tags.forEach(function(tag){
 			if(tag in tagset){
-				gids.forEach(function(gid){
-					if(tag in tagset){
-						delete tagset[tag][order.indexOf(gid)]
-					}
-				})
-				if(tagset[tag].len == 0){
+				var t = tagset[tag]
+				gids
+					.forEach(function(gid){ 
+						delete t[order[gid]] })
+				if(t.len == 0){
 					delete tagset[tag]
 				}
 			}

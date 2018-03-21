@@ -1217,12 +1217,11 @@ module.TagsEditActions = actions.Actions({
 		function(tags, gids){
 			gids = gids || this.current
 			gids = gids instanceof Array ? gids : [gids]
+			gids = this.data.getImages(gids)
+
 			tags = tags instanceof Array ? tags : [tags]
 
 			var that = this
-			gids = gids
-				.map(function(gid){ return that.data.getImage(gid) })
-				.filter(function(gid){ return gid != null })
 
 			if(gids.length == 0){
 				return
@@ -1234,13 +1233,8 @@ module.TagsEditActions = actions.Actions({
 			// images...
 			var images = this.images
 			gids.forEach(function(gid){
-				var img = images[gid]
-				if(img == null){
-					img = images[gid] = {}
-				}
-				if(img.tags == null){
-					img.tags = []
-				}
+				var img = images[gid] = images[gid] || {}
+				img.tags = img.tags || []
 
 				img.tags = img.tags.concat(tags).unique()
 
@@ -1344,11 +1338,9 @@ module.TagsEdit = core.ImageGridFeatures.Feature({
 				var that = this
 				var changes = []
 
-				gids = gids || [this.data.getImage()]
-				gids = gids instanceof Array ? 
-					gids
-						.map(function(e){ return that.data.getImage(e) })
-					: [this.data.getImage(gids)] 
+				gids = gids || this.current
+				gids = gids instanceof Array ? gids : [gids]
+				gids = this.data.getImages(gids)
 
 				tags = tags || []
 				tags = tags instanceof Array ? tags : [tags]
@@ -1414,6 +1406,8 @@ module.TagsEdit = core.ImageGridFeatures.Feature({
 			}],
 	],
 })
+
+
 
 
 

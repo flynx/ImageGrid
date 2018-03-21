@@ -34,14 +34,15 @@ var ui = require('features/ui')
 // NOTE: of no data is defined this will not have any effect...
 // NOTE: we are not using the vanilla toggler here as it can't handle 
 // 		toggling independently multiple elements...
+// 
+// XXX this is really slow on large sets of images...
 function makeTagTogglerAction(tag){
 	// get actual target gids...
 	var _getTarget = function(target){
 		target = target || this.current
-		target = target == 'all' 
+		target = (target == 'all' 
 					|| target == 'loaded' 
-					|| target in this.data.ribbons 
-						? 
+					|| target in this.data.ribbons) ? 
 				this.data.getImages(target)
 			: target == 'ribbon' ? 
 				this.data.getImages('current')
@@ -64,6 +65,7 @@ function makeTagTogglerAction(tag){
 
 			} else if(action == 'on'){
 				this.tag(tag, target)
+
 			} else if(action == 'off'){
 				this.untag(tag, target)
 			}
@@ -83,19 +85,25 @@ function makeTagTogglerAction(tag){
 					|| action == '!')){
 			var res = []
 			var that = this
+			var on = []
+			var off = []
 			target = _getTarget.call(this, target)
 			target.forEach(function(t){
 				if((that.data.getTags(t).indexOf(tag) < 0) 
 						// invert check if action is '!'...
 						+ (action == '!' ? -1 : 0)){
-					that.tag(tag, t)
+					on.push(tag)
 					res.push('on')
 
 				} else {
-					that.untag(tag, t)
+					off.push(tag)
 					res.push('off')
 				}
 			})
+
+			that.tag(t, on)
+			that.untag(t, off)
+
 			return res.length == 1 ? res[0] : res
 		}
 

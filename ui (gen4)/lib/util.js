@@ -40,6 +40,12 @@ Object.defineProperty(Object.prototype, 'run', {
 Array.prototype.compact = function(){
 	return this.filter(function(){ return true })
 }
+Array.prototype.toKeys = function(){
+	return this.reduce(function(r, e, i){
+		r[e] = i
+		return r
+	}, {})
+}
 /*
 Array.prototype.compact = function(){
 	var res = []
