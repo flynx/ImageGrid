@@ -131,11 +131,7 @@
 .SECONDEXPANSION:
 # basic configuration...
 
-# This prevents pipe and redirection sequensing difference errors between
-# Windows and *NIX systmes for commands like:
-# 	cat package.json | sed 's/"index.html"/"e.js"/g' > package.json
-# ...which would produce zero-length results under cmp/powershell.
-SHELL := $(shell which sh)
+#SHELL := $(shell which bash)
 
 
 
@@ -573,7 +569,7 @@ $(TARGET_DIR)/$(ELECTRON_DIST):
 $(BUILD_DIR)/app.asar: $(PACK_FULL)
 	# update package.json to start electron...
 	cd "$(BUILD_DIR)/$(APP_NAME)/" ; \
-		cat package.json | sed 's/"index.html"/"e.js"/g' > package.json
+		sed -i 's/"index.html"/"e.js"/g' package.json
 	cd "$(BUILD_DIR)" ; \
 		asar p "$(APP_NAME)" app.asar \
 			--exclude-hidden \
@@ -656,8 +652,6 @@ $(TARGET_DIR)/$(NW_DIST):
 
 # NOTE: this needs a clean app dir...
 # XXX BUG: can't find modules in unpacked node_modules...
-# XXX for some reason if $(BUILD_DIR)/$(APP_NAME) exists package.josn 
-# 	is zero length...
 .PRECIOUS: $(BUILD_DIR)/package.nw
 $(BUILD_DIR)/package.nw: INCLUDE_NODE_MODULES += $(INCLUDE_NW_NODE_MODULES)
 $(BUILD_DIR)/package.nw: PACK_MINIMAL = $(BUILD_DIR)/$(APP_NAME)/ \
@@ -665,7 +659,7 @@ $(BUILD_DIR)/package.nw: PACK_MINIMAL = $(BUILD_DIR)/$(APP_NAME)/ \
 $(BUILD_DIR)/package.nw: $$(PACK_MINIMAL)
 	# update package.json to start nw...
 	cd "$<" ; \
-		cat package.json | sed 's/"e.js"/"index.html"/g' > package.json
+		sed -i 's/"e.js"/"index.html"/g' package.json
 	$(call zipFrom,$<,$@,*)
 
 
