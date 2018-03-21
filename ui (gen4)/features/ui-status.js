@@ -72,9 +72,6 @@ var StatusBarActions = actions.Actions({
 				'bookmark',
 			],
 		},
-		'status-bar-blink': [
-			'hidden',
-		],
 
 		'status-bar-index': {
 			'mode': 'normal',
@@ -93,6 +90,16 @@ var StatusBarActions = actions.Actions({
 		'status-bar-changes-text': '*',
 
 		'status-bar-edit-mode-indicator-update-interval': 1000,
+
+		// workspace stuff...
+		'status-bar-workspace-attrs': [
+			'status-bar',
+		],
+		'status-bar-workspace-defaults': {
+			'default': 'full',
+			'single-image': 'minimal',
+			'slideshow': 'hidden',
+		},
 	},
 
 	__statusbar_elements__: {
@@ -773,21 +780,34 @@ module.StatusBar = core.ImageGridFeatures.Feature({
 				this.toggleStatusBar('?') == 'hidden'
 					&& this.statusItemBlink('bookmark') }],
 
-		// Workspace...
+		// Workspaces...
 		['saveWorkspace',
 			core.makeWorkspaceConfigWriter(
 				function(){ return Object.keys(StatusBar.config) })],
+		// workspace defaults...
+		[[
+			'loadWorkspace.pre', 
+			'saveWorkspace.pre',
+		],
+			function(workspace){
+				if(!workspace || workspace in this.workspaces){
+					return
+				}
+
+				this.config['status-bar'] = 
+					(this.config['status-bar-workspace-defaults'][workspace] 
+						|| this.config['status-bar'])
+			}],
 		['loadWorkspace',
 			core.makeWorkspaceConfigLoader(
 				function(){ 
-					return Object.keys(StatusBar.config) },
+					return this.config['status-bar-workspace-attrs'] },
 				function(workspace){
-					// XXX not sure about this protocol yet...
 					if(this.workspace == 'ui-chrome-hidden'){
-						this.toggleStatusBar('none')
+						this.toggleStatusBar('hidden')
 
 					} else {
-						'status-bar-mode' in workspace ?
+						'status-bar' in workspace ?
 							this.toggleStatusBar(workspace['status-bar'])
 							: this.toggleStatusBar(this.config['status-bar'])
 					}

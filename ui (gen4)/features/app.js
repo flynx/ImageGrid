@@ -182,6 +182,7 @@ var ElectronHostActions = actions.Actions({
 	minimize: ['Window/Minimize',
 		function(){
 			electron.remote.getCurrentWindow().minimize() }],
+	// XXX need to detect initial fullscreen state...
 	// XXX this is almost generic, but it is not usable unless within 
 	// 		a user event handler...
 	// 		...can we use this on electron???
@@ -559,7 +560,7 @@ var AppButtonsActions = actions.Actions({
 			{
 				'_': ['minimize', 
 					'minimize -- Minimize'],
-				'&#8601;': ['fullscreen allways-shown', 
+				'&#8601;': ['fullscreen always-shown', 
 					'toggleFullScreen -- Toggle fullscreen'],
 				'&times;': ['close', 
 					'close -- Quit'],
@@ -601,10 +602,10 @@ module.AppButtons = core.ImageGridFeatures.Feature({
 
 				// XXX should this be done by css???
 				if(fullscreen == 'on'){
-					buttons.find('.button:not(.allways-shown)').show()
+					buttons.find('.button:not(.always-shown)').show()
 
 				} else {
-					buttons.find('.button:not(.allways-shown)').hide()
+					buttons.find('.button:not(.always-shown)').hide()
 				}
 
 				//this.toggleFullScreenControls(fullScreen)

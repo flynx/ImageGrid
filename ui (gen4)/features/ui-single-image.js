@@ -245,6 +245,7 @@ var SingleImageActions = actions.Actions({
 				if(state == 'on'){
 					this.pushWorkspace()
 
+					// base the single image defaults of ui-chrome-hidden...
 					if(this.workspaces['single-image'] == null){
 						this.loadWorkspace('ui-chrome-hidden') 
 						this.mergeConfig('single-image-config-defaults')
@@ -548,7 +549,7 @@ module.SingleImageCursor = core.ImageGridFeatures.Feature({
 
 	handlers: [
 		// setup...
-		['load',
+		['start',
 			function(){
 				var mode = this.toggleSingleImage('?') == 'on' ? 
 					'cursor-autohide-on-timeout-single-image-view'

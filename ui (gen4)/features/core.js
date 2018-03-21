@@ -1618,7 +1618,8 @@ module.makeWorkspaceConfigLoader = function(keys, callback){
 			}
 		})
 
-		callback && callback.call(this, workspace)
+		callback 
+			&& callback.call(this, workspace)
 	}
 }
 
@@ -1738,7 +1739,8 @@ module.Workspace = ImageGridFeatures.Feature({
 		['start', 
 			function(){ 
 				this.loadWorkspace(this.config['load-workspace'] || 'default') }],
-		['stop', 
+		// NOTE: this needs to be done before the .config is saved...
+		['stop.pre', 
 			function(){ 
 				this.saveWorkspace() }],
 	],

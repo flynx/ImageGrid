@@ -2038,7 +2038,7 @@ var ButtonsActions = actions.Actions({
 		},
 
 		'app-buttons': {
-			[SETTINGS_ICON]: ['ui-settings allways-shown', [
+			[SETTINGS_ICON]: ['ui-settings always-shown', [
 				'browseActions: "Interface/" -- Interface settings...',
 				'toggleSideButtons -- Toggle touch controls',
 			]],

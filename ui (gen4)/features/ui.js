@@ -1104,11 +1104,13 @@ module.Cursor = core.ImageGridFeatures.Feature({
 		toggleAutoHideCursorTimeout: ['Interface/Hide cursor on timeout',
 			core.makeConfigToggler('cursor-autohide-on-timeout', 
 				['on', 'off'],
-				function(){ this.toggleAutoHideCursor('!') })],
+				function(){ 
+					this.toggleAutoHideCursor('!') })],
 		toggleAutoHideCursorKeyboard: ['Interface/Hide cursor on keyboard',
 			core.makeConfigToggler('cursor-autohide-on-keyboard', 
 				['on', 'off'],
-				function(){ this.toggleAutoHideCursor('!') })],
+				function(){ 
+					this.toggleAutoHideCursor('!') })],
 	}),
 
 	handlers: [
