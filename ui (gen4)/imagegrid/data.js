@@ -2947,8 +2947,8 @@ var DataWithTagsPrototype = {
 			if(mode == 'reset'){
 				// iterate through all the gids (both images and buffer/data)
 				for(var gid in Object.keys(images)
-									.concat(Object.keys(buffer))
-									.unique()){
+						.concat(Object.keys(buffer))
+						.uniqueStrings()){
 					// no tags / remove...
 					if(buffer[gid] == null || buffer[gid].tags.length == 0){
 						// the image exists and has tags...
@@ -2976,7 +2976,9 @@ var DataWithTagsPrototype = {
 				for(var gid in buffer){
 					var img = _get(images, gid)
 					var l = img.tags.length
-					img.tags = img.tags.concat(buffer[gid].tags).unique()
+					img.tags = img.tags
+						.concat(buffer[gid].tags)
+						.uniqueStrings()
 					// we are updated iff length changed...
 					// NOTE: this is true as we are not removing anything 
 					// 		thus the length can only increase if changes are

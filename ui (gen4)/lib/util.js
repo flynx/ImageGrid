@@ -40,9 +40,23 @@ Object.defineProperty(Object.prototype, 'run', {
 Array.prototype.compact = function(){
 	return this.filter(function(){ return true })
 }
-Array.prototype.toKeys = function(){
+
+
+// Convert an array to object...
+//
+// Format:
+// 	{
+// 		<item>: <index>,
+// 		...
+// 	}
+//
+// NOTE: items should be strings, other types will get converted to 
+// 		strings and thus may mess things up.
+// NOTE: this will forget repeating items...
+// NOTE: normalize will slow things down...
+Array.prototype.toKeys = function(normalize){
 	return this.reduce(function(r, e, i){
-		r[e] = i
+		r[normalize ? normalize(e) : e] = i
 		return r
 	}, {})
 }
@@ -57,7 +71,7 @@ Array.prototype.compact = function(){
 */
 
 
-// return an array with duplicate elements removed...
+// Return an array with duplicate elements removed...
 //
 // NOTE: we are not using an Object as an index here as an Array can 
 // 		contain any type of item while Object keys can only be strings...
@@ -70,6 +84,12 @@ Array.prototype.unique = function(normalize){
 		return this.filter(function(e, i, a){ return a.indexOf(e) == i })
 	}
 }
+
+
+// Special case of .unique, allot faster on arrays of strings...
+//
+Array.prototype.uniqueStrings = function(normalize){
+	return Object.keys(this.toKeys(normalize)) }
 
 
 // Compare two arrays...

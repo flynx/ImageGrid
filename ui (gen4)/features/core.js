@@ -1513,7 +1513,9 @@ var ChangesActions = actions.Actions({
 				if(changes[section] === true){
 					return
 				}
-				changes[section] = (changes[section] || []).concat(items).unique()
+				changes[section] = (changes[section] || [])
+					.concat(items)
+					.uniqueStrings()
 				this.changes = changes
 
 			// section(s)...

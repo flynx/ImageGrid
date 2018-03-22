@@ -1633,12 +1633,29 @@ var RibbonsPrototype = {
 		}))
 	},
 	// XXX add options for images to preload and only then do the update...
+	// XXX really slow for very large numbers of input images/gids...
 	updateImage: function(image, gid, size, sync, callback){
 		var that = this
-		image = (image == '*' ? this.viewer.find(IMAGE)
-			: image == null 
-				|| typeof(image) == typeof('str') ? this.getImage(image)
-			: $(image))
+		var imgs = this.viewer.find(IMAGE)
+
+		// reduce the length of input image set...
+		// NOTE: this will make things substantially faster for very large
+		// 		input sets...
+		if(image instanceof Array && image.length > imgs.length){
+			image = imgs
+				.filter(function(_, img){
+					return image.indexOf(img) >= 0
+						|| image.indexOf(that.elemGID(img)) >= 0 })
+				.map(function(_, img){
+					return that.elemGID(img) })
+				.toArray()
+		}
+		// normalize...
+		image = image == '*' ? 
+				imgs
+			: (image == null || typeof(image) == typeof('str')) ? 
+				this.getImage(image)
+			: $(image)
 		sync = sync == null ? this.load_img_sync : sync
 		size = size == null ? this.getVisibleImageSize('max') : size
 
