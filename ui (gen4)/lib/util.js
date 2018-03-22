@@ -55,26 +55,23 @@ Array.prototype.compact = function(){
 // NOTE: this will forget repeating items...
 // NOTE: normalize will slow things down...
 Array.prototype.toKeys = function(normalize){
-	return this.reduce(function(r, e, i){
-		r[normalize ? normalize(e) : e] = i
-		return r
-	}, {})
+	return normalize ? 
+		this.reduce(function(r, e, i){
+			r[normalize(e)] = i
+			return r
+		}, {})
+		: this.reduce(function(r, e, i){
+			r[e] = i
+			return r
+		}, {})
 }
-/*
-Array.prototype.compact = function(){
-	var res = []
-	for(var i in res){
-		res.push(this[i])
-	}
-	return res
-}
-*/
 
 
 // Return an array with duplicate elements removed...
 //
 // NOTE: we are not using an Object as an index here as an Array can 
 // 		contain any type of item while Object keys can only be strings...
+// NOTE: for an array containing only strings use a much faster .uniqueStrings(..)
 Array.prototype.unique = function(normalize){
 	if(normalize){
 		var cache = this.map(function(e){ return normalize(e) })
@@ -86,8 +83,9 @@ Array.prototype.unique = function(normalize){
 }
 
 
-// Special case of .unique, allot faster on arrays of strings...
+// Special case of .unique(), allot faster on arrays of strings...
 //
+// NOTE: this may jield unexpected results for non-string items...
 Array.prototype.uniqueStrings = function(normalize){
 	return Object.keys(this.toKeys(normalize)) }
 
@@ -114,8 +112,12 @@ Array.prototype.cmp = function(other){
 // This will ignore order
 Array.prototype.setCmp = function(other){
 	return this === other 
-		|| this.unique().sort().cmp(other.unique().sort())
-}
+		|| this
+			.unique()
+			.sort()
+			.cmp(other
+				.unique()
+				.sort()) }
 
 
 var args2array =

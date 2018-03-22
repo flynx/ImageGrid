@@ -1475,6 +1475,7 @@ var ChangesActions = actions.Actions({
 
 			Mark item(s) of section as changed...
 			.markChanged(<section>, [<item>, .. ])
+				NOTE: items must be strings...
 
 		NOTE: when marking section items, the new items will be added to
 			the set of already marked items.
