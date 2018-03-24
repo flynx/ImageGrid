@@ -1387,20 +1387,18 @@ var BrowseActionsActions = actions.Actions({
 
 	// XXX this should also (optionally?):
 	// 		- sort levels						- DONE
-	// 			...remove sorting from .browseActions(..)
-	// 		- expand path patterns (???)
+	// 		- expand path patterns				- DONE
 	// 		- handle "*" listing (???)
 	// 		- handle visibility checks (???)
-	// XXX add option to run checks...
-	listActions: ['- System/',
+	getActions: ['- System/',
 		core.doc`List actions in action tree...
 
 			Build tree and return it...
-			.listActions('raw'[, tree])
+			.getActions('raw'[, tree])
 				-> tree
 
 			Get sup-tree/action at path...
-			.listActions(path[, tree])
+			.getActions(path[, tree])
 				-> sub-tree
 				-> action
 
@@ -1434,7 +1432,6 @@ var BrowseActionsActions = actions.Actions({
 			// Sort tree level in-place...
 			//
 			// NOTE: this will remove the priority
-			// XXX should this also handle path patterns...
 			var sortTree = function(tree, raw_keys, shallow){
 				var level = Object.keys(tree)
 				level
@@ -1469,9 +1466,16 @@ var BrowseActionsActions = actions.Actions({
 							key.replace(PRIORITY, '').trim()
 							: key 
 
-						// replace keys in order...
+						// remove the key form old position...
 						var value = tree[key]
 						delete tree[key]
+
+						// skip patterns...
+						if(!raw_keys && /\.\*/.test(key)){
+							return
+						}
+
+						// place the key in correct order...
 						tree[text] = value
 
 						// go down the tree...
@@ -1488,9 +1492,6 @@ var BrowseActionsActions = actions.Actions({
 			//
 			// returns:
 			// 	[<existing-text>, <new-level>]
-			//
-			// XXX this may mess up the ordering of items when using 
-			// 		item patterns...
 			var getItem = function(level, text){
 				// direct match...
 				if(text in level){
@@ -1526,8 +1527,6 @@ var BrowseActionsActions = actions.Actions({
 
 			// Tree builder...
 			//
-			// XXX normalize actions -- whitespace, '!', args...
-			// XXX should this do level sorting???
 			var buildTree = function(path, leaf, action, mode, tree){
 				path = path.slice()
 				// build leaf...
@@ -1593,7 +1592,6 @@ var BrowseActionsActions = actions.Actions({
 				})
 
 				// sort the tree...
-				// XXX still needs to handle path patterns...
 				sortTree(tree, path == 'raw')
 			}
 
@@ -1622,7 +1620,7 @@ var BrowseActionsActions = actions.Actions({
 	// XXX can this also do a flat mode???
 	// 		...this would help with the (global) search -- switch to 
 	// 		flat if searching in root mode...
-	// XXX should this be live (options.live) or not??? (currently not)
+	// XXX should this be live (options.live_tree) or not??? (currently not)
 	browseActions: ['Interface|System/Dialog/Actions...',
 		core.doc`Browse actions dialog...
 
@@ -1686,6 +1684,10 @@ var BrowseActionsActions = actions.Actions({
 				callback: <function>,
 				no_disabled: false,
 				no_hidden: false,
+
+				// if true then the action tree will get rebuilt live on
+				// each list navigation... 
+				live_tree: false,
 			}
 
 
@@ -1722,8 +1724,6 @@ var BrowseActionsActions = actions.Actions({
 				fullPathEdit: true,
 
 				item_shortcut_marker: MARKER,
-
-				live: true,
 			}
 			cfg.__proto__ = this.config['browse-actions-settings']
 
@@ -1770,14 +1770,14 @@ var BrowseActionsActions = actions.Actions({
 			}.bind(this)
 
 			// pre-cache the action tree... 
-			var tree = cfg.live ? 
-				null 
-				: actions.listActions('raw')
+			var tree = !options.live_tree ? 
+				actions.getActions('raw')
+				: null 
 
 			// now for the dialog...
 			return browse.makeLister(null, function(path, make){
 				var that = this
-				var cur = actions.listActions(path.slice(), tree)
+				var cur = actions.getActions(path.slice(), tree)
 
 				// render current level...
 				// NOTE: we can be at one of several level types, each 
@@ -1845,43 +1845,8 @@ var BrowseActionsActions = actions.Actions({
 
 				// Level: normal -- list actions...
 				} else {
-					var level = Object.keys(cur)
-					level
-						/*/ XXX
-						.slice()
-						// sort according to item priority: 'NN: <text>'
-						//	NN > 0		- is sorted above the non-prioritized
-						//					elements, the greater the number 
-						//					the higher the element
-						//	NN < 0		- is sorted below the non-prioritized
-						//					elements, the lower the number 
-						//					the lower the element
-						// other		- keep order
-						.sort(function(a, b){
-							var ai = PRIORITY.exec(a)
-							ai = ai ? ai.pop()*1 : null
-							ai = ai > 0 ? -ai
-								: ai < 0 ? -ai + level.length
-								: 0
-
-							var bi = PRIORITY.exec(b)
-							bi = bi ? bi.pop()*1 : null
-							bi = bi > 0 ? -bi
-								: bi < 0 ? -bi + level.length
-								: 0
-
-							return ai == bi ? 
-								level.indexOf(a) - level.indexOf(b) 
-								: ai - bi
-						})
-						//*/
+					Object.keys(cur)
 						.forEach(function(key){
-							// remove the order...
-							// XXX remove this...
-							// 		...this is done by .listActions(..)
-							//var text = key.replace(PRIORITY, '').trim()
-							var text = key
-
 							// Item: action...
 							if(cur[key] instanceof Array){
 								var action = cur[key][0]
@@ -1892,7 +1857,7 @@ var BrowseActionsActions = actions.Actions({
 
 								// Action: toggler -> add toggle button...
 								if(actions.isToggler && actions.isToggler(action)){
-									make(text + '/', { 
+									make(key + '/', { 
 										cls: mode == 'hidden' ? mode : '',
 										// NOTE: if something is hidden 
 										// 		it is also disabled...
@@ -1912,7 +1877,7 @@ var BrowseActionsActions = actions.Actions({
 												function(){
 													actions[action]()
 													that.update()
-													that.select('"'+ text +'"')
+													that.select('"'+ key +'"')
 												}],
 											//[getKeys(action)],
 										],
@@ -1922,13 +1887,13 @@ var BrowseActionsActions = actions.Actions({
 												: actions[action]()
 
 											that.update()
-											that.select('"'+ text +'"')
+											that.select('"'+ key +'"')
 										},
 									})
 
 								// Action: normal...
 								} else {
-									make(text, {
+									make(key, {
 											// NOTE: if something is hidden 
 											// 		it is also disabled...
 											// 		...this is by design.
@@ -1954,9 +1919,9 @@ var BrowseActionsActions = actions.Actions({
 							} else if(actions.config['browse-actions-settings'].showEmpty 
 									|| (cur[key] != null
 										&& Object.keys(cur[key]).length > 0)){
-								var p = '/'+ path.concat([text]).join('/') +'/'
+								var p = '/'+ path.concat([key]).join('/') +'/'
 								p = MARKER ? p.replace(MARKER, '$1') : p
-								make(text + '/', { 
+								make(key + '/', { 
 									push_on_open: true,
 									attrs: {
 										keys: [
@@ -1967,7 +1932,7 @@ var BrowseActionsActions = actions.Actions({
 								})
 
 							// item: line...
-							} else if(/---+/.test(text)){
+							} else if(/---+/.test(key)){
 								make('---')
 							}
 						})
