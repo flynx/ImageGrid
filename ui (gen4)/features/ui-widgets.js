@@ -1433,7 +1433,8 @@ var BrowseActionsActions = actions.Actions({
 
 			// Sort tree level in-place...
 			//
-			// NOTE: this will remove the priority
+			// NOTE: this will remove the priority unless raw_keys is set...
+			// NOTE: setting shallow will sort only one level level...
 			var sortTree = function(tree, raw_keys, shallow){
 				var level = Object.keys(tree)
 				level
@@ -1594,7 +1595,7 @@ var BrowseActionsActions = actions.Actions({
 				})
 
 				// sort the tree...
-				sortTree(tree)
+				sortTree(tree, path == 'raw')
 			}
 
 			// return the raw tree...
@@ -1772,7 +1773,7 @@ var BrowseActionsActions = actions.Actions({
 
 			// pre-cache the action tree... 
 			var tree = !options.live_tree ? 
-				actions.getActions('raw')
+				actions.getActions('/')
 				: null 
 
 			// now for the dialog...
