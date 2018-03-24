@@ -1385,9 +1385,13 @@ var BrowseActionsActions = actions.Actions({
 	// 		'System/' hidden...
 	alias: ['- System/', ''],
 
-	// XXX this should sort the tree leaves???
-	// 		...if sorting then exclude priorities...
-	// XXX add option not to run checks...
+	// XXX this should also (optionally?):
+	// 		- sort levels						- DONE
+	// 			...remove sorting from .browseActions(..)
+	// 		- expand path patterns (???)
+	// 		- handle "*" listing (???)
+	// 		- handle visibility checks (???)
+	// XXX add option to run checks...
 	listActions: ['- System/',
 		core.doc`List actions in action tree...
 
@@ -1427,8 +1431,61 @@ var BrowseActionsActions = actions.Actions({
 			var MARKER = RegExp(this.config['browse-actions-shortcut-marker'], 'g')
 			MARKER = MARKER || RegExp(MARKER, 'g')
 
+			// Sort tree level in-place...
+			//
+			// NOTE: this will remove the priority
+			// XXX should this also handle path patterns...
+			var sortTree = function(tree, raw_keys, shallow){
+				var level = Object.keys(tree)
+				level
+					.slice()
+					// sort according to item priority: 'NN: <text>'
+					//	NN > 0		- is sorted above the non-prioritized
+					//					elements, the greater the number 
+					//					the higher the element
+					//	NN < 0		- is sorted below the non-prioritized
+					//					elements, the lower the number 
+					//					the lower the element
+					// other		- keep order
+					.sort(function(a, b){
+						var ai = PRIORITY.exec(a)
+						ai = ai ? ai.pop()*1 : null
+						ai = ai > 0 ? -ai
+							: ai < 0 ? -ai + level.length
+							: 0
+
+						var bi = PRIORITY.exec(b)
+						bi = bi ? bi.pop()*1 : null
+						bi = bi > 0 ? -bi
+							: bi < 0 ? -bi + level.length
+							: 0
+
+						return ai == bi ? 
+							level.indexOf(a) - level.indexOf(b) 
+							: ai - bi
+					})
+					.forEach(function(key){
+						var text = !raw_keys ? 
+							key.replace(PRIORITY, '').trim()
+							: key 
+
+						// replace keys in order...
+						var value = tree[key]
+						delete tree[key]
+						tree[text] = value
+
+						// go down the tree...
+						!shallow 
+							&& value 
+							&& !(value instanceof Array)
+							&& sortTree(value, raw_keys, shallow)
+					}) 
+				return tree
+			}
+
 			// Get item from tree level taking into account additional 
 			// syntax like prioority...
+			//
 			// returns:
 			// 	[<existing-text>, <new-level>]
 			//
@@ -1468,6 +1525,7 @@ var BrowseActionsActions = actions.Actions({
 			}
 
 			// Tree builder...
+			//
 			// XXX normalize actions -- whitespace, '!', args...
 			// XXX should this do level sorting???
 			var buildTree = function(path, leaf, action, mode, tree){
@@ -1533,6 +1591,10 @@ var BrowseActionsActions = actions.Actions({
 
 					buildTree(path, leaf, action, mode, tree)
 				})
+
+				// sort the tree...
+				// XXX still needs to handle path patterns...
+				sortTree(tree, path == 'raw')
 			}
 
 			// return the raw tree...
@@ -1785,6 +1847,7 @@ var BrowseActionsActions = actions.Actions({
 				} else {
 					var level = Object.keys(cur)
 					level
+						/*/ XXX
 						.slice()
 						// sort according to item priority: 'NN: <text>'
 						//	NN > 0		- is sorted above the non-prioritized
@@ -1811,9 +1874,13 @@ var BrowseActionsActions = actions.Actions({
 								level.indexOf(a) - level.indexOf(b) 
 								: ai - bi
 						})
+						//*/
 						.forEach(function(key){
 							// remove the order...
-							var text = key.replace(PRIORITY, '').trim()
+							// XXX remove this...
+							// 		...this is done by .listActions(..)
+							//var text = key.replace(PRIORITY, '').trim()
+							var text = key
 
 							// Item: action...
 							if(cur[key] instanceof Array){
