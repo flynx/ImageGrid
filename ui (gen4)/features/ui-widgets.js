@@ -1880,6 +1880,163 @@ var BrowseActionsActions = actions.Actions({
 				this.menu(showDoc.bind(this))
 			}) })],
 
+	// XXX might be a good idea to split out the lister out of .browseActions(..)
+	// 		...this would simplify debugging of actions...
+	listActions: ['- System/',
+		function(path, options){
+			var actions = this
+			options = options || {}
+
+			var PRIORITY = /^(-?[0-9]+)\s*:\s*/
+			var MARKER = RegExp(this.config['browse-actions-shortcut-marker'], 'g')
+			MARKER = MARKER || RegExp(MARKER, 'g')
+
+			// prepare the config...
+			var cfg = {
+				cls: 'browse-actions',
+
+				path: path,
+
+				flat: false,
+				traversable: true,
+				pathPrefix: '/',
+				fullPathEdit: true,
+
+				item_shortcut_marker: MARKER,
+			}
+			cfg.__proto__ = this.config['browse-actions-settings']
+
+			// Get item from tree level taking into account additional 
+			// syntax like prioority...
+			// returns:
+			// 	[<existing-text>, <new-level>]
+			//
+			// XXX this may mess up the ordering of items when using 
+			// 		item patterns...
+			var getItem = function(level, text){
+				// direct match...
+				if(text in level){
+					return [text, level[text]]
+
+				// check if it's a priority path or a pattern... 
+				} else {
+					var t = text.replace(PRIORITY, '')
+					t = (MARKER ? t.replace(MARKER, '$1') : t).trim()
+
+					for(var e in level){
+						var n = e.replace(PRIORITY, '')
+						n = (MARKER ? n.replace(MARKER, '$1') : n).trim()
+
+						if(n == t){
+							return [e, level[e]]
+						}
+
+						// check pattern...
+						var p = /\.\*/.test(n) ? new RegExp('^'+ n +'$', 'i') : null
+
+						if(p && p.test(t)){
+							// override item priority from pattern...
+							var pr = PRIORITY.exec(e)
+							pr = pr ? pr.pop() + ':' : ''
+
+							return [pr + text.replace(PRIORITY, ''), level[e]]
+						}
+					}
+				}
+				return []
+			}
+
+			// Tree builder...
+			// XXX normalize actions -- whitespace, '!', args...
+			var buildTree = function(path, leaf, action, mode, tree){
+				path = path.slice()
+				// build leaf...
+				if(path.length == 0){
+					// handle "|" in leavs...
+					leaf.split(/\|/g)
+						.forEach(function(leaf){
+							var l = getItem(tree, leaf)[0]
+							tree[l || leaf] = action != null ? [action, mode] : action
+						})
+					return
+				}
+				// build alternative paths...
+				var p = path.shift() || ''
+				p.split(/\|/g)
+					.forEach(function(e){
+						// build branch element...
+						var branch = getItem(tree, e)
+						branch = tree[branch[0] || e] = branch[1] || {}
+
+						// build sub-branch...
+						buildTree(path, leaf, action, mode, branch)
+					})
+			}
+
+			// Action tree...
+			//
+			// Format:
+			// 	{
+			// 		<name>: <tree>,
+			//
+			// 		<name>: [
+			// 			<action-name>,
+			// 			// mode...
+			// 			'disabled' | 'hidden',
+			// 		],
+			//
+			// 		...
+			// 	}
+			//
+			// NOTE: this is created once per call, so to refresh the 
+			// 		actions tree we'll need to re-open the dialog...
+			var tree = {}
+
+			// pre-order the main categories...
+			// NOTE: pre_order can be a list of long paths...
+			var s = ''
+			var pre_order = (this.config['action-category-order'] || [])
+				.map(function(p, i){
+					// make all separators unique...
+					// ...this will prevent us from losing or merging them.
+					if(p.trimRight().endsWith('---')){
+						s += '-'
+						p = p.trimRight() + s
+					}
+					return p
+				})
+			pre_order.forEach(function(key){
+				var path = key.split(/[\\\/]/g)
+				var leaf = path.pop()
+
+				buildTree(path, leaf, null, null, tree)
+			})
+
+			// build the tree...
+			var paths = this.getPath()
+			Object.keys(paths).forEach(function(key){
+				// handle mode flag...
+				var action = paths[key][0]
+				var mode = key.split(/^-\s*/)
+				var path = mode.pop()
+				mode = mode.length > 0 ? 'hidden' : null
+
+				path = path.split(/[\\\/]/g)
+				var leaf = path.pop()
+
+				buildTree(path, leaf, action, mode, tree)
+			})
+
+			if(path == 'raw'){
+				return tree
+			}
+
+			// XXX get sub-path...
+			// XXX
+
+			return tree
+		}],
+
 	toggleBrowseActionKeys: ['Interface/Show keys in menu',
 		core.makeConfigToggler(
 			'browse-actions-keys', 
