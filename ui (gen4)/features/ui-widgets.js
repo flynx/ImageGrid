@@ -1381,120 +1381,51 @@ var BrowseActionsActions = actions.Actions({
 	//
 	// NOTE: we need to do this as .alias(..) is defined in actions and
 	// 		has no concept of the naming protocols used in ImageGrid.Viewer
+	// NOTE: this essentially defines and empty alias and puts it in
+	// 		'System/' hidden...
 	alias: ['- System/', ''],
 
+	// XXX this should sort the tree leaves???
+	// 		...if sorting then exclude priorities...
+	// XXX add option not to run checks...
+	listActions: ['- System/',
+		core.doc`List actions in action tree...
 
-	// Browse actions dialog...
-	//
-	// This uses action definition to build and present an action tree.
-	//
-	// This supports the following element (action doc) syntax:
-	// 	- '/' separated action path (action short doc) to indicate the
-	// 	  path to action.
-	//
-	// 	- leading path element number followed by colon to indicate 
-	// 	  element priority on level.
-	// 		Example:
-	// 			'Path/99: To/50:Element'
-	// 	  NOTE: multiple path elements may have multiple priorities.
-	// 	  NOTE: an item with positive priority will be above and item 
-	// 	  		with less or no priority.
-	// 	  NOTE: an item with negative priority will be below any item 
-	// 	  		with greater or no priority.
-	//
-	// 	- leading '-' in path to indicate a hidden/disabled element.
-	// 		Example: 
-	// 			'- Path/To/Element'			(disabled/hidden)
-	// 			'- 99:Path/To/Element'		(disabled/hidden)
-	// 			'Path/To/Other element'		(enabled)
-	//
-	//
-	//
-	// Action mode (disabled/hidden) and also be controlled dynamically:
-	// 	- .browseMode() action method is called with actions as base.
-	//		Example:
-	//			someAction: ['Path/To/Some action',
-	//				{browseMode: function(){ ... }},
-	//				function(){
-	//					...
-	//				}],
-	//			someOtherAction: ['Path/To/Some action',
-	//				// alias
-	//				{browseMode: 'someAction'},
-	//				function(){
-	//					...
-	//				}],
-	//
-	//		.browseMode can be:
-	//			<function>			- action method.
-	//			<action-name>		- alias, name of action to get the
-	//									method from.
-	//
-	//		.browseMode() can return:
-	//			'disabled'		- item will be disabled.
-	//			'hidden'		- item will be both hidden and disabled.
-	//
-	//		NOTE: disabling in path has priority over .browseMode(), thus
-	//			it is possible to hide/disable an enabled item but not
-	//			possible to enable a disabled by default path.
-	//		NOTE: .browseMode() can be defined in any action in chain,
-	//			though only the last one is called...
-	//
-	//
-	// options format:
-	// 	{
-	// 		callback: <function>,
-	// 		no_disabled: false,
-	// 		no_hidden: false,
-	// 	}
-	//
-	//
-	// NOTE: if the action returns an instance of overlay.Overlay this
-	// 		will not close right away but rather bind to:
-	// 			overlay.close			-> self.focus()
-	// 			overlay.client.open		-> self.close()
-	// NOTE: we are not using the browse.PathList(..) here as we need 
-	// 		custom controls and special path handling...
-	// NOTE: this will keep the first instance title it encounters, this
-	// 		if a later instance includes a priority, it will be ignored.
-	// 		This may happen if several actions are in the same path and
-	// 		each one set a different priority in that path...
-	// 		...to avoid this use .config['action-category-order'] to set
-	// 		base order/priorities...
-	//
-	// XXX can we do a deep search on '/' -- find any nested action???
-	// XXX can this also do a flat mode???
-	// 		...this would help with the (global) search -- switch to 
-	// 		flat if searching in root mode...
-	browseActions: ['Interface|System/Dialog/Actions...',
-		makeUIDialog(function(path, options){
+			Build tree and return it...
+			.listActions('raw'[, tree])
+				-> tree
+
+			Get sup-tree/action at path...
+			.listActions(path[, tree])
+				-> sub-tree
+				-> action
+
+
+		This is used by .browseActions(..) to list the actions to be 
+		drawn in the action menu.
+		
+
+		Action tree format:
+			{
+				// sub-tree...
+				<name>: <tree>,
+		
+				// action...
+				<name>: [
+					<action-name>,
+					// mode...
+					'disabled' | 'hidden',
+				],
+		
+				...
+			}
+		`,
+		function(path, tree){
 			var actions = this
-			options = options || {}
 
 			var PRIORITY = /^(-?[0-9]+)\s*:\s*/
 			var MARKER = RegExp(this.config['browse-actions-shortcut-marker'], 'g')
 			MARKER = MARKER || RegExp(MARKER, 'g')
-
-			// prepare the config...
-			var cfg = {
-				cls: 'browse-actions',
-
-				path: path,
-
-				flat: false,
-				traversable: true,
-				pathPrefix: '/',
-				fullPathEdit: true,
-
-				item_shortcut_marker: MARKER,
-			}
-			cfg.__proto__ = this.config['browse-actions-settings']
-
-			// get keys for each action...
-			var keys = this.getKeysForAction ? this.getKeysForAction() : {}
-			// Get keys for action...
-			var getKeys = function(action){
-				return (keys[action] || []).join(' / ') }
 
 			// Get item from tree level taking into account additional 
 			// syntax like prioority...
@@ -1536,6 +1467,210 @@ var BrowseActionsActions = actions.Actions({
 				return []
 			}
 
+			// Tree builder...
+			// XXX normalize actions -- whitespace, '!', args...
+			// XXX should this do level sorting???
+			var buildTree = function(path, leaf, action, mode, tree){
+				path = path.slice()
+				// build leaf...
+				if(path.length == 0){
+					// handle "|" in leavs...
+					leaf.split(/\|/g)
+						.forEach(function(leaf){
+							var l = getItem(tree, leaf)[0]
+							tree[l || leaf] = action != null ? [action, mode] : action
+						})
+					return
+				}
+				// build alternative paths...
+				var p = path.shift() || ''
+				p.split(/\|/g)
+					.forEach(function(e){
+						// build branch element...
+						var branch = getItem(tree, e)
+						branch = tree[branch[0] || e] = branch[1] || {}
+
+						// build sub-branch...
+						buildTree(path, leaf, action, mode, branch)
+					})
+			}
+
+			// if no tree is given, build one...
+			if(tree == null){
+				tree = {}
+
+				// pre-order the main categories...
+				// NOTE: pre_order can be a list of long paths...
+				var s = ''
+				var pre_order = (this.config['action-category-order'] || [])
+					.map(function(p, i){
+						// make all separators unique...
+						// ...this will prevent us from losing or merging them.
+						if(p.trimRight().endsWith('---')){
+							s += '-'
+							p = p.trimRight() + s
+						}
+						return p
+					})
+				pre_order.forEach(function(key){
+					var path = key.split(/[\\\/]/g)
+					var leaf = path.pop()
+
+					buildTree(path, leaf, null, null, tree)
+				})
+
+				// build the tree...
+				var paths = this.getPath()
+				Object.keys(paths).forEach(function(key){
+					// handle mode flag...
+					var action = paths[key][0]
+					var mode = key.split(/^-\s*/)
+					var path = mode.pop()
+					mode = mode.length > 0 ? 'hidden' : null
+
+					path = path.split(/[\\\/]/g)
+					var leaf = path.pop()
+
+					buildTree(path, leaf, action, mode, tree)
+				})
+			}
+
+			// return the raw tree...
+			if(path == 'raw'){
+				return tree
+			}
+
+			// prepare path...
+			path = path || '/'
+			path = (path instanceof Array ? path : path.split(/[\\\/]/g))
+				.filter(function(e){ return e.trim() != '' })
+
+			// get the tree node...
+			var cur = tree
+			var rest = path.slice()
+			while(rest.length > 0 && !('*' in cur)){
+				cur = getItem(cur, rest.shift()).pop() || {}
+			}
+
+			return cur
+		}],
+
+	// XXX can we do a deep search on '/' -- find any nested action???
+	// 		...or rather a search from this level and down...
+	// XXX can this also do a flat mode???
+	// 		...this would help with the (global) search -- switch to 
+	// 		flat if searching in root mode...
+	// XXX should this be live (options.live) or not??? (currently not)
+	browseActions: ['Interface|System/Dialog/Actions...',
+		core.doc`Browse actions dialog...
+
+		This uses action definition to build and present an action tree.
+
+		This supports the following element (action doc) syntax:
+			- '/' separated action path (action short doc) to indicate the
+			  path to action.
+
+			- leading path element number followed by colon to indicate 
+			  element priority on level.
+				Example:
+					'Path/99: To/50:Element'
+			  NOTE: multiple path elements may have multiple priorities.
+			  NOTE: an item with positive priority will be above and item 
+					with less or no priority.
+			  NOTE: an item with negative priority will be below any item 
+					with greater or no priority.
+
+			- leading '-' in path to indicate a hidden/disabled element.
+				Example: 
+					'- Path/To/Element'			(disabled/hidden)
+					'- 99:Path/To/Element'		(disabled/hidden)
+					'Path/To/Other element'		(enabled)
+
+
+
+		Action mode (disabled/hidden) and also be controlled dynamically:
+			- .browseMode() action method is called with actions as base.
+			Example:
+				someAction: ['Path/To/Some action',
+					{browseMode: function(){ ... }},
+					function(){
+						...
+					}],
+				someOtherAction: ['Path/To/Some action',
+					// alias
+					{browseMode: 'someAction'},
+					function(){
+						...
+					}],
+
+			.browseMode can be:
+				<function>			- action method.
+				<action-name>		- alias, name of action to get the
+										method from.
+
+			.browseMode() can return:
+				'disabled'		- item will be disabled.
+				'hidden'		- item will be both hidden and disabled.
+
+			NOTE: disabling in path has priority over .browseMode(), thus
+				it is possible to hide/disable an enabled item but not
+				possible to enable a disabled by default path.
+			NOTE: .browseMode() can be defined in any action in chain,
+				though only the last one is called...
+
+
+		options format:
+			{
+				callback: <function>,
+				no_disabled: false,
+				no_hidden: false,
+			}
+
+
+		NOTE: if the action returns an instance of overlay.Overlay this
+				will not close right away but rather bind to:
+					overlay.close			-> self.focus()
+					overlay.client.open		-> self.close()
+		NOTE: we are not using the browse.PathList(..) here as we need 
+				custom controls and special path handling...
+		NOTE: this will keep the first instance title it encounters, this
+				if a later instance includes a priority, it will be ignored.
+				This may happen if several actions are in the same path and
+				each one set a different priority in that path...
+				...to avoid this use .config['action-category-order'] to set
+				base order/priorities...
+		`,
+		makeUIDialog(function(path, options){
+			var actions = this
+			options = options || {}
+
+			var PRIORITY = /^(-?[0-9]+)\s*:\s*/
+			var MARKER = RegExp(this.config['browse-actions-shortcut-marker'], 'g')
+			MARKER = MARKER || RegExp(MARKER, 'g')
+
+			// prepare the config...
+			var cfg = {
+				cls: 'browse-actions',
+
+				path: path,
+
+				flat: false,
+				traversable: true,
+				pathPrefix: '/',
+				fullPathEdit: true,
+
+				item_shortcut_marker: MARKER,
+
+				live: true,
+			}
+			cfg.__proto__ = this.config['browse-actions-settings']
+
+			// get keys for each action...
+			var keys = this.getKeysForAction ? this.getKeysForAction() : {}
+			// Get keys for action...
+			var getKeys = function(action){
+				return (keys[action] || []).join(' / ') }
+
 			// Get action browse mode (disabled or hidden)...
 			var getMode = function(action){
 				var m = action
@@ -1572,102 +1707,15 @@ var BrowseActionsActions = actions.Actions({
 				return child
 			}.bind(this)
 
-			// Tree builder...
-			// XXX normalize actions -- whitespace, '!', args...
-			var buildTree = function(path, leaf, action, mode, tree){
-				path = path.slice()
-				// build leaf...
-				if(path.length == 0){
-					// handle "|" in leavs...
-					leaf.split(/\|/g)
-						.forEach(function(leaf){
-							var l = getItem(tree, leaf)[0]
-							tree[l || leaf] = action != null ? [action, mode] : action
-						})
-					return
-				}
-				// build alternative paths...
-				var p = path.shift() || ''
-				p.split(/\|/g)
-					.forEach(function(e){
-						// build branch element...
-						var branch = getItem(tree, e)
-						branch = tree[branch[0] || e] = branch[1] || {}
-
-						// build sub-branch...
-						buildTree(path, leaf, action, mode, branch)
-					})
-			}
-
-			// Action tree...
-			//
-			// Format:
-			// 	{
-			// 		<name>: <tree>,
-			//
-			// 		<name>: [
-			// 			<action-name>,
-			// 			// mode...
-			// 			'disabled' | 'hidden',
-			// 		],
-			//
-			// 		...
-			// 	}
-			//
-			// NOTE: this is created once per call, so to refresh the 
-			// 		actions tree we'll need to re-open the dialog...
-			var tree = {}
-
-			// pre-order the main categories...
-			// NOTE: pre_order can be a list of long paths...
-			var s = ''
-			var pre_order = (this.config['action-category-order'] || [])
-				.map(function(p, i){
-					// make all separators unique...
-					// ...this will prevent us from losing or merging them.
-					if(p.trimRight().endsWith('---')){
-						s += '-'
-						p = p.trimRight() + s
-					}
-					return p
-				})
-			pre_order.forEach(function(key){
-				var path = key.split(/[\\\/]/g)
-				var leaf = path.pop()
-
-				buildTree(path, leaf, null, null, tree)
-			})
-
-			// build the tree...
-			var paths = this.getPath()
-			Object.keys(paths).forEach(function(key){
-				// handle mode flag...
-				var action = paths[key][0]
-				var mode = key.split(/^-\s*/)
-				var path = mode.pop()
-				mode = mode.length > 0 ? 'hidden' : null
-
-				path = path.split(/[\\\/]/g)
-				var leaf = path.pop()
-
-				buildTree(path, leaf, action, mode, tree)
-			})
-
-			//console.log('!!!!', tree)
+			// pre-cache the action tree... 
+			var tree = cfg.live ? 
+				null 
+				: actions.listActions('raw')
 
 			// now for the dialog...
 			return browse.makeLister(null, function(path, make){
 				var that = this
-				var cur = tree
-
-				// get level...
-				// NOTE: we need to get the level till first '*'...
-				// NOTE: this needs to account for leading priority of 
-				// 		an element...
-				var rest = path.slice()
-				while(rest.length > 0 && !('*' in cur)){
-					cur = getItem(cur, rest.shift()).pop() || {}
-				}
+				var cur = actions.listActions(path.slice(), tree)
 
 				// render current level...
 				// NOTE: we can be at one of several level types, each 
@@ -1879,163 +1927,6 @@ var BrowseActionsActions = actions.Actions({
 				this.keyboard.handler('General', '?', 'showDoc')
 				this.menu(showDoc.bind(this))
 			}) })],
-
-	// XXX might be a good idea to split out the lister out of .browseActions(..)
-	// 		...this would simplify debugging of actions...
-	listActions: ['- System/',
-		function(path, options){
-			var actions = this
-			options = options || {}
-
-			var PRIORITY = /^(-?[0-9]+)\s*:\s*/
-			var MARKER = RegExp(this.config['browse-actions-shortcut-marker'], 'g')
-			MARKER = MARKER || RegExp(MARKER, 'g')
-
-			// prepare the config...
-			var cfg = {
-				cls: 'browse-actions',
-
-				path: path,
-
-				flat: false,
-				traversable: true,
-				pathPrefix: '/',
-				fullPathEdit: true,
-
-				item_shortcut_marker: MARKER,
-			}
-			cfg.__proto__ = this.config['browse-actions-settings']
-
-			// Get item from tree level taking into account additional 
-			// syntax like prioority...
-			// returns:
-			// 	[<existing-text>, <new-level>]
-			//
-			// XXX this may mess up the ordering of items when using 
-			// 		item patterns...
-			var getItem = function(level, text){
-				// direct match...
-				if(text in level){
-					return [text, level[text]]
-
-				// check if it's a priority path or a pattern... 
-				} else {
-					var t = text.replace(PRIORITY, '')
-					t = (MARKER ? t.replace(MARKER, '$1') : t).trim()
-
-					for(var e in level){
-						var n = e.replace(PRIORITY, '')
-						n = (MARKER ? n.replace(MARKER, '$1') : n).trim()
-
-						if(n == t){
-							return [e, level[e]]
-						}
-
-						// check pattern...
-						var p = /\.\*/.test(n) ? new RegExp('^'+ n +'$', 'i') : null
-
-						if(p && p.test(t)){
-							// override item priority from pattern...
-							var pr = PRIORITY.exec(e)
-							pr = pr ? pr.pop() + ':' : ''
-
-							return [pr + text.replace(PRIORITY, ''), level[e]]
-						}
-					}
-				}
-				return []
-			}
-
-			// Tree builder...
-			// XXX normalize actions -- whitespace, '!', args...
-			var buildTree = function(path, leaf, action, mode, tree){
-				path = path.slice()
-				// build leaf...
-				if(path.length == 0){
-					// handle "|" in leavs...
-					leaf.split(/\|/g)
-						.forEach(function(leaf){
-							var l = getItem(tree, leaf)[0]
-							tree[l || leaf] = action != null ? [action, mode] : action
-						})
-					return
-				}
-				// build alternative paths...
-				var p = path.shift() || ''
-				p.split(/\|/g)
-					.forEach(function(e){
-						// build branch element...
-						var branch = getItem(tree, e)
-						branch = tree[branch[0] || e] = branch[1] || {}
-
-						// build sub-branch...
-						buildTree(path, leaf, action, mode, branch)
-					})
-			}
-
-			// Action tree...
-			//
-			// Format:
-			// 	{
-			// 		<name>: <tree>,
-			//
-			// 		<name>: [
-			// 			<action-name>,
-			// 			// mode...
-			// 			'disabled' | 'hidden',
-			// 		],
-			//
-			// 		...
-			// 	}
-			//
-			// NOTE: this is created once per call, so to refresh the 
-			// 		actions tree we'll need to re-open the dialog...
-			var tree = {}
-
-			// pre-order the main categories...
-			// NOTE: pre_order can be a list of long paths...
-			var s = ''
-			var pre_order = (this.config['action-category-order'] || [])
-				.map(function(p, i){
-					// make all separators unique...
-					// ...this will prevent us from losing or merging them.
-					if(p.trimRight().endsWith('---')){
-						s += '-'
-						p = p.trimRight() + s
-					}
-					return p
-				})
-			pre_order.forEach(function(key){
-				var path = key.split(/[\\\/]/g)
-				var leaf = path.pop()
-
-				buildTree(path, leaf, null, null, tree)
-			})
-
-			// build the tree...
-			var paths = this.getPath()
-			Object.keys(paths).forEach(function(key){
-				// handle mode flag...
-				var action = paths[key][0]
-				var mode = key.split(/^-\s*/)
-				var path = mode.pop()
-				mode = mode.length > 0 ? 'hidden' : null
-
-				path = path.split(/[\\\/]/g)
-				var leaf = path.pop()
-
-				buildTree(path, leaf, action, mode, tree)
-			})
-
-			if(path == 'raw'){
-				return tree
-			}
-
-			// XXX get sub-path...
-			// XXX
-
-			return tree
-		}],
 
 	toggleBrowseActionKeys: ['Interface/Show keys in menu',
 		core.makeConfigToggler(
