@@ -1389,6 +1389,8 @@ var BrowseActionsActions = actions.Actions({
 	// 		- sort levels						- DONE
 	// 		- expand path patterns				- DONE
 	// 		- handle "*" listing (???)
+	// 			...only for paths going into such a branch, otherwise 
+	// 			it might get recursive fast.
 	// 		- handle visibility checks (???)
 	getActions: ['- System/',
 		core.doc`List actions in action tree...
@@ -1592,7 +1594,7 @@ var BrowseActionsActions = actions.Actions({
 				})
 
 				// sort the tree...
-				sortTree(tree, path == 'raw')
+				sortTree(tree)
 			}
 
 			// return the raw tree...
@@ -1708,7 +1710,6 @@ var BrowseActionsActions = actions.Actions({
 			var actions = this
 			options = options || {}
 
-			var PRIORITY = /^(-?[0-9]+)\s*:\s*/
 			var MARKER = RegExp(this.config['browse-actions-shortcut-marker'], 'g')
 			MARKER = MARKER || RegExp(MARKER, 'g')
 
