@@ -726,7 +726,7 @@ var CacheActions = actions.Actions({
 	// 				}) }],
 	//
 	cache: function(title, lister){
-		if(!this.config.cache){
+		if(!(this.config || {}).cache){
 			return lister.call(this)
 		}
 		var cache = this.__cache = this.__cache || {}

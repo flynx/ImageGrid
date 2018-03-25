@@ -65,19 +65,18 @@ var StoreActions = actions.Actions({
 	// 			.stores_actions		- dict of store-specific actions
 	get stores(){
 		return this.cache('stores', function(d){
-			var res = {}
-
-			this.actions.forEach(function(action){ 
-				var store = this.getActionAttr(action, 'handle_data_store')
-				res[store]
-					&& console.warn('Multiple handlers for store:', store)
-				if(store){
-					res[store] = action
-				}
-			}.bind(this))
-
-			return res
-		}) },
+			return d ?
+				Object.assign({}, d)
+				: this.actions
+					.reduce(function(res, action){ 
+						var store = this.getActionAttr(action, 'handle_data_store')
+						res[store]
+							&& console.warn('Multiple handlers for store:', store)
+						if(store){
+							res[store] = action
+						}
+						return res
+					}.bind(this), {}) }) },
 
 	// events...
 	// XXX update signature -- see doc for: .loadStore(..)
