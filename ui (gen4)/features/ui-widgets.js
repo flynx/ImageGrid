@@ -1385,13 +1385,12 @@ var BrowseActionsActions = actions.Actions({
 	// 		'System/' hidden...
 	alias: ['- System/', ''],
 
-	// XXX this should also (optionally?):
-	// 		- sort levels						- DONE
-	// 		- expand path patterns				- DONE
-	// 		- handle "*" listing (???)
-	// 			...only for paths going into such a branch, otherwise 
-	// 			it might get recursive fast.
-	// 		- handle visibility checks (???)
+	// NOTE: we are avoiding handling here the lister actions (action 
+	// 		paths ending with '*') as they are active while .getActions(..)
+	// 		should be as independent as possible and never trigger any 
+	// 		side-effects...
+	// 		...the same can be said about handling visibility tests.
+	// 		XXX revise...
 	getActions: ['- System/',
 		core.doc`List actions in action tree...
 
@@ -1429,13 +1428,11 @@ var BrowseActionsActions = actions.Actions({
 
 			var PRIORITY = /^(-?[0-9]+)\s*:\s*/
 			var MARKER = RegExp(this.config['browse-actions-shortcut-marker'], 'g')
-			MARKER = MARKER || RegExp(MARKER, 'g')
 
 			// Sort tree level in-place...
 			//
 			// NOTE: this will remove the priority unless raw_keys is set...
-			// NOTE: setting shallow will sort only one level level...
-			var sortTree = function(tree, raw_keys, shallow){
+			var sortTree = function(tree, raw_keys){
 				var level = Object.keys(tree)
 				level
 					.slice()
@@ -1482,10 +1479,9 @@ var BrowseActionsActions = actions.Actions({
 						tree[text] = value
 
 						// go down the tree...
-						!shallow 
-							&& value 
+						value 
 							&& !(value instanceof Array)
-							&& sortTree(value, raw_keys, shallow)
+							&& sortTree(value, raw_keys)
 					}) 
 				return tree
 			}
@@ -1618,6 +1614,10 @@ var BrowseActionsActions = actions.Actions({
 			return cur
 		}],
 
+	// XXX do not draw empty dirs (i.e. where all actions are hidden)...
+	// 		Example:
+	// 			/Store/
+	// 			/Jobs/
 	// XXX can we do a deep search on '/' -- find any nested action???
 	// 		...or rather a search from this level and down...
 	// XXX can this also do a flat mode???
@@ -1712,7 +1712,6 @@ var BrowseActionsActions = actions.Actions({
 			options = options || {}
 
 			var MARKER = RegExp(this.config['browse-actions-shortcut-marker'], 'g')
-			MARKER = MARKER || RegExp(MARKER, 'g')
 
 			// prepare the config...
 			var cfg = {
@@ -1736,12 +1735,15 @@ var BrowseActionsActions = actions.Actions({
 				return (keys[action] || []).join(' / ') }
 
 			// Get action browse mode (disabled or hidden)...
+			var mode_cache = {}
 			var getMode = function(action){
 				var m = action
 				var visited = [m]
+				var last
 
 				// handle aliases...
 				do {
+					last = m
 					m = actions.getActionAttr(m, 'browseMode')
 					// check for loops...
 					if(m && visited[m] != null){
@@ -1751,7 +1753,14 @@ var BrowseActionsActions = actions.Actions({
 					visited.push(m)
 				} while(typeof(m) == typeof('str'))
 
-				return m ? m.call(actions) : undefined
+				//return m ? m.call(actions) : undefined
+				return m ? 
+					(mode_cache == null ?
+							m.call(actions)
+						: last in mode_cache ? 
+							mode_cache[last] 
+						: (mode_cache[last] = m.call(actions)))
+					: undefined
 			}
 
 			// Wait for dialog...
@@ -1780,6 +1789,11 @@ var BrowseActionsActions = actions.Actions({
 			return browse.makeLister(null, function(path, make){
 				var that = this
 				var cur = actions.getActions(path.slice(), tree)
+
+				// reset mode cache...
+				// NOTE: we reset the cache to allow state changes while
+				// 		navigating...
+				mode_cache = {}
 
 				// render current level...
 				// NOTE: we can be at one of several level types, each 
@@ -1918,6 +1932,10 @@ var BrowseActionsActions = actions.Actions({
 								}
 
 							// Item: dir...
+							// XXX need to check if this is empty...
+							// 		...do not draw if nothing will be visible inside...
+							// XXX this will hide non-empty dirs containing only hidden stuff
+							// 		...should such dirs still be treated as empty???
 							} else if(actions.config['browse-actions-settings'].showEmpty 
 									|| (cur[key] != null
 										&& Object.keys(cur[key]).length > 0)){
@@ -1931,6 +1949,15 @@ var BrowseActionsActions = actions.Actions({
 											getKeys('browseActions!: "'+ p +'"'), 
 										].filter(function(e){ return e.trim() != '' }).join(' / '),
 									},
+									// XXX this will only check statically hidden stuff...
+									// 		...the rest may still get dynamically hidden...
+									hidden: options.no_hidden ? 
+										false
+										: Object.keys(cur[key])
+											// XXX we still need to check browseMode of each child...
+											.filter(function(k){ 
+												return (cur[key][k] || [])[1] != 'hidden' })
+								   			.length == 0,
 								})
 
 							// item: line...

@@ -1409,8 +1409,6 @@ module.TagsEdit = core.ImageGridFeatures.Feature({
 
 
 
-
-
 //---------------------------------------------------------------------
 // Image Group...
 
@@ -1491,7 +1489,6 @@ module.ImageEditGroupActions = actions.Actions({
 	groupForward: ['Group|Edit/Group forwards', 
 		{journal: true},
 		function(target){ this.groupTo(target, 'next') }],
-
 })
 
 var ImageEditGroup =
