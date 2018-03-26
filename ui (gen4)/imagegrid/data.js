@@ -1146,8 +1146,6 @@ var DataPrototype = {
 				})
 				.filter(function(e){ return e !== null })
 
-			console.log('>>>>', list, loaded)
-
 			count = null 
 			target = null 
 
