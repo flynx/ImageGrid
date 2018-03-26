@@ -1614,10 +1614,6 @@ var BrowseActionsActions = actions.Actions({
 			return cur
 		}],
 
-	// XXX do not draw empty dirs (i.e. where all actions are hidden)...
-	// 		Example:
-	// 			/Store/
-	// 			/Jobs/
 	// XXX can we do a deep search on '/' -- find any nested action???
 	// 		...or rather a search from this level and down...
 	// XXX can this also do a flat mode???
@@ -1735,16 +1731,31 @@ var BrowseActionsActions = actions.Actions({
 				return (keys[action] || []).join(' / ') }
 
 			// Get action browse mode (disabled or hidden)...
+			//
+			// NOTE: this will cache and reuse action's browseMode, this
+			// 		will make things faster when lots of actions use the 
+			// 		same mode test (alias)...
 			var mode_cache = {}
 			var getMode = function(action){
 				var m = action
 				var visited = [m]
 				var last
 
+				// check cache...
+				if(m in (mode_cache || {})){
+					return mode_cache[m]
+				}
+
 				// handle aliases...
 				do {
 					last = m
 					m = actions.getActionAttr(m, 'browseMode')
+
+					// check cache...
+					if(m in (mode_cache || {})){
+						return mode_cache[m]
+					}
+
 					// check for loops...
 					if(m && visited[m] != null){
 						m = null
@@ -1755,11 +1766,16 @@ var BrowseActionsActions = actions.Actions({
 
 				//return m ? m.call(actions) : undefined
 				return m ? 
+					// no cache...
 					(mode_cache == null ?
 							m.call(actions)
+						// cache hit...
 						: last in mode_cache ? 
 							mode_cache[last] 
-						: (mode_cache[last] = m.call(actions)))
+						// call check and populate cache...
+						: (mode_cache[action] = 
+							mode_cache[last] = 
+								m.call(actions)))
 					: undefined
 			}
 
