@@ -1132,7 +1132,7 @@ var DataPrototype = {
 				.map(function(e){
 					// primary path -- gids...
 					// NOTE: this is the most probable path...
-					if(loaded[e]){
+					if(e in loaded){
 						return e
 					}
 
@@ -1142,9 +1142,11 @@ var DataPrototype = {
 						that.getImage(e, 'global')
 						: that.getImage(e)
 
-					return loaded[e] ? e : null
+					return e in loaded ? e : null
 				})
 				.filter(function(e){ return e !== null })
+
+			console.log('>>>>', list, loaded)
 
 			count = null 
 			target = null 
