@@ -790,7 +790,7 @@ module.FileSystemLoader = core.ImageGridFeatures.Feature({
 						&& imgs.length > 0 
 						&& that
 							.markChanged('data')
-							.markChanged(imgs.keys()) })
+							.markChanged('images', imgs.keys()) })
 			}],
 	],
 })
