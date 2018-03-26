@@ -723,9 +723,7 @@ var FileSystemLoaderActions = actions.Actions({
 					// NOTE: we are prepending new images to the start...
 					// NOTE: all ribbon gids will change here...
 					var cur = that.data.current
-					// XXX this does not seem to work...
-					//that.data = new_data.join(that.data)
-					that.data = new_data.join('top', that.data)
+					that.data = new_data.join(that.data)
 					that.data.current = cur
 
 					that.images.join(imgs)

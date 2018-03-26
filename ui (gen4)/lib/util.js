@@ -574,6 +574,8 @@ if(typeof(jQuery) != typeof(undefined)){
 
 					// continue handling...
 					} else if(options.propagate_unhandled_keys !== false){
+						// NOTE: jQuery can't reuse browser events, this 
+						// 		we need to pass a jq event/proxy here...
 						$(this).parent().trigger(in_evt)
 					}
 				})

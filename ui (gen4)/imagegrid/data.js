@@ -2386,8 +2386,7 @@ var DataPrototype = {
 	//
 	// XXX test more complex cases...
 	// XXX add a 'gid' align mode...
-	join: function(){
-		var args = Array.apply(null, arguments)
+	join: function(...args){
 		var align = typeof(args[0]) == typeof('str') || args[0] == null ? 
 			args.shift() 
 			: 'base'
@@ -2398,6 +2397,8 @@ var DataPrototype = {
 
 		args.forEach(function(data){
 			// calculate align offset...
+			// NOTE: negative d means we push data up while positive 
+			// 		pushes data down by number of ribbons...
 			if(align == 'base'){
 				var d = base.getRibbonOrder('base') - data.getRibbonOrder('base')
 
@@ -2411,44 +2412,61 @@ var DataPrototype = {
 			var t = 0
 
 			// merge order...
+			// XXX need to take care of gid conflicts...
 			base.order = base.order.concat(data.order)
 
-			// merge ribbons...
+			// merge .ribbons and .ribbon_order...
+			//
 			// NOTE: this is a special case, so we do not handle it in 
 			// 		the .eachImageList(..) below. the reason being that
-			// 		ribbons can be merged is different ways.
-			for(var i=0; i < data.ribbon_order.length; i++){
-				var g = data.ribbon_order[i]
-				var r = data.ribbons[g]
+			// 		ribbons can be merged in different ways.
+			// NOTE: we will reuse gids of some ribbons... (XXX???)
+			var n_base = d > 0 ? 
+				base.getRibbonOrder('base') 
+				: data.getRibbonOrder('base')
+			var cur = base.current
 
-				// push the new ribbon just before the base...
-				if(d < 0){
-					// see if g is unique...
-					if(g in base.ribbons || base.order.indexOf(g) >= 0){
-						g = base.newGID()
-					}
-					base.ribbon_order.splice(t, 0, g)
-					base.ribbons[g] = r
-					t += 1
-					d -= 1
+			var i = 0
+			var n_ribbons = {}
+			var n_ribbon_order = []
+			var b_ribbon_order = base.ribbon_order.slice()
+			var d_ribbon_order = data.ribbon_order.slice()
+			while(b_ribbon_order.length > 0 
+					|| d_ribbon_order.length > 0){
+				// pull data up by d...
+				if(d + i < 0){
+					var bg = null
+					var dg = d_ribbon_order.shift()
+					var gid = dg
 
-				// append ribbons...
-				} else if(d < base.ribbon_order.length){
-					var tg = base.ribbon_order[d]
-					base.ribbons[tg] = base.ribbons[tg].concat(r)
+				// push data down by d...
+				} else if(d - i > 0){
+					var bg = b_ribbon_order.shift()
+					var dg = null
+					var gid = bg
 
-				// push the new ribbon to the end...
+				// merge...
 				} else {
-					// see if g is unique...
-					if(g in base.ribbons || base.order.indexOf(g) >= 0){
-						g = base.newGID()
-					}
-					base.ribbon_order.push(g)
-					base.ribbons[g] = r
+					var bg = b_ribbon_order.shift()
+					var dg = d_ribbon_order.shift()
+					var gid = base.newGID()
 				}
 
-				d += 1
+				// do the actual merge...
+				// NOTE: the tails will take care of themselves via the 
+				// 		defaults...
+				n_ribbons[gid] = 
+					(base.ribbons[bg] || [])
+						.concat(data.ribbons[dg] || [])
+				n_ribbon_order.push(gid)
+				i++
 			}
+
+			// set the new data...
+			base.ribbon_order = n_ribbon_order
+			base.ribbons = n_ribbons
+			base.base = base.getRibbon(n_base)
+			base.current = cur
 
 			// merge other stuff...
 			data.eachImageList(function(list, key, set){
