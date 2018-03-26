@@ -543,8 +543,8 @@ if(typeof(jQuery) != typeof(undefined)){
 				// make the element focusable and selectable...
 				.attr('tabindex', '0')
 				.addClass('editable-field')
-				.keydown(events.keydown = function(evt){ 
-					evt = window.event || evt
+				.keydown(events.keydown = function(jqevt){ 
+					var evt = window.event || in_evt
 					if(!that.prop('contenteditable')){
 						return
 					}
@@ -574,7 +574,7 @@ if(typeof(jQuery) != typeof(undefined)){
 
 					// continue handling...
 					} else if(options.propagate_unhandled_keys !== false){
-						$(this).parent().trigger(evt)
+						$(this).parent().trigger(in_evt)
 					}
 				})
 				.blur(events.blur = function(){
