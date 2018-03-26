@@ -396,15 +396,17 @@ module.GLOBAL_KEYBOARD = {
 
 		// metadata...
 		I: 'showMetadata',
-		ctrl_shift_I: 'showMetadata: "current" "full" -- Show full metadata',
+		//ctrl_shift_I: 'showMetadata: "current" "full" -- Show full metadata',
 
 
 		// marking...
 		M: 'toggleMark',
-		ctrl_A: 'toggleMark!: "ribbon" "on" -- Mark all images in ribbon',
-		ctrl_shift_A: 'toggleMarkBlock!',
-		ctrl_D: 'toggleMark!: "ribbon" "off" -- Unmark all images in ribbon',
-		ctrl_I: 'invertRibbonMarks',
+		ctrl_A: 'markRibbon!',
+		ctrl_shift_A: 'markLoaded!',
+		ctrl_D: 'unmarkRibbon!',
+		ctrl_shift_D: 'unmarkLoaded!',
+		ctrl_I: 'toggleMarkRibbon!',
+		ctrl_shift_I: 'toggleMarkBlock!',
 		',': 'prevMarked',
 		'.': 'nextMarked',
 		alt_M: 'browseActions: "/Mark/" -- Mark menu...',

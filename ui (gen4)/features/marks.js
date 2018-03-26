@@ -88,21 +88,22 @@ function makeTagTogglerAction(tag){
 			var on = []
 			var off = []
 			target = _getTarget.call(this, target)
-			target.forEach(function(t){
-				if((that.data.getTags(t).indexOf(tag) < 0) 
-						// invert check if action is '!'...
-						+ (action == '!' ? -1 : 0)){
-					on.push(tag)
-					res.push('on')
+			target
+				.forEach(function(gid){
+					if((that.data.getTags(gid).indexOf(tag) < 0) 
+							// invert check if action is '!'...
+							+ (action == '!' ? -1 : 0)){
+						on.push(gid)
+						res.push('on')
 
-				} else {
-					off.push(tag)
-					res.push('off')
-				}
-			})
+					} else {
+						off.push(gid)
+						res.push('off')
+					}
+				})
 
-			that.tag(t, on)
-			that.untag(t, off)
+			that.tag(tag, on)
+			that.untag(tag, off)
 
 			return res.length == 1 ? res[0] : res
 		}
@@ -221,6 +222,11 @@ var ImageMarkActions = actions.Actions({
 
 	// a shorthand...
 	// NOTE: this will return a copy...
+	//
+	// XXX should we add a caching scheme here???
+	// 		...it would require invalidation on tagging...
+	// 		the problem is that on large sets this may take up quite a 
+	// 		chunk of memory...
 	get marked(){
 		if(this.data == null 
 				|| this.data.tags == null
@@ -315,7 +321,7 @@ var ImageMarkEditActions = actions.Actions({
 	toggleMark: ['Mark|Image/Image $mark',
 		undoTag('toggleMark'),
 		makeTagTogglerAction('selected')],
-	toggleMarkBlock: ['Mark/Mark $block',
+	toggleMarkBlock: ['Mark/Invert $block marks',
 		core.doc`A block is a set of adjacent images either marked on unmarked
 		in the same way
 		`,
@@ -355,18 +361,15 @@ var ImageMarkEditActions = actions.Actions({
 			// do the marking...
 			return this.toggleMark(block, state ? 'off' : 'on')
 		}],
+	toggleMarkRibbon: ['Mark/$Invert ribbon marks', 
+		'toggleMark: "ribbon" ...' ],
+	toggleMarkLoaded: ['Mark/Invert marks', 
+		'toggleMark: "loaded" ...' ],
 
-	// shorthands...
-	invertRibbonMarks: ['Mark/$Invert marks in ribbon',
-		{browseMode: 'cropMarked'},
-		'toggleMark: "ribbon"'],
-	invertLoadedMarks: ['Mark/$Invert marks',
-		{browseMode: 'cropMarked'},
-		'toggleMark: "loaded"'],
-
-	unmarkAll: ['Mark/$Unmark all',
-		{browseMode: 'cropMarked'},
-		function(){ this.toggleMark(this.marked) }],
+	markRibbon: ['Mark/Mark $ribbon', 
+		'toggleMark: "ribbon" "on"' ],
+	markLoaded: ['Mark/Mark $all', 
+		'toggleMark: "loaded" "on"' ],
 
 	markTagged: ['- Mark/Mark images by tags',
 		function(tags, mode){
@@ -378,7 +381,7 @@ var ImageMarkEditActions = actions.Actions({
 			})
 		}],
 
-	shiftMarkedUp: ['Mark/Shift marked $up',
+	shiftMarkedUp: ['Mark/Shift marked u$p',
 		{undo: undoShift('shiftMarkedDown'),
 			browseMode: 'cropMarked'},
 		shiftMarked('up')],
@@ -397,6 +400,13 @@ var ImageMarkEditActions = actions.Actions({
 		{browseMode: 'cropMarked'},
 		function(target){
 			this.shiftImageTo(this.marked, target || 'current', 'before') }],
+
+	unmarkRibbon: ['Mark/Unmark ribbon',
+		{browseMode: 'cropMarked'},
+		'toggleMark: "ribbon" "off"'],
+	unmarkLoaded: ['Mark/$Unmark all',
+		{browseMode: 'cropMarked'},
+		'toggleMark: "loaded" "off"'],
 })
 
 var ImageEditMarks = 
@@ -489,7 +499,13 @@ module.ImageMarksUI = core.ImageGridFeatures.Feature({
 var ImageBookmarkActions = actions.Actions({
 
 	// a shorthand...
+	//
 	// NOTE: this will return a copy...
+	//
+	// XXX should we add a caching scheme here???
+	// 		...it would require invalidation on tagging...
+	// 		the problem is that on large sets this may take up quite a 
+	// 		chunk of memory...
 	get bookmarked(){
 		if(this.data == null 
 				|| this.data.tags == null
