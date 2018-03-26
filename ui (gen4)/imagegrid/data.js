@@ -2384,8 +2384,10 @@ var DataPrototype = {
 	// NOTE: this will merge the items in-place, into the method's object;
 	// 		if it is needed to keep the original intact, just .clone() it...
 	//
-	// XXX test more complex cases...
-	// XXX add a 'gid' align mode...
+	// XXX add a 'gid' align mode... (???)
+	// 		...or should this be a .merge(..) action???
+	// XXX do we need to take care of gid conflicts between merged data sets???
+	// 		...now images with matching gids will simply be overwritten.
 	join: function(...args){
 		var align = typeof(args[0]) == typeof('str') || args[0] == null ? 
 			args.shift() 
@@ -2409,18 +2411,15 @@ var DataPrototype = {
 				var d = base.ribbon_order.length - data.ribbon_order.length
 			}
 
-			var t = 0
-
 			// merge order...
-			// XXX need to take care of gid conflicts...
+			// XXX need to take care of gid conflicts... (???)
 			base.order = base.order.concat(data.order)
 
 			// merge .ribbons and .ribbon_order...
-			//
 			// NOTE: this is a special case, so we do not handle it in 
 			// 		the .eachImageList(..) below. the reason being that
 			// 		ribbons can be merged in different ways.
-			// NOTE: we will reuse gids of some ribbons... (XXX???)
+			// NOTE: we will reuse gids of ribbons that did not change...
 			var n_base = d > 0 ? 
 				base.getRibbonOrder('base') 
 				: data.getRibbonOrder('base')
@@ -2453,15 +2452,14 @@ var DataPrototype = {
 				}
 
 				// do the actual merge...
-				// NOTE: the tails will take care of themselves via the 
-				// 		defaults...
+				//
+				// NOTE: the tails will take care of themselves here...
 				n_ribbons[gid] = 
 					(base.ribbons[bg] || [])
 						.concat(data.ribbons[dg] || [])
 				n_ribbon_order.push(gid)
 				i++
 			}
-
 			// set the new data...
 			base.ribbon_order = n_ribbon_order
 			base.ribbons = n_ribbons
