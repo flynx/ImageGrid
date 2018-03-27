@@ -360,6 +360,8 @@ web: $(DIST_DIR)/$(APP_NAME)-$(VERSION)-web.zip
 
 #------------------------------------------------- Electron targets ---
 
+# XXX this can potentially do a build for an existing/matching *.zip in
+# 	the $(DIST_DIR)...
 .PHONY: electron-dist
 electron-dist: VERSION := $(VERSION)-el
 electron-dist: DIST := $(DIST_DIR)/$(APP_NAME)-$(VERSION)-$(TARGET_OS)-$(ARCH).zip
@@ -601,8 +603,6 @@ $(BUILD_DIR)/$(APP_NAME)-%/: $(TARGET_DIR)/$(ELECTRON_DIST) \
 # modify the archive in place (electron-specific)...
 # XXX need to take nw/el version part into account...
 # XXX need to setup app icons...
-# XXX BUG: this is triggered by older files in $(DIST_DIR), need to make
-# 	the target specific to the currently built version...
 $(BUILD_DIR)/$(APP_NAME)-%.in-place.zip: $(TARGET_DIR)/$(ELECTRON_DIST) \
 		$(BUILD_DIR)/app.asar $(BUILD_INFO)
 	cp "$<" "$@.tmp"
