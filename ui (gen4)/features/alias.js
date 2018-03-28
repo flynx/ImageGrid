@@ -184,6 +184,7 @@ var UIAliasActions = actions.Actions({
 	// XXX should we set white-space: pre on doc here or in css???
 	// XXX multiline doc edit does not work...
 	// XXX edit key bindings (???)
+	// XXX BUG: doc not savable...
 	editAlias: ['- System/Edit alias...',
 		widgets.makeUIDialog(function(alias){
 			var that = this
