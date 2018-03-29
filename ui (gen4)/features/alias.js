@@ -184,7 +184,9 @@ var UIAliasActions = actions.Actions({
 	// XXX should we set white-space: pre on doc here or in css???
 	// XXX multiline doc edit does not work...
 	// XXX edit key bindings (???)
-	// XXX BUG: doc not savable...
+	// XXX BUG: moving up/down out of a field will not save that field...
+	// XXX BUG: can't use multi-line fields...
+	// XXX BUG: renaming alias breaks .browseActions(..)
 	editAlias: ['- System/Edit alias...',
 		widgets.makeUIDialog(function(alias){
 			var that = this
@@ -199,8 +201,7 @@ var UIAliasActions = actions.Actions({
 						edit_text: 'last',
 						clear_on_edit: false,
 						reset_on_commit: false,
-						// XXX bug -- error + clear field???
-						//abort_on_deselect: false, 
+						abort_on_deselect: false, 
 					}
 
 					// doc fields...

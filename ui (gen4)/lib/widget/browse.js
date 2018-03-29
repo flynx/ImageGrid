@@ -356,9 +356,11 @@ function(text, options){
 		})
 		.on('deselect', function(){
 			//editable && editable.trigger(
-			getEditable()
+			var editable = getEditable()
+				// XXX need to pass the text....
+			editable
 				.trigger(
-					options.abort_on_deselect !== false ? 'edit-abort' : 'edit-commit')
+					options.abort_on_deselect !== false ? 'edit-abort' : 'edit-commit', editable.text())
 		})
 
 	stop_propagation
