@@ -156,7 +156,7 @@ var UIAliasActions = actions.Actions({
 
 					make('---')
 
-					make('New...', { events: {
+					make('$New...', { events: {
 						open: function(){ 
 							that.editAlias() 
 								.on('close', function(){ dialog.update() })
@@ -204,7 +204,7 @@ var UIAliasActions = actions.Actions({
 					}
 
 					// doc fields...
-					make.Editable(['Path:', that.getActionAttr(alias, 'doc')], item_opts)
+					make.Editable(['$Path:', that.getActionAttr(alias, 'doc')], item_opts)
 						.on('edit-commit', function(evt, text){ 
 							if(data.length > 1 && typeof(data[0]) == typeof('str')){
 								data[0] = text
@@ -219,7 +219,7 @@ var UIAliasActions = actions.Actions({
 						multiline: true,
 					}
 					doc_opts.__proto__ = item_opts
-					make.Editable(['Doc:', that.getActionAttr(alias, 'long_doc')], doc_opts)
+					make.Editable(['$Doc:', that.getActionAttr(alias, 'long_doc')], doc_opts)
 						.on('edit-commit', function(evt, text){ 
 							// existing .doc and .long_doc -> replace .long_doc...
 							if(data.length > 2 
@@ -243,11 +243,11 @@ var UIAliasActions = actions.Actions({
 					make('---')
 
 					// alias fields...
-					make.Editable(['Alias:', alias || ''], item_opts)
+					make.Editable(['$Alias:', alias || ''], item_opts)
 						.on('edit-commit', function(evt, text){ 
 							name = text
 						})
-					make.Editable(['Code:', ((that.config.aliases || {})[alias] || ['']).slice(-1)[0]], item_opts)
+					make.Editable(['$Code:', ((that.config.aliases || {})[alias] || ['']).slice(-1)[0]], item_opts)
 						.on('edit-commit', function(evt, text){ 
 							data[data.length-1] = text
 						})
@@ -271,7 +271,8 @@ var UIAliasActions = actions.Actions({
 				})
 				.on('close', function(_, mode){
 					// do not save on cancel...
-					if(mode == 'cancel'){
+					if(mode == 'cancel' 
+							|| ((name == '' || name == null) && !that[name])){
 						return
 					}
 
