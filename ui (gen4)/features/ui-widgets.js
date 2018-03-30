@@ -1619,7 +1619,6 @@ var BrowseActionsActions = actions.Actions({
 	// XXX can this also do a flat mode???
 	// 		...this would help with the (global) search -- switch to 
 	// 		flat if searching in root mode...
-	// XXX should this be live (options.live_tree) or not??? (currently not)
 	browseActions: ['Interface|System/Dialog/Actions...',
 		core.doc`Browse actions dialog...
 
@@ -1686,7 +1685,7 @@ var BrowseActionsActions = actions.Actions({
 
 				// if true then the action tree will get rebuilt live on
 				// each list navigation... 
-				live_tree: false,
+				live_tree: true,
 			}
 
 
@@ -1705,7 +1704,12 @@ var BrowseActionsActions = actions.Actions({
 		`,
 		makeUIDialog(function(path, options){
 			var actions = this
-			options = options || {}
+			options = Object.assign({
+				// defaults...
+				no_disabled: false,
+				no_hidden: false,
+				live_tree: true,
+			}, options || {})
 
 			var MARKER = RegExp(this.config['browse-actions-shortcut-marker'], 'g')
 
