@@ -260,12 +260,40 @@ function(path){
 
 /*********************************************************************/
 
-module.selectElemText = function(elem){
+var selectElemText =
+module.selectElemText = 
+function(elem){
 	var range = document.createRange()
 	range.selectNodeContents(elem)
 	var sel = window.getSelection()
 	sel.removeAllRanges()
 	sel.addRange(range)
+}
+
+
+// XXX make this global...
+var getCaretOffset = 
+module.getCaretOffset =
+function(elem){
+	try{
+		if(window.getSelection){
+			var r = window.getSelection().getRangeAt(0)
+			var pre = r.cloneRange()
+			pre.selectNodeContents(elem)
+			pre.setEnd(r.endContainer, r.endOffset)
+			return pre.toString().length || 0
+		// IE...
+		} else {
+			var r = document.selection.createRange()
+			var pre = document.body.createTextRange()
+			pre.moveToElementText(elem)
+			pre.setEndPoint("EndToEnd", r)
+			return pre.text.length || 0
+		}
+
+	}catch(e){
+		return -1
+	}
 }
 
 
@@ -413,6 +441,7 @@ if(typeof(jQuery) != typeof(undefined)){
 
 		return this
 	}
+	jQuery.fn.caretOffset = function(){ return getCaretOffset(this) }
 
 
 	var keyboard = require('lib/keyboard')
@@ -548,16 +577,8 @@ if(typeof(jQuery) != typeof(undefined)){
 					if(!that.prop('contenteditable')){
 						return
 					}
-					// XXX make this global...
-					var caretOffset = function(elem){
-						var range = window.getSelection().getRangeAt(0)
-						var preCaretRange = range.cloneRange()
-						preCaretRange.selectNodeContents(elem)
-						preCaretRange.setEnd(range.endContainer, range.endOffset)
-						return preCaretRange.toString().length || 0
-					}
 
-					var c = caretOffset(this)
+					var c = getCaretOffset(this)
 
 					evt.stopPropagation() 
 
@@ -582,10 +603,11 @@ if(typeof(jQuery) != typeof(undefined)){
 							&& options.multiline){
 						evt.preventDefault()
 
+						// XXX this sometimes eats newline chars...
 						that.trigger('edit-commit', that.text())
 
 					// multi-line keep keys...
-					} else if(n == 'Enter' >= 0 && options.multiline){
+					} else if(n == 'Enter' && options.multiline){
 						return
 
 					// multi-line arrow keys -- keep key iff not at first/last position...
