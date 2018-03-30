@@ -548,6 +548,16 @@ if(typeof(jQuery) != typeof(undefined)){
 					if(!that.prop('contenteditable')){
 						return
 					}
+					// XXX make this global...
+					var caretOffset = function(elem){
+						var range = window.getSelection().getRangeAt(0)
+						var preCaretRange = range.cloneRange()
+						preCaretRange.selectNodeContents(elem)
+						preCaretRange.setEnd(range.endContainer, range.endOffset)
+						return preCaretRange.toString().length || 0
+					}
+
+					var c = caretOffset(this)
 
 					evt.stopPropagation() 
 
@@ -565,12 +575,28 @@ if(typeof(jQuery) != typeof(undefined)){
 						that.trigger('edit-commit', that.text())
 
 					// done -- multi-line...
+					// XXX revise: do we exit on Enter or on ctrl-Enter???
+					// 		...or should there be an option???
 					} else if(n == 'Enter' 
 							&& (evt.ctrlKey || evt.metaKey) 
 							&& options.multiline){
 						evt.preventDefault()
 
 						that.trigger('edit-commit', that.text())
+
+					// multi-line keep keys...
+					} else if(n == 'Enter' >= 0 && options.multiline){
+						return
+
+					// multi-line arrow keys -- keep key iff not at first/last position...
+					} else if(n == 'Up'
+							&& c > 0
+							&& options.multiline){
+						return
+					} else if(n == 'Down'
+							&& c < $(this).text().length
+							&& options.multiline){
+						return
 
 					// continue handling...
 					} else if(options.propagate_unhandled_keys !== false){
