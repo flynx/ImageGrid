@@ -275,25 +275,26 @@ function(elem){
 var getCaretOffset = 
 module.getCaretOffset =
 function(elem){
-	try{
-		if(window.getSelection){
-			var r = window.getSelection().getRangeAt(0)
-			var pre = r.cloneRange()
-			pre.selectNodeContents(elem)
-			pre.setEnd(r.endContainer, r.endOffset)
-			return pre.toString().length || 0
-		// IE...
-		} else {
-			var r = document.selection.createRange()
-			var pre = document.body.createTextRange()
-			pre.moveToElementText(elem)
-			pre.setEndPoint("EndToEnd", r)
-			return pre.text.length || 0
-		}
-
-	}catch(e){
+	var s = window.getSelection()
+	if(s.rangeCount == 0){
 		return -1
 	}
+	var r = s.getRangeAt(0)
+	var pre = r.cloneRange()
+	pre.selectNodeContents(elem)
+	pre.setEnd(r.endContainer, r.endOffset)
+	return pre.toString().length || 0
+}
+
+
+var selectionCollapsed =
+module.selectionCollapsed =
+function(elem){
+		var s = window.getSelection()
+		if(s.rangeCount == 0){
+			return false
+		}
+		return s.getRangeAt(0).cloneRange().collapsed
 }
 
 
@@ -442,6 +443,7 @@ if(typeof(jQuery) != typeof(undefined)){
 		return this
 	}
 	jQuery.fn.caretOffset = function(){ return getCaretOffset(this) }
+	jQuery.fn.selectionCollapsed = function(){ return selectionCollapsed(this) }
 
 
 	var keyboard = require('lib/keyboard')
@@ -455,8 +457,13 @@ if(typeof(jQuery) != typeof(undefined)){
 	// 		// NOTE: this will also select the element text...
 	// 		activate: false,
 	//
-	// 		// set multi line edit mode...
+	// 		// set multi-line edit mode...
 	// 		multiline: false,
+	//
+	// 		// if true in multi-line mode, accept filed on Enter, while
+	// 		// ctrl-Enter / meta-Enter insert a new line; otherwise
+	// 		// ctrl-Enter / meta-Enter will accept the edit.
+	// 		accept_on_enter: true,
 	//
 	// 		// clear element value on edit...
 	// 		clear_on_edit: false,
@@ -516,8 +523,6 @@ if(typeof(jQuery) != typeof(undefined)){
 	//
 	// XXX add option to select the element on start or just focus it...
 	// 		.activate: 'select' | true | false
-	// XXX multiline fields need to retain original function of arrows 
-	// 		until we are at last line, then pass it through...
 	// XXX should we just use form elements???
 	// 		...it's a trade-off, here we add editing functionality and fight
 	// 		a bit the original function, in an input we'll need to fight part
@@ -541,9 +546,25 @@ if(typeof(jQuery) != typeof(undefined)){
 			return this
 		}
 
-		options = options || {}
+		options = Object.assign({
+			// defaults...
+			activate: false,
+			multiline: false,
+			accept_on_enter: true,
+			clear_on_edit: false,
+			reset_on_commit: true,
+			reset_on_abort: true,
+			blur_on_commit: false,
+			blur_on_abort: false,
+			keep_focus_on_parent: true,
+			clear_selection_on_commit: true,
+			clear_selection_on_abort: true,
+			propagate_unhandled_keys: true,
+			reset_on_done: true,
+			abort_keys: ['Esc'],
+		}, options || {})
 
-		var original_text = this.text()
+		var original_text = this[0].innerText
 		var original_dom = document.createDocumentFragment()
 		this[0].childNodes
 			.forEach(function(node){ 
@@ -578,50 +599,54 @@ if(typeof(jQuery) != typeof(undefined)){
 						return
 					}
 
-					var c = getCaretOffset(this)
-
 					evt.stopPropagation() 
 
+					var c = getCaretOffset(this)
+					var collapsed = selectionCollapsed(this) 
 					var n = keyboard.code2key(evt.keyCode)
 
 					// abort...
-					if((options.abort_keys || ['Esc']).indexOf(n) >= 0){
+					if((options.abort_keys || []).indexOf(n) >= 0){
 						that.trigger('edit-abort', original_text)
 
 					// done -- single line...
 					} else if(n == 'Enter' 
 							&& !options.multiline){
 						evt.preventDefault()
-
-						that.trigger('edit-commit', that.text())
+						that.trigger('edit-commit', that[0].innerText)
 
 					// done -- multi-line...
-					// XXX revise: do we exit on Enter or on ctrl-Enter???
-					// 		...or should there be an option???
-					} else if(n == 'Enter' 
-							&& (evt.ctrlKey || evt.metaKey) 
-							&& options.multiline){
+					} else if(options.multiline 
+							&& n == 'Enter' 
+							&& (options.accept_on_enter ?
+								!(evt.ctrlKey || evt.shiftKey || evt.metaKey) 
+								: (evt.ctrlKey || evt.shiftKey || evt.metaKey)) ){
 						evt.preventDefault()
-
-						// XXX this sometimes eats newline chars...
-						that.trigger('edit-commit', that.text())
+						that.trigger('edit-commit', that[0].innerText)
 
 					// multi-line keep keys...
-					} else if(n == 'Enter' && options.multiline){
+					} else if(options.multiline 
+							&& options.accept_on_enter ? 
+								(n == 'Enter' 
+								 	&& (evt.ctrlKey || evt.shiftKey || evt.metaKey))
+								: n == 'Enter'){
 						return
 
 					// multi-line arrow keys -- keep key iff not at first/last position...
-					} else if(n == 'Up'
-							&& c > 0
-							&& options.multiline){
+					} else if(options.multiline
+							&& n == 'Up'
+							&& (c > 0 || !collapsed)){
 						return
-					} else if(n == 'Down'
-							&& c < $(this).text().length
-							&& options.multiline){
+					} else if(options.multiline
+							&& n == 'Down'
+							&& (c < $(this).text().length || !collapsed)){
 						return
+					} else if(n == 'Up' || n == 'Down'){
+						evt.preventDefault()
+						that.trigger('edit-commit', that[0].innerText)
 
 					// continue handling...
-					} else if(options.propagate_unhandled_keys !== false){
+					} else if(options.propagate_unhandled_keys){
 						// NOTE: jQuery can't reuse browser events, this 
 						// 		we need to pass a jq event/proxy here...
 						$(this).parent().trigger(in_evt || evt)
@@ -641,39 +666,39 @@ if(typeof(jQuery) != typeof(undefined)){
 				.on('edit-abort', events['edit-abort'] = function(evt, text){
 					that.trigger('edit-aborting', text)
 
-					options.clear_selection_on_abort !== false 
+					options.clear_selection_on_abort
 						&& window.getSelection().removeAllRanges()
 
 					// reset original value...
-					options.reset_on_abort !== false
+					options.reset_on_abort
 						&& resetOriginal() 
-					options.blur_on_abort !== false 
+					options.blur_on_abort
 						&& this.blur() 
 
 					// restore focus on parent...
-					options.keep_focus_on_parent !== false
+					options.keep_focus_on_parent
 						&& that.parents('[tabindex]').first().focus()
 
-					options.reset_on_done !== false
+					options.reset_on_done
 						&& that.makeEditable(false)
 				})
 				.on('edit-commit', events['edit-commit'] = function(evt, text){
 					that.trigger('edit-committing', text)
 
-					options.clear_selection_on_commit !== false 
+					options.clear_selection_on_commit
 						&& window.getSelection().removeAllRanges()
 
 					// reset original value...
-					options.reset_on_commit !== false
+					options.reset_on_commit
 						&& resetOriginal() 
-					options.blur_on_commit !== false 
+					options.blur_on_commit
 						&& this.blur() 
 
 					// restore focus on parent...
-					options.keep_focus_on_parent !== false
+					options.keep_focus_on_parent
 						&& that.parents('[tabindex]').first().focus()
 
-					options.reset_on_done !== false
+					options.reset_on_done
 						&& that.makeEditable(false)
 				})
 
