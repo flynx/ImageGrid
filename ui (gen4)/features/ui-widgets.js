@@ -1390,7 +1390,12 @@ var BrowseActionsActions = actions.Actions({
 	// 		should be as independent as possible and never trigger any 
 	// 		side-effects...
 	// 		...the same can be said about handling visibility tests.
-	// 		XXX revise...
+	// 		XXX REVISE:
+	// 			...considering that listers should have no side-effects 
+	// 			(on list), not listing here may be too "defensive"...
+	// 			...on the other hand this could be done via an extra 
+	// 			action/function that would expand active stuff (renaming
+	// 			this to .getActionsPassive(..) and that to .getActionsActive(..))
 	getActions: ['- System/',
 		core.doc`List actions in action tree...
 
