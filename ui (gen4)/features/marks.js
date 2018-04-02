@@ -479,16 +479,14 @@ module.ImageMarksUI = core.ImageGridFeatures.Feature({
 
 		// XXX is this the right way to go???
 		['updateImage', function(_, gid, img){
-			// update only when ribbons are preset... 
-			if(this.ribbons != null){
-				// NOTE: we are not using .toggleMark(..) here as this 
-				// 		does not need to depend on the 'edit' feature...
-				if(this.data.toggleTag('selected', gid, '?') == 'on'){
-					this.ribbons.toggleImageMark(gid, 'selected', 'on')
-				} else {
-					this.ribbons.toggleImageMark(gid, 'selected', 'off')
-				}
-			}
+			// NOTE: we are not using .toggleMark(..) here as this 
+			// 		does not need to depend on the 'edit' feature...
+			this.ribbons
+				&& this.ribbons
+					.toggleImageMark(
+						gid, 
+						'selected', 
+						this.data.hasTag(gid, 'selected') ? 'on' : 'off')
 		}],
 	],
 })
@@ -604,14 +602,12 @@ module.ImageBookmarksUI = core.ImageGridFeatures.Feature({
 	handlers: [
 		// XXX is this the right way to go???
 		['updateImage', function(_, gid, img){
-			// update only when ribbons are preset... 
-			if(this.ribbons != null){
-				if(this.data.toggleTag('bookmark', gid, '?') == 'on'){
-					this.ribbons.toggleImageMark(gid, 'bookmark', 'on')
-				} else {
-					this.ribbons.toggleImageMark(gid, 'bookmark', 'off')
-				}
-			}
+			this.ribbons
+				&& this.ribbons
+					.toggleImageMark(
+						gid, 
+						'bookmark', 
+						this.data.hasTag(gid, 'bookmark') ? 'on' : 'off')
 		}],
 	],
 })

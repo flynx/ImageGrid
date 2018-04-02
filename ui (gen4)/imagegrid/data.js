@@ -379,11 +379,13 @@ var DataPrototype = {
 	// NOTE: this is slow-ish...
 	removeDuplicates: function(lst, skip_undefined){
 		skip_undefined = skip_undefined == null ? true : skip_undefined
+		var lst_idx = lst.toKeys()
 		for(var i=0; i < lst.length; i++){
 			if(skip_undefined && lst[i] == null){
 				continue
 			}
-			if(lst.indexOf(lst[i]) != i){
+			//if(lst.indexOf(lst[i]) != i){
+			if(lst_idx[lst[i]] != i){
 				lst.splice(i, 1)
 				i -= 1
 			}
@@ -3126,27 +3128,26 @@ var DataWithTagsPrototype = {
 				return gids.length > 1 ? gids.map(function(gid){ return 'off' }) : 'off'
 			}
 			var that = this
-			var tagset = this.tags
+			var tagset = this.tags || {}
 			var order = this.order
-			var res = gids.map(function(gid){
-				gid = that.getImage(gid)
-				if(!(tag in tagset)){
-					return 'off'
-				}
-				//return that.getTags(gid).indexOf(tag) != -1 ? 'on' : 'off'
-				return tagset[tag][order.indexOf(gid)] != null ?  'on' : 'off'
-			})
+			var order_idx = order.toKeys()
+			var res = tag in tagset ?
+				gids.map(function(gid){
+					gid = that.getImage(gid)
+					return tagset[tag][order_idx[gid]] != null ?  'on' : 'off'
+				})
+				: gids.map(function(){ return 'off' })
 
 		// toggle each...
 		} else {
 			var that = this
 			var tagset = this.tags
 			var order = this.order
+			var order_idx = order.toKeys()
 			var res = gids.map(function(gid){
 				gid = that.getImage(gid)
-				//var t = that.getTags(gid).indexOf(tag) != -1 ? 'off' : 'on'
 				var t = tagset == null || !(tag in tagset) ? 'on'
-					: tagset[tag][order.indexOf(gid)] == null ? 'on'
+					: tagset[tag][order_idx[gid]] == null ? 'on'
 					: 'off'
 				if(t == 'on'){
 					that.tag(tag, gid)
@@ -3160,6 +3161,8 @@ var DataWithTagsPrototype = {
 		return res.length == 1 ? res[0] : res
 	},
 
+	hasTag: function(gid, tag){
+		return ((this.tags || {})[tag] || []).indexOf(this.getImage(gid)) >= 0 },
 	getTags: function(gids){
 		gids = arguments.length > 1 ? [].slice.call(arguments) 
 			: gids == null || gids == 'current' ? this.getImage() 
