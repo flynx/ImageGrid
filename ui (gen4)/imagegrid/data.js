@@ -333,8 +333,6 @@ var DataPrototype = {
 				continue
 			}
 
-			// try and avoid the expensive .indexOf(..) as much as possible...
-			//var j = e != order[i] ? order.indexOf(e) : i
 			var j = order_idx[e]
 
 			if(j >= 0){
@@ -360,8 +358,12 @@ var DataPrototype = {
 		}
 
 		// avoid duplicating target items...
+		// XXX not yet sure here what is faster, .toKeys(..) or Set(..)
+		//var target_idx = target.toKeys()
+		var target_idx = new Set(target)
 		rest = rest
-			.filter(function(e){ return target.indexOf(e) < 0 })
+			//.filter(function(e){ return e in target_idx })
+			.filter(function(e){ return target_idx.has(e) })
 
 		if(rest.length > 0){
 			target.length = Math.max(order.length, target.length)
@@ -2964,7 +2966,7 @@ var DataWithTagsPrototype = {
 				// iterate through all the gids (both images and buffer/data)
 				for(var gid in Object.keys(images)
 						.concat(Object.keys(buffer))
-						.uniqueStrings()){
+						.unique()){
 					// no tags / remove...
 					if(buffer[gid] == null || buffer[gid].tags.length == 0){
 						// the image exists and has tags...
@@ -2994,7 +2996,7 @@ var DataWithTagsPrototype = {
 					var l = img.tags.length
 					img.tags = img.tags
 						.concat(buffer[gid].tags)
-						.uniqueStrings()
+						.unique()
 					// we are updated iff length changed...
 					// NOTE: this is true as we are not removing anything 
 					// 		thus the length can only increase if changes are

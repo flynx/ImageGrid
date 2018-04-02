@@ -1516,7 +1516,7 @@ var ChangesActions = actions.Actions({
 				}
 				changes[section] = (changes[section] || [])
 					.concat(items)
-					.uniqueStrings()
+					.unique()
 				this.changes = changes
 
 			// section(s)...

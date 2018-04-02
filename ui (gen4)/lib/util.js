@@ -38,8 +38,7 @@ Object.defineProperty(Object.prototype, 'run', {
 //
 // NOTE: this will not compact in-place.
 Array.prototype.compact = function(){
-	return this.filter(function(){ return true })
-}
+	return this.filter(function(){ return true }) }
 
 
 // Convert an array to object...
@@ -63,8 +62,32 @@ Array.prototype.toKeys = function(normalize){
 		: this.reduce(function(r, e, i){
 			r[e] = i
 			return r
-		}, {})
-}
+		}, {}) }
+
+
+// Convert an array to a map...
+//
+// This is similar to Array.prototype.toKeys(..) but does not restrict 
+// value type to string.
+//
+// Format:
+// 	Map([
+// 		[<item>, <index>],
+// 		...
+// 	])
+//
+// NOTE: this will forget repeating items...
+// NOTE: normalize will slow things down...
+Array.prototype.toMap = function(normalize){
+	return normalize ? 
+		this.reduce(function(m, e, i){
+			m.set(normalize(e), i)
+			return m
+		}, new Map())
+		: this.reduce(function(m, e, i){
+			m.set(e, i)
+			return m
+		}, new Map()) }
 
 
 // Return an array with duplicate elements removed...
@@ -72,22 +95,9 @@ Array.prototype.toKeys = function(normalize){
 // NOTE: we are not using an Object as an index here as an Array can 
 // 		contain any type of item while Object keys can only be strings...
 // NOTE: for an array containing only strings use a much faster .uniqueStrings(..)
+// NOTE: this may not work on IE...
 Array.prototype.unique = function(normalize){
-	if(normalize){
-		var cache = this.map(function(e){ return normalize(e) })
-		return this.filter(function(e, i, a){ return cache.indexOf(cache[i]) == i })
-
-	} else {
-		return this.filter(function(e, i, a){ return a.indexOf(e) == i })
-	}
-}
-
-
-// Special case of .unique(), allot faster on arrays of strings...
-//
-// NOTE: this may jield unexpected results for non-string items...
-Array.prototype.uniqueStrings = function(normalize){
-	return Object.keys(this.toKeys(normalize)) }
+	return new Array(...(new Set(normalize ? normalize(this) : this))) }
 
 
 // Compare two arrays...
@@ -110,6 +120,8 @@ Array.prototype.cmp = function(other){
 // Compare two Arrays as sets...
 //
 // This will ignore order
+//
+// XXX should we use Set(..) here???
 Array.prototype.setCmp = function(other){
 	return this === other 
 		|| this
