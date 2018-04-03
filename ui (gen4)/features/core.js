@@ -831,8 +831,23 @@ module.Cache = ImageGridFeatures.Feature({
 					this.preCache() 
 				: false
 			}],
+
+		/*/ XXX clear cache when feature/action topology changes...
+		[[
+			'inlineMixin',
+			'inlineMixout',
+
+			// XXX not sure about this...
+			'mixout',
+		],
+			function(){
+				// XXX should this trigger a recache???
+				this.clearCache()
+			}],
+		//*/
 	],
 })
+
 
 
 //---------------------------------------------------------------------

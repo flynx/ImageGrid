@@ -201,9 +201,14 @@ var CollectionActions = actions.Actions({
 	// XXX revise doc...
 	// XXX this is almost the same as .store_handlers...
 	get collection_handlers(){
-		return this.cache('collection_handlers', function(){
+		return this.cache('collection_handlers', function(handlers){
+			// cached value...
+			if(handlers){
+				return Object.assign({}, handlers)
+			}
+
 			var that = this
-			var handlers = {}
+			handlers = {}
 
 			handlers['data'] = null
 			this.actions.forEach(function(action){
