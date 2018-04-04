@@ -1900,17 +1900,16 @@ var CollectionTagsActions = actions.Actions({
 		// NOTE: the rest of the tags are shared between all collections
 		// NOTE: to disable local tags either delete this, set it to null
 		// 		or to an empty list.
-		'collection-local-tags': [
-			'bookmark',
-			'selected',
-		],
+		'collection-local-tags': [],
 		
+		/*
 		'collection-transfer-changes': 
+			// XXX need a way to exrtend config values in order of merge
+			// 		and not manually...
 			CollectionActions.config['collection-transfer-changes']
 				.concat([
-					'bookmarked', 
-					'selected',
 				]),
+		//*/
 	},
 
 	collectTagged: ['- Collections|Tag/',
@@ -1920,25 +1919,6 @@ var CollectionTagsActions = actions.Actions({
 		function(tags, collection){
 			return this.uncollect(this.data.getTaggedByAll(tags), collection) }],
 
-	// marked...
-	collectMarked: ['- Collections|Mark/',
-		function(collection){
-			return this.collectTagged('selected', collection) }],
-	uncollectMarked: ['Collections|Mark/Remove marked from collection',
-		{browseMode: function(){ 
-			return (!this.collection || this.marked.length == 0) && 'disabled' }},
-		function(collection){
-			return this.uncollectTagged('selected', collection) }],
-
-	// bookmarked...
-	collectBookmarked: ['- Collections|Bookmark/',
-		function(collection){
-			return this.collectTagged('bookmark', collection) }],
-	uncollectBookmarked: ['Collections|Bookmark/Remove bookmarked from collection',
-		{browseMode: function(){ 
-			return (!this.collection || this.bookmarked.length == 0) && 'disabled' }},
-		function(collection){
-			return this.uncollectTagged('bookmark', collection) }],
 })
 
 var CollectionTags = 
@@ -1979,10 +1959,6 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 	depends: [
 		'collections',
 		'tags',
-
-		// XXX
-		'image-marks',
-		'image-bookmarks',
 	],
 
 	actions: CollectionTagsActions,
@@ -2781,23 +2757,6 @@ var UICollectionActions = actions.Actions({
 				})
 		}, null, false)],
 
-	// XXX should these be here or in marks-specific feature???
-	markImagesInCollection: ['Collections|Mark/$Mark images in collection...',
-		{browseMode: 'cropImagesInCollection'},
-		mixedModeCollectionAction(function(title){
-			var that = this
-			this.ensureCollection(title)
-				.then(function(collection){
-					var images = collection.data.getImages('all')
-
-					that.toggleMark(images, 'on')
-				})
-		})],
-	addMarkedToCollection: ['Collections|Mark/Add marked to $collection...',
-		{browseMode: function(){ 
-			return this.marked.length == 0 && 'disabled' }},
-		mixedModeCollectionAction(function(title){ this.collectMarked(title) })],
-
 	// XXX should this be in Collections/ ???
 	editDefaultCollections: ['Interface|Collections/Edit default collections...',
 		widgets.makeConfigListEditorDialog(
@@ -2853,6 +2812,9 @@ module.UICollection = core.ImageGridFeatures.Feature({
 		// XXX needed only for .addMarkedToCollection(..)
 		'collection-tags',
 	],
+	suggested: [
+		'ui-collection-marks',
+	],
 
 	actions: UICollectionActions, 
 
@@ -2889,6 +2851,85 @@ module.UICollection = core.ImageGridFeatures.Feature({
 					: 'removeClass']('crop-mode')
 			}],
 	],
+})
+
+
+
+//---------------------------------------------------------------------
+
+var UICollectionMarksActions = actions.Actions({
+	config: {
+		'collection-local-tags': 
+			// XXX need a way to exrtend config values in order of merge
+			// 		and not manually...
+			CollectionTagsActions.config['collection-local-tags']
+				.concat([
+					'bookmark',
+					'selected',
+				]),
+		
+		'collection-transfer-changes': 
+			// XXX need a way to exrtend config values in order of merge
+			// 		and not manually...
+			//CollectionTagsActions.config['collection-transfer-changes']
+			CollectionActions.config['collection-transfer-changes']
+				.concat([
+					'bookmarked', 
+					'selected',
+				]),
+	},
+
+	// marked...
+	markImagesInCollection: ['Collections|Mark/$Mark images in collection...',
+		{browseMode: 'cropImagesInCollection'},
+		mixedModeCollectionAction(function(title){
+			var that = this
+			this.ensureCollection(title)
+				.then(function(collection){
+					var images = collection.data.getImages('all')
+
+					that.toggleMark(images, 'on')
+				})
+		})],
+	addMarkedToCollection: ['Collections|Mark/Add marked to $collection...',
+		{browseMode: function(){ 
+			return this.marked.length == 0 && 'disabled' }},
+		mixedModeCollectionAction(function(title){ this.collectMarked(title) })],
+
+	collectMarked: ['- Collections|Mark/',
+		function(collection){
+			return this.collectTagged('selected', collection) }],
+	uncollectMarked: ['Collections|Mark/Remove marked from collection',
+		{browseMode: function(){ 
+			return (!this.collection || this.marked.length == 0) && 'disabled' }},
+		function(collection){
+			return this.uncollectTagged('selected', collection) }],
+
+	// bookmarked...
+	collectBookmarked: ['- Collections|Bookmark/',
+		function(collection){
+			return this.collectTagged('bookmark', collection) }],
+	uncollectBookmarked: ['Collections|Bookmark/Remove bookmarked from collection',
+		{browseMode: function(){ 
+			return (!this.collection || this.bookmarked.length == 0) && 'disabled' }},
+		function(collection){
+			return this.uncollectTagged('bookmark', collection) }],
+})
+
+var UICollectionMarks = 
+module.UICollectionMarks = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-collection-marks',
+	depends: [
+		'collections',
+		'collection-tags',
+		'ui-collections',
+		'marks',
+	],
+
+	actions: UICollectionMarksActions,
 })
 
 

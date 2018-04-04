@@ -567,13 +567,15 @@ core.ImageGridFeatures.Feature({
 			'removeFromCrop',
 			'reverseImages',
 		], 
-			function(target){ return this.reload(true) }],
+			function(target){ 
+				return this.reload(true) }],
 		[[
 			'reverseRibbons',
 			'cropGroup',
 			'syncTags',
 		], 
-			function(target){ return this.reload() }],
+			function(target){ 
+				return this.reload() }],
 	],
 })
 
