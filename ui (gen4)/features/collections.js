@@ -1318,9 +1318,11 @@ module.Collection = core.ImageGridFeatures.Feature({
 	suggested: [
 		'collections-local-config',
 		'collection-tags',
+		'collection-marks',
 		'auto-collections',
 
 		'ui-collections',
+		'ui-collection-marks',
 		'fs-collections',
 	],
 
@@ -2812,9 +2814,6 @@ module.UICollection = core.ImageGridFeatures.Feature({
 		// XXX needed only for .addMarkedToCollection(..)
 		'collection-tags',
 	],
-	suggested: [
-		'ui-collection-marks',
-	],
 
 	actions: UICollectionActions, 
 
@@ -2857,7 +2856,7 @@ module.UICollection = core.ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 
-var UICollectionMarksActions = actions.Actions({
+var CollectionMarksActions = actions.Actions({
 	config: {
 		'collection-local-tags': 
 			// XXX need a way to exrtend config values in order of merge
@@ -2880,22 +2879,6 @@ var UICollectionMarksActions = actions.Actions({
 	},
 
 	// marked...
-	markImagesInCollection: ['Collections|Mark/$Mark images in collection...',
-		{browseMode: 'cropImagesInCollection'},
-		mixedModeCollectionAction(function(title){
-			var that = this
-			this.ensureCollection(title)
-				.then(function(collection){
-					var images = collection.data.getImages('all')
-
-					that.toggleMark(images, 'on')
-				})
-		})],
-	addMarkedToCollection: ['Collections|Mark/Add marked to $collection...',
-		{browseMode: function(){ 
-			return this.marked.length == 0 && 'disabled' }},
-		mixedModeCollectionAction(function(title){ this.collectMarked(title) })],
-
 	collectMarked: ['- Collections|Mark/',
 		function(collection){
 			return this.collectTagged('selected', collection) }],
@@ -2916,6 +2899,45 @@ var UICollectionMarksActions = actions.Actions({
 			return this.uncollectTagged('bookmark', collection) }],
 })
 
+var CollectionMarks = 
+module.CollectionMarks = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'collection-marks',
+	depends: [
+		'marks',
+		'collection-tags',
+		'ui-collections',
+	],
+
+	actions: CollectionMarksActions,
+})
+
+
+
+//---------------------------------------------------------------------
+
+var UICollectionMarksActions = actions.Actions({
+	// UI...
+	// XXX should these be a separate feature???
+	markImagesInCollection: ['Collections|Mark/$Mark images in collection...',
+		{browseMode: 'cropImagesInCollection'},
+		mixedModeCollectionAction(function(title){
+			var that = this
+			this.ensureCollection(title)
+				.then(function(collection){
+					var images = collection.data.getImages('all')
+
+					that.toggleMark(images, 'on')
+				})
+		})],
+	addMarkedToCollection: ['Collections|Mark/Add marked to $collection...',
+		{browseMode: function(){ 
+			return this.marked.length == 0 && 'disabled' }},
+		mixedModeCollectionAction(function(title){ this.collectMarked(title) })],
+})
+
 var UICollectionMarks = 
 module.UICollectionMarks = core.ImageGridFeatures.Feature({
 	title: '',
@@ -2923,10 +2945,8 @@ module.UICollectionMarks = core.ImageGridFeatures.Feature({
 
 	tag: 'ui-collection-marks',
 	depends: [
-		'collections',
-		'collection-tags',
+		'collection-marks',
 		'ui-collections',
-		'marks',
 	],
 
 	actions: UICollectionMarksActions,
