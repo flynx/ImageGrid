@@ -97,7 +97,7 @@ Array.prototype.toMap = function(normalize){
 // NOTE: for an array containing only strings use a much faster .uniqueStrings(..)
 // NOTE: this may not work on IE...
 Array.prototype.unique = function(normalize){
-	return new Array(...(new Set(normalize ? normalize(this) : this))) }
+	return new Array(...(new Set(normalize ? this.map(normalize) : this))) }
 
 
 // Compare two arrays...
