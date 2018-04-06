@@ -56,6 +56,7 @@ var widgets = require('features/ui-widgets')
 // 		- horizontal only
 // 		- both
 // XXX external / linked collections (.location)...
+// XXX merge collections from multiple indexes -- can we avoid extending the format???
 //
 
 // XXX should these be in .config???
