@@ -1921,7 +1921,6 @@ var CollectionTagsActions = actions.Actions({
 	uncollectTagged: ['- Collections|Tag/',
 		function(tags, collection){
 			return this.uncollect(this.data.getTaggedByAll(tags), collection) }],
-
 })
 
 var CollectionTags = 
