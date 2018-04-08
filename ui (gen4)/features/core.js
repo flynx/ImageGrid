@@ -1131,10 +1131,7 @@ var UtilActions = actions.Actions({
 			config = config instanceof Function ? config.call(this)
 				: typeof(config) == typeof('str') ? this.config[config]
 				: config
-			var that = this
-			Object.keys(config).forEach(function(key){
-				that.config[key] = config[key]
-			})
+			Object.assign(this.config, config)
 		}],
 })
 
