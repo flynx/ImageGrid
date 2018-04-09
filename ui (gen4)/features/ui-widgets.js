@@ -1385,7 +1385,7 @@ var BrowseActionsActions = actions.Actions({
 	// 		'System/' hidden...
 	alias: ['- System/', ''],
 
-	// NOTE: we are avoiding handling here the lister actions (action 
+	// NOTE: we are avoiding handling the lister actions here (action 
 	// 		paths ending with '*') as they are active while .getActions(..)
 	// 		should be as independent as possible and never trigger any 
 	// 		side-effects...
