@@ -702,6 +702,8 @@ var CacheActions = actions.Actions({
 		// NOTE: progress will only be displayed if .showProgress(..) 
 		// 		action is available...
 		'pre-cache-progress': 3000,
+
+		// XXX handler cache..
 	},
 
 	// Cache utility method...
@@ -807,6 +809,15 @@ var CacheActions = actions.Actions({
 			this
 				.clearCache()
 				.preCache(t) }],
+
+
+	toggleHandlerCache: ['System/Action handler cache',
+		makeConfigToggler('action-handler-cache', 
+			['off', 'on']/*,
+			function(state){}*/)],
+	resetHanlerCache: ['System/Reset action handler cache',
+		function(){
+			delete this.__handler_cache }],
 })
 
 var Cache = 
@@ -830,6 +841,11 @@ module.Cache = ImageGridFeatures.Feature({
 				: t >= 0 ?
 					this.preCache() 
 				: false
+			}],
+		['start',
+			function(){
+				// XXX this breaks loading...
+				//this.toggleHandlerCache(this.config['action-handler-cache'] || 'on')
 			}],
 
 		/*/ XXX clear cache when feature/action topology changes...
