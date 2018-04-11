@@ -74,7 +74,7 @@ var ExampleActions = actions.Actions({
 		}],
 	exampleAsyncAction: ['- Test/',
 		{await: false},
-		function(t){
+		function(t){ 
 			return new Promise(function(resolve){
 				setTimeout(function(){ resolve() }, t || 1000) })
 		}],

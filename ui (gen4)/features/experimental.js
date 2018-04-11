@@ -7,22 +7,69 @@
 (function(require){ var module={} // make module AMD/node compatible...
 /*********************************************************************/
 
+var toggler = require('lib/toggler')
 var actions = require('lib/actions')
 var features = require('lib/features')
 
 var core = require('features/core')
+var widgets = require('features/ui-widgets')
+
+var widget = require('lib/widget/widget')
+var browse = require('lib/widget/browse')
+var overlay = require('lib/widget/overlay')
+var drawer = require('lib/widget/drawer')
+
+var browseWalk = require('lib/widget/browse-walk')
 
 
 
 /*********************************************************************/
 
 var ExperimentActions = actions.Actions({
-	/* trying an argument mutation method... (FAILED: arguments is mutable)
-	argumentMutation: [
-		function(a, b){
-			console.log('ACTIONS ARGS:', a, b)
-		}],
-	*/
+	// XXX depends on ui, ...
+	// XXX should we add ability to pick and chose the changes???
+	// XXX would be nice to have a universal .save() action...
+	browseChanges: ['Experimental/$Changes...',
+		{dialogTitle: 'Unsaved changes'},
+		widgets.makeUIDialog(function(path){
+			var that = this
+			var handlers_setup = false
+			return browse.makeLister(null, function(_, make){
+				var keys = Object.keys(that.changes || {})
+				if(keys.length == 0){
+					make.Empty('No changes...')
+
+				} else {
+					keys
+						.forEach(function(key){
+							make(key)
+						})
+
+					make('---')
+					make('Save', {
+						open: function(){
+							that.saveIndexHere 
+								&& that.saveIndexHere()
+						},
+						close: function(){
+							that.off('markChanged', 'changes-dialog-updater')
+						}
+					})
+
+					if(!handlers_setup){
+						// XXX this needs to be triggered after save 
+						// 		is done in a more universal way...
+						// 		...also unbind on error/close...
+						// XXX need to clean this up in a better way...
+						// XXX this should also track .changes...
+						that.on('markChanged', 'changes-dialog-updater', function(){
+							make.dialog.update()
+						})
+						handlers_setup = true
+					}
+				}
+			})
+		})],
 })
 
 var ExperimentFeature = 
@@ -32,19 +79,11 @@ module.ExperimentFeature = core.ImageGridFeatures.Feature({
 
 	tag: 'experiments',
 
-	isApplicable: function(actions){ return actions.experimental },
+	//isApplicable: function(actions){ return actions.experimental },
 
 	actions: ExperimentActions,
 
 	handlers: [
-		/* trying an argument mutation method... (FAILED: arguments is mutable)
-		['argumentMutation.pre', 
-			function(a, b){
-				console.log('EVENT ARGS:', a, b)
-				arguments[0] += 1
-				arguments[1] += 1
-			}],
-		*/
 	],
 })
 

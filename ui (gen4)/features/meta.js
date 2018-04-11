@@ -173,8 +173,8 @@ core.ImageGridFeatures.Feature('imagegrid-testing', [
 
 
 	//----------------------------------------------------- testing ---
+	'experiments',
 	'-tests',
-	'-experiments',
 
 	// missing suggested feature test -- should show up in .features.missing...
 	'missing-feature',

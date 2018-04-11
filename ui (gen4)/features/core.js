@@ -1478,6 +1478,9 @@ var ChangesActions = actions.Actions({
 	// NOTE: in the complex format all fields ar optional; if a field 
 	// 		is not included it is not written (same as when set to false)
 	// NOTE: .current is written always.
+	//
+	// XXX this should be a prop to enable correct changes tracking via 
+	// 		events...
 	chages: null,
 
 	clone: [function(full){
@@ -1489,6 +1492,7 @@ var ChangesActions = actions.Actions({
 			}
 		}],
 
+	// XXX this should also track .changes...
 	markChanged: ['- System/',
 		doc`Mark data sections as changed...
 
