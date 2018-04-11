@@ -845,6 +845,8 @@ module.Cache = ImageGridFeatures.Feature({
 		['start',
 			function(){
 				// XXX this breaks loading...
+				// 		...not sure why, but when switched on manually 
+				// 		there seems to be no problems...
 				//this.toggleHandlerCache(this.config['action-handler-cache'] || 'on')
 			}],
 
