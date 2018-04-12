@@ -1483,6 +1483,11 @@ var ChangesActions = actions.Actions({
 	// 		events...
 	chages: null,
 
+	get _changes(){
+		return this.__changes },
+	// XXX proxy to .markChanged(..)
+	set _changes(value){},
+
 	clone: [function(full){
 			return function(res){
 				res.changes = null
@@ -1493,6 +1498,8 @@ var ChangesActions = actions.Actions({
 		}],
 
 	// XXX this should also track .changes...
+	// 		...would also need to make this applicable to changes, 
+	// 		i.e. x.markChanged(x.changes)
 	markChanged: ['- System/',
 		doc`Mark data sections as changed...
 
