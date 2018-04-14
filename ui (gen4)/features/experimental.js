@@ -26,8 +26,12 @@ var browseWalk = require('lib/widget/browse-walk')
 /*********************************************************************/
 
 var ExperimentActions = actions.Actions({
+	// NOTE: we do not want to pick and chose changes as that might lead 
+	// 		to inconsistencies...
+	// 		...a better way would be to go would be to:
+	// 			- reset
+	// 			- undo / redo
 	// XXX depends on ui, ...
-	// XXX should we add ability to pick and chose the changes???
 	// XXX would be nice to have a universal .save() action...
 	browseChanges: ['Experimental/$Changes...',
 		{dialogTitle: 'Unsaved changes'},
@@ -42,7 +46,14 @@ var ExperimentActions = actions.Actions({
 				} else {
 					keys
 						.forEach(function(key){
-							make(key)
+							var opts = {}
+							if(that.changes[key] instanceof Array){
+								opts.attrs = {
+									count: that.changes[key].length
+								}
+							}
+
+							make(key, opts)
 						})
 
 					make('---')
