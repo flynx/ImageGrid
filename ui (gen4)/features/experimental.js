@@ -53,6 +53,7 @@ var ExperimentActions = actions.Actions({
 								}
 							}
 
+							// XXX show human-readable info... (???)
 							make(key, opts)
 						})
 
