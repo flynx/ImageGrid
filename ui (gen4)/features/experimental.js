@@ -33,6 +33,9 @@ var ExperimentActions = actions.Actions({
 	// 			- undo / redo
 	// XXX depends on ui, ...
 	// XXX would be nice to have a universal .save() action...
+	// XXX can we make this into a dialog that would stop a certain 
+	// 		action until the user confirms or aborts... e.g. warn of 
+	// 		unsaved changes when navigating away...
 	browseChanges: ['Experimental/$Changes...',
 		{dialogTitle: 'Unsaved changes'},
 		widgets.makeUIDialog(function(path){
