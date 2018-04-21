@@ -36,6 +36,7 @@ var ExperimentActions = actions.Actions({
 	// XXX can we make this into a dialog that would stop a certain 
 	// 		action until the user confirms or aborts... e.g. warn of 
 	// 		unsaved changes when navigating away...
+	// XXX move this to ui-widgets...
 	browseChanges: ['Experimental/$Changes...',
 		{dialogTitle: 'Unsaved changes'},
 		widgets.makeUIDialog(function(path){
