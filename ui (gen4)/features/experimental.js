@@ -38,6 +38,8 @@ var ExperimentActions = actions.Actions({
 	// 		unsaved changes when navigating away...
 	// XXX move this to ui-widgets...
 	browseChanges: ['Experimental/$Changes...',
+		core.doc`
+		`,
 		{dialogTitle: 'Unsaved changes'},
 		widgets.makeUIDialog(function(path){
 			var that = this
