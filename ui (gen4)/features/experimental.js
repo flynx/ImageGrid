@@ -86,6 +86,10 @@ var ExperimentActions = actions.Actions({
 				}
 			})
 		})],
+
+	unsavedChanges: ['- Experimental/',
+		function(){
+		}],
 })
 
 var ExperimentFeature = 
