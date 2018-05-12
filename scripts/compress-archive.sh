@@ -27,16 +27,6 @@ printhelp(){
 	echo "	-ext EXT	- set file extension to compress (default: ARW)"
 	echo "			  NOTE: only one -ext is supported now".
 	echo
-	echo "NOTE: not yet sure if to use ntfs compression or bzip2 as default"
-	echo "	they both have advantages and disadvantages:"
-	echo "		ntfs compression:"
-	echo "		  + transparent to all apps -- no extra steps needed"
-	echo "		  - might complicate low level data recovery"
-	echo "		  - transfers may not be transparent -- actual size vs. disk size"
-	echo "		bzip2/gzip/...:"
-	echo "		  + transparent to file operations and recovery"
-	echo "		  - requires manual decompression"
-	echo
 }
 
 # process args...
@@ -76,14 +66,14 @@ while true ; do
 done
 
 # get path...
-if [ $1 ] ; then
-	BASE_PATH="$1"
+if [ "$1" ] ; then
+	BASE_PATH=$1
 fi
 
 
 
 # do the work...
-find $BASE_PATH -name \*.${EXT} -exec ${ARCH} \;
+find "$BASE_PATH" -name \*.${EXT} -exec ${ARCH} \;
 
 
 
