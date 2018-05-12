@@ -5,7 +5,16 @@
 
 BASE_PATH=.
 
-ARCH="bzip2 -v {}"
+
+ARCH_BZIP2='bzip2 -v {}'
+ARCH_GZIP='gzip -v {}'
+# XXX should we cygpath -w all the inputs???
+ARCH_NTFS='compact /c /exe:lzx {}'
+
+
+# default...
+ARCH=$ARCH_NTFS
+
 
 EXT=ARW
 
@@ -39,16 +48,15 @@ while true ; do
 
 		# archivers...
 		-bz|--bzip2)
-			ARCH=bzip2 -v \{}
+			ARCH=$ARCH_BZIP2
 			shift
 			;;
 		-gz|--gzip)
-			ARCH=gzip -v \{}
+			ARCH=$ARCH_GZIP
 			shift
 			;;
 		-c|--compact)
-			# XXX should we cygpath -w all the inputs???
-			ARCH='compact /c /exe:lzx {}'
+			ARCH=$ARCH_NTFS
 			shift
 			;;
 
