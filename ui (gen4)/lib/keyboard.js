@@ -1088,9 +1088,16 @@ var KeyboardWithCSSModesPrototype = {
 		context = context || this.context
 		return !pattern 
 			|| pattern == '*' 
-			// XXX can we join these into one search???
-			|| context.is(pattern)
-			|| context.find(pattern).length > 0
+			// jQuery...
+			|| context.is ? 
+				(context.is(pattern)
+					|| context.find(pattern).length > 0)
+				: false
+			// Vanilla JS...
+			|| context.matches ? 
+				(context.matches(pattern)
+					|| !!context.querySelector(pattern))
+				: false
 	},
 
 	__init__: function(keyboard, context){
