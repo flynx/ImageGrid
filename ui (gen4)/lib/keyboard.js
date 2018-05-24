@@ -1089,15 +1089,15 @@ var KeyboardWithCSSModesPrototype = {
 		return !pattern 
 			|| pattern == '*' 
 			// jQuery...
-			|| context.is ? 
+			|| (context.is ? 
 				(context.is(pattern)
 					|| context.find(pattern).length > 0)
-				: false
+				: false)
 			// Vanilla JS...
-			|| context.matches ? 
+			|| (context.matches ? 
 				(context.matches(pattern)
 					|| !!context.querySelector(pattern))
-				: false
+				: false)
 	},
 
 	__init__: function(keyboard, context){

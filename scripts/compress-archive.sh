@@ -85,4 +85,8 @@ find "$BASE_PATH" -name \*.${EXT} -exec ${ARCH} \;
 
 
 
+echo done.
+
+
+
 # vim:set nowrap nospell :
