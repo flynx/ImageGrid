@@ -1193,11 +1193,10 @@ function makeKeyboardHandler(keyboard, unhandled, actions){
 			// action call syntax...
 			// XXX should this be a Keyboard thing or a context thing???
 			} else if(actions.parseStringHandler || kb.parseStringHandler){
-			//} else if(kb.parseStringHandler){
 				var h = (actions.parseStringHandler || kb.parseStringHandler)(handler, actions)
-				//var h = kb.parseStringHandler(handler)
+				var path = h ? h.action.split('.') : []
 
-				if(h && h.action in actions){
+				if(path.length > 0 && path[0] in actions){
 					did_handling = true
 
 					evt 
@@ -1205,7 +1204,13 @@ function makeKeyboardHandler(keyboard, unhandled, actions){
 						&& evt.preventDefault()
 
 					// call the handler...
-					res = actions[h.action].apply(actions, h.arguments)
+					var context = actions
+					res = path 
+						.reduce(function(res, k){ 
+							context = res
+							return res[k] 
+						}, actions)
+						.apply(context, h.arguments)
 
 					evt 
 						&& h.stop_propagation
