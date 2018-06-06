@@ -328,15 +328,27 @@ function(text, options){
 
 			// edit the element...
 			var editable = getEditable()
-				.makeEditable({
+				//.makeEditable({
+					//activate: true,
+					//blur_on_abort: false,
+					//blur_on_commit: false,
+					//multiline: options.multiline,
+					//clear_on_edit: options.clear_on_edit,
+					//reset_on_commit: options.reset_on_commit === undefined ?
+					//	true
+					//	// XXX need to take this from .makeEditable(..) defaults
+					//	: options.reset_on_commit,
+					//reset_on_abort: options.reset_on_abort === undefined ?
+					//	true
+					//	// XXX need to take this from .makeEditable(..) defaults
+					//	: options.reset_on_abort,
+				//)
+				// XXX is Object.assign(..) here a bit of an overkill??
+				.makeEditable(Object.assign({
 					activate: true,
 					blur_on_abort: false,
 					blur_on_commit: false,
-					multiline: options.multiline,
-					clear_on_edit: options.clear_on_edit,
-					reset_on_commit: options.reset_on_commit,
-					reset_on_abort: options.reset_on_abort,
-				})
+				}, options))
 
 			!keep_selection
 				// deselect on abort/commit...
