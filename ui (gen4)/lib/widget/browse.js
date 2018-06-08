@@ -343,7 +343,8 @@ function(text, options){
 					//	// XXX need to take this from .makeEditable(..) defaults
 					//	: options.reset_on_abort,
 				//)
-				// XXX is Object.assign(..) here a bit of an overkill??
+				// XXX check if shadowing attrs between .Editable(..) and 
+				// 		util.makeEditable(..) can be a problem...
 				.makeEditable(Object.assign({
 					activate: true,
 					blur_on_abort: false,
