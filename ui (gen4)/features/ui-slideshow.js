@@ -197,6 +197,7 @@ var SlideshowActions = actions.Actions({
 					length_limit: that.config['slideshow-interval-max-count'],
 					check: Date.str2ms,
 					unique: Date.str2ms,
+					normalize: function(e){ return e.trim() },
 					sort: function(a, b){
 						return Date.str2ms(a) - Date.str2ms(b) },
 				})

@@ -80,14 +80,16 @@ Array.prototype.toKeys = function(normalize){
 // NOTE: normalize will slow things down...
 Array.prototype.toMap = function(normalize){
 	return normalize ? 
-		this.reduce(function(m, e, i){
-			m.set(normalize(e), i)
-			return m
-		}, new Map())
-		: this.reduce(function(m, e, i){
-			m.set(e, i)
-			return m
-		}, new Map()) }
+		this
+			.reduce(function(m, e, i){
+				m.set(normalize(e), i)
+				return m
+			}, new Map())
+		: this
+			.reduce(function(m, e, i){
+				m.set(e, i)
+				return m
+			}, new Map()) }
 
 
 // Return an array with duplicate elements removed...
@@ -97,7 +99,9 @@ Array.prototype.toMap = function(normalize){
 // NOTE: for an array containing only strings use a much faster .uniqueStrings(..)
 // NOTE: this may not work on IE...
 Array.prototype.unique = function(normalize){
-	return new Array(...(new Set(normalize ? this.map(normalize) : this))) }
+	return normalize ? 
+		[...new Map(this.map(function(e){ return [normalize(e), e] })).values()]
+		: [...(new Set(this))] }
 
 
 // Compare two arrays...

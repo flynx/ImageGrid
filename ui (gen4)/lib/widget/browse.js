@@ -616,9 +616,8 @@ function(data, options){
 // 		// If a function this will be used to normalize the values before
 // 		// uniqueness check is performed...
 // 		//
-// 		// NOTE: this (if a function) is different from normalize above 
-// 		//		in that this will not store the normalized value, rather 
-// 		//		just use it for uniqueness testing...
+// 		// NOTE: if this is a function the value returned is only used 
+// 		//		for uniqueness checking and will not be stored.
 // 		unique: <bool> | function(value){ ... },
 //
 // 		// called when new item is added to list...
@@ -810,7 +809,7 @@ function(list, options){
 			// account for '$' as key binding marker...
 			lst = lst.unique(function(e){ return e.replace(/\$/g, '') })
 
-		// unique normalized...
+		// unique filter...
 		} else if(options.unique instanceof Function){
 			lst = lst.unique(options.unique) 
 		}
