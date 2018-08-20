@@ -237,25 +237,22 @@ function(strings, ...values){
 		.split(/\n/g)
 
 	// get the common whitespae offset...
-	var l = -1
-	lines.forEach(function(line, i){ 
-		if(line.trim().length == 0){
-			return
-		}
-
-		// get the indent...
-		var a = line.length - line.trimLeft().length
-
-		// if line 0 is not indented, ignore it...
-		if(i == 0 && a == 0){
-			return
-		}
-
-		l = l < 0 ? a : Math.min(l, a)
-	})
+	var l = lines 
+		.reduce(function(l, e, i){
+			var indent = e.length - e.trimLeft().length
+			return (
+				// ignore empty lines...
+				e.trim().length == 0 
+					// ignore 0 indent of first line...
+					|| (i == 0 && indent == 0) ? l 
+				: l < 0 ? 
+					indent 
+				: Math.min(l, indent))
+		}, -1)
 
 	return lines
-		.map(function(line, i){ return i == 0 ? line : line.slice(l) })
+		.map(function(line, i){ 
+			return i == 0 ? line : line.slice(l) })
 		.join('\n')
 }
 
