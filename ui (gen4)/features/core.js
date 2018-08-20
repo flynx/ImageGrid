@@ -231,30 +231,9 @@ if(typeof(window) != 'undefined'){
 var doc = 
 module.doc =
 function(strings, ...values){
-	var lines = strings
+	return object.normalizeIndent(strings
 		.map(function(s, i){ return s + (values[i] || '') })
-		.join('')
-		.split(/\n/g)
-
-	// get the common whitespae offset...
-	var l = lines 
-		.reduce(function(l, e, i){
-			var indent = e.length - e.trimLeft().length
-			return (
-				// ignore empty lines...
-				e.trim().length == 0 
-					// ignore 0 indent of first line...
-					|| (i == 0 && indent == 0) ? l 
-				: l < 0 ? 
-					indent 
-				: Math.min(l, indent))
-		}, -1)
-
-	return lines
-		.map(function(line, i){ 
-			return i == 0 ? line : line.slice(l) })
-		.join('\n')
-}
+		.join('')) }
 
 
 // Indicate that an action is not intended for direct use...

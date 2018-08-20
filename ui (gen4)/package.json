@@ -28,7 +28,7 @@
     "guarantee-events": "^1.0.0",
     "ig-actions": "^3.19.3",
     "ig-features": "^3.3.4",
-    "ig-object": "^1.0.6",
+    "ig-object": "^1.0.7",
     "moment": "^2.22.2",
     "openseadragon": "^2.4.0",
     "requirejs": "^2.3.5",
