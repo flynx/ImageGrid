@@ -325,7 +325,7 @@ WalkPrototype.options.__proto__ = browse.Browser.prototype.options
 var Walk = 
 module.Walk = 
 object.makeConstructor('Walk', 
-		browse.Browser.__proto__, 
+		browse.Browser, 
 		WalkPrototype)
 
 
