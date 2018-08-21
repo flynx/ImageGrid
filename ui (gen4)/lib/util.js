@@ -34,6 +34,43 @@ Object.defineProperty(Object.prototype, 'run', {
 })
 
 
+// Extended map...
+//
+// 	.emap(func)
+// 		-> array
+//
+// func has the same input signature used in .map(..) but returns an array
+// that will be merged into the resulting array. This frees us from the
+// 1:1 nature of .map(..) and adds the ability to return 0 or more items 
+// on each iteration.
+//
+//
+// Example:
+// 	// double each item... 
+// 	;[1, 2, 3]
+// 		.emap(function(e){ return [e, e] })
+// 			// -> [1, 1, 2, 2, 3, 3]
+//
+//	// filter-like behaviour...
+//	;[1, 2, 3]
+//		.emap(function(e){ retunr e%2 == 0 ? [] : e })
+//			// -> [2]
+//
+//
+// NOTE: if func returns a non-Array it will be placed in the resulting 
+// 		array as-is...
+// NOTE: to return an explicit array, wrap it in an array, e.g:
+// 		;[1, 2, 3]
+// 			.emap(function(e){ return [[e]] })
+// 				// -> [[1], [2], [3]]
+Array.prototype.emap = function(func){
+    return this
+        .map(func)
+        .reduce(function(res, e){
+            return res
+                .concat(e instanceof Array ? e : [e] ) }, []) }
+
+
 // Compact a sparse array...
 //
 // NOTE: this will not compact in-place.
