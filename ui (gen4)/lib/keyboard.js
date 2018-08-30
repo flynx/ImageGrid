@@ -536,6 +536,18 @@ var KeyboardPrototype = {
 	// XXX revise name...
 	parseStringHandler: parseActionCall,
 
+	// call keyboard handler...
+	//
+	callKeyboardHandler: function(data, context){
+		// call the handler...
+		return data.action
+			.split('.') 
+			.reduce(function(res, k){ 
+				context = res
+				return res[k] 
+			}, context)
+			.apply(context, h.arguments) },
+
 
 	// utils...
 	event2key: KeyboardClassPrototype.event2key,
@@ -1193,7 +1205,9 @@ function makeKeyboardHandler(keyboard, unhandled, actions){
 			// action call syntax...
 			// XXX should this be a Keyboard thing or a context thing???
 			} else if(actions.parseStringHandler || kb.parseStringHandler){
-				var h = (actions.parseStringHandler || kb.parseStringHandler)(handler, actions)
+				var h = actions.parseStringHandler ?
+					actions.parseStringHandler(handler, actions)
+					: kb.parseStringHandler(handler, actions)
 				var path = h ? h.action.split('.') : []
 
 				if(path.length > 0 && path[0] in actions){
@@ -1204,13 +1218,9 @@ function makeKeyboardHandler(keyboard, unhandled, actions){
 						&& evt.preventDefault()
 
 					// call the handler...
-					var context = actions
-					res = path 
-						.reduce(function(res, k){ 
-							context = res
-							return res[k] 
-						}, actions)
-						.apply(context, h.arguments)
+					res = actions.callKeyboardHandler ?
+						actions.callKeyboardHandler(h, actions)
+						: kb.callKeyboardHandler(h, actions)
 
 					evt 
 						&& h.stop_propagation

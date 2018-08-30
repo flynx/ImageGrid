@@ -256,8 +256,7 @@ module.GLOBAL_KEYBOARD = {
 
 
 		// modes... 
-		//Enter: 'toggleSingleImage',
-		Enter: 'debounce: 500 "toggleSingleImage" -- Toggle single image mode (debounced)',
+		Enter: '@500 toggleSingleImage',
 		S: 'slideshowDialog',
 
 
@@ -513,6 +512,120 @@ var KeyboardActions = actions.Actions({
 					function(){ return that.dom })
 		return kb },
 
+	debounce: ['- Interface/',
+		core.doc`Debounce action call...
+
+			Debounce call an action...
+			.debounce(action, ...)
+			.debounce(timeout, action, ...)
+			.debounce(tag, action, ...)
+			.debounce(timeout, tag, action, ...)
+
+			Debounce call a function...
+			.debounce(tag, func, ...)
+			.debounce(timeout, tag, func, ...)
+
+		NOTE: when using a tag, it must not resolve to and action, i.e.
+			this[tag] must not be callable...
+		NOTE: this ignores action return value and returns this...
+		`,
+		function(...args){
+			// parse the args...
+			var timeout = typeof(args[0]) == typeof(123) ?
+				args.shift()
+				: (this.config['debounce-action-timeout'] || 200)
+			// NOTE: this[tag] must not be callable, otherwise we treat it
+			// 		as an action...
+			var tag = (args[0] instanceof Function 
+					|| this[args[0]] instanceof Function) ? 
+				args[0] 
+				: args.shift()
+			var action = args.shift()
+
+			// when debouncing a function a tag is required...
+			if(tag instanceof Function){
+				throw new TypeError('debounce: when passing a function a tag is required.')
+			}
+
+			var attr = '__debounce_'+ tag
+
+			// repeated call...
+			if(this[attr]){
+				this[attr +'_retriggered'] = true
+
+			// setup and first call...
+			} else {
+				// NOTE: we are ignoring the return value here so as to
+				// 		make the first and repeated call uniform...
+				var context = this
+				;(action instanceof Function ?
+						action
+						: action.split('.')
+							.reduce(function(res, e){ 
+									context = res
+									return res[e] 
+								}, this))
+					.call(context, ...args)
+
+				this[attr] = setTimeout(function(){
+					delete this[attr]
+
+					// retrigger...
+					if(this[attr +'_retriggered']){
+						delete this[attr +'_retriggered']
+
+						tag == action ?
+							this.debounce(timeout, action, ...args)
+							: this.debounce(timeout, tag, action, ...args)
+					}
+				}.bind(this), timeout)
+			}
+		}],
+
+	// Add debounce support to keyboard handling... 
+	//
+	// NOTE: these are not actions to make the call as light as possible...
+	parseStringHandler: function(txt, ...rest){
+		var debounce = 0
+		var scale = {
+			ms: 1,
+			s: 1000,
+			m: 1000 * 60,
+			h: 1000 * 60 * 60,
+		}
+		txt = txt.replace(/^\s*@([^\s]*)\s*/,
+			function(_, time){
+				var unit = time
+					.replace(/(\d+|\d*\.\d+)(h|m|s|ms)/, '$2')
+				unit = unit == time ? 'ms' : unit
+				debounce = parseFloat(time) * scale[unit]
+				return '' 
+			})
+
+		return debounce > 0 ?
+			Object.assign(
+				this.parseStringAction(txt, ...rest), 
+				{debounce: debounce})
+			: this.parseStringAction(txt, ...rest)
+	},
+	callKeyboardHandler: function(data, context){
+		context = context || this
+		var meth = data.action
+			.split('.')
+			.reduce(function(res, e){ 
+				context = res
+				return res[e] 
+			}, this)
+		return data.debounce ?
+			// debounce...
+			this.debounce(
+				data.debounce, 
+				'tag:'+data.action, 
+				meth.bind(context), ...data.arguments)
+			// direct call...
+			: meth.call(context, ...data.arguments) },
+
+
 	testKeyboardDoc: ['- Interface/',
 		core.doc`Self-test action keyboard configuration.`,
 		{self_test: true},
@@ -529,7 +642,8 @@ var KeyboardActions = actions.Actions({
 
 					// XXX we should also check if code is a key (i.e. alias)...
 
-					var a = keyboard.parseActionCall(code, that)
+					//var a = keyboard.parseActionCall(code, that)
+					var a = that.parseStringHandler(code, that)
 					// skip aliases that look like actions (namely ':') and bad actions...
 					if(a.action == ''){
 						return
@@ -691,7 +805,8 @@ var KeyboardActions = actions.Actions({
 			// 	- .no_default
 			// 	- .stop_propagation
 			var normalizeHandler = function(action){
-				var a = keyboard.parseActionCall(action.doc || action, that)
+				//var a = keyboard.parseActionCall(action.doc || action, that)
+				var a = that.parseStringHandler(action.doc || action, that)
 				return a.action in that ?
 					a.action 
 						+(a.arguments.length > 0 ? 
@@ -838,56 +953,6 @@ var KeyboardActions = actions.Actions({
 			this.config['keyboard-repeat-pause-check'] > 0
 				&& this.keyboard.pauseRepeat
 				&& this.keyboard.pauseRepeat() }],
-
-	debounce: ['- Interface/',
-		core.doc`Debounce action call...
-
-			.debounce(action, ...)
-			.debounce(timeout, action, ...)
-			.debounce(timeout, tag, action, ...)
-
-		NOTE: when using a tag, it must not resolve to and action, i.e.
-			this[tag] must not be callable...
-		NOTE: this ignores action return value and returns this...
-		`,
-		function(...args){
-			// parse the args...
-			var timeout = typeof(args[0]) == typeof(123) ?
-				args.shift()
-				: (this.config['debounce-action-timeout'] || 200)
-			// NOTE: this[tag] must not be callable, otherwise we treat it
-			// 		as an action...
-			var tag = this[args[0]] instanceof Function ? 
-				args[0] 
-				: args.shift()
-			var action = args.shift()
-
-			var attr = '__debounce_'+ tag
-
-			// repeated call...
-			if(this[attr]){
-				this[attr +'_retriggered'] = true
-
-			// setup and first call...
-			} else {
-				// NOTE: we are ignoring the return value here so as to
-				// 		make the first and repeated call uniform...
-				this[action](...args)
-
-				this[attr] = setTimeout(function(){
-					delete this[attr]
-
-					// retrigger...
-					if(this[attr +'_retriggered']){
-						delete this[attr +'_retriggered']
-
-						tag == action ?
-							this.debounce(timeout, action, ...args)
-							: this.debounce(timeout, tag, action, ...args)
-					}
-				}.bind(this), timeout)
-			}
-		}],
 })
 
 var Keyboard = 
@@ -913,7 +978,8 @@ module.Keyboard = core.ImageGridFeatures.Feature({
 				this.__keyboard_config = this.keybindings || GLOBAL_KEYBOARD
 
 				// string action call parser...
-				this.parseStringHandler = this.parseStringAction
+				//this.parseStringHandler = this.parseStringAction
+				//this.parseStringHandler = this.parseStringActionWithDebounce
 
 				this.toggleKeyboardHandling('on')
 			}],
@@ -1069,7 +1135,8 @@ var KeyboardUIActions = actions.Actions({
 							var c = 0
 							Object.keys(keys[mode] || {}).forEach(function(action){
 
-								var o = keyboard.parseActionCall(action, that)
+								//var o = keyboard.parseActionCall(action, that)
+								var o = that.parseStringHandler(action, that)
 
 								if(getKeyText){
 									var doc = ''
@@ -1419,7 +1486,8 @@ var KeyboardUIActions = actions.Actions({
 								['&ctdot;', function(evt, elem){
 									code = code || ''
 									// highlight the current action...
-									var a = keyboard.parseActionCall(code, that)
+									//var a = keyboard.parseActionCall(code, that)
+									var a = that.parseStringHandler(code, that)
 									var p = a.action in that ? 
 										that.getDocPath(a.action)
 										: ''
@@ -1443,6 +1511,9 @@ var KeyboardUIActions = actions.Actions({
 						})
 						.on('edit-commit', 
 							function(evt, text){ code = text })
+
+					// XXX should we edit/view this separately???
+					//make(['Debounce:', that.parseStringHandler(code).debounce || ''])
 
 					make('---')
 
