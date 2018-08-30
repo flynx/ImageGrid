@@ -256,7 +256,8 @@ module.GLOBAL_KEYBOARD = {
 
 
 		// modes... 
-		Enter: 'toggleSingleImage',
+		//Enter: 'toggleSingleImage',
+		Enter: 'debounce: 500 "toggleSingleImage" -- Toggle single image mode (debounced)',
 		S: 'slideshowDialog',
 
 
@@ -487,6 +488,11 @@ var KeyboardActions = actions.Actions({
 		// The amount of keyboard "quiet" time to wait for when
 		// .pauseKeyboardRepeat(..) is called...
 		'keyboard-repeat-pause-check': 100,
+
+
+		// A timeout to wait between calls to actions triggered via 
+		// .debounce(..)
+		'debounce-action-timeout': 200,
 	},
 
 	get keybindings(){
@@ -832,6 +838,56 @@ var KeyboardActions = actions.Actions({
 			this.config['keyboard-repeat-pause-check'] > 0
 				&& this.keyboard.pauseRepeat
 				&& this.keyboard.pauseRepeat() }],
+
+	debounce: ['- Interface/',
+		core.doc`Debounce action call...
+
+			.debounce(action, ...)
+			.debounce(timeout, action, ...)
+			.debounce(timeout, tag, action, ...)
+
+		NOTE: when using a tag, it must not resolve to and action, i.e.
+			this[tag] must not be callable...
+		NOTE: this ignores action return value and returns this...
+		`,
+		function(...args){
+			// parse the args...
+			var timeout = typeof(args[0]) == typeof(123) ?
+				args.shift()
+				: (this.config['debounce-action-timeout'] || 200)
+			// NOTE: this[tag] must not be callable, otherwise we treat it
+			// 		as an action...
+			var tag = this[args[0]] instanceof Function ? 
+				args[0] 
+				: args.shift()
+			var action = args.shift()
+
+			var attr = '__debounce_'+ tag
+
+			// repeated call...
+			if(this[attr]){
+				this[attr +'_retriggered'] = true
+
+			// setup and first call...
+			} else {
+				// NOTE: we are ignoring the return value here so as to
+				// 		make the first and repeated call uniform...
+				this[action](...args)
+
+				this[attr] = setTimeout(function(){
+					delete this[attr]
+
+					// retrigger...
+					if(this[attr +'_retriggered']){
+						delete this[attr +'_retriggered']
+
+						tag == action ?
+							this.debounce(timeout, action, ...args)
+							: this.debounce(timeout, tag, action, ...args)
+					}
+				}.bind(this), timeout)
+			}
+		}],
 })
 
 var Keyboard = 
