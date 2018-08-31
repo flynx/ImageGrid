@@ -1171,6 +1171,14 @@ var ControlActions = actions.Actions({
 		// The timeout to wait after window focus before unlocking the 
 		// viewer 
 		'window-focus-timeout': 200,
+
+		// Debounce clicks 
+		// 
+		// All consecutive clicks within this timeout
+		// will be dropped.
+		//
+		// To disable set to 0
+		'image-click-debounce-timeout': 400,
 	},
 
 	// XXX do we need this???
@@ -1337,6 +1345,7 @@ var ControlActions = actions.Actions({
 			// Not for direct use.
 		})],
 
+	// XXX need to debounce the clicks...
 	// XXX do not do anything on viewer focus... (???)
 	// XXX depends on .ribbons...
 	// XXX uses: .focusImage(..)
@@ -1427,6 +1436,18 @@ var ControlActions = actions.Actions({
 						var gid = that.ribbons.elemGID(img)
 						var x = evt.offsetX
 						var y = evt.offsetY
+
+						// debounce the clicks/taps...
+						if(that.config['image-click-debounce-timeout'] != 0){
+							if(that.__clicked_image == gid){
+								return
+							}
+							that.__clicked_image = gid
+							setTimeout(function(){
+								delete that.__clicked_image
+							}, that.config['image-click-debounce-timeout'] || 400)
+						}
+
 
 						var clicked_image = isImageClicked(evt, img)
 
