@@ -584,6 +584,15 @@ var KeyboardActions = actions.Actions({
 
 	// Add debounce support to keyboard handling... 
 	//
+	// Syntax:
+	// 	@0.5s actionName: arg arg -- doc...
+	//
+	// Supported units:	
+	// 	ms (default)	- Milliseconds
+	// 	s				- Seconds 
+	// 	m 				- Minutes
+	// 	hz				- Hertz
+	//
 	// NOTE: these are not actions to make the call as light as possible...
 	parseStringHandler: function(txt, ...rest){
 		var debounce = 0
@@ -591,14 +600,21 @@ var KeyboardActions = actions.Actions({
 			ms: 1,
 			s: 1000,
 			m: 1000 * 60,
-			h: 1000 * 60 * 60,
+			//h: 1000 * 60 * 60,
+
+			// just for fun...
+			hz: function(v){ return 1000 / v },
+			//khz: function(v){ return 1 / v },
 		}
 		txt = txt.replace(/^\s*@([^\s]*)\s*/,
 			function(_, time){
 				var unit = time
-					.replace(/(\d+|\d*\.\d+)(h|m|s|ms)/, '$2')
+					.replace(/(\d+|\d*\.\d+)([^\s]*)/, '$2')
+					.toLowerCase()
 				unit = unit == time ? 'ms' : unit
-				debounce = parseFloat(time) * scale[unit]
+				debounce = scale[unit] instanceof Function ?
+					scale[unit](parseFloat(time))
+					: parseFloat(time) * scale[unit]
 				return '' 
 			})
 
