@@ -1144,11 +1144,11 @@ var KeyboardUIActions = actions.Actions({
 
 								} else {
 									var doc = o.doc
-									var text = o.action 
-										+ (o.no_default ? '!' : '') 
-										+ (o.arguments.length > 0 ? 
-											(': '+ o.arguments.map(JSON.stringify).join(' '))
+									var text = (o.debounce ? 
+											`@${o.debounce} ` 
 											: '')
+										+ o.code.split('--')[0].trim()
+										
 								}
 
 								var hidden = !options.show_non_actions
@@ -1198,6 +1198,7 @@ var KeyboardUIActions = actions.Actions({
 											doc 
 											: (kb.special_handlers[action] 
 												|| null),
+										'debounce': o.debounce || '',
 									})
 									.addClass('key'
 										// special stuff...
