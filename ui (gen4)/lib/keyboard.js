@@ -546,7 +546,7 @@ var KeyboardPrototype = {
 				context = res
 				return res[k] 
 			}, context)
-			.apply(context, h.arguments) },
+			.apply(context, data.arguments) },
 
 
 	// utils...
