@@ -600,18 +600,14 @@ var KeyboardActions = actions.Actions({
 			ms: 1,
 			s: 1000,
 			m: 1000 * 60,
-			//h: 1000 * 60 * 60,
-
-			// just for fun...
 			hz: function(v){ return 1000 / v },
-			//khz: function(v){ return 1 / v },
 		}
 		txt = txt.replace(/^\s*@([^\s]*)\s*/,
 			function(_, time){
 				var unit = time
 					.replace(/(\d+|\d*\.\d+)([^\s]*)/, '$2')
 					.toLowerCase()
-				unit = unit == time ? 'ms' : unit
+				unit = unit == '' ? 'ms' : unit
 				debounce = scale[unit] instanceof Function ?
 					scale[unit](parseFloat(time))
 					: parseFloat(time) * scale[unit]
@@ -658,7 +654,6 @@ var KeyboardActions = actions.Actions({
 
 					// XXX we should also check if code is a key (i.e. alias)...
 
-					//var a = keyboard.parseActionCall(code, that)
 					var a = that.parseStringHandler(code, that)
 					// skip aliases that look like actions (namely ':') and bad actions...
 					if(a.action == ''){
@@ -821,7 +816,6 @@ var KeyboardActions = actions.Actions({
 			// 	- .no_default
 			// 	- .stop_propagation
 			var normalizeHandler = function(action){
-				//var a = keyboard.parseActionCall(action.doc || action, that)
 				var a = that.parseStringHandler(action.doc || action, that)
 				return a.action in that ?
 					a.action 
@@ -1151,7 +1145,6 @@ var KeyboardUIActions = actions.Actions({
 							var c = 0
 							Object.keys(keys[mode] || {}).forEach(function(action){
 
-								//var o = keyboard.parseActionCall(action, that)
 								var o = that.parseStringHandler(action, that)
 
 								if(getKeyText){
@@ -1503,7 +1496,6 @@ var KeyboardUIActions = actions.Actions({
 								['&ctdot;', function(evt, elem){
 									code = code || ''
 									// highlight the current action...
-									//var a = keyboard.parseActionCall(code, that)
 									var a = that.parseStringHandler(code, that)
 									var p = a.action in that ? 
 										that.getDocPath(a.action)
