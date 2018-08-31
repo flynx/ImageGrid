@@ -1172,12 +1172,12 @@ var ControlActions = actions.Actions({
 		// viewer 
 		'window-focus-timeout': 200,
 
-		// Debounce clicks 
+		// Debounce clicks/taps... 
 		// 
-		// All consecutive clicks within this timeout
-		// will be dropped.
-		//
+		// All consecutive clicks within this timeout will be dropped.
 		// To disable set to 0
+		//
+		// NOTE: this effectively disables double-clicks (by design).
 		'image-click-debounce-timeout': 400,
 	},
 
