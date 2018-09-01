@@ -487,11 +487,6 @@ var KeyboardActions = actions.Actions({
 		// The amount of keyboard "quiet" time to wait for when
 		// .pauseKeyboardRepeat(..) is called...
 		'keyboard-repeat-pause-check': 100,
-
-
-		// A timeout to wait between calls to actions triggered via 
-		// .debounce(..)
-		'debounce-action-timeout': 200,
 	},
 
 	get keybindings(){
@@ -511,76 +506,6 @@ var KeyboardActions = actions.Actions({
 					},
 					function(){ return that.dom })
 		return kb },
-
-	debounce: ['- Interface/',
-		core.doc`Debounce action call...
-
-			Debounce call an action...
-			.debounce(action, ...)
-			.debounce(timeout, action, ...)
-			.debounce(tag, action, ...)
-			.debounce(timeout, tag, action, ...)
-
-			Debounce call a function...
-			.debounce(tag, func, ...)
-			.debounce(timeout, tag, func, ...)
-
-		NOTE: when using a tag, it must not resolve to and action, i.e.
-			this[tag] must not be callable...
-		NOTE: this ignores action return value and returns this...
-		`,
-		function(...args){
-			// parse the args...
-			var timeout = typeof(args[0]) == typeof(123) ?
-				args.shift()
-				: (this.config['debounce-action-timeout'] || 200)
-			// NOTE: this[tag] must not be callable, otherwise we treat it
-			// 		as an action...
-			var tag = (args[0] instanceof Function 
-					|| this[args[0]] instanceof Function) ? 
-				args[0] 
-				: args.shift()
-			var action = args.shift()
-
-			// when debouncing a function a tag is required...
-			if(tag instanceof Function){
-				throw new TypeError('debounce: when passing a function a tag is required.')
-			}
-
-			var attr = '__debounce_'+ tag
-
-			// repeated call...
-			if(this[attr]){
-				this[attr +'_retriggered'] = true
-
-			// setup and first call...
-			} else {
-				// NOTE: we are ignoring the return value here so as to
-				// 		make the first and repeated call uniform...
-				var context = this
-				;(action instanceof Function ?
-						action
-						: action.split('.')
-							.reduce(function(res, e){ 
-									context = res
-									return res[e] 
-								}, this))
-					.call(context, ...args)
-
-				this[attr] = setTimeout(function(){
-					delete this[attr]
-
-					// retrigger...
-					if(this[attr +'_retriggered']){
-						delete this[attr +'_retriggered']
-
-						tag == action ?
-							this.debounce(timeout, action, ...args)
-							: this.debounce(timeout, tag, action, ...args)
-					}
-				}.bind(this), timeout)
-			}
-		}],
 
 	// Add debounce support to keyboard handling... 
 	//

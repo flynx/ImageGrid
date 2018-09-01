@@ -48,6 +48,18 @@ var ExampleActions = actions.Actions({
 			// XXX
 		}],
 
+	exampleActionDebounced: ['Test/Action (debounced)',
+		core.doc`This is .exampleAction(..) debounced.
+		`,
+		core.debounce('exampleAction')],
+	exampleDebouncedAction: ['Test/Custom debounced action',
+		core.debounce(1000, function(...args){
+			console.log('exampleDebouncedAction: This can\'t be called more often than once per 1 second.')
+			console.log('exampleDebouncedAction: note that within this second only the original return value is returned.')
+			console.log('    <', args)
+			return args
+		})],
+
 	// a normal method...
 	exampleMethod: function(){
 		console.log('example method:', [].slice.call(arguments))
