@@ -59,9 +59,8 @@ var ExampleActions = actions.Actions({
 			console.log('    <', args)
 			return args
 		})],
-
-	testDebounce: ['Test/',
-		core.debounce(1000, 'exampleAction: ... -- docs...')],
+	exampleAliasDebounced: ['Test/',
+		core.debounce(1000, 'exampleAction: ...')],
 
 	// a normal method...
 	exampleMethod: function(){

@@ -849,6 +849,11 @@ module.Cache = ImageGridFeatures.Feature({
 
 // Create a debounced action...
 //
+// 	debounce(<func>)
+// 	debounce(<timeout>, <func>)
+// 	debounce(<options>, <func>)
+// 		-> function
+//
 // options format:
 // 	{
 // 		timeout: number,
@@ -860,8 +865,9 @@ var debounce =
 module.debounce =
 function(options, func){
 	// parse args...
-	func = options instanceof Function ? options : func
-	options = options instanceof Function ? {} : options
+	var args = [...arguments]
+	func = args.pop()
+	options = args.pop() || {} 
 
 	if(typeof(options) == typeof(123)){
 		options.timeout = options
@@ -903,7 +909,8 @@ function(options, func){
 	}
 
 	f.toString = function(){
-		return `// debounced...\n${doc([func.toString()])}`
+		return `// debounced...\n${
+			doc([ func instanceof Function ? func.toString() : func ])}`
 	}
 
 	return f
