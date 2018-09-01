@@ -1139,10 +1139,14 @@ var TimersActions = actions.Actions({
 			// XXX
 		})],
 
+
 	// Action debounce...
 	//
 	debounce: ['- System/',
 		doc`Debounce action call...
+
+		Debouncing prevents an action from being called more than once 
+		every timeout milliseconds.
 
 			Debounce call an action...
 			.debounce(action, ...)
@@ -1160,27 +1164,39 @@ var TimersActions = actions.Actions({
 
 		options format:
 			{
-				tag: <string>,
+				// debounce timeout...
 				timeout: <milliseconds>,
+
+				// tag to group action call debouncing (optional)
+				tag: <string>,
+
+				// controls how the return value is handled:
+				// 	'cached'	- during the timeout the first return value
+				// 					is cached and re-returned on each call
+				// 					during the timeout.
+				// 	'dropped'	- all return values are ignored/dropped
+				//
+				// NOTE: these, by design, enable only stable/uniform behavior
+				// 		without introducing any special cases and gotchas...
 				returns: 'cached' | 'dropped',
-				callback: <function>,
+
+				// if true the action will get retriggered after the timeout
+				// is over but only if it was triggered during the timeout...
+				//
+				// NOTE: if the action is triggered more often than timeout/200
+				// 		times, then it will not retrigger, this prevents an extra 
+				// 		call after, for example, sitting on a key and triggering
+				// 		key repeat...
+				retrigger: <bool>,
+
+				// a function, if given will be called when the timeout is up.
+				callback: function(<retrigger-count>, <args>),
 			}
-
-
-		Protocol:
-			- call
-				- start timeout timer
-				- trigger target action
-				- drop 
-			- call (within timeout)
-				- drop
-				- re-trigger when timer ends
-
 
 		NOTE: when using a tag, it must not resolve to and action, i.e.
 			this[tag] must not be callable...
 		NOTE: this ignores action return value and returns this...
-		NOTE: this is a shorthand to .debounceActionCall(..)
+		NOTE: this uses core.debounce(..) adding a retrigger option to it...
 		`,
 		function(...args){
 			// parse the args...
