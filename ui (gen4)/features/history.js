@@ -55,6 +55,18 @@ var URLHistoryActions = actions.Actions({
 	set url_history(value){
 		this.__url_history = value },
 
+	// NOTE: this is created on the fly as a convenience, editing this 
+	// 		will have no effect...
+	get url_history_pinned(){
+		var url_history = this.url_history
+		return Object.keys(url_history)
+			.reduce(function(res, k){ 
+				if(url_history[k].pinned){
+					res[k] = url_history[k]
+				}
+				return res 
+			}, {}) },
+
 
 	clone: [function(full){
 		return function(res){
@@ -145,15 +157,15 @@ var URLHistoryActions = actions.Actions({
 
 			// update history length...
 			if(l > 0){
-				var k = Object.keys(this.url_history)
-					// we will not remove pinned items...
-					.filter((function(e){
-						return !this.url_history[e].pinned }).bind(this))
-				while(k.length > l){
-					// drop first url in order -- last added...
-					this.dropURLFromHistory(k[0])
+				do {
 					var k = Object.keys(this.url_history)
-				}
+						// we will not remove pinned items...
+						.filter((function(e){
+							return !this.url_history[e].pinned }).bind(this))
+
+					// drop first url in order -- first added...
+					this.dropURLFromHistory(k[0])
+				} while(k.length - 1 > l)
 			}
 		}],
 	// NOTE: url can be an index, 0 being the last url added to history;
