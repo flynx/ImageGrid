@@ -847,29 +847,70 @@ module.Cache = ImageGridFeatures.Feature({
 //---------------------------------------------------------------------
 // Timers...
 
+// Create a debounced action...
+//
+// options format:
+// 	{
+// 		timeout: number,
+// 		returns: 'cached' | 'dropped',
+// 		callback: function(retriggered, args),
+// 	}
+//
 var debounce =
 module.debounce =
-function(timeout, func){
-	func = timeout instanceof Function ? timeout : func
-	var f = function(...args){
-		return this.debounceActionCall({
-			action: func,
-			args: args,
-			tag: func instanceof Function ? 
-				(func.name || f.name) 
-				: func,
-			timeout: timeout instanceof Function ? null : timeout,
-			returns: 'cached',
-			retrigger: true,
-		})
+function(options, func){
+	// parse args...
+	func = options instanceof Function ? options : func
+	options = options instanceof Function ? {} : options
+
+	if(typeof(options) == typeof(123)){
+		options.timeout = options
 	}
+
+	// closure state...
+	var res = undefined
+	var debounced = false
+	var retriggered = 0
+
+	var f = function(...args){
+		if(!debounced){
+			res = func instanceof Function ?
+				func.call(this, ...args)
+				// alias...
+				: this.parseStringAction.callAction(this, func, ...args)
+			res = options.returns != 'cahced' ? res : undefined
+
+			// start the timer...
+			debounced = setTimeout(
+				function(){
+					// callback...
+					options.callback instanceof Function
+						&& options.callback.call(this, retriggered, args)
+
+					// cleanup...
+					retriggered = 0
+					res = undefined
+					debounced = false
+				}.bind(this), 
+				options.timeout 
+					|| this.config['debounce-action-timeout'] 
+					|| 200)
+
+		} else {
+			retriggered++
+			return res
+		}
+	}
+
 	f.toString = function(){
 		return `// debounced...\n${doc([func.toString()])}`
 	}
-	// NOTE: this will force Action(..) to set the .name to the action name...
-	Object.defineProperty(f, 'name', { value: '<action-name>' })
+
 	return f
 }
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
 var TimersActions = actions.Actions({
 	config: {
@@ -1100,120 +1141,6 @@ var TimersActions = actions.Actions({
 
 	// Action debounce...
 	//
-	debounceActionCall: ['- System/',
-		doc`Debounce the action call...
-
-			.debounceActionCall(call)
-				-> result
-
-		Call format:
-			{
-				// action name of function to be called...
-				action: <name> | <function>,
-
-				// arguments to be passed to action/function...
-				args: <array>,
-
-				// tag to identify the call...
-				//
-				// Defaults to action name, optional for actions and 
-				// required for functions...
-				tag: <tag> | null,
-
-				// timeout to drop calls within (optional).
-				//
-				// defaults to .config['debounce-action-timeout'] then 
-				// to 200.
-				timeout: <number> | null,
-
-				// controls how action return value is handled:
-				//
-				// Values:
-				// 	'cached'		- cache the value and return it for
-				// 						every call within the timeout.
-				// 	'dropped'		- ignore return values.
-				//
-				// NOTE: this is designed to produce uniform results 
-				// 		without and exceptions.
-				returns: 'cached' | 'dropped',
-
-				// if true re trigger the action after timeout if it was 
-				// called after the initial call but before the timeout 
-				// ended...
-				retrigger: <bool>,
-			}
-
-		NOTE: this does not affect actions called directly in any way.
-		`,
-		function(call){
-			var action = call.action
-			var args = call.args || []
-			var tag = call.tag || call.action
-			var timeout = call.timeout 
-				|| this.config['debounce-action-timeout'] 
-				|| 200
-			var returns = call.returns || 'cached'
-			var retrigger = call.retrigger || false
-
-			// when debouncing a function a tag is required...
-			if(tag instanceof Function){
-				throw new TypeError('debounce: when passing a function a tag is required.')
-			}
-
-			var attr = '__debounce_'+ tag
-
-			// repeated call...
-			if(this[attr]){
-				if(retrigger){
-					this[attr +'_retriggered'] = true
-				}
-
-				var res = returns == 'cached' ?
-					this[attr +'_return']
-					: undefined
-
-			// setup and first call...
-			} else {
-				// NOTE: we are ignoring the return value here so as to
-				// 		make the first and repeated call uniform...
-				var context = this
-				var res = (action instanceof Function ?
-						action
-						: action.split('.')
-							.reduce(function(res, e){ 
-									context = res
-									return res[e] 
-								}, this))
-					.call(context, ...args)
-
-				// cache the return value...
-				if(returns == 'cached'){
-					this[attr +'_return'] = res
-
-				// drop the return value...
-				} else {
-					res = undefined
-				}
-
-				this[attr] = setTimeout(function(){
-					delete this[attr]
-					delete this[attr +'_return']
-
-					// retrigger...
-					if(this[attr +'_retriggered']){
-						delete this[attr +'_retriggered']
-
-						tag == action ?
-							this.debounce(timeout, action, ...args)
-							: this.debounce(timeout, tag, action, ...args)
-					}
-				}.bind(this), timeout)
-			}
-
-			return res
-		}],
-
-	// shorthand...
 	debounce: ['- System/',
 		doc`Debounce action call...
 
@@ -1226,6 +1153,19 @@ var TimersActions = actions.Actions({
 			Debounce call a function...
 			.debounce(tag, func, ...)
 			.debounce(timeout, tag, func, ...)
+
+			Generic debounce:
+			.debounce(options, action, ...)
+			.debounce(options, func, ...)
+
+		options format:
+			{
+				tag: <string>,
+				timeout: <milliseconds>,
+				returns: 'cached' | 'dropped',
+				callback: <function>,
+			}
+
 
 		Protocol:
 			- call
@@ -1244,26 +1184,58 @@ var TimersActions = actions.Actions({
 		`,
 		function(...args){
 			// parse the args...
-			var timeout = typeof(args[0]) == typeof(123) ?
-				args.shift()
-				: (this.config['debounce-action-timeout'] || 200)
-			// NOTE: this[tag] must not be callable, otherwise we treat it
-			// 		as an action...
-			var tag = (args[0] instanceof Function 
-					|| this[args[0]] instanceof Function) ? 
-				args[0] 
-				: args.shift()
-			var action = args.shift()
+			if(!(args[0] instanceof Function 
+					|| typeof(args[0]) == typeof(123)
+					|| typeof(args[0]) == typeof('str'))){
+				var options = args.shift()
+				var tag = options.tag || args[0].name || args[0]
 
-			return this.debounceActionCall({
-				action: action, 
-				args: args,
-				tag: tag,
-				timeout: timeout,
-				// XXX
-				returns: 'dropped',
-				retrigger: true,
+			} else {
+				var options = {
+					timeout: typeof(args[0]) == typeof(123) ?
+						args.shift()
+						: (this.config['debounce-action-timeout'] || 200),
+				}
+
+				// NOTE: this[tag] must not be callable, otherwise we treat it
+				// 		as an action...
+				var tag = (args[0] instanceof Function 
+						|| this[args[0]] instanceof Function) ? 
+					args[0] 
+					: args.shift()
+			}
+
+			// sanity check: when debouncing a function a tag is required...
+			if(tag instanceof Function){
+				throw new TypeError('debounce: when passing a function a tag is required.')
+			}
+
+			var action = args.shift()
+			var attr = '__debounce_'+ tag
+
+			options = Object.assign(Object.create(options), {
+				callback: function(retriggered, args){
+					// cleanup...
+					delete this[attr]
+
+					// call the original callback...
+					options.__proto__.callback
+						&& options.__proto__.callback.call(that, ...args)
+
+					if(options.retrigger 
+							&& retriggered > 0 
+							// this prevents an extra action after "sitting" 
+							// on the keyboard and triggering key repeat...
+							&& retriggered < (options.timeout || 200) / 200){
+						var func = this[attr] = this[attr] || debounce(options, action)
+						func.call(this, ...args)
+					}
+				},
 			})
+
+			var func = this[attr] = this[attr] || debounce(options, action)
+
+			return func.call(this, ...args)
 		}],
 })
 

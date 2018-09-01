@@ -555,9 +555,12 @@ var KeyboardActions = actions.Actions({
 			}, this)
 		return data.debounce ?
 			// debounce...
-			this.debounce(
-				data.debounce, 
-				'tag:'+data.action, 
+			this.debounce({
+					timeout: data.debounce, 
+					tag: 'tag:'+data.action,
+					retrigger: true,
+					returns: 'dropped',
+				},
 				meth.bind(context), ...data.arguments)
 			// direct call...
 			: meth.call(context, ...data.arguments) },

@@ -60,6 +60,9 @@ var ExampleActions = actions.Actions({
 			return args
 		})],
 
+	testDebounce: ['Test/',
+		core.debounce(1000, 'exampleAction: ... -- docs...')],
+
 	// a normal method...
 	exampleMethod: function(){
 		console.log('example method:', [].slice.call(arguments))
