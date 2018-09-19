@@ -130,6 +130,7 @@ var URLHistoryActions = actions.Actions({
 	// 		history is more than allowed...
 	pushURLToHistory: ['- History/',
 		function(url, open, check, clear){
+			var that = this
 			url = url || this.location.path
 			var l = this.config['url-history-length'] || -1
 
@@ -156,18 +157,18 @@ var URLHistoryActions = actions.Actions({
 			}*/
 
 			// update history length...
-			if(l > 0){
-				do {
-					var k = Object.keys(this.url_history)
-						// we will not remove pinned items...
-						.filter((function(e){
-							return this.url_history[e].pinned != null }).bind(this))
-
-					// drop first url in order -- first added...
-					k.length > l
-						&& this.dropURLFromHistory(k[0])
-				} while(k.length - 1 > l)
-			}
+			var to_remove = Object.keys(this.url_history)
+				// we will not remove pinned items...
+				.filter(function(e){
+					return that.url_history[e].pinned == null })
+			// we clear the head of the list -- first/oldest urls added...
+			to_remove.reverse()
+			// do the actual removal...
+			to_remove
+				.slice(l)
+				.forEach(function(e){
+					console.log('Removing url from history:', e)
+					that.dropURLFromHistory(e) })
 		}],
 	// NOTE: url can be an index, 0 being the last url added to history;
 	// 		negative values are also supported.
