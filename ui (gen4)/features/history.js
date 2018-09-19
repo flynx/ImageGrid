@@ -161,10 +161,11 @@ var URLHistoryActions = actions.Actions({
 					var k = Object.keys(this.url_history)
 						// we will not remove pinned items...
 						.filter((function(e){
-							return !this.url_history[e].pinned }).bind(this))
+							return this.url_history[e].pinned != null }).bind(this))
 
 					// drop first url in order -- first added...
-					this.dropURLFromHistory(k[0])
+					k.length > l
+						&& this.dropURLFromHistory(k[0])
 				} while(k.length - 1 > l)
 			}
 		}],
