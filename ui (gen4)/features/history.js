@@ -134,6 +134,9 @@ var URLHistoryActions = actions.Actions({
 			url = url || this.location.path
 			var l = this.config['url-history-length'] || -1
 
+			var logger = this.logger 
+				&& this.logger.push('History')
+
 			if(l == 0){
 				return
 			}
@@ -151,10 +154,6 @@ var URLHistoryActions = actions.Actions({
 
 			// push url to history...
 			this.url_history[url] = item
-			/*this.url_history[url] = {
-				open: open,
-				check: check,
-			}*/
 
 			// update history length...
 			var to_remove = Object.keys(this.url_history)
@@ -169,7 +168,8 @@ var URLHistoryActions = actions.Actions({
 			to_remove
 				.slice(l)
 				.forEach(function(e){
-					console.log('Removing url from history:', e)
+					logger
+						&& logger.emit(`Removing URL from history: "${e}"`)
 					that.dropURLFromHistory(e) })
 		}],
 	// NOTE: url can be an index, 0 being the last url added to history;

@@ -135,11 +135,15 @@ $(function(){
 			// XXX STUB...
 			} else if(e == 'error' ){
 				ig.showProgress(['Error'].concat(msg), '+0', '+1')
-				console.log('    '+ (msg || []).join(': ') + ':', e, v) 
+				console.log(msg ? 
+					'    '+ msg.join(': ') + ':' 
+					: '', ...arguments) 
 
 			} else {
 				// console...
-				console.log('    '+ (msg || []).join(': ') + ':', e, v) 
+				console.log(msg ? 
+					'    '+ msg.join(': ') + ':' 
+					: '', ...arguments) 
 			}
 
 			// XXX
