@@ -168,8 +168,9 @@ var URLHistoryActions = actions.Actions({
 			to_remove
 				.slice(l)
 				.forEach(function(e){
+					// XXX not sure if this is needed here...
 					logger
-						&& logger.emit(`Removing URL from history: "${e}"`)
+						&& logger.emit(`Auto-removing URL from history: "${e}"`)
 					that.dropURLFromHistory(e) })
 		}],
 	// NOTE: url can be an index, 0 being the last url added to history;
