@@ -1260,8 +1260,9 @@ var DataPrototype = {
 		gids = arguments.length > 1 ? 
 			[].slice.call(arguments) 
 			: (gids || this.current)
-		gids = (gids instanceof Array ? gids : [gids])
-			// sort ribbon gids to .ribbon_order
+		gids = (gids instanceof Array ? gids.slice() : [gids])
+		// sort ribbon gids to .ribbon_order
+		gids = gids
 			.concat(this.ribbon_order
 				.filter(function(g){ 
 					var i = gids.indexOf(g)
