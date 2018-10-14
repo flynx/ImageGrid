@@ -33,7 +33,7 @@ module.SortActions = actions.Actions({
 		// 	- sort mode name		- as set in .config['sort-mode'] key
 		// 								Example: 'Date'
 		// 	- explicit sort method	- as set in .config['sort-mode'] value
-		// 								Example: 'metadata.createDate birthtime'
+		// 								Example: 'metadata.createDate ctime'
 		'default-sort': 'Date',
 
 		// Default sort order...
@@ -62,11 +62,10 @@ module.SortActions = actions.Actions({
 			// NOTE: for when date resolution is not good enough this 
 			// 		also takes into account file sequence number...
 			// NOTE: this is descending by default...
-			//'Date': 'metadata.createDate birthtime name-sequence keep-position reverse',
 			'Date': 
-				'metadata.createDate birthtime keep-position reverse',
+				'metadata.createDate ctime name-sequence keep-position reverse',
 			'File date': 
-				'birthtime keep-position reverse',
+				'ctime keep-position reverse',
 			'File sequence number (with overflow)': 
 				'name-sequence-overflow name path keep-position',
 			'File sequence number': 
@@ -234,9 +233,9 @@ module.SortActions = actions.Actions({
 	// NOTE: reverse is calculated by oddity -- if an odd number indicated
 	// 		then the result is reversed, otherwise it is not. 
 	// 		e.g. adding:
-	// 		 	'metadata.createDate birthtime' + ' reverse' 
+	// 		 	'metadata.createDate ctime' + ' reverse' 
 	// 		will reverse the result's order while:
-	// 		 	'metadata.createDate birthtime reverse' + ' reverese' 
+	// 		 	'metadata.createDate ctime reverse' + ' reverese' 
 	// 		will cancel reversal.
 	// NOTE: with empty images this will not do anything.
 	//
@@ -261,7 +260,7 @@ module.SortActions = actions.Actions({
 
 			// defaults...
 			method = method 
-				|| ((this.config['default-sort'] || 'birthtime')
+				|| ((this.config['default-sort'] || 'ctime')
 					+ (this.config['default-sort-order'] == 'reverse' ? ' reverse' : ''))
 
 			// set sort method in data...
