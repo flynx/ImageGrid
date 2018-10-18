@@ -70,6 +70,8 @@ module.SortActions = actions.Actions({
 			// 		and the other is set via the current cation .readMetadata(..)...
 			// 		...might be a good idea to add an alias system or 
 			// 		a way to not list "alias" methods in the main list...
+			// 			file-date: 
+			// 				'metadata.createDate birthtime ctime name-sequence keep-position'
 			'Date': 
 				'metadata.createDate birthtime ctime name-sequence keep-position reverse',
 			'File date': 
