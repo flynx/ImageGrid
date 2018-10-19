@@ -72,6 +72,8 @@ module.SortActions = actions.Actions({
 			// 		a way to not list "alias" methods in the main list...
 			// 			file-date: 
 			// 				'metadata.createDate birthtime ctime name-sequence keep-position'
+			// 		The best way seems to be to hide the titles that start 
+			// 		with a lower case letter in the UI...
 			'Date': 
 				'metadata.createDate birthtime ctime name-sequence keep-position reverse',
 			'File date': 
