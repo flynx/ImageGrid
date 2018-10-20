@@ -74,6 +74,9 @@ module.SortActions = actions.Actions({
 			// 				'metadata.createDate birthtime ctime name-sequence keep-position'
 			// 		The best way seems to be to hide the titles that start 
 			// 		with a lower case letter in the UI...
+			// 			checking for upper case:
+			// 				var st = s.trim()
+			// 				st[0].toUpperCase() == st[0]
 			'Date': 
 				'metadata.createDate birthtime ctime name-sequence keep-position reverse',
 			'File date': 
