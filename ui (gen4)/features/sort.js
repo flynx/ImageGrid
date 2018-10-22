@@ -116,6 +116,15 @@ module.SortActions = actions.Actions({
 	// XXX add doc support -- make this an action-set???...
 	// XXX add alias and string support...
 	__sort_methods__: {
+		// aliases...
+		'image-date':
+			'image-create-date image-modify-date',
+		'image-create-date':
+			'metadata.createDate birthtime ctime name-sequence keep-position',
+		// XXX 
+		'image-modify-date':
+			'metadata.createDate birthtime ctime name-sequence keep-position',
+
 		// XXX make sequence sort methods compatible with repeating numbers,
 		// 		i.e. for file names like DSC_1234 sorting more than 10K files
 		// 		should split the repeating numbers by some other means, like
@@ -282,20 +291,57 @@ module.SortActions = actions.Actions({
 			// set sort method in data...
 			this.data.sort_method = typeof(method) == typeof('str') ? method : method.join(' ')
 
+			var splitMethods = function(m){
+				return m instanceof Array ? m : 
+					m
+						.split(/'([^']*)'|"([^"]*)"| +/)
+						.filter(function(e){ 
+							return e && e.trim() != '' && !/['"]/.test(e) }) }
+			// XXX
+			var expandMethods = function(m, seen){
+				seen = seen || new Set()
+				if(seen.has(m)){
+					throw new Error('Sort method loop detected.')
+				} else {
+					seen.add(m)
+				}
+				return (m instanceof Array ? m : splitMethods(m))
+					.map(function(m){ 
+						var a = SortActions.__sort_methods__[m]
+							|| (that.__sort_methods__ && that.__sort_methods__[m])
+						// expand local aliases...
+						return m in that.config['sort-methods'] ?
+							   expandMethods(that.config['split-methods'], seen) 
+							// expand system aliases...
+							: typeof(a) == typeof('str') ? 
+								expandMethods(a, seen)
+							: a instanceof Array ?
+								a
+							: m })
+					// merge...
+					.reduce(function(r, e){
+						return e instanceof Array ? r.concat(e) : r.push(e) }, []) }
+
 			// expand method names...
 			// XXX should this be recursive???
-			method = typeof(method) == typeof('str') ? 
-				method
-					.split(/'([^']*)'|"([^"]*)"| +/)
-						.filter(function(e){ return e && e.trim() != '' && !/['"]/.test(e) })
-					.map(function(m){ 
-						return that.config['sort-methods'][m] || m })
-					.join(' ')
-				: method
-			method = typeof(method) == typeof('str') ? 
-				method.split(/'([^']*)'|"([^"]*)"| +/)
-					.filter(function(e){ return e && e.trim() != '' && !/['"]/.test(e) })
-				: method
+			method = splitMethods(method)
+				.map(function(m){ 
+					return m in that.config['sort-methods'] ?
+					   splitMethods(that.config['split-methods']) : m })
+			// expand system aliases...
+			/*
+			method = method
+				.map(function(m){
+					var a = (SortActions.__sort_methods__[m]
+						|| (that.__sort_methods__ && that.__sort_methods__[m])
+					return typeof(a) == typeof('str') ? 
+							splitMethods(a)
+						: a instanceof Array ?
+							a
+						: m })
+				.reduce(function(r, e){
+					return e instanceof Array ? r.concat(e) : r.push(e) }, [])
+			//*/
 
 			// get the reverse arity...
 			var i = method.indexOf('reverse')
