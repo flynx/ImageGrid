@@ -62,39 +62,99 @@ module.SortActions = actions.Actions({
 			// NOTE: for when date resolution is not good enough this 
 			// 		also takes into account file sequence number...
 			// NOTE: this is descending by default...
-			//
-			// XXX need a way to unify the non-metadata dates...
-			// 		i.e. the birthtime and friends and ctime and friends...
-			// 		...currently both flavors can exist at the same time,
-			// 		one is created with the legacy python indexing tools
-			// 		and the other is set via the current cation .readMetadata(..)...
-			// 		...might be a good idea to add an alias system or 
-			// 		a way to not list "alias" methods in the main list...
-			// 			file-date: 
-			// 				'metadata.createDate birthtime ctime name-sequence keep-position'
-			// 		The best way seems to be to hide the titles that start 
-			// 		with a lower case letter in the UI...
-			// 			checking for upper case:
-			// 				var st = s.trim()
-			// 				st[0].toUpperCase() == st[0]
-			// XXX keep-position should be on by default... (???)
+			// NOTE: if a method starts with a lower case letter it is 
+			// 		considered an alias and will be hidden from the UI...
 			'Date': 
-				'image-date name-sequence keep-position reverse',
+				'image-date name-sequence reverse',
 			'File date': 
-				'birthtime ctime keep-position reverse',
+				'file-date reverse',
 			'File sequence number (with overflow)': 
-				'name-sequence-overflow name path keep-position',
+				'name-sequence-overflow name path',
 			'File sequence number': 
-				'name-sequence name path keep-position',
+				'name-sequence name path',
 			'Name': 
-				'name path keep-position',
+				'name path',
 			'Name (natural number order)': 
-				'name-leading-sequence name path keep-position',
+				'name-leading-sequence name path',
+
+			// aliases...
+			'example-sort-alias':
+				'Date "File date" Name',
 		},
 	},
 
 	toggleDefaultSortOrder: ['- Edit|Sort/Default sort order',
 		core.makeConfigToggler('default-sort-order', ['default', 'reverse'])],
+
+	// XXX de we need this to be recursive???
+	// 		...or do we need a recursive expansion action???
+	expandSortMethod: ['- Sort/',
+		core.doc`Expand sort method...
+
+			Expand all methods...
+			.expandSortMethod()
+				-> methods
+
+			Expand one specific method...
+			.expandSortMethod(method)
+				-> [method, ..]
+
+			Expand specific methods...
+			.expandSortMethod(method, method, ..)
+			.expandSortMethod([method, method, ..])
+				-> methods
+
+		methods format:
+			{
+				<method-name>: [method, ...],
+				...
+			}
+
+		NOTE: this is non-recursive...
+		`,
+		function(...methods){
+			var that = this
+			// normalize args...
+			methods = methods.length == 0 ?
+					Object.keys(this.config['sort-methods'] || {})
+				: methods.length == 1 ?
+					methods.pop()
+				: methods
+
+			var splitMethods = function(m){
+				return (m instanceof Array ? 
+							m 
+						: typeof(m) == typeof('str') ?
+							m
+								.split(/'([^']*)'|"([^"]*)"| +/)
+								.filter(function(e){ 
+									return e && e.trim() != '' && !/['"]/.test(e) }) 
+						: [])
+					.reduce(function(r, e){
+						return r.concat(e instanceof Array ? e : [e]) }, []) }
+			var get = function(name){
+				// normalize name...
+				name = name
+					.trim()
+					// remove quotes...
+					.replace(/^(["'])([^'"]*)(\1)$/, '$2')
+				var m = that.config['sort-methods'][name]
+					|| (that.__sort_methods__ && that.__sort_methods__[name])
+					|| SortActions.__sort_methods__[name]
+				return typeof(m) == typeof('str') ? splitMethods(m) : m
+			}
+
+			// return a single method...
+			if(!(methods instanceof Array)){
+				return get(methods)
+			}
+
+			// return multiple methods...
+			var res = {}
+			methods
+				.forEach(function(m){ res[m] = get(m) })
+			return res
+		}],
 
 	// Custom sort methods...
 	//
@@ -120,15 +180,20 @@ module.SortActions = actions.Actions({
 		// aliases...
 		'image-date':
 			'image-create-date',
+		'file-date':
+			'file-create-date',
+		// XXX
+		//'modify-date':
+		//	'image-modify-date',
 
 		'image-create-date':
-			'metadata.createDate birthtime ctime name-sequence keep-position',
+			'metadata.createDate file-date name-sequence',
 		// XXX 
 		//'image-modify-date':
-		//	'metadata.createDate birthtime ctime name-sequence keep-position',
+		//	'metadata.createDate birthtime ctime name-sequence',
 		
 		'file-create-date':
-				'birthtime ctime keep-position',
+				'birthtime ctime',
 
 
 		// XXX make sequence sort methods compatible with repeating numbers,
@@ -215,6 +280,8 @@ module.SortActions = actions.Actions({
 		//
 		// XXX need to test how will this affect a set of images where part
 		// 		of the set is sortable an part is not...
+		// XXX legacy: this is added to every sort automatically...
+		// 		...do we still need this here???
 		'keep-position': function(){
 			return function(a, b){
 				a = this.data.order.indexOf(a)
@@ -297,24 +364,15 @@ module.SortActions = actions.Actions({
 			// set sort method in data...
 			this.data.sort_method = typeof(method) == typeof('str') ? method : method.join(' ')
 
-			var splitMethods = function(m){
-				return (m instanceof Array ? 
-							m 
-						: typeof(m) == typeof('str') ?
-							m
-								.split(/'([^']*)'|"([^"]*)"| +/)
-								.filter(function(e){ 
-									return e && e.trim() != '' && !/['"]/.test(e) }) 
-						: [])
-					.reduce(function(r, e){
-						return r.concat(e instanceof Array ? e : [e]) }, []) }
 			var expandMethods = function(m, seen){
 				seen = seen || []
 				if(seen.indexOf(m) >= 0){
 					throw new Error('Sort method loop detected.')
 				}
 				var methods = that.config['sort-methods'] || []
-				return (m instanceof Array ? m : splitMethods(m))
+				return (m instanceof Array ? 
+						m 
+						: that.expandSortMethod(m))
 					.map(function(m){ 
 						var a = SortActions.__sort_methods__[m]
 							|| (that.__sort_methods__ && that.__sort_methods__[m])
@@ -387,6 +445,13 @@ module.SortActions = actions.Actions({
 								}
 							}}).call(that) 
 				})
+				// terminator: keep current position...
+				.concat([function(a, b){
+					a = that.data.order.indexOf(a)
+					b = that.data.order.indexOf(b)
+
+					return a - b
+				}])
 
 			// prepare the cmp function...
 			var cmp = method.length == 1 ? 
@@ -436,7 +501,8 @@ module.SortActions = actions.Actions({
 					&& this.data.sort_method
 					&& (this.data.sort_method
 						.split(/'([^']*)'|"([^"]*)"| +/)
-							.filter(function(e){ return e && e.trim() != '' && !/['"]/.test(e) })[0]))
+							.filter(function(e){ 
+								return e && e.trim() != '' && !/['"]/.test(e) })[0]))
 					|| 'none' },
 			function(){ 
 				return Object.keys(this.config['sort-methods'])
@@ -653,9 +719,12 @@ module.Sort = core.ImageGridFeatures.Feature({
 // 		- by hour/day/month/year in date modes...
 // 		- ???
 var SortUIActions = actions.Actions({
+	// XXX add links from method names to their expansions and actual 
+	// 		methods (docs)...
+	// 		...method docs do not exist at this point...
 	showSortMethodDoc: ['- Sort/',
 		widgets.makeUIDialog(function(method){
-			var data = this.config['sort-methods'][method]
+			var data = this.expandSortMethod(method)
 
 			return $('<div class="help-dialog">')
 				.append($('<div class="sort-method">')
@@ -667,7 +736,7 @@ var SortUIActions = actions.Actions({
 					.append($('<pre>')
 						.text(
 							'Sort order:\n  '
-							+data.replace(/\s+/g, '\n  '))))
+							+data.join('\n  '))))
 		})],
 
 	// XXX should we be able to edit modes??? 
@@ -704,6 +773,8 @@ var SortUIActions = actions.Actions({
 							(mode == cur ? 'highlighted selected' : ''),
 							(mode == dfl ? 'default' : ''),
 						].join(' '),
+						// show only modes starting with upper case...
+						hidden: mode[0].toUpperCase() != mode[0],
 					})
 						.on('open', function(){
 							that.toggleImageSort(null, mode, 
