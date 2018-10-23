@@ -77,6 +77,7 @@ module.SortActions = actions.Actions({
 			// 			checking for upper case:
 			// 				var st = s.trim()
 			// 				st[0].toUpperCase() == st[0]
+			// XXX keep-position should be on by default... (???)
 			'Date': 
 				'image-date name-sequence keep-position reverse',
 			'File date': 
@@ -118,13 +119,17 @@ module.SortActions = actions.Actions({
 	__sort_methods__: {
 		// aliases...
 		'image-date':
-			//'image-create-date image-modify-date',
 			'image-create-date',
+
 		'image-create-date':
 			'metadata.createDate birthtime ctime name-sequence keep-position',
 		// XXX 
 		//'image-modify-date':
 		//	'metadata.createDate birthtime ctime name-sequence keep-position',
+		
+		'file-create-date':
+				'birthtime ctime keep-position',
+
 
 		// XXX make sequence sort methods compatible with repeating numbers,
 		// 		i.e. for file names like DSC_1234 sorting more than 10K files
