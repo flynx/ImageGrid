@@ -722,6 +722,7 @@ var SortUIActions = actions.Actions({
 	// XXX add links from method names to their expansions and actual 
 	// 		methods (docs)...
 	// 		...method docs do not exist at this point...
+	// XXX do a better action calling scheme...
 	showSortMethodDoc: ['- Sort/',
 		widgets.makeUIDialog(function(method){
 			var data = this.expandSortMethod(method)
@@ -734,9 +735,12 @@ var SortUIActions = actions.Actions({
 					.append($('<hr>'))
 					// parse the action doc...
 					.append($('<pre>')
-						.text(
+						.html(
 							'Sort order:\n  '
-							+data.join('\n  '))))
+							+data
+								.map(function(m){
+									return `<a href="javascript:ig.showSortMethodDoc('${m}')">${m}</a>`})
+								.join('\n  '))))
 		})],
 
 	// XXX should we be able to edit modes??? 
