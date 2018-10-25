@@ -147,8 +147,7 @@ module.SortActions = actions.Actions({
 
 			// return a single method...
 			if(!(methods instanceof Array)){
-				// XXX can we return a function from an action???
-				return get(methods) || null
+				return actions.ASIS(get(methods) || null)
 			}
 
 			// return multiple methods...
