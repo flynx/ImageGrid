@@ -98,6 +98,7 @@ module.SortActions = actions.Actions({
 			Expand one specific method...
 			.expandSortMethod(method)
 				-> [method, ..]
+				-> null
 
 			Expand specific methods...
 			.expandSortMethod(method, method, ..)
@@ -146,7 +147,8 @@ module.SortActions = actions.Actions({
 
 			// return a single method...
 			if(!(methods instanceof Array)){
-				return get(methods)
+				// XXX can we return a function from an action???
+				return get(methods) || null
 			}
 
 			// return multiple methods...
@@ -725,6 +727,7 @@ var SortUIActions = actions.Actions({
 	// XXX do a better action calling scheme...
 	showSortMethodDoc: ['- Sort/',
 		widgets.makeUIDialog(function(method){
+			var that = this
 			var data = this.expandSortMethod(method)
 
 			return $('<div class="help-dialog">')
@@ -739,7 +742,9 @@ var SortUIActions = actions.Actions({
 							'Sort order:\n  '
 							+data
 								.map(function(m){
-									return `<a href="javascript:ig.showSortMethodDoc('${m}')">${m}</a>`})
+									return that.expandSortMethod(m) ?
+										`<a href="javascript:ig.showSortMethodDoc('${m}')">${m}</a>`
+										: m })
 								.join('\n  '))))
 		})],
 
