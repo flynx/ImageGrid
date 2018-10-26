@@ -359,7 +359,7 @@ module.SortActions = actions.Actions({
 
 			// defaults...
 			method = method 
-				|| ((this.config['default-sort'] || 'birthtime' || 'ctime')
+				|| ((this.config['default-sort'] || 'image-date')
 					+ (this.config['default-sort-order'] == 'reverse' ? ' reverse' : ''))
 
 			// set sort method in data...
