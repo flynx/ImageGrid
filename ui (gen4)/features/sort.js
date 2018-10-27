@@ -741,7 +741,8 @@ var SortUIActions = actions.Actions({
 							'Sort order:\n  '
 							+data
 								.map(function(m){
-									return that.expandSortMethod(m) ?
+									var e = that.expandSortMethod(m)
+									return (e instanceof Array || typeof(e) == typeof('str')) ?
 										`<a href="javascript:ig.showSortMethodDoc('${m}')">${m}</a>`
 										: m })
 								.join('\n  '))))
