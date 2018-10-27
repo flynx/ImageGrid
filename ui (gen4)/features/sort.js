@@ -731,6 +731,18 @@ var SortUIActions = actions.Actions({
 	// 		...method docs do not exist at this point...
 	// XXX do a better action calling scheme...
 	showSortMethodDoc: ['- Sort/',
+		core.doc`
+
+			Show sort method doc...
+			.showSortMethodDoc(method)
+
+			Show sort method doc with expanded method list...
+			.showSortMethodDoc(method, true)
+
+			Show sort method doc with flat method list...
+			.showSortMethodDoc(method, false)
+
+		`,
 		widgets.makeUIDialog(function(method, expand, indent){
 			var that = this
 			expand = expand || this.config['sort-doc-expand-methods'] || false
