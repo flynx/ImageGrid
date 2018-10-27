@@ -720,14 +720,42 @@ module.Sort = core.ImageGridFeatures.Feature({
 // 		- by hour/day/month/year in date modes...
 // 		- ???
 var SortUIActions = actions.Actions({
+	config: {
+		// If true expand the sort method alias tree...
+		//
+		'sort-doc-expand-methods': true,
+	},
+
 	// XXX add links from method names to their expansions and actual 
 	// 		methods (docs)...
 	// 		...method docs do not exist at this point...
 	// XXX do a better action calling scheme...
 	showSortMethodDoc: ['- Sort/',
-		widgets.makeUIDialog(function(method){
+		widgets.makeUIDialog(function(method, expand, indent){
 			var that = this
-			var data = this.expandSortMethod(method)
+			expand = expand || this.config['sort-doc-expand-methods'] || false
+			indent = indent || '  '
+
+			var expandMethods = function(method){
+				var methods = that.expandSortMethod(method)
+				return [ methods instanceof Array || typeof(methods) == typeof('str') ? 
+						`<a href="javascript:ig.showSortMethodDoc('${method}', ${expand})">${method}</a>`
+						: method ]
+					.concat(
+						methods instanceof Array ?
+							methods
+								.map(!expand ? 
+									// !expand -> keep only the first/root item...
+									function(e){ 
+										return expandMethods(e)[0] || [] } 
+									: expandMethods)
+								.reduce(function(r, e){
+									return r.concat(e instanceof Array ? e : [e]) }, [])
+								.map(function(e){ 
+									return indent + e })
+						: typeof(methods) == typeof('str') ?
+							[indent + methods]
+						: []) }
 
 			return $('<div class="help-dialog">')
 				.append($('<div class="sort-method">')
@@ -735,17 +763,14 @@ var SortUIActions = actions.Actions({
 					.append($('<h2>')
 						.text(method))
 					.append($('<hr>'))
-					// parse the action doc...
 					.append($('<pre>')
 						.html(
-							'Sort order:\n  '
-							+data
-								.map(function(m){
-									var e = that.expandSortMethod(m)
-									return (e instanceof Array || typeof(e) == typeof('str')) ?
-										`<a href="javascript:ig.showSortMethodDoc('${m}')">${m}</a>`
-										: m })
-								.join('\n  '))))
+							'Sort order:\n'
+							+ expandMethods(method)
+								// ignore the first item as we mention 
+								// it in the title...
+								.slice(1)
+								.join('\n'))))
 		})],
 
 	// XXX should we be able to edit modes??? 
