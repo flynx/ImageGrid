@@ -57,6 +57,9 @@ module.SortActions = actions.Actions({
 		// NOTE: all sort methods are terminated with 'keep-position' so 
 		// 		as to prevent shuffling of images that are not usable with
 		// 		the previous methods in chain...
+		//
+		// XXX should 'reverse' position have an effect???
+		// 		...currently only arity is used...
 		'sort-methods': {
 			'none': '',
 			// NOTE: for when date resolution is not good enough this 
@@ -86,23 +89,25 @@ module.SortActions = actions.Actions({
 	toggleDefaultSortOrder: ['- Edit|Sort/Default sort order',
 		core.makeConfigToggler('default-sort-order', ['default', 'reverse'])],
 
+	// helpers...
+	// XXX should these be actions???
 	// XXX de we need this to be recursive???
 	// 		...or do we need a recursive expansion action???
-	expandSortMethod: ['- Sort/',
-		core.doc`Expand sort method...
+	getSortMethods: ['- Sort/',
+		core.doc`Get sort method value...
 
-			Expand all methods...
-			.expandSortMethod()
+			Get all methods...
+			.getSortMethods()
 				-> methods
 
-			Expand one specific method...
-			.expandSortMethod(method)
+			Get one specific method...
+			.getSortMethods(method)
 				-> [method, ..]
 				-> null
 
-			Expand specific methods...
-			.expandSortMethod(method, method, ..)
-			.expandSortMethod([method, method, ..])
+			Get specific methods...
+			.getSortMethods(method, method, ..)
+			.getSortMethods([method, method, ..])
 				-> methods
 
 		methods format:
@@ -156,6 +161,44 @@ module.SortActions = actions.Actions({
 				.forEach(function(m){ res[m] = get(m) })
 			return res
 		}],
+	// XXX should this count 'reverese' arity???
+	expandSortMethod: ['- Sort/',
+		core.doc`Build list of basic sort methods...
+
+			.expandSortMethod(method)
+				-> methods
+
+		The resulting list will contain either field names or method names 
+		contained in .__sort_methods__
+
+		NOTE: this will not remove repeating methods.
+		`,
+		function(method, seen){
+			var that = this
+			seen = seen || []
+			if(seen.indexOf(method) >= 0){
+				throw new Error('Sort method loop detected.')
+			}
+			var methods = that.config['sort-methods'] || []
+
+			return (method instanceof Array ? 
+					method 
+					: that.getSortMethods(method))
+				.map(function(method){ 
+					var a = SortActions.__sort_methods__[method]
+						|| (that.__sort_methods__ && that.__sort_methods__[method])
+					// expand local aliases...
+					return method in methods ?
+						   that.expandSortMethod(methods[method], seen.concat([method])) 
+						// expand system aliases...
+						: typeof(a) == typeof('str') ? 
+							that.expandSortMethod(a, seen.concat([method]))
+						: a instanceof Array ?
+							a
+						: method })
+				// merge...
+				.reduce(function(r, e){
+					return r.concat(e instanceof Array ? e : [e]) }, []) }],
 
 	// Custom sort methods...
 	//
@@ -341,6 +384,8 @@ module.SortActions = actions.Actions({
 	// XXX would be nice to be able to sort a list of gids or a section
 	// 		of images...
 	// XXX should this handle manual sort order???
+	// XXX should reverse position have an effect???
+	// 		...currently only reverse arity is used...
 	sortImages: ['- Edit|Sort/Sort images',
 		function(method, reverse){ 
 			var that = this
@@ -365,32 +410,7 @@ module.SortActions = actions.Actions({
 			// set sort method in data...
 			this.data.sort_method = typeof(method) == typeof('str') ? method : method.join(' ')
 
-			var expandMethods = function(m, seen){
-				seen = seen || []
-				if(seen.indexOf(m) >= 0){
-					throw new Error('Sort method loop detected.')
-				}
-				var methods = that.config['sort-methods'] || []
-				return (m instanceof Array ? 
-						m 
-						: that.expandSortMethod(m))
-					.map(function(m){ 
-						var a = SortActions.__sort_methods__[m]
-							|| (that.__sort_methods__ && that.__sort_methods__[m])
-						// expand local aliases...
-						return m in methods ?
-							   expandMethods(methods[m], seen.concat([m])) 
-							// expand system aliases...
-							: typeof(a) == typeof('str') ? 
-								expandMethods(a, seen.concat([m]))
-							: a instanceof Array ?
-								a
-							: m })
-					// merge...
-					.reduce(function(r, e){
-						return r.concat(e instanceof Array ? e : [e]) }, []) }
-
-			method = expandMethods(method)
+			method = this.expandSortMethod(method)
 
 			// get the reverse arity...
 			var i = method.indexOf('reverse')
@@ -749,7 +769,7 @@ var SortUIActions = actions.Actions({
 			indent = indent || '  '
 
 			var expandMethods = function(method){
-				var methods = that.expandSortMethod(method)
+				var methods = that.getSortMethods(method)
 				return [ methods instanceof Array || typeof(methods) == typeof('str') ? 
 						`<a href="javascript:ig.showSortMethodDoc('${method}', ${expand})">${method}</a>`
 						: method ]
@@ -777,7 +797,12 @@ var SortUIActions = actions.Actions({
 					.append($('<hr>'))
 					.append($('<pre>')
 						.html(
-							'Sort order:\n'
+							'Sort order:\n  '
+							+ this.expandSortMethod(method)
+								.unique()
+								.join(', ')
+							+'\n\n'
+							+'Sort method tree:\n'
 							+ expandMethods(method)
 								// ignore the first item as we mention 
 								// it in the title...
