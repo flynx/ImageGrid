@@ -335,58 +335,58 @@ module.SortActions = actions.Actions({
 			}
 		},
 	},
-	// Sort images...
-	//
-	//	Sort using the default sort method
-	//	.sortImages()
-	//		NOTE: the actual sort method used is set via 
-	//			.config['default-sort'] and .config['default-sort-order']
-	//
-	//	Sort using a specific method(s):
-	//	.sortImages(<method>)
-	//	.sortImages(<method>, <reverse>)
-	//
-	//	.sortImages('<method> ..')
-	//	.sortImages('<method> ..', <reverse>)
-	//
-	//	.sortImages([<method>, ..])
-	//	.sortImages([<method>, ..], <reverse>)
-	//		NOTE: <method> can either be one of:
-	//			1) method name (key) from .config['sort-methods']
-	//			2) a space separated string of methods or attribute paths
-	//				as in .config['sort-methods']'s values.
-	//			for more info se doc for: .config['sort-methods']
-	//		NOTE: if it is needed to reverse the method by default just
-	//			add 'reverse' to it's string.
-	//
-	//	Update current sort order:
-	//	.sortImages('update')
-	//		NOTE: unless the sort order (.data.order) is changed manually
-	//			this will have no effect.
-	//		NOTE: this is designed to facilitate manual sorting of 
-	//			.data.order
-	//
-	//	Reverse image order:
-	//	.sortImages('reverse')
-	//
-	//
-	// NOTE: if a sort method name contains a space it must be quoted either
-	// 		in '"'s or in "'"s.
-	// NOTE: reverse is calculated by oddity -- if an odd number indicated
-	// 		then the result is reversed, otherwise it is not. 
-	// 		e.g. adding:
-	// 		 	'metadata.createDate birthtime ctime' + ' reverse' 
-	// 		will reverse the result's order while:
-	// 		 	'metadata.createDate birthtime ctime reverse' + ' reverese' 
-	// 		will cancel reversal.
-	// NOTE: with empty images this will not do anything.
-	//
 	// XXX would be nice to be able to sort a list of gids or a section
 	// 		of images...
 	// XXX should this handle manual sort order???
 	// XXX should reverse position have an effect???
 	// 		...currently only reverse arity is used...
 	sortImages: ['- Edit|Sort/Sort images',
+		core.doc`Sort images...
+	
+		Sort using the default sort method
+		 .sortImages()
+			NOTE: the actual sort method used is set via 
+				.config['default-sort'] and .config['default-sort-order']
+		
+		Sort using a specific method(s):
+		.sortImages(<method>)
+		.sortImages(<method>, <reverse>)
+		
+		.sortImages('<method> ..')
+		.sortImages('<method> ..', <reverse>)
+		
+		.sortImages([<method>, ..])
+		.sortImages([<method>, ..], <reverse>)
+			NOTE: <method> can either be one of:
+				1) method name (key) from .config['sort-methods']
+				2) a space separated string of methods or attribute paths
+					as in .config['sort-methods']'s values.
+				for more info se doc for: .config['sort-methods']
+			NOTE: if it is needed to reverse the method by default just
+				add 'reverse' to it's string.
+		
+		Update current sort order:
+		.sortImages('update')
+			NOTE: unless the sort order (.data.order) is changed manually
+				this will have no effect.
+			NOTE: this is designed to facilitate manual sorting of 
+				.data.order
+		
+		Reverse image order:
+		.sortImages('reverse')
+		
+		
+		NOTE: if a sort method name contains a space it must be quoted either
+			in '"'s or in "'"s.
+		NOTE: reverse is calculated by oddity -- if an odd number indicated
+			then the result is reversed, otherwise it is not. 
+			e.g. adding:
+				'metadata.createDate birthtime ctime' + ' reverse' 
+			will reverse the result's order while:
+				'metadata.createDate birthtime ctime reverse' + ' reverese' 
+			will cancel reversal.
+		NOTE: with empty images this will not do anything.
+		`,
 		function(method, reverse){ 
 			var that = this
 
