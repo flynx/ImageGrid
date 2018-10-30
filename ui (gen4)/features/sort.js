@@ -503,19 +503,19 @@ module.SortActions = actions.Actions({
 			this.data.updateImagePositions()
 		}],
 
-	// Toggle sort modes...
-	//
-	// This is similar to sort images but it will also maintain 
-	// .data.manual_order state.
-	//
-	// NOTE: a state can be passed appended with reverse, e.g.
-	// 		.toggleImageSort('Date') and .toggleImageSort('Date reverse')
-	// 		both will set the sort method to 'Date' but the later will 
-	// 		also reverse it.
-	//
 	// XXX should we merge manual order handling with .sortImages(..)???
 	// XXX currently this will not toggle past 'none'
 	toggleImageSort: ['- Edit|Sort/Image sort method',
+		core.doc`Toggle sort modes...
+		
+		This is similar to sort images but it will also maintain 
+		.data.manual_order state.
+		
+		NOTE: a state can be passed appended with reverse, e.g.
+			.toggleImageSort('Date') and .toggleImageSort('Date reverse')
+			both will set the sort method to 'Date' but the later will 
+			also reverse it.
+		`,
 		toggler.Toggler(null,
 			function(){ 
 				return (this.data 
