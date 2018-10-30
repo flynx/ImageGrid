@@ -1043,6 +1043,7 @@ var UIIntrospectionActions = actions.Actions({
 			return res
 		})],
 	// XXX make hypertext...
+	// XXX add specific action doc if available....
 	showCode: ['- Help/Show action code...',
 		makeUIDialog(function(action){
 			action = action instanceof Array ? action[0] : action
