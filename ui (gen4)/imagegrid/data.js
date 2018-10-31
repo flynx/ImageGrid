@@ -3190,7 +3190,9 @@ var DataWithTagsPrototype = {
 	},
 
 	// selectors...
-	getTaggedByAny: function(tags){
+	// NOTE: if raw is set to true then this will return all the tagged 
+	// 		gids even if they are not loaded in ribbons (i.e. cropped out)...
+	getTaggedByAny: function(tags, raw){
 		tags = arguments.length > 1 ? [].slice.call(arguments) : tags
 		tags = tags instanceof Array ? tags : [tags]
 
@@ -3208,9 +3210,11 @@ var DataWithTagsPrototype = {
 			}
 		})
 
-		return res.compact()
+		return raw ? 
+			res.compact() 
+			: this.getImages(res.compact())
 	},
-	getTaggedByAll: function(tags){
+	getTaggedByAll: function(tags, raw){
 		tags = arguments.length > 1 ? [].slice.call(arguments) : tags
 		tags = tags instanceof Array ? tags : [tags]
 
@@ -3247,7 +3251,9 @@ var DataWithTagsPrototype = {
 			i = index.indexOf(l)
 		}
 
-		return res
+		return raw ? 
+			res 
+			: this.getImages(res)
 	},
 }
 DataWithTagsPrototype.__proto__ = DataPrototype

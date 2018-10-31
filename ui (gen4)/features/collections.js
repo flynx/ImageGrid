@@ -2217,6 +2217,7 @@ var AutoCollectionsActions = actions.Actions({
 						return local_tag_names.indexOf(tag) < 0 })
 
 				// XXX should this be a real tag query???
+				//var gids = this.data.getTaggedByAll(tags, true)
 				var gids = this.data.getTaggedByAll(tags)
 
 				// get items that topped matching the query...
@@ -2881,12 +2882,14 @@ var CollectionMarksActions = actions.Actions({
 	// marked...
 	collectMarked: ['- Collections|Mark/',
 		function(collection){
-			return this.collectTagged('selected', collection) }],
+			return this.collect(this.marked, collection) }],
+			//return this.collectTagged('selected', collection) }],
 	uncollectMarked: ['Collections|Mark/Remove marked from collection',
 		{browseMode: function(){ 
 			return (!this.collection || this.marked.length == 0) && 'disabled' }},
 		function(collection){
-			return this.uncollectTagged('selected', collection) }],
+			return this.uncollect(this.marked, collection) }],
+			//return this.uncollectTagged('selected', collection) }],
 
 	// bookmarked...
 	collectBookmarked: ['- Collections|Bookmark/',
