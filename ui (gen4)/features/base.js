@@ -473,7 +473,8 @@ actions.Actions({
 			has a slightly different signature to the above, this is done
 			for simplicity...
 		`,
-		function(img, list){ this.data.focusImage.apply(this.data, arguments) }],
+		//function(img, list){ this.data.focusImage.apply(this.data, arguments) }],
+		function(img, list){ this.data.focusImage(...arguments) }],
 	// Focuses a ribbon by selecting an image in it...
 	//
 	// modes supported:

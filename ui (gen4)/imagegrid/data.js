@@ -760,16 +760,11 @@ var DataPrototype = {
 	// 		NOTE: the second argument must be .getRibbon(..) compatible.
 	// 		NOTE: to get global first/last image use the index, e.g.:
 	// 			.getImage(0) / .getImage(-1)
-	//
-	// 	Get image closest to current in list/ribbon:
-	// 	.getImage(list|ribbon[, 'before'|'after'])
-	// 		-> gid
-	// 		-> null
-	// 		NOTE: null is returned if there is no image before/after the
-	// 				current image in the given list/ribbon, e.g. the 
-	// 				current image is first/last resp.
-	// 		NOTE: 'before' is default.
-	// 		NOTE: the first argument must not be a number.
+	// 		NOTE: to reference relative ribbon 'before'/'after' keywords 
+	// 			are ignored, use 'above'/'prev' or 'below'/'next' instead.
+	// 			This is done foe uniformity with:
+	// 				.getImage(gid|order, 'before'|'after', ...)
+	// 			...see below for more info.
 	//
 	// 	Get image closest to current or a specific image:
 	// 	.getImage('before'[, list|ribbon])
@@ -785,6 +780,17 @@ var DataPrototype = {
 	// 				current image is first/last resp.
 	// 		NOTE: in both the above cases if gid|order is found explicitly
 	// 			it will be returned.
+	//
+	// 	Get image closest to current in list/ribbon (special case):
+	// 	.getImage(list|ribbon[, 'before'|'after'])
+	// 		-> gid
+	// 		-> null
+	// 		NOTE: null is returned if there is no image before/after the
+	// 				current image in the given list/ribbon, e.g. the 
+	// 				current image is first/last resp.
+	// 		NOTE: 'before' is default.
+	// 		NOTE: the first argument must not be a number.
+	//
 	//
 	// 	Get next/prev image (offset of 1):
 	// 	.getImage('next')
@@ -818,6 +824,7 @@ var DataPrototype = {
 	//
 	// XXX most of the complexity here comes from argument DSL parsing,
 	// 		might be good to revise argument syntax and handling...
+	// XXX doc needs revision....
 	getImage: function(target, mode, list){
 		// empty data...
 		if(this.order == null || (this.order && this.order.length == 0)){
@@ -842,6 +849,7 @@ var DataPrototype = {
 		// first/last special case...
 		// XXX need to get first loaded...
 		if(target == 'first'){
+			mode = mode == 'before' || mode == 'after' ? null : mode
 			list = this.ribbons[this.getRibbon(mode)]
 			for(var res in list){
 				return list[res]
@@ -849,6 +857,7 @@ var DataPrototype = {
 			return null
 		}
 		if(target == 'last'){
+			mode = mode == 'before' || mode == 'after' ? null : mode
 			list = this.ribbons[this.getRibbon(mode)]
 			for(var i=list.length; i >= 0; i--){
 				if(list[i] != null){
@@ -1341,8 +1350,8 @@ var DataPrototype = {
 			return this.ribbon_order.slice(-1)[0]
 		}
 
-		target = target == 'next' ? 'after' : target
-		target = target == 'prev' ? 'before' : target
+		target = target == 'next' || target == 'below' ? 'after' : target
+		target = target == 'prev' || target == 'above' ? 'before' : target
 
 		if(target == 'before' || target == 'after'){
 			offset = target
