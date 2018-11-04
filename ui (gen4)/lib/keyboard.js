@@ -14,7 +14,6 @@ var object = require('lib/object')
 /*********************************************************************/
 
 var MODIFIERS =
-//module.MODIFIERS = [ 'ctrl', 'meta', 'alt', 'shift' ]
 module.MODIFIERS = [ 'caps', 'ctrl', 'meta', 'alt', 'shift' ]
 
 
@@ -36,20 +35,18 @@ module.KEY_SEPARATORS = ['+', '-', '_']
 var SPECIAL_KEYS =
 module.SPECIAL_KEYS = {
 	// Special Keys...
-	9:		'Tab',		33:		'PgUp',		45:		'Ins',		
-	13:		'Enter',	34:		'PgDown',	46:		'Del',		
-	16:		'Shift',	35:		'End',		 8:		'Backspace',
-	17:		'Ctrl',		36:		'Home',		91:		'Win',		
-	18:		'Alt',		37:		'Left',		93:		'Menu',		
-	20:		'Caps Lock',38:		'Up',	 
-	27:		'Esc',		39:		'Right',  
-	32:		'Space',	40:		'Down',  
+	 8: 'Backspace',		 9: 'Tab',				13: 'Enter',	
+	16: 'Shift',			17: 'Ctrl',				18: 'Alt',			
+	20: 'Caps Lock',		27: 'Esc',				32: 'Space',		
+	33: 'PgUp',				34: 'PgDown',			35: 'End',			 
+	36: 'Home',				37: 'Left',				38: 'Up',	 
+	39: 'Right',  			40: 'Down',				45: 'Ins',		
+	46: 'Del',				91: 'Win',				93: 'Menu',		
 
 	// Function Keys...
-	112:	'F1',		116:	'F5',		120:	'F9', 
-	113:	'F2',		117:	'F6',		121:	'F10',
-	114:	'F3',		118:	'F7',		122:	'F11',
-	115:	'F4',		119:	'F8',		123:	'F12',
+	112: 'F1',		113: 'F2',		114: 'F3',		115: 'F4',		
+	116: 'F5',		117: 'F6',		118: 'F7',		119: 'F8',		
+	120: 'F9',		121: 'F10',		122: 'F11',		123: 'F12',
 
 	// Number row..
 	// NOTE: to avoid conflicts with keys that have a code the same as
@@ -116,17 +113,17 @@ var SPECIAL_KEY_ALTERNATIVE_TITLES = {
 
 	ctl: 'Ctrl', control: 'Ctrl',
 
-	'capslock': 'Caps Lock',
+	capslock: 'Caps Lock', caps: 'Caps Lock',
 
-	'page up': 'PgUp', 'pageup': 'PgUp',
+	'page up': 'PgUp', pageup: 'PgUp',
 
-	'page down': 'PgDown', 'pagedown': 'PgDown',
+	'page down': 'PgDown', pagedown: 'PgDown',
 
 	insert: 'Ins',
 
 	delete: 'Del',
 
-	'bkspace' : 'Backspace', 'back space' : 'Backspace',
+	bkspace : 'Backspace', 'back space' : 'Backspace',
 
 	windows: 'Win',
 }
