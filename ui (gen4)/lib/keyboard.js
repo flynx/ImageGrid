@@ -31,6 +31,7 @@ module.KEY_SEPARATORS = ['+', '-', '_']
 // 			String.fromCharCode(<code>) or <letter>.charCodeAt(0)
 // NOTE: the lower case letters are accessible by adding 32 to the 
 // 		capital key code.
+// NOTE: this is *mostly* language agnostic.
 // NOTE: don't understand why am I the one who has to write this...
 var SPECIAL_KEYS =
 module.SPECIAL_KEYS = {
