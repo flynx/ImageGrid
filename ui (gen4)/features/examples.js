@@ -386,6 +386,7 @@ var ExampleUIActions = actions.Actions({
 				console.log('Dialog closing...')
 			})
 		})],
+	// XXX use tag list and current image tags....
 	exampleBrowseCloud: ['Test/Demo $cloud dialog...',
 		widgets.makeUIDialog(function(){
 			var actions = this
