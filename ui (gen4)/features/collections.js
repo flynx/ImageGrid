@@ -2865,7 +2865,7 @@ var CollectionMarksActions = actions.Actions({
 			CollectionTagsActions.config['collection-local-tags']
 				.concat([
 					'bookmark',
-					'selected',
+					'marked',
 				]),
 		
 		'collection-transfer-changes': 
@@ -2875,7 +2875,7 @@ var CollectionMarksActions = actions.Actions({
 			CollectionActions.config['collection-transfer-changes']
 				.concat([
 					'bookmarked', 
-					'selected',
+					'marked',
 				]),
 	},
 
@@ -2883,13 +2883,13 @@ var CollectionMarksActions = actions.Actions({
 	collectMarked: ['- Collections|Mark/',
 		function(collection){
 			return this.collect(this.marked, collection) }],
-			//return this.collectTagged('selected', collection) }],
+			//return this.collectTagged('marked', collection) }],
 	uncollectMarked: ['Collections|Mark/Remove marked from collection',
 		{browseMode: function(){ 
 			return (!this.collection || this.marked.length == 0) && 'disabled' }},
 		function(collection){
 			return this.uncollect(this.marked, collection) }],
-			//return this.uncollectTagged('selected', collection) }],
+			//return this.uncollectTagged('marked', collection) }],
 
 	// bookmarked...
 	collectBookmarked: ['- Collections|Bookmark/',

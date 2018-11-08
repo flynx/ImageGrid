@@ -2885,6 +2885,15 @@ var DataPrototype = {
 
 var DataWithTagsPrototype = {
 
+	// tags store...
+	//
+	// Format:
+	// 	{
+	// 		<tag>: [<gid>, ...],
+	// 		...
+	// 	}
+	tags: null,
+
 	// XXX hate manual super calls...
 	// 		....is there a way not to say DataPrototype here???
 	__gid_lists: DataPrototype.__gid_lists.concat(['tags']),

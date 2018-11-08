@@ -37,7 +37,7 @@ module.demo_data = {
 	},
 
 	tags: {
-		selected: ['b', 'z'],
+		marked: ['b', 'z'],
 		bookmark: ['1', 'c', 'z'],
 	},
 

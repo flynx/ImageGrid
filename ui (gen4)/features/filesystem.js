@@ -2083,7 +2083,7 @@ var FileSystemWriterActions = actions.Actions({
 				// tags...
 				// XXX test: %n%(b)b%(m)m%e
 				.replace(
-					/%\(([^)]*)\)m/, tags.indexOf('selected') >= 0 ? '$1' : '')
+					/%\(([^)]*)\)m/, tags.indexOf('marked') >= 0 ? '$1' : '')
 				.replace(
 					/%\(([^)]*)\)b/, tags.indexOf('bookmark') >= 0 ? '$1' : '')
 
@@ -2369,7 +2369,7 @@ var FileSystemWriterUIActions = actions.Actions({
 					['Marked:', 
 						actions.formatImageName(pattern, 
 							img, 
-							{tags: ['selected']})],
+							{tags: ['marked']})],
 					['Bookmarked:', 
 						actions.formatImageName(pattern, 
 							img, 
@@ -2383,7 +2383,7 @@ var FileSystemWriterUIActions = actions.Actions({
 							img, 
 							{
 								tags: [
-									'selected',
+									'marked',
 									'bookmark',
 								],
 								conflicts: {

@@ -22,7 +22,7 @@ var PreCacheActions = actions.Actions({
 		'preload-radius': 5,
 
 		// Sources to preload...
-		'preload-sources': ['bookmark', 'selected'],
+		'preload-sources': ['bookmark', 'marked'],
 	},
 
 	// NOTE: this will not work from chrome when loading from a local fs...
@@ -75,7 +75,7 @@ var PreCacheActions = actions.Actions({
 	//
 	// Sources supported:
 	// 	<tag>			- pre-load images tagged with <tag> 
-	// 					  (default: ['bookmark', 'selected']) 
+	// 					  (default: ['bookmark', 'marked']) 
 	// 	<ribbon-gid>	- pre-cache from a specific ribbon
 	// 	'ribbon'		- pre-cache from current ribbon
 	// 	'order'			- pre-cache from images in order
@@ -115,7 +115,7 @@ var PreCacheActions = actions.Actions({
 				: (this.data.getImage(target)
 					|| this.data.getImage(target, 'after'))
 
-			sources = sources || this.config['preload-sources'] || ['bookmark', 'selected']
+			sources = sources || this.config['preload-sources'] || ['bookmark', 'marked']
 			sources = sources.constructor !== Array ? [sources] : sources
 			radius = radius || this.config['preload-radius'] || 9
 

@@ -1290,7 +1290,7 @@ module.TagsEditActions = actions.Actions({
 	// NOTE: setting source to 'both' and mode to 'reset' is the same as
 	// 		'images' and 'reset' as all .data tags will be lost on first 
 	// 		pass...
-	syncTags: ['Tag/Synchoronize tags between data and images',
+	syncTags: ['Tag/-10:Synchoronize tags between data and images',
 		{journal: true},
 		function(source, mode){
 			// can't do anything if either .data or .images are not 
@@ -1350,8 +1350,8 @@ module.TagsEdit = core.ImageGridFeatures.Feature({
 				if(tags.length > 0){
 					this.markChanged('tags')
 
-					tags.indexOf('selected') >= 0
-						&& this.markChanged('selected')
+					tags.indexOf('marked') >= 0
+						&& this.markChanged('marked')
 
 					tags.indexOf('bookmark') >= 0
 						&& this.markChanged('bookmarked')
@@ -1360,7 +1360,7 @@ module.TagsEdit = core.ImageGridFeatures.Feature({
 				this.markChanged('images', gids)
 			}],
 
-		// store .tags and .tags.selected / .tags.bookmark separately from .data...
+		// store .tags and .tags.marked / .tags.bookmark separately from .data...
 		//
 		// XXX see if this can be automated...
 		['prepareIndexForWrite', 
@@ -1375,9 +1375,9 @@ module.TagsEdit = core.ImageGridFeatures.Feature({
 					res.index.tags = res.raw.data.tags
 				}
 
-				// XXX should we save an empty list *iff* changes.selected is true???
-				if(changes === true || changes.selected){
-					res.index.marked = (res.raw.data.tags || {}).selected || []
+				// XXX should we save an empty list *iff* changes.marked is true???
+				if(changes === true || changes.marked){
+					res.index.marked = (res.raw.data.tags || {}).marked || []
 				}
 				// XXX should we save an empty list *iff* changes.bookmarked is true???
 				if(changes === true || changes.bookmarked){
@@ -1389,7 +1389,7 @@ module.TagsEdit = core.ImageGridFeatures.Feature({
 
 				// cleanup...
 				if(res.index.data && res.index.data.tags){
-					delete res.index.data.tags.selected
+					delete res.index.data.tags.marked
 					delete res.index.data.tags.bookmark
 					//delete res.index.data.tags.bookmark_data
 					delete res.index.data.tags
@@ -1399,7 +1399,7 @@ module.TagsEdit = core.ImageGridFeatures.Feature({
 			function(res, json){
 				res.data.tags = json.tags || {}
 
-				res.data.tags.selected = json.marked || []
+				res.data.tags.marked = json.marked || []
 				res.data.tags.bookmark = json.bookmarked ? json.bookmarked[0] : []
 				//res.data.tags.bookmark_data = json.bookmarked ? json.bookmarked[1] : {}
 

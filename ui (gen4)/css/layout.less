@@ -1034,15 +1034,15 @@ stretching in width... */
 }
 
 .mark.bookmark,
-.mark.selected {
+.mark.marked {
 	width: 0px;
 	margin-left: 0px;
 	border: none;
 	overflow: visible;
 }
 .mark.bookmark:after,
-.mark.selected:before,
-.mark.selected:after {
+.mark.marked:before,
+.mark.marked:after {
 	display: block;
 	position: absolute;
 	content: "";
@@ -1082,9 +1082,9 @@ stretching in width... */
 }
 
 
-/* the selected tick... */
-.mark.selected:before,
-.mark.selected:after {
+/* the marked tick... */
+.mark.marked:before,
+.mark.marked:after {
 	top: @image-tile-size/30;
 	left: -@image-tile-size/15;
 	bottom: auto;
@@ -1093,11 +1093,11 @@ stretching in width... */
 
 	.rotate(-45deg);
 }
-.mark.selected:before {
+.mark.marked:before {
 	width: @image-tile-size/100;
 	height: @image-tile-size/50;
 }
-.mark.selected:after {
+.mark.marked:after {
 	width: @image-tile-size/25;
 	height: @image-tile-size/100;
 }
@@ -1406,7 +1406,7 @@ stretching in width... */
 }
 
 
-/* XXX REUSE: this is the same as selected/bookmarked image markers... */
+/* XXX REUSE: this is the same as marked/bookmarked image markers... */
 .overlay-info .marked,
 .overlay-info .marked:after,
 .overlay-info .marked:before,

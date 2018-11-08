@@ -895,7 +895,7 @@ module.Dialogs = core.ImageGridFeatures.Feature({
 					&& this.toggleOverlayBlur(this.config['ui-overlay-blur'])
 			}],
 		['__call__', 
-			function(res, action){
+			function(res, action, args){
 				//if(res instanceof jQuery || res instanceof widget.Widget){
 				//	var elem = (res.dom || res)
 				if(res instanceof widget.Widget){
@@ -904,7 +904,10 @@ module.Dialogs = core.ImageGridFeatures.Feature({
 					var title = this.getActionAttr(action, 'dialogTitle')
 
 					title ?
-						elem.attr('dialog-title', title)
+						elem.attr('dialog-title', 
+							title instanceof Function ? 
+								title.call(this, action, args) 
+								: title)
 						: !elem.attr('keep-dialog-title') 
 							&& !this.getActionAttr(action, 'keepDialogTitle')
 							&& elem.attr('dialog-title', this.getDocTitle(action))

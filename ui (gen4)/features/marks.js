@@ -230,11 +230,11 @@ var ImageMarkActions = actions.Actions({
 	get marked(){
 		if(this.data == null 
 				|| this.data.tags == null
-				|| !('selected' in this.data.tags)){
+				|| !('marked' in this.data.tags)){
 			return []
 		}
-		//return this.data.tags['selected'].slice()
-		return this.data.getImages(this.data.tags['selected'])
+		//return this.data.tags['marked'].slice()
+		return this.data.getImages(this.data.tags['marked'])
 	},
 
 	markedInRibbon: ['- Mark|Ribbon/',
@@ -250,16 +250,16 @@ var ImageMarkActions = actions.Actions({
 	prevMarked: ['Mark|Navigate/Previous marked image',
 		{browseMode: function(target){ 
 			return this.data.getImage('current', 'before', this.marked) == null && 'disabled' }},
-		function(mode){ this.prevTagged('selected', mode) }],
+		function(mode){ this.prevTagged('marked', mode) }],
 	nextMarked: ['Mark|Navigate/Next marked image',
 		{browseMode: function(target){ 
 			return this.data.getImage('current', 'after', this.marked) == null && 'disabled' }},
-		function(mode){ this.nextTagged('selected', mode) }],
+		function(mode){ this.nextTagged('marked', mode) }],
 
 	cropMarked: ['Mark|Crop/Crop $marked images',
 		{browseMode: function(target){ 
 			return this.marked.length == 0 && 'disabled' }},
-		function(flatten){ this.cropTagged('selected', 'any', flatten) }],
+		function(flatten){ this.cropTagged('marked', 'any', flatten) }],
 
 	removeMarkedFromCrop: ['Mark|Crop/Remove marked from crop',
 		{browseMode: function(target){ 
@@ -320,7 +320,7 @@ var ImageMarkEditActions = actions.Actions({
 	//
 	toggleMark: ['Mark|Image/Image $mark',
 		undoTag('toggleMark'),
-		makeTagTogglerAction('selected')],
+		makeTagTogglerAction('marked')],
 	toggleMarkBlock: ['Mark/Invert $block marks',
 		core.doc`A block is a set of adjacent images either marked on unmarked
 		in the same way
@@ -485,8 +485,8 @@ module.ImageMarksUI = core.ImageGridFeatures.Feature({
 				&& this.ribbons
 					.toggleImageMark(
 						gid, 
-						'selected', 
-						this.data.hasTag(gid, 'selected') ? 'on' : 'off')
+						'marked', 
+						this.data.hasTag(gid, 'marked') ? 'on' : 'off')
 		}],
 	],
 })
@@ -563,7 +563,7 @@ var ImageBookmarkEditActions = actions.Actions({
 	toggleBookmarkOnMarked: ['Bookmark|Mark/-70:Toggle bookmark on maked images',
 		{browseMode: 'cropMarked'},
 		function(action){ 
-			return this.toggleBookmark(this.data.getTaggedByAny('selected'), action) 
+			return this.toggleBookmark(this.data.getTaggedByAny('marked'), action) 
 		}],
 })
 

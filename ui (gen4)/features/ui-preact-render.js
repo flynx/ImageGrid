@@ -76,7 +76,7 @@ class IGRibbon extends preact.Component {
 
 		var images = data.ribbons[ribbon]
 			.map(function(gid){
-				var marks = data.tags.selected.indexOf(gid) >= 0 ?
+				var marks = data.tags.marked.indexOf(gid) >= 0 ?
 					h(IGImageMark, {
 						gid: gid,
 						type: 'selected',

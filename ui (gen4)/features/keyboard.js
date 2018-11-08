@@ -208,6 +208,7 @@ module.GLOBAL_KEYBOARD = {
 		alt_F: 'browseActions: "/File/" -- File menu...',
 		alt_E: 'browseActions: "/Edit/" -- Edit menu...',
 		alt_N: 'browseActions: "/Navigate/" -- Navigate menu...',
+		alt_T: 'browseActions: "/Tag/" -- Tag menu...',
 
 		//alt_S: 'browseActions: "/Sort/" -- Sort menu...',
 		alt_shift_A: 'listActions',
@@ -397,6 +398,9 @@ module.GLOBAL_KEYBOARD = {
 		// metadata...
 		I: 'showMetadata',
 		//ctrl_shift_I: 'showMetadata: "current" "full" -- Show full metadata',
+
+		// XXX
+		ctrl_T: 'showTagCloud',
 
 
 		// marking...

@@ -236,8 +236,8 @@ var VirtualDOMRibbonsPrototype = {
 		// XXX STUB: make this extensible...
 		tags.indexOf('bookmark') >= 0 
 			&& marks.push('bookmark')
-		tags.indexOf('selected') >= 0 
-			&& marks.push('selected')
+		tags.indexOf('marked') >= 0 
+			&& marks.push('marked')
 
 		return marks
 			.map(function(type){

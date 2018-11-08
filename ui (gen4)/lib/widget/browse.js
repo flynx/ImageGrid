@@ -290,7 +290,7 @@ function(text, options){
 //		stop_propagation: 'open',
 //
 // 		// Called when editing is abrted... 
-// 		editaborted: <func>,
+// 		editaborted: <func(new-text)>,
 //
 // 		// Called when editing is done...
 // 		editdone: <func>,
@@ -2253,10 +2253,16 @@ var BrowserPrototype = {
 	//			...
 	//		},
 	//
+	//		// element attributes...
 	//		attrs: {
 	//			<attr>: <value>,
 	//			...
 	//		},
+	//
+	//		// element css style...
+	//		style: {
+	//			<attr>: <value>,
+	//		}
 	//	}
 	//
 	//	<buttons> format (optional):
@@ -2658,6 +2664,8 @@ var BrowserPrototype = {
 
 			opts.attrs
 				&& res.attr(opts.attrs)
+			opts.style
+				&& res.css(opts.style)
 
 			//--------------------------------------------- buttons ---
 			// button container...
@@ -4026,6 +4034,10 @@ var BrowserPrototype = {
 
 		var dom = this.dom
 		options = this.options
+
+		// handle close event...
+		options.close
+			&& this.close(options.close)
 
 		// basic permanent interactions...
 		dom.find('.path')

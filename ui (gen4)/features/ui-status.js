@@ -477,7 +477,7 @@ var StatusBarActions = actions.Actions({
 			// 		...this also simpler than handling '?' and other
 			// 		special toggler args in the handler...
 			var tags = this.data ? this.data.getTags(gid) : []
-			var tag = type == 'mark' ? 'selected' : 'bookmark'
+			var tag = type == 'mark' ? 'marked' : 'bookmark'
 			var on = item.hasClass('on')
 			item[tags.indexOf(tag) < 0 ?
 					'removeClass' 

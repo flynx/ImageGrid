@@ -66,6 +66,8 @@ core.ImageGridFeatures.Feature('imagegrid-ui-minimal', [
 
 	'ui-bounds-indicators',
 	'ui-current-image-indicator',
+
+	'ui-tags',
 ])
 
 

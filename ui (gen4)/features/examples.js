@@ -351,7 +351,7 @@ var ExampleUIActions = actions.Actions({
 					})
 					
 				make('do nothing')
-					.addClass('selected')
+					.addClass('marked')
 
 				make('nested dialog...',
 					{
@@ -767,8 +767,8 @@ var ExampleUIActions = actions.Actions({
 		}],
 	showBookmarkedInDrawer: ['Test/Show bookmarked in drawer',
 		function(){ this.showTaggedInDrawer('bookmark') }],
-	showSelectedInDrawer: ['Test/Show selected in drawer',
-		function(){ this.showTaggedInDrawer('selected') }],
+	showSelectedInDrawer: ['Test/Show marked in drawer',
+		function(){ this.showTaggedInDrawer('marked') }],
 
 
 	makePartitionAfter: ['Test/Make Partition after image',
