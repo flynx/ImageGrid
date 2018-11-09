@@ -242,7 +242,7 @@ module.GLOBAL_KEYBOARD = {
 		// XXX experimental, not sure if wee need this with a keyboard...
 		T: 'rotateRibbonCCW -- Tilt ribbons counter clock wise',
 		shift_T: 'rotateRibbonCW -- Tilt ribbons clock wise',
-		alt_T: 'resetRibbonRotation -- Reset ribbon tilt',
+		ctrl_shift_T: 'resetRibbonRotation -- Reset ribbon tilt',
 
 
 		// NOTE: this is handled by the wrapper at this point, so we do 

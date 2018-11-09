@@ -56,6 +56,7 @@ module.PersistentTags = core.ImageGridFeatures.Feature({
 
 var TagUIActions = actions.Actions({
 	// XXX use global tag list... (???) 
+	// XXX make this reusable...
 	showTagCloud: ['Tag|Edit|Image/$Tags...',
 		core.doc`
 		`,
@@ -79,6 +80,7 @@ var TagUIActions = actions.Actions({
 			// XXX
 			var removeTag = function(tag){
 				console.log('REMOVE TAG:', tag)
+				// XXX
 			}
 
 			return browse.makeLister(null, function(path, make){
@@ -108,8 +110,8 @@ var TagUIActions = actions.Actions({
 								e.css('opacity', on ? 0.3 : '')
 
 								on ?
-									that.data.untag(tag, gids)
-									: that.data.tag(tag, gids)
+									that.untag(tag, gids)
+									: that.tag(tag, gids)
 							},
 							buttons: [
 								// remove tag button...
@@ -129,7 +131,7 @@ var TagUIActions = actions.Actions({
 							return
 						}
 
-						that.data.tag(tag, gids)
+						that.tag(tag, gids)
 
 						// update tag list...
 						make.dialog
@@ -149,6 +151,10 @@ var TagUIActions = actions.Actions({
 	
 	// XXX crop/filter by tags...
 	// XXX
+	cropTaggedFromCloud: ['-Tag|Crop/Crop tagged...',
+		widgets.makeUIDialog(function(){
+			// XXX
+		})],
 })
 
 
