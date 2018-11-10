@@ -2144,10 +2144,14 @@ module.PreviewFilters = core.ImageGridFeatures.Feature({
 
 	config: {
 		'preview-filters': {
-			'Black and white': 'image-bw',
+			// exposure aids...
 			'Show shadows': 'image-show-shadows',
 			'Show highlights': 'image-show-highlights',
+
+			// sharpness aids...
+			'Black and white': 'image-bw',
 			'Edge detect': 'image-edge-detect',
+
 			'No filters': 'none',
 		},
 	},
@@ -2193,15 +2197,29 @@ module.PreviewFilters = core.ImageGridFeatures.Feature({
 					var classes = Object.values(filters)
 						.filter(function(c){ return c != cls })
 					this.dom
-						.find('.'+ classes.join(', .'))
-							.removeClass(classes.join(' '))
+						.find('.filter-applied')
+							.removeClass(classes.join(' ') +' filter-applied')
 
 					// toggle filter...
-					if(state in filters){
-						img.toggleClass(cls)
+					if(cls != 'none' && state in filters){
+						// NOTE: we are not using .toggleClass(..) here 
+						// 		because we need to ensure *both* the cls 
+						// 		and '.filter-applied' classes are set to
+						// 		the same state...
+						if(img.hasClass(cls)){
+							img.removeClass(cls +' filter-applied')
+
+						} else {
+							img.addClass(cls +' filter-applied')
+							return state
+						}
 					}
 
-					return img.hasClass(cls) ? state : 'No filters'
+					// XXX not sure if this is needed...
+					//return (cls != 'none' && img.hasClass(cls)) ? 
+					//	state 
+					//	: 'No filters'
+					return 'No filters'
 				},
 				function(){ 
 					return Object.keys(this.config['preview-filters']) })],

@@ -56,6 +56,16 @@ module.GLOBAL_KEYBOARD = {
 		L: 'toggleSlideshowLooping -- Toggle slideshow looping',
 	},
 
+	'Preview filter': {
+		doc: 'Preview filter applied',
+		pattern: '.filter-applied',
+		drop: [
+			'Esc',
+		],
+
+		Esc: 'togglePreviewFilter: "No filters" -- Clear preview filter',
+	},
+
 	// XXX do we need to prevent up/down navigation here, it may get confusing?
 	// XXX do we need to disable fast sorting here???
 	'Single Image': {
@@ -442,6 +452,8 @@ module.GLOBAL_KEYBOARD = {
 
 
 		// filters...
+		// NOTE: Esc will also clear the filter (see "Preview filter" mode above)...
+		shift_F: 'browseActions: "/Image/Preview filter/" -- Preview filters...',
 		';': 'togglePreviewFilter: "Show shadows" -- Preview shadows',
 		':': 'togglePreviewFilter: "Show highlights" -- Preview highlights',
 		'caps+:': ':',
