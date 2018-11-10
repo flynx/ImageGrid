@@ -100,16 +100,20 @@ requirejs(['ui'])
 </head>
 <body>
 
-<div class="svg-filters">
+<!-- 
+XXX this lives in css/filters.svg but Chrome refuses to reference 
+	it's internals from the file: protocol... 
+-->
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="0%" height="0%" class="svg-filters">
 
-<!-- edge detect -->
-<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="0%" height="0%">
-  <filter id="EdgeDetect">
-    <feConvolveMatrix order="3 3" preserveAlpha="true" kernelMatrix="-1 -1 -1 -1 8 -1 -1 -1 -1"/>
-  </filter>
+	<!-- edge detect -->
+	<filter id="EdgeDetect">
+		<feConvolveMatrix order="3 3" preserveAlpha="true" kernelMatrix="-1 -1 -1 -1 8 -1 -1 -1 -1"/>
+	</filter>
+
 </svg>
 
-</div>
+
 
 <!-- for viewer structure doc see: ribbons.js... -->
 
