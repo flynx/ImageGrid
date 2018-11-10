@@ -154,6 +154,10 @@ body {
 .image-show-highlights {
 	filter: contrast(0.8) brightness(0.6) contrast(1.2);
 }
+.image-edge-detect {
+	-webkit-filter: url(#EdgeDetect);
+	filter: url(#EdgeDetect);
+}
 
 
 
