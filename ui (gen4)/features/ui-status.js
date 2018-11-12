@@ -857,7 +857,7 @@ var StatusLogActions = actions.Actions({
 		}],
 	statusMessage: ['- Interface/',
 		function(){
-			var msg = args2array(arguments)
+			var msg = [...arguments]
 			if(msg.len == 0){
 				return
 			}

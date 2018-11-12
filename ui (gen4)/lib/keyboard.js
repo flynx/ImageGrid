@@ -661,7 +661,7 @@ var KeyboardPrototype = {
 		var service_fields = this.service_fields 
 			|| this.constructor.service_fields
 
-		handler = arguments.length > 1 ? [].slice.call(arguments)
+		handler = arguments.length > 1 ? [...arguments]
 			: handler == null ? '*'
 			: handler == '*' || handler == '?' || handler instanceof Function ? handler
 			: handler instanceof Array ? handler 

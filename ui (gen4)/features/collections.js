@@ -1405,7 +1405,7 @@ module.Collection = core.ImageGridFeatures.Feature({
 		], 
 			function(){
 				var that = this
-				var args = [].slice.call(arguments)
+				var args = [...arguments]
 				var title = (args.length == 1 ? args[0] : args[1]) || this.collection
 				var collection = (this.collections || {})[title] || {}
 
@@ -1435,7 +1435,7 @@ module.Collection = core.ImageGridFeatures.Feature({
 			}],
 		['joinCollect',
 			function(_, align, collection, data){
-				var args = [].slice.call(arguments)
+				var args = [...arguments]
 				var title = (args.length == 1 ? args[0] : args[1]) || this.collection
 				var collection = (this.collections || {})[title] || {}
 
@@ -2247,7 +2247,7 @@ var AutoCollectionsActions = actions.Actions({
 		NOTE: at least one tag must be supplied...
 		`,
 		function(title, tags){
-			tags = arguments.length > 2 ? [].slice.call(arguments, 1) : tags
+			tags = arguments.length > 2 ? [...arguments].slice(1) : tags
 			tags = tags instanceof Array ? tags : [tags]
 
 			if(tags.length == 0){
@@ -2323,7 +2323,7 @@ module.AutoCollections = core.ImageGridFeatures.Feature({
 // 		passed to func with an appended title...
 var mixedModeCollectionAction = function(func, n, last_used_collection){
 	return widgets.uiDialog(function(){
-		var args = [].slice.call(arguments)
+		var args = [...arguments]
 		// check if minimum number of arguments is reached...
 		return args.length < (n || 1) ? 
 			// show the dialog...
@@ -2338,7 +2338,7 @@ var mixedModeCollectionAction = function(func, n, last_used_collection){
 // are given...
 var collectionGetterWrapper = function(func, n, last_used_collection){
 	return widgets.uiDialog(function(){
-		var args = [].slice.call(arguments)
+		var args = [...arguments]
 		// check if minimum number of arguments is reached...
 		return args.length < (n || 1)
 			// show the dialog...

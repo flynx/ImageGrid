@@ -36,9 +36,9 @@ var ExampleActions = actions.Actions({
 	// 		i.e. once defined it can't be overwritten...
 	exampleAction: ['Test/Action',
 		function(){
-			console.log('>>>', [].slice.call(arguments))
+			console.log('>>>', [...arguments])
 			return function(){
-				console.log('<<<', [].slice.call(arguments)) }}],
+				console.log('<<<', [...arguments]) }}],
 	exampleActionFull: ['- Test/',
 		core.doc`Example full action long documentation string
 		`,
@@ -64,7 +64,7 @@ var ExampleActions = actions.Actions({
 
 	// a normal method...
 	exampleMethod: function(){
-		console.log('example method:', [].slice.call(arguments))
+		console.log('example method:', [...arguments])
 		return 'example result'
 	},
 
@@ -306,7 +306,7 @@ var ExampleUIActions = actions.Actions({
 	exampleActionDisabled: ['Test/$Disabled example action',
 		{browseMode: function(){ return 'disabled' }},
 		function(){ 
-			console.log('Disabled action called:', [].slice.call(arguments)) }],
+			console.log('Disabled action called:', [...arguments]) }],
 
 	// Usage Examples:
 	// 	.exampleDrawer()						- show html in base drawer...
@@ -340,7 +340,7 @@ var ExampleUIActions = actions.Actions({
 		widgets.makeUIDialog(function(){
 			var actions = this
 
-			console.log('>>> args:', [].slice.call(arguments))
+			console.log('>>> args:', [...arguments])
 
 			return browse.makeLister(null, function(path, make){
 				var that = this
@@ -391,7 +391,7 @@ var ExampleUIActions = actions.Actions({
 		widgets.makeUIDialog(function(){
 			var actions = this
 
-			console.log('>>> args:', [].slice.call(arguments))
+			console.log('>>> args:', [...arguments])
 
 			return browse.makeLister(null, function(path, make){
 				var that = this

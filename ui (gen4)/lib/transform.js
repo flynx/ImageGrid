@@ -158,8 +158,8 @@ var transformEditor = function(){
 		},
 
 		toString: function(){ 
-			//return obj2transform(this.data, args2array(arguments)) 
-			var args = args2array(arguments)
+			//return obj2transform(this.data, [...arguments]) 
+			var args = [...arguments]
 			return obj2transform(this.simplify(args), args) 
 		},
 		// NOTE: this will not build the alias data...
@@ -197,7 +197,7 @@ var transformEditor = function(){
 			var that = this
 			var attrs = arguments[0] instanceof Array ?
 				arguments[0] 
-				: args2array(arguments)
+				: [...arguments]
 			var res = {}
 
 			attrs.forEach(function(a){
@@ -373,7 +373,7 @@ var transformEditor = function(){
 				// 		i.e. this will iterate the arguments (width) while 
 				// 		the handler(..) will iterate the aliases...
 				function(){
-					var args = args2array(arguments)
+					var args = [...arguments]
 					// XXX do a full search through the alias values and merge results...
 					if(args.length == 0 && k in this.__direct){
 						return this.__direct[k].call(this)
@@ -388,7 +388,7 @@ var transformEditor = function(){
 					return b
 				} 
 				: function(){ 
-					var args = args2array(arguments)
+					var args = [...arguments]
 					return func.call(this, k, args) 
 				}
 
@@ -461,7 +461,7 @@ var transformEditor = function(){
 	Object.keys(editor.__direct).forEach(function(k){
 		if(!(k in editor)){
 			editor[k] = function(){ 
-				var args = args2array(arguments)
+				var args = [...arguments]
 				editor.__direct[k].apply(this, args.length > 0 ? [args]: [])
 				return editor.__direct[k].call(this)
 			}
@@ -485,7 +485,7 @@ jQuery.fn.transform = function(){
 	var e = $(this)
 	var elem = e[0]
 
-	var args = args2array(arguments)
+	var args = [...arguments]
 	// normalize...
 	args = args.length == 0 
 			|| typeof(args[0]) == typeof('str') ? args
@@ -532,7 +532,7 @@ jQuery.fn.transform = function(){
 // shorthands...
 jQuery.fn.scale = function(value){
 	if(arguments.length > 0){
-		return $(this).transform({scale: args2array(arguments)})
+		return $(this).transform({scale: [...arguments]})
 
 	} else {
 		return $(this).transform('scale')
@@ -540,7 +540,7 @@ jQuery.fn.scale = function(value){
 }
 jQuery.fn.rotate = function(value){
 	if(arguments.length > 0){
-		return $(this).transform({rotate: args2array(arguments)})
+		return $(this).transform({rotate: [...arguments]})
 
 	} else {
 		return $(this).transform('rotate')

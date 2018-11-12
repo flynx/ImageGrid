@@ -307,13 +307,13 @@ var BaseRibbonsPrototype = {
 	// XXX do we need custom target support here???
 	noTransitions: function(func){
 		this.preventTransitions()
-		func.apply(this, args2array(arguments).slice(1))
+		func.apply(this, [...arguments].slice(1))
 		this.restoreTransitions(true)
 		return this
 	},
 	noTransitionsDeep: function(func){
 		this.preventTransitions(null, true)
-		func.apply(this, args2array(arguments).slice(1))
+		func.apply(this, [...arguments].slice(1))
 		this.restoreTransitions(true)
 		return this
 	},

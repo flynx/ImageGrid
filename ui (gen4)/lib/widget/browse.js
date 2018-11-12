@@ -1871,7 +1871,7 @@ var BrowserPrototype = {
 
 		// NOTE: this will propagate up to the dialog...
 		if(elem.length > 0){
-			var args = [].slice.call(arguments).slice(1)
+			var args = [...arguments].slice(1)
 			elem.trigger({
 				type: arguments[0],
 				source: this,
@@ -2579,7 +2579,7 @@ var BrowserPrototype = {
 				if(item_shortcut_marker){
 					var _replace = function(){
 						// get the last group...
-						var key = [].slice.call(arguments).slice(-3)[0]
+						var key = [...arguments].slice(-3)[0]
 						!item_shortcuts[keyboard.normalizeKey(key)]
 							// NOTE: this is a side-effect...
 							&& that.keyboard.handler(

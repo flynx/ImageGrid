@@ -260,7 +260,7 @@ var LocationActions = actions.Actions({
 			XXX introspection...
 		`,
 		function(spec){
-			var args = [].slice.call(arguments, 1)
+			var args = [...arguments].slice(1)
 			spec = spec instanceof Array ? spec : spec.split(':')
 
 			var cache = this.protocols

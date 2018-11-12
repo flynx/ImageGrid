@@ -173,12 +173,6 @@ Array.prototype.setCmp = function(other){
 				.sort()) }
 
 
-var args2array =
-module.args2array =
-Array.fromArgs = 
-	function(args){ return [].slice.call(args) }
-
-
 Array.prototype.sortAs = function(other){
 	return this.sort(function(a, b){
 		var i = other.indexOf(a)

@@ -131,7 +131,7 @@ module.CLI = core.ImageGridFeatures.Feature({
 							push: function(){ 
 								var o = Object.create(this) 
 								o.root = false
-								o.__prefix = (this.__prefix || []).concat([].slice.call(arguments))
+								o.__prefix = (this.__prefix || []).concat([...arguments])
 								return o
 							},
 							pop: function(){
@@ -139,7 +139,7 @@ module.CLI = core.ImageGridFeatures.Feature({
 							},
 							emit: function(){ 
 								console.log.apply(console, 
-									(this.__prefix || []).concat([].slice.call(arguments)))
+									(this.__prefix || []).concat([...arguments]))
 							}, 
 						}
 					})

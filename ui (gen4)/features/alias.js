@@ -52,7 +52,7 @@ module.Alias = core.ImageGridFeatures.Feature({
 		// 		other than the ones created by .alias(..).
 		['alias',
 			function(_, alias, target){
-				var args = [].slice.call(arguments, 1)
+				var args = [...arguments].slice(1)
 				var alias = args.shift()
 				var target = args[args.length-1]
 

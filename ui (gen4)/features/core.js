@@ -1414,7 +1414,7 @@ var JournalActions = actions.Actions({
 			var handler = function(action){
 				return function(){
 					var cur = this.current
-					var args = util.args2array(arguments)
+					var args = [...arguments]
 
 					var data = {
 						type: 'basic',
@@ -1696,7 +1696,7 @@ var ChangesActions = actions.Actions({
 			var that = this
 			var args = section instanceof Array ? 
 				section 
-				: util.args2array(arguments)
+				: [...arguments]
 			//var changes = this.changes = 
 			var changes = 
 				this.hasOwnProperty('changes') ?

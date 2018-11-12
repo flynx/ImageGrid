@@ -846,7 +846,7 @@ function makeDeferredPool(size, paused){
 		var deferred = $.Deferred()
 
 		// add worker to queue...
-		this.queue.push([deferred, func, args2array(arguments).slice(1)])
+		this.queue.push([deferred, func, [...arguments].slice(1)])
 
 		// start work if we have not already...
 		this._fill()
@@ -1026,13 +1026,6 @@ $(getDPI)
 // return 1, -1, or 0 depending on sign of x
 function sign(x){
 	return (x > 0) - (x < 0)
-}
-
-
-// convert JS arguments to Array...
-function args2array(args){
-	//return Array.apply(null, args)
-	return [].slice.call(args)
 }
 
 

@@ -432,7 +432,7 @@ module.uiDialog = function(func){
 // 		extended/overloaded...
 var makeUIDialog =
 module.makeUIDialog = function(a, b){
-	var args = [].slice.call(arguments)
+	var args = [...arguments]
 
 	// container name (optional)...
 	var dfl = typeof(args[0]) == typeof('str') ?
@@ -444,7 +444,7 @@ module.makeUIDialog = function(a, b){
 	var cargs = args
 
 	return uiDialog(function(){
-		var args = [].slice.call(arguments)
+		var args = [...arguments]
 
 		// see if the first arg is a container spec...
 		var container = !(args[0] instanceof Array) && this.isUIContainer(args[0]) ?

@@ -1899,7 +1899,7 @@ module.CropActions = actions.Actions({
 			var current = this.current
 			var focus = false
 
-			gids = arguments.length > 1 ? [].slice.call(arguments) : gids
+			gids = arguments.length > 1 ? [...arguments] : gids
 			gids = gids || 'current'
 			gids = gids instanceof Array ? gids : [gids] 
 

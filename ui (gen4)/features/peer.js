@@ -135,7 +135,7 @@ function(protocol, func){
 	return function(id){
 		return id.startsWith(protocol + ':')
 			&& function(res){ 
-				res.set(func.apply(this, [].slice.call(arguments, 1))) }}} 
+				res.set(func.apply(this, [...arguments].slice(1))) }}} 
 
 
 
@@ -228,7 +228,7 @@ var PeerActions = actions.Actions({
 	// 		is no need to reload it...
 	peerCall: ['- System/Peer/',
 		function(id, action){
-			var args = [].slice.call(arguments, 2)
+			var args = [...arguments].slice(2)
 			return this.peerApply(id, action, args)
 		}],
 	peerApply: ['- System/Peer/',

@@ -44,13 +44,13 @@ function(name, defaults){
 	return function(){ 
 		// register...
 		if(arguments[0] instanceof Function){
-			this.dom.trigger(name, [].slice.call(arguments)) 
+			this.dom.trigger(name, [...arguments]) 
 
 		// trigger...
 		} else {
 			var args = (arguments.length == 0 && defaults) ? 
 				defaults.call(this) 
-				: [].slice.call(arguments)
+				: [...arguments]
 			args = args instanceof Array ? args : [args]
 
 			this.dom.trigger(name, args) 

@@ -249,7 +249,7 @@ var DataPrototype = {
 			return this.getImages(gids)
 		}
 
-		gids = arguments.length > 1 ? [].slice.call(arguments) : gids
+		gids = arguments.length > 1 ? [...arguments] : gids
 		gids = gids instanceof Array ? gids : [gids]
 
 		return gids
@@ -1267,7 +1267,7 @@ var DataPrototype = {
 	// 		list of image gids...
 	getImagePositions: function(gids){
 		gids = arguments.length > 1 ? 
-			[].slice.call(arguments) 
+			[...arguments] 
 			: (gids || this.current)
 		gids = (gids instanceof Array ? gids.slice() : [gids])
 		// sort ribbon gids to .ribbon_order
@@ -2344,7 +2344,7 @@ var DataPrototype = {
 	// 		.getImage(..)
 	// NOTE: if no target is given this will assume the current image.
 	split: function(target){
-		target = arguments.length > 1 ? [].slice.call(arguments)
+		target = arguments.length > 1 ? [...arguments]
 			: target == null || target instanceof Array ? target
 			: [target]
 
@@ -3183,7 +3183,7 @@ var DataWithTagsPrototype = {
 	hasTag: function(gid, tag){
 		return ((this.tags || {})[tag] || []).indexOf(this.getImage(gid)) >= 0 },
 	getTags: function(gids){
-		gids = arguments.length > 1 ? [].slice.call(arguments) 
+		gids = arguments.length > 1 ? [...arguments] 
 			: gids == null || gids == 'current' ? this.getImage() 
 			: gids
 		gids = gids == null ? [] : gids
@@ -3212,7 +3212,7 @@ var DataWithTagsPrototype = {
 	// NOTE: if raw is set to true then this will return all the tagged 
 	// 		gids even if they are not loaded in ribbons (i.e. cropped out)...
 	getTaggedByAny: function(tags, raw){
-		tags = arguments.length > 1 ? [].slice.call(arguments) : tags
+		tags = arguments.length > 1 ? [...arguments] : tags
 		tags = tags instanceof Array ? tags : [tags]
 
 		var res = []
@@ -3234,7 +3234,7 @@ var DataWithTagsPrototype = {
 			: this.getImages(res.compact())
 	},
 	getTaggedByAll: function(tags, raw){
-		tags = arguments.length > 1 ? [].slice.call(arguments) : tags
+		tags = arguments.length > 1 ? [...arguments] : tags
 		tags = tags instanceof Array ? tags : [tags]
 
 		if(this.tags == null){

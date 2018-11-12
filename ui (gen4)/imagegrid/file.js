@@ -158,9 +158,7 @@ module.denodeify =
 function(func){
 	var that = this
 	return function(){
-		// XXX for some reason this does not see args2array...
-		// XXX and for some reason the error is not reported...
-		var args = [].slice.call(arguments)
+		var args = [...arguments]
 		return new Promise(function(resolve, reject){
 			func.apply(that, args.concat([function(err, res){
 				return err ? reject(err) : resolve(res)
