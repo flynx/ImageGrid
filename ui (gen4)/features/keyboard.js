@@ -25,6 +25,8 @@ var collections = require('features/collections')
 
 var GLOBAL_KEYBOARD =
 module.GLOBAL_KEYBOARD = {
+	// NOTE: the order of sections is important, it determines in what 
+	// 		order the keys are handled...
 	'Global': {
 		doc: 'Global bindings that take priority over other sections.',
 		pattern: '*',
@@ -57,7 +59,6 @@ module.GLOBAL_KEYBOARD = {
 	},
 
 	'Preview filter': {
-		doc: 'Preview filter applied',
 		pattern: '.filter-applied',
 		drop: [
 			'Esc',
@@ -221,8 +222,6 @@ module.GLOBAL_KEYBOARD = {
 		alt_T: 'browseActions: "/Tag/" -- Tag menu...',
 
 		//alt_S: 'browseActions: "/Sort/" -- Sort menu...',
-		alt_shift_A: 'listActions',
-
 
 		// open/save...
 		O: 'browsePath',
