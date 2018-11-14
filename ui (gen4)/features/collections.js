@@ -847,7 +847,7 @@ var CollectionActions = actions.Actions({
 						: [ that.data.getImage(gid) 
 							// check base data for image gid...
 							|| that.collections[MAIN_COLLECTION_TITLE].data.getImage(gid) ] })
-				.reduce(function(a, b){ return a.concat(b) }, [])
+				.flat()
 
 			this.ensureCollection(collection)
 				.then((function(c){
@@ -1040,7 +1040,7 @@ var CollectionActions = actions.Actions({
 						// when adding a ribbon gid expand to images...
 						that.data.ribbons[gid].compact()
 						: [that.data.getImage(gid)] })
-				.reduce(function(a, b){ return a.concat(b) }, [])
+				.flat()
 
 			// remove from the loaded state...
 			this.collection == collection

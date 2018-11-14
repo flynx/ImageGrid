@@ -136,8 +136,7 @@ module.SortActions = actions.Actions({
 								.filter(function(e){ 
 									return e && e.trim() != '' && !/['"]/.test(e) }) 
 						: [])
-					.reduce(function(r, e){
-						return r.concat(e instanceof Array ? e : [e]) }, []) }
+					.flat() }
 			var get = function(name){
 				// normalize name...
 				name = name
@@ -196,9 +195,7 @@ module.SortActions = actions.Actions({
 						: a instanceof Array ?
 							a
 						: method })
-				// merge...
-				.reduce(function(r, e){
-					return r.concat(e instanceof Array ? e : [e]) }, []) }],
+				.flat() }],
 
 	// Custom sort methods...
 	//
@@ -783,8 +780,7 @@ var SortUIActions = actions.Actions({
 									function(e){ 
 										return expandMethods(e)[0] || [] } 
 									: expandMethods)
-								.reduce(function(r, e){
-									return r.concat(e instanceof Array ? e : [e]) }, [])
+								.flat()
 								.map(function(e){ 
 									return indent + e })
 						: typeof(methods) == typeof('str') ?

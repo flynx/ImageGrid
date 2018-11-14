@@ -223,8 +223,7 @@ var TagUIActions = actions.Actions({
 			gids = gids
 				.map(function(gid){
 					return gid == 'marked' ? that.marked : gid })
-				.reduce(function(res, cur){
-					return res.concat(cur instanceof Array ? cur : [cur]) }, [])
+				.flat()
 				.unique()
 
 			// XXX

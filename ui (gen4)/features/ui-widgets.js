@@ -1144,7 +1144,7 @@ var UIIntrospectionActions = actions.Actions({
 						.html('Handlers: '
 							+ (feature.handlers || [['-']])
 								.map(function(h){ return h[0] instanceof Array ? h[0] : [h[0]] })
-								.reduce(function(a, b){ return a.concat(b) }, [])
+								.flat()
 								.unique()
 								.map(function(n){
 									return n == '-' ? n : action2lnk(n) })
