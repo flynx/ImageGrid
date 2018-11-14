@@ -86,6 +86,10 @@ var TagUIActions = actions.Actions({
 		// 		.tagOrpahns()
 		// 		 ...
 		// XXX should this be here or in .data???
+		// XXX add "auto-tags" -- tags that are automatically added 
+		// 		depending on specific rules, like:
+		// 			orientation:landscape / orientation:portrait / orientation:square (???)
+		// 		...these should not be settable by user...
 		// XXX do a whitepaper (RFC?) on this system when done...
 		'base-tags': [
 			'count',
@@ -103,6 +107,7 @@ var TagUIActions = actions.Actions({
 			'people/girl',
 			'people/boy',
 			'people/child',
+			// ...
 
 			'name',
 
@@ -110,6 +115,7 @@ var TagUIActions = actions.Actions({
 			'role/photographer',
 			'role/artist',
 			'role/painter',
+			// ...
 
 			'color',
 			'color/red',
@@ -120,6 +126,7 @@ var TagUIActions = actions.Actions({
 			'color/orange',
 			'color/yellow',
 			'color/gray',
+			// ...
 
 			// XXX should this be 'type' or something else???
 			'genre',
@@ -130,6 +137,7 @@ var TagUIActions = actions.Actions({
 			'genre/macro',
 			'genre/abstract',
 			'genre/sport',
+			// ...
 
 			'activity',
 			'activity/sport',
@@ -154,10 +162,49 @@ var TagUIActions = actions.Actions({
 			.concat(Object.keys((this.data || {}).tags || {}))
    			.unique() },
 
-	// XXX use global tag list... (???) 
-	// XXX make this reusable...
+	// XXX add support for tag sets and paths...
 	showTagCloud: ['Tag|Edit|Image/$Tags...',
-		core.doc`
+		core.doc`Show tags in cloud format...
+
+			Show tags for current image...
+			.showTagCloud([options])
+			.showTagCloud('current'[, options])
+				-> dialog
+
+			Show tags for specific images...
+			.showTagCloud(gid, ...[, options])
+			.showTagCloud([gid, ...][, options])
+				-> dialog
+
+
+			Show tags for current image with custom constructor...
+			.showTagCloud(func[, gid, ...][, options])
+			.showTagCloud(func[, [gid, ...]][, options])
+				-> dialog
+
+			Show tags for gids image with custom constructor...
+			.showTagCloud(func, gid, ... [, options])
+			.showTagCloud(func, [gid, ...] [, options])
+				-> dialog
+
+
+		The constructor func is called in the action context and has the
+		following format:
+			func(path, make, gids, opts)
+
+		This uses the same option format as browse.makeLister(..) with 
+		the following additions:
+			{
+				// callback to be called when a tag state is flipped...
+				itemOpen: <function(tag, state)>,
+
+				// if false do not show the 'New...' button...
+				noNewButton: <bool>,
+			}
+
+
+		NOTE: if 'marked' is passed as one of the gids it will get 
+			replaced with the list of marked gids...
 		`,
 		{dialogTitle: function(_, gids){ 
 			return (gids.length == 1 && gids[0] == 'marked') ?
@@ -167,6 +214,10 @@ var TagUIActions = actions.Actions({
 				: 'Tags' }},
 		widgets.makeUIDialog(function(...gids){
 			var that = this
+
+			var func = gids[0] instanceof Function ? gids.shift() : null
+			var opts = gids[gids.length-1] instanceof Object ? gids.pop() : {}
+
 			gids = gids.length == 0 ? ['current'] : gids
 			// handle 'marked' keyword...
 			gids = gids
@@ -208,52 +259,80 @@ var TagUIActions = actions.Actions({
 
 								e.css('opacity', on ? 0.3 : '')
 
-								on ?
-									that.untag(tag, gids)
-									: that.tag(tag, gids)
+								// NOTE: we are reversing the state here 
+								// 		because 'on' contains the state 
+								// 		prior to modification...
+								opts.itemOpen ?
+									(on ?
+										opts.itemOpen.call(that, tag, false)
+										: opts.itemOpen.call(that, tag, true))
+									:(on ?
+										that.untag(tag, gids)
+										: that.tag(tag, gids))
 							},
 							buttons: [
 								// remove tag button...
-								['&times;', removeTag.bind(that, tag) ],
+								//['&times;', removeTag.bind(that, tag) ],
 							],
 						})
 					})
 
-				make.Separator()
+				if(!opts.noNewButton){
+					make.Separator()
 
-				make.Editable('$New...', {
-					clear_on_edit: true,
-					editdone: function(evt, tag){
-						tag = tag.trim()
-						// no empty tags...
-						if(tag == ''){
-							return
-						}
+					make.Editable('$New...', {
+						clear_on_edit: true,
+						editdone: function(evt, tag){
+							tag = tag.trim()
+							// no empty tags...
+							if(tag == ''){
+								return
+							}
 
-						that.tag(tag, gids)
+							that.tag(tag, gids)
 
-						// update tag list...
-						make.dialog
-							.update()
-							// select the new tag...
-							.then(function(){
-								make.dialog.select(tag) })
-					},
-				})
-			}, { 
+							// update tag list...
+							make.dialog
+								.update()
+								// select the new tag...
+								.then(function(){
+									make.dialog.select(tag) })
+						},
+					})
+				}
+
+				func
+					&& func.call(that, path, make, gids, opts)
+			}, 
+			Object.assign({ 
 				cloudView: true, 
 				close: function(){ that.refresh() },
-			})
+			}, opts))
 		})],
-	showMakedTagCoud: ['Tag|Mark/$Tags of marked images...',
+	showMarkedTagCoud: ['Tag|Mark/$Tags of marked images...',
 		'showTagCloud: "marked"'],
-	
-	// XXX crop/filter by tags...
-	// XXX
-	cropTaggedFromCloud: ['-Tag|Crop/Crop tagged...',
-		widgets.makeUIDialog(function(){
-			// XXX
-		})],
+	// XXX should this show all the tags or just the used???
+	cropTaggedFromCloud: ['Tag|Crop/Crop tagged...',
+		widgets.uiDialog(function(){
+			var that = this
+			var tags = new Set()
+
+			return this.showTagCloud(function(path, make, gids, opts){
+				make.Separator()
+				make.Action('$Crop', {
+					open: function(){
+						that.cropTagged([...tags])
+
+						make.dialog.close()
+					}
+				})
+			}, [], {
+				itemOpen: function(tag, state){
+					state ? 
+						tags.add(tag) 
+						: tags.delete(tag) },
+				'noNewButton': true,
+			}) })],
 
 
 	// Tag tree...
