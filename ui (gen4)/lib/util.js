@@ -34,6 +34,18 @@ Object.defineProperty(Object.prototype, 'run', {
 })
 
 
+// Array.prototype.flat polyfill...
+//
+// NOTE: .flat(..) is not yet supported in IE/Edge...
+Array.prototype.flat
+	|| (Array.prototype.flat = function(depth){
+		depth = typeof(depth) == typeof(123) ? depth : 1
+		return this.reduce(function(res, e){ 
+			return res.concat(e instanceof Array && depth > 0 ? 
+				e.flat(depth-1) 
+				: [e]) }, []) })
+
+
 // Extended map...
 //
 // 	.emap(func)
@@ -63,12 +75,7 @@ Object.defineProperty(Object.prototype, 'run', {
 // 		;[1, 2, 3]
 // 			.emap(function(e){ return [[e]] })
 // 				// -> [[1], [2], [3]]
-Array.prototype.emap = function(func){
-    return this
-        .map(func)
-        .reduce(function(res, e){
-            return res
-                .concat(e instanceof Array ? e : [e] ) }, []) }
+Array.prototype.emap = function(func){ return this.map(func).flat() } 
 
 
 // Compact a sparse array...
@@ -76,6 +83,28 @@ Array.prototype.emap = function(func){
 // NOTE: this will not compact in-place.
 Array.prototype.compact = function(){
 	return this.filter(function(){ return true }) }
+
+
+// like .length but for sparse arrays will return the element count...
+// XXX make this a prop...
+/*
+Array.prototype.len = function(){
+	//return this.compact().length
+	return Object.keys(this).length
+}
+*/
+
+Object.defineProperty(Array.prototype, 'len', {
+	get : function () {
+		return Object.keys(this).length
+	},
+	set : function(val){},
+
+	// NOTE: this is hear to enable running this module multiple times 
+	// 		without any side-effects...
+	configurable: true,
+});
+
 
 
 // Convert an array to object...
@@ -223,28 +252,6 @@ Object.flatCopy = function(obj){
 	})
 	return res
 }
-
-
-// like .length but for sparse arrays will return the element count...
-// XXX make this a prop...
-/*
-Array.prototype.len = function(){
-	//return this.compact().length
-	return Object.keys(this).length
-}
-*/
-
-Object.defineProperty(Array.prototype, 'len', {
-	get : function () {
-		return Object.keys(this).length
-	},
-	set : function(val){},
-
-	// NOTE: this is hear to enable running this module multiple times 
-	// 		without any side-effects...
-	configurable: true,
-});
-
 
 
 // Quote a string and convert to RegExp to match self literally.
