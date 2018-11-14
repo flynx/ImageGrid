@@ -65,7 +65,7 @@ function(name, defaults){
 var triggerEventWithSource =
 module.triggerEventWithSource = 
 function(){
-	var args = args2array(arguments)
+	var args = [...arguments]
 	var evt = args.shift()
 	
 	if(typeof(evt) == typeof('str')){

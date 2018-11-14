@@ -3944,7 +3944,7 @@ var BrowserPrototype = {
 
 		// get the options method and call it if it exists...
 		var m = this.options.open
-		var args = args2array(arguments)
+		var args = [...arguments]
 		args[0] = path
 		var res = m ? m.apply(this, args) : this
 		res = res || this
