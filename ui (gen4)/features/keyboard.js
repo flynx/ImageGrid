@@ -249,9 +249,9 @@ module.GLOBAL_KEYBOARD = {
 
 		// tilt...
 		// XXX experimental, not sure if wee need this with a keyboard...
-		T: 'rotateRibbonCCW -- Tilt ribbons counter clock wise',
-		shift_T: 'rotateRibbonCW -- Tilt ribbons clock wise',
-		ctrl_shift_T: 'resetRibbonRotation -- Reset ribbon tilt',
+		ctrl_T: 'rotateRibbonCCW -- Tilt ribbons counter clock wise',
+		ctrl_shift_T: 'rotateRibbonCW -- Tilt ribbons clock wise',
+		ctrl_alt_T: 'resetRibbonRotation -- Reset ribbon tilt',
 
 
 		// NOTE: this is handled by the wrapper at this point, so we do 
@@ -409,7 +409,7 @@ module.GLOBAL_KEYBOARD = {
 		//ctrl_shift_I: 'showMetadata: "current" "full" -- Show full metadata',
 
 		// XXX
-		ctrl_T: 'showTagCloud',
+		T: 'showTagCloud',
 
 
 		// marking...

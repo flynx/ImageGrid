@@ -186,6 +186,7 @@ var TagUIActions = actions.Actions({
 			.showTagCloud(func, gid, ... [, options])
 			.showTagCloud(func, [gid, ...] [, options])
 				-> dialog
+				NOTE: for an example see: .cropTaggedFromCloud(..)
 
 
 		The constructor func is called in the action context and has the
@@ -195,11 +196,28 @@ var TagUIActions = actions.Actions({
 		This uses the same option format as browse.makeLister(..) with 
 		the following additions:
 			{
+				//
+				// this can be:
+				// 	'count' (default)
+				// 	'name'
+				sortTagsBy: 'count',
+
 				// callback to be called when a tag state is flipped...
+				//
+				// NOTE: this if set will disable auto dialog update on 
+				// 		item change, this should be done by itemOpen(..).
 				itemOpen: <function(tag, state)>,
 
+				// disable dialog update on item open...
+				//
+				// NOTE: this is ignored if itemOpen is set.
+				lazyDialogUpdate: false,
+
+				// 
+				hideTagCount: false,
+
 				// if false do not show the 'New...' button...
-				noNewButton: <bool>,
+				noNewButton: false,
 			}
 
 
@@ -245,11 +263,40 @@ var TagUIActions = actions.Actions({
 				// XXX add key binding to delete a tag...
 				that.tags
 					.sort()
+					// prep for sort...
+					.map(function(t, i){ return [t, i, (that.data.tags[t] || {}).len] })
+					// XXX add ability to sort by popularity, both local
+					//		(selected tags) and global...
+					.run(function(){
+						return opts.sortTagsBy == 'name' ?
+								this
+							// count...
+							: this.sort(function(a, b){
+								var ac = a[2]
+								var bc = b[2]
+
+								return ac != null && bc != null ? 
+										bc - ac
+									// keep used tags before unused...
+									: ac == null ?
+										1
+									: bc == null ?
+										-1
+									// sort by position...
+									: a[0] - b[0] 
+							}) })
 					.map(function(tag){
+						// normalize...
+						var count = tag[2]
+						tag = tag[0]
+
 						return make(tag, {
 							cls: tags.indexOf(tag) >= 0 ? 'tagged' : '',
 							style: {
 								opacity: tags.indexOf(tag) >= 0 ? '' : '0.3'
+							},
+							attrs: {
+								count: opts.hideTagCount || count,
 							},
 							open: function(){
 								var e = $(this)
@@ -268,6 +315,10 @@ var TagUIActions = actions.Actions({
 									:(on ?
 										that.untag(tag, gids)
 										: that.tag(tag, gids))
+
+								opts.itemOpen 
+									|| opts.lazyDialogUpdate
+									|| make.dialog.update()
 							},
 							buttons: [
 								// remove tag button...
@@ -308,30 +359,34 @@ var TagUIActions = actions.Actions({
 				close: function(){ that.refresh() },
 			}, opts))
 		})],
-	showMarkedTagCoud: ['Tag|Mark/$Tags of marked images...',
+	showMarkedTagCoud: ['Tag|Mark/$Tags of $marked images...',
 		'showTagCloud: "marked"'],
 	// XXX should this show all the tags or just the used???
-	cropTaggedFromCloud: ['Tag|Crop/Crop tagged...',
+	// XXX should we add image count to tags???
+	cropTaggedFromCloud: ['Tag|Crop/$Crop $ta$gged...',
 		widgets.uiDialog(function(){
 			var that = this
 			var tags = new Set()
 
-			return this.showTagCloud(function(path, make, gids, opts){
-				make.Separator()
-				make.Action('$Crop', {
-					open: function(){
-						that.cropTagged([...tags])
+			return this.showTagCloud(
+				function(path, make, gids, opts){
+					make.Separator()
+					make.Action('$Crop', {
+						open: function(){
+							that.cropTagged([...tags])
 
-						make.dialog.close()
-					}
-				})
-			}, [], {
-				itemOpen: function(tag, state){
-					state ? 
-						tags.add(tag) 
-						: tags.delete(tag) },
-				'noNewButton': true,
-			}) })],
+							make.dialog.close()
+						}
+					})
+				}, 
+				[], 
+				{
+					itemOpen: function(tag, state){
+						state ? 
+							tags.add(tag) 
+							: tags.delete(tag) },
+					'noNewButton': true,
+				}) })],
 
 
 	// Tag tree...
