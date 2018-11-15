@@ -1482,11 +1482,15 @@ stretching in width... */
 .overlay-info .index .position.editable {
 	cursor: text;
 }
+.overlay-info .index.loaded:after,
 .overlay-info .index.global:after {
 	content: "G";
 	opacity: 0.7;
 
 	font-size: small;
+}
+.overlay-info .index.loaded:after {
+	content: "L";
 }
 /*
 .overlay-info .index.global:hover:after {

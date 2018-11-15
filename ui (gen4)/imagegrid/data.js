@@ -898,7 +898,7 @@ var DataPrototype = {
 				: offset > 0 ? 'after'
 				: mode
 			offset = Math.abs(offset)
-		} else if(mode == 'global'){
+		} else if(mode == 'global' || mode == 'loaded'){
 			list = mode
 			mode = 'before'
 		} else if(mode == 'next'){
@@ -926,6 +926,8 @@ var DataPrototype = {
 						|| this.getRibbon(this.getImage(target, 'after', this.getImages()))]
 			: list == 'global' ?
 				this.order
+			: list == 'loaded' ?
+				this.getImages('loaded')
 			: list instanceof Array ? 
 				this.makeSparseImages(list)
 			: this.ribbons[this.getRibbon(list)]

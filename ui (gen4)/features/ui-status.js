@@ -142,6 +142,16 @@ var StatusBarActions = actions.Actions({
 			// make an element...
 			if(typeof(item) == typeof('str')){
 				var type = item
+				var go = function(i){
+					i = i >= 1 ? i-1
+						: i == null ? 'current'
+						: i
+					that.focusImage(i,
+						item.hasClass('global') ? 
+							'global' 
+						: item.hasClass('loaded') ? 
+							'loaded'
+						: undefined) }
 				item = $('<span>')
 					.addClass(type)
 					.append(!(this.config['status-bar-index'] || {})['editable'] ?
@@ -164,27 +174,15 @@ var StatusBarActions = actions.Actions({
 							})
 							// select image when done...
 							.on('edit-commit', function(_, text){
-								var i = parseInt(text)
-								i = i >= 1 ? i-1
-									: i == null ? 'current'
-									: i
-								that.focusImage(i, 
-									item.hasClass('global') ? 'global' : undefined)
-							})
+								go(parseInt(text)) })
 							// update image position...
 							// XXX this appears to be run in the node context...
 							.keyup(function(){
 								// XXX KeyboardEvent does not appear to have this...
 								//event.stopPropagation()
 
-								if((that.config['status-bar-index'] || {})['live-update-on-edit']){
-									var i = parseInt($(this).text())
-									i = i >= 1 ? i-1
-										: i == null ? 'current'
-										: i
-									that.focusImage(i,
-										item.hasClass('global') ? 'global' : undefined)
-								}
+								(that.config['status-bar-index'] || {})['live-update-on-edit']
+									&& go(parseInt($(this).text()))
 							})
 							.focus(function(){
 								$(this).selectText()
@@ -213,6 +211,11 @@ var StatusBarActions = actions.Actions({
 			if(cls == 'global'){
 				var i = this.data ? this.data.getImageOrder(gid) : -1
 				var l = this.data ? this.data.length : 0
+
+			// loaded/crop index...
+			} else if(cls == 'loaded'){
+				var i = this.data ? this.data.getImageOrder('loaded', gid) : -1
+				var l = this.data ? this.data.getImages('loaded').len : 0
 
 			// ribbon index...
 			} else {
@@ -698,8 +701,9 @@ var StatusBarActions = actions.Actions({
 		}],
 	toggleStatusBarIndexMode: ['Interface/Status bar index mode',
 		toggler.CSSClassToggler(
-			function(){ return this.dom.find('.global-info .index') },
-			['normal', 'global'],
+			function(){ 
+				return this.dom.find('.global-info .index') },
+			['normal', 'loaded', 'global'],
 			function(state){
 				this.toggleStatusBar('?') == 'none' && this.toggleStatusBar()
 
