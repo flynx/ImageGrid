@@ -229,7 +229,7 @@ var TagUIActions = actions.Actions({
 					'Marked image tags'
 				: gids.length > 1 ?
 					'Tags of: '+ gids.join(', ')
-				: 'Tags' }},
+				: 'Current image tags' }},
 		widgets.makeUIDialog(function(...gids){
 			var that = this
 
@@ -359,7 +359,8 @@ var TagUIActions = actions.Actions({
 				close: function(){ that.refresh() },
 			}, opts))
 		})],
-	showMarkedTagCoud: ['Tag|Mark/$Tags of $marked images...',
+	showMarkedTagCoud: ['Tag|Mark/$Tag $marked images...',
+		{dialogTitle: 'Tag marked images'},
 		'showTagCloud: "marked"'],
 	// XXX should this show all the tags or just the used???
 	// XXX should we add image count to tags???
