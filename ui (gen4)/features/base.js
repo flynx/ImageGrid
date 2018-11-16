@@ -1695,7 +1695,7 @@ module.CropActions = actions.Actions({
 		function(restore_current){ this.uncrop('all', restore_current) }],
 	// XXX see if we need to do this on this level??
 	// 		...might be a good idea to do this in data...
-	uncropAndKeepOrder: ['Crop|Edit/Uncrop and keep crop image order', {
+	uncropAndKeepOrder: ['Crop|Edit/Uncrop keeping image order', {
 		journal: true,
 		browseMode: 'uncrop'}, 
 		function(level, restore_current){ this.uncrop(level, restore_current, true) }],

@@ -1323,6 +1323,8 @@ var BrowseActionsActions = actions.Actions({
 				// 			this is not a bug...
 				'Crop/60:crop .*ribbon.*',
 
+				'Crop/60:.*tag.*',
+
 				// The rest of the elements in the path will get added 
 				// between the positive and negative prioritized items...
 				// ...
@@ -1339,10 +1341,15 @@ var BrowseActionsActions = actions.Actions({
 				'Crop/-70:---',
 				//*/
 
-				'Crop/-70:---',
-				'Crop/-70:.*remove.*',
+				'Crop/-50:---',
+				'Crop/-60:Remove from crop',
+				'Crop/-70:Remove ribbon.*',
+				'Crop/-71:Remove marked.*',
+				'Crop/-72:.*remove.*',
 
-				'Crop/-80:Uncrop and keep crop image order',
+				'Crop/-75:---',
+
+				'Crop/-80:Uncrop keeping image order',
 				'Crop/-81:Uncrop all',
 				'Crop/-82:$Uncrop',
 			'Co$llections',

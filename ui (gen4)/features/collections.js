@@ -2747,7 +2747,7 @@ var UICollectionActions = actions.Actions({
 					that.crop(images, false)
 				})
 		}, null, false)],
-	cropOutImagesInCollection: ['Collections|Crop/Crop $out images in collec$tion...',
+	cropOutImagesInCollection: ['Collections|Crop/Remove collection images from crop...',
 		{browseMode: 'cropImagesInCollection'},
 		mixedModeCollectionAction(function(title){
 			var that = this
