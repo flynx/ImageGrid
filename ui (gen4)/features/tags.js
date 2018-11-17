@@ -95,6 +95,7 @@ var TagUIActions = actions.Actions({
 			'count',
 			'count/one',
 			'count/two',
+			'count/some',
 			'count/many',
 
 			'people',
