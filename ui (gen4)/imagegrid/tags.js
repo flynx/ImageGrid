@@ -21,6 +21,43 @@ var util = require('lib/util')
 /*********************************************************************/
 
 var TagsClassPrototype = {
+	// Utils...
+	//
+	// 	.normalize(tag)
+	// 		-> ntag
+	//
+	// 	.normalize(tag, ...)
+	// 	.normalize([tag, ...])
+	// 		-> [ntag, ...]
+	//
+	// XXX should this sort sets???
+	// XXX should this be .normalizeTags(..) ???
+	normalize: function(...tags){
+		var tagRemovedCahrs = (this.config || {})['tagRemovedCahrs']
+		tagRemovedCahrs = tagRemovedCahrs instanceof RegExp ? 
+				tagRemovedCahrs
+			: typeof(tagRemovedCahrs) == typeof('str') ?
+				new RegExp(tagRemovedCahrs, 'g')
+			: /[\s-_]/g
+		var res = (tags.length == 1 && tags[0] instanceof Array) ? 
+			tags.pop() 
+			: tags
+		res = res
+			.map(function(tag){
+				return tag
+					.trim()
+					.toLowerCase()
+					.replace(tagRemovedCahrs, '')
+					// XXX do we need to sort here???
+					.split(/:/)
+						.sort()
+						.join(':') })
+			.unique()
+		return (tags.length == 1 && !(tags[0] instanceof Array)) ? 
+			// NOTE: if we got a single tag return it as a single tag...
+			res.pop() 
+			: res
+	},
 }
 
 
@@ -35,6 +72,20 @@ var TagsClassPrototype = {
 // 			- sets/relations
 // 			- tag-object references
 var TagsPrototype = {
+	config: {
+		tagRemovedCahrs: '\\s-_',
+	},
+
+	// Utils...
+	//
+	// proxy to Tags.normalize(..)
+	// XXX should this be .normalizeTags(..) ???
+	normalize: function(...tags){
+		return this.constructor.normalize.call(this, ...tags) },
+
+	// XXX expand aliases...
+	// XXX
+
 
 	// Add/Remove/Modify tags API...
 	// XXX
@@ -61,8 +112,31 @@ var TagsPrototype = {
 	
 
 	// Query API...
-	// XXX
-	get: function(){
+	//
+	// XXX not sure about the format...
+	// 		...we can use diff:
+	// 			tags.query(
+	// 				AND('x', 
+	// 					OR('a', 'b'),
+	// 					NOT('z')))
+	// 		the algorithm would be something like:
+	// 			- get individual tags from query
+	// 			- match tags
+	// 			- build item list
+	// 		another syntax variants might be:
+	// 			tags.query(
+	// 				{and: [
+	// 					'x',
+	//					{or: ['a', 'b']},
+	//					{not: 'z'} ]})
+	// 			// lisp-like...
+	// 			tags.query(
+	// 				['and',
+	// 					'x',
+	//					['or', 'a', 'b'],
+	//					['not', 'z']])
+	query: function(){
+		// XXX
 	},
 
 
@@ -110,7 +184,7 @@ var TagsPrototype = {
 var Tags = 
 module.Tags = 
 object.makeConstructor('Tags', 
-		TagssClassPrototype, 
+		TagsClassPrototype, 
 		TagsPrototype)
 
 
