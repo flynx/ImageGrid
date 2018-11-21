@@ -87,6 +87,14 @@ var TagsPrototype = {
 	// XXX
 
 
+	get length(){
+	},
+	tags: function(){
+	},
+	values: function(){
+	},
+
+
 	// Add/Remove/Modify tags API...
 	// XXX
 	path: function(){
