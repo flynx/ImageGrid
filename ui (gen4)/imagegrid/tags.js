@@ -33,11 +33,11 @@ var TagsClassPrototype = {
 	// XXX should this sort sets???
 	// XXX should this be .normalizeTags(..) ???
 	normalize: function(...tags){
-		var tagRemovedCahrs = (this.config || {})['tagRemovedCahrs']
-		tagRemovedCahrs = tagRemovedCahrs instanceof RegExp ? 
-				tagRemovedCahrs
-			: typeof(tagRemovedCahrs) == typeof('str') ?
-				new RegExp(tagRemovedCahrs, 'g')
+		var tagRemovedChars = (this.config || {})['tagRemovedChars']
+		tagRemovedChars = tagRemovedChars instanceof RegExp ? 
+				tagRemovedChars
+			: typeof(tagRemovedChars) == typeof('str') ?
+				new RegExp(tagRemovedChars, 'g')
 			: /[\s-_]/g
 		var res = (tags.length == 1 && tags[0] instanceof Array) ? 
 			tags.pop() 
@@ -47,7 +47,7 @@ var TagsClassPrototype = {
 				return tag
 					.trim()
 					.toLowerCase()
-					.replace(tagRemovedCahrs, '')
+					.replace(tagRemovedChars, '')
 					// XXX do we need to sort here???
 					.split(/:/)
 						.sort()
@@ -71,9 +71,13 @@ var TagsClassPrototype = {
 // 			- paths
 // 			- sets/relations
 // 			- tag-object references
+// XXX should we store normalized and non-normalized tags for reference???
+// 		...there are two ways to think of this:
+// 			1) both (a-la flickr) -- keep both, use normalized internally
+// 			2) only normalized -- simpler but may surprise the user and not be as pretty...
 var TagsPrototype = {
 	config: {
-		tagRemovedCahrs: '\\s-_',
+		tagRemovedChars: '\\s-_',
 	},
 
 	// Utils...
@@ -88,10 +92,22 @@ var TagsPrototype = {
 
 
 	get length(){
+		// XXX number of elements (values)...
 	},
+
+	// Tags present in the system...
+	//
+	// NOTE: this includes all the .persistent tags as well as all the 
+	// 		tags actually used.
 	tags: function(){
+		// XXX
+	},
+	// XXX need a way to add/remove these...
+	persistent: function(){
+		// XXX
 	},
 	values: function(){
+		// XXX
 	},
 
 
