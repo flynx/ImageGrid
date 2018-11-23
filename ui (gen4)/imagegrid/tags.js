@@ -80,6 +80,11 @@ var TagsPrototype = {
 		tagRemovedChars: '\\s-_',
 	},
 
+	// data...
+	__persistent_tags: [],
+	__index: {},
+
+
 	// Utils...
 	//
 	// proxy to Tags.normalize(..)
