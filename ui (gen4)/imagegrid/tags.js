@@ -82,6 +82,11 @@ var TagsPrototype = {
 
 	// data...
 	__persistent_tags: [],
+	// Format:
+	// 	{
+	// 		<tag>: [ <item>, ... ],
+	// 		...
+	// 	}
 	__index: {},
 
 
