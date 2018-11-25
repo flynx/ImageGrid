@@ -30,9 +30,17 @@ var TagsClassPrototype = {
 	// 	.normalize([tag, ...])
 	// 		-> [ntag, ...]
 	//
-	// XXX should this sort sets???
+	// NOTE: tag set order is not significant.
+	// NOTE: for mixed tags sets are sorted in-place within paths, 
+	// 		e.g.
+	// 			c:b/a -> b:c/a
+	//
+	// XXX not sure if we should do:
+	// 			c:b/a -> b:c/a 		- sort sets within pats (current)
+	// 		or
+	// 			c:b/a -> b/a:c		- sort paths within sets
 	// XXX should this be .normalizeTags(..) ???
-	// XXX should this resolve aliases???
+	// XXX should we support priority braces, i.e. c:(b/a)
 	normalize: function(...tags){
 		var that = this
 		var tagRemovedChars = (this.config || {})['tagRemovedChars']
@@ -50,10 +58,18 @@ var TagsClassPrototype = {
 					.trim()
 					.toLowerCase()
 					.replace(tagRemovedChars, '')
-					// XXX do we need to sort here???
-					.split(/:/)
-						.sort()
-						.join(':') })
+					// sort sets within paths...
+					.split(/[\\\/]/g)
+						.map(function(e){
+							return e
+								.split(/:/g)
+								.sort()
+								.join(':') })
+						.join('/') })
+					// sort paths within sets...
+					//.split(/:/g)
+					//	.sort()
+					//	.join(':') })
 			.unique()
 		return (tags.length == 1 && !(tags[0] instanceof Array)) ? 
 			// NOTE: if we got a single tag return it as a single tag...
@@ -88,14 +104,7 @@ var TagsPrototype = {
 	// 	[ <tag>, ... ]
 	//
 	// XXX Q: should these be normalized???
-	__persistent_tags: [],
-
-	// Format:
-	// 	{
-	// 		<tag>: [ <item>, ... ],
-	// 		...
-	// 	}
-	__index: {},
+	__persistent_tags: null,
 
 	// Format:
 	// 	{
@@ -104,7 +113,14 @@ var TagsPrototype = {
 	//
 	// XXX need introspection for this...
 	// 		...should this be .aliases ???
-	__aliases: {},
+	__aliases: null,
+
+	// Format:
+	// 	{
+	// 		<tag>: [ <item>, ... ],
+	// 		...
+	// 	}
+	__index: null,
 
 
 	// Utils...
@@ -113,37 +129,106 @@ var TagsPrototype = {
 	// XXX Q: should this be .normalizeTags(..) ???
 	normalize: function(...tags){
 		return this.constructor.normalize.call(this, ...tags) },
-
-	// XXX expand aliases...
-	// XXX
-
-
-	get length(){
-		// XXX number of elements (values)...
-	},
-
-	// Tags present in the system...
+	// Match two tags...
 	//
-	// NOTE: this includes all the .persistent tags as well as all the 
-	// 		tags actually used.
-	tags: function(){
-		// XXX
+	// NOTE: this is not symmetric e.g. a will match a:b but not vice-versa.
+	//
+	// XXX add support for * in sets...
+	match: function(a, b){
+		// normalized match...
+		a = this.normalize(a)
+		b = this.normalize(b)
+		if(a == b){
+			return true
+		}
+
+		// set matching...
+		// 	a matches b iff each element of a exists in b.
+		var matchSet = function(a, b){
+			a = a.split(/:/g) 
+			b = b.split(/:/g)
+			return a
+				.filter(function(e){ 
+					return e == '*' 
+						|| b.indexOf(e) < 0 }).length == 0 }
+
+		// path matching...
+		// 	a matches b iff each element in a exists in b and in the same 
+		// 	order as in a.
+		a = a.split(/[\/\\]/g) 
+		b = b.split(/[\/\\]/g)
+
+		return b
+			.reduce(function(a, e){
+				return a[0] && matchSet(a[0], e) ? 
+					a.slice(1) 
+					: a
+			}, a).length == 0
 	},
+
+
+	// Introspection...
+	//
+	get length(){
+		return this.values().length },
+
 	// XXX need a way to add/remove these...
 	persistent: function(){
 		// XXX
 	},
-	values: function(){
-		// XXX
+	// Tags present in the system...
+	//
+	//	Get all tags...
+	//	.tags()
+	//		-> tags
+	//
+	//	Get value tags...
+	//	.tags(value)
+	//		-> tags
+	//
+	// NOTE: this includes all the .persistent tags as well as all the 
+	// 		tags actually used.
+	tags: function(value){
+		var that = this
+		// get tags of specific value...
+		if(value){
+			return Object.entries(this.__index || {})
+				.filter(function(e){ return e[1].has(value) })
+				.map(function(e){ return e[0] })
+				.flat()
+				.unique()
+
+		// get all tags...
+		} else {
+			return Object.keys(this.__index || {})
+				.concat((this.__persistent_tags || [])
+					.map(function(t){ 
+						return that.normalize(t) }))
+				.unique()
+		}
 	},
+	//
+	// 	Get all values...
+	// 	.values()
+	// 		-> values
+	//
+	// 	Get specific tag values...
+	// 	.values(tag)
+	// 		-> values
+	//
+	// NOTE: this does not support any query syntax...
+	values: function(tag){
+		var that = this
+		tag = this.normalize(tag || '*')
+		return [...new Set(
+			Object.entries(this.__index || {})
+				.filter(function(e){ 
+					return tag == '*' || that.match(tag, e[0]) })
+				.map(function(s){ return [...s[1]] })
+				.flat())] },
 
 
 	// Add/Remove/Modify tags API...
-	// XXX
-	path: function(){
-		// XXX
-		return this
-	},
 	// 
 	// 	Resolve alias (recursive)...
 	// 	.alias(tag)
@@ -159,6 +244,7 @@ var TagsPrototype = {
 	// 		-> this
 	//
 	alias: function(tag, value){
+		var aliases = this.__aliases = this.__aliases || {}
 		// XXX this seems a bit ugly...
 		var resolve = function(tag, seen){
 			seen = seen || []
@@ -168,8 +254,8 @@ var TagsPrototype = {
 					seen
 						.concat([seen[0]])
 						.join('" -> "') }"`) }
-			var next = this.__aliases[tag] 
-				|| this.__aliases[this.normalize(tag)]
+			var next = aliases[tag] 
+				|| aliases[this.normalize(tag)]
 			seen.push(tag)
 			return next != null ?
 					resolve(next, seen)
@@ -184,8 +270,8 @@ var TagsPrototype = {
 
 		// remove...
 		} else if(value == null){
-			delete this.__aliases[tag.trim()]
-			delete this.__aliases[this.normalize(tag)]
+			delete aliases[tag.trim()]
+			delete aliases[this.normalize(tag)]
 
 		// set...
 		} else {
@@ -201,20 +287,35 @@ var TagsPrototype = {
 						.concat([chain[0]])
 						.join('" -> "') }"`) }
 
-			this.__aliases[tag] = value
+			aliases[tag] = value
 		}
 		return this
 	},
 
 
 	// Add/Remove/Modify content API...
-	// XXX
-	tag: function(){
-		// XXX
+	//
+	// XXX save un-normalized tags as aliases...
+	// XXX when value is not given, add tags to persistent tags...
+	tag: function(tags, value){
+		var that = this
+		this.__index = this.__index || {}
+		this.normalize(tags instanceof Array ? tags : [tags])
+			.forEach(function(tag){
+				(that.__index[tag] = that.__index[tag] || new Set()).add(value) })
 		return this
 	},
-	untag: function(){
-		// XXX
+	untag: function(tags, value){
+		var that = this
+		this.normalize(tags instanceof Array ? tags : [tags])
+			.forEach(function(tag){
+				var s = that.__index[tag] || new Set()
+				s.delete(value) 
+				// remove empty sets...
+				if(s.size == 0){
+					delete that.__index[tag]
+				}
+			})
 		return this
 	},
 	
