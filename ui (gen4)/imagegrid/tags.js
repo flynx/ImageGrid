@@ -99,11 +99,11 @@ var TagsPrototype = {
 
 	// Format:
 	// 	{
-	// 		<alias>: <tag>,
+	// 		<alias>: <normalized-tag>,
 	// 	}
 	//
-	// XXX Q: should we use these as a dict for normalized user input???
-	// 		...i.e. 'A B C': 'abc'
+	// XXX need introspection for this...
+	// 		...should this be .aliases ???
 	__aliases: {},
 
 
@@ -145,7 +145,7 @@ var TagsPrototype = {
 		return this
 	},
 	// 
-	// 	Resolve alias...
+	// 	Resolve alias (recursive)...
 	// 	.alias(tag)
 	// 		-> value
 	// 		-> undefined
@@ -159,22 +159,28 @@ var TagsPrototype = {
 	// 		-> this
 	//
 	alias: function(tag, value){
+		// XXX this seems a bit ugly...
+		var resolve = function(tag, seen){
+			seen = seen || []
+			// check for loops...
+			if(seen.indexOf(tag) >= 0){
+				throw new Error(`Recursive alias chain: "${ 
+					seen
+						.concat([seen[0]])
+						.join('" -> "') }"`) }
+			var next = this.__aliases[tag] 
+				|| this.__aliases[this.normalize(tag)]
+			seen.push(tag)
+			return next != null ?
+					resolve(next, seen)
+				: seen.length > 1 ? 
+					tag
+				: undefined
+		}.bind(this)
+
 		// resolve...
 		if(arguments.length == 1){
-			var seen = []
-			var next
-			do {
-				tag = next || tag.trim()
-				seen.push(tag)
-				next = this.__aliases[tag] 
-					|| this.__aliases[this.normalize(tag)]
-				// check for loops...
-				if(seen.indexOf(next) >= 0){
-					throw new Error(`Recursive alias chain: "${ seen.join('", "') }"`)
-				}
-			} while(!next)
-
-			return seen.length > 1 ? tag : undefined
+			return resolve(tag.trim())
 
 		// remove...
 		} else if(value == null){
@@ -187,17 +193,13 @@ var TagsPrototype = {
 			value = this.normalize(value)
 
 			// check for recursion...
-			var chain = [value]
-			var cur = value
-			var t = this.normalize(tag)
-			do {
-				cur = this.__aliases[cur] 
-					|| this.__aliases[this.normalize(cur)]
-				chain.push(cur)
-				if(cur == t){
-					throw new Error(`Creating a recursive alias chain: "${ chain.join('", "') }"`)
-				}
-			} while(cur)
+			var chain = []
+			var target = resolve(value, chain)
+			if(target == tag || target == this.normalize(tag)){
+				throw new Error(`Creating a recursive alias chain: "${ 
+					chain
+						.concat([chain[0]])
+						.join('" -> "') }"`) }
 
 			this.__aliases[tag] = value
 		}
