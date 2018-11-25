@@ -32,7 +32,9 @@ var TagsClassPrototype = {
 	//
 	// XXX should this sort sets???
 	// XXX should this be .normalizeTags(..) ???
+	// XXX should this resolve aliases???
 	normalize: function(...tags){
+		var that = this
 		var tagRemovedChars = (this.config || {})['tagRemovedChars']
 		tagRemovedChars = tagRemovedChars instanceof RegExp ? 
 				tagRemovedChars
@@ -77,11 +79,17 @@ var TagsClassPrototype = {
 // 			2) only normalized -- simpler but may surprise the user and not be as pretty...
 var TagsPrototype = {
 	config: {
-		tagRemovedChars: '\\s-_',
+		tagRemovedChars: '[\\s-_]',
 	},
 
 	// data...
+	//
+	// Format:
+	// 	[ <tag>, ... ]
+	//
+	// XXX Q: should these be normalized???
 	__persistent_tags: [],
+
 	// Format:
 	// 	{
 	// 		<tag>: [ <item>, ... ],
@@ -89,11 +97,20 @@ var TagsPrototype = {
 	// 	}
 	__index: {},
 
+	// Format:
+	// 	{
+	// 		<alias>: <tag>,
+	// 	}
+	//
+	// XXX Q: should we use these as a dict for normalized user input???
+	// 		...i.e. 'A B C': 'abc'
+	__aliases: {},
+
 
 	// Utils...
 	//
 	// proxy to Tags.normalize(..)
-	// XXX should this be .normalizeTags(..) ???
+	// XXX Q: should this be .normalizeTags(..) ???
 	normalize: function(...tags){
 		return this.constructor.normalize.call(this, ...tags) },
 
@@ -127,8 +144,63 @@ var TagsPrototype = {
 		// XXX
 		return this
 	},
-	alias: function(){
-		// XXX
+	// 
+	// 	Resolve alias...
+	// 	.alias(tag)
+	// 		-> value
+	// 		-> undefined
+	//
+	// 	Set alias...
+	// 	.alias(tag, value)
+	// 		-> this
+	//
+	// 	Remove alias...
+	// 	.alias(tag, null)
+	// 		-> this
+	//
+	alias: function(tag, value){
+		// resolve...
+		if(arguments.length == 1){
+			var seen = []
+			var next
+			do {
+				tag = next || tag.trim()
+				seen.push(tag)
+				next = this.__aliases[tag] 
+					|| this.__aliases[this.normalize(tag)]
+				// check for loops...
+				if(seen.indexOf(next) >= 0){
+					throw new Error(`Recursive alias chain: "${ seen.join('", "') }"`)
+				}
+			} while(!next)
+
+			return seen.length > 1 ? tag : undefined
+
+		// remove...
+		} else if(value == null){
+			delete this.__aliases[tag.trim()]
+			delete this.__aliases[this.normalize(tag)]
+
+		// set...
+		} else {
+			tag = tag.trim()
+			value = this.normalize(value)
+
+			// check for recursion...
+			var chain = [value]
+			var cur = value
+			var t = this.normalize(tag)
+			do {
+				cur = this.__aliases[cur] 
+					|| this.__aliases[this.normalize(cur)]
+				chain.push(cur)
+				if(cur == t){
+					throw new Error(`Creating a recursive alias chain: "${ chain.join('", "') }"`)
+				}
+			} while(cur)
+
+			this.__aliases[tag] = value
+		}
 		return this
 	},
 
