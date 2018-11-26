@@ -66,7 +66,7 @@ var TagsClassPrototype = {
 								.sort()
 								.join(':') })
 						.join('/') })
-					// sort paths within sets...
+					// sort sets containing paths...
 					//.split(/:/g)
 					//	.sort()
 					//	.join(':') })
