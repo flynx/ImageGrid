@@ -132,12 +132,16 @@ var TagsPrototype = {
 
 	// Match tags...
 	//
-	// 	Match two tags...
+	// 	Check if tags match...
 	// 	.match(tag, tag)
 	// 		-> bool
 	//
 	// 	Get all matching tags...
 	// 	.match(tag)
+	// 		-> tags
+	//
+	// 	Filter out non-matching from tags...
+	// 	.match(tag, tags)
 	// 		-> tags
 	//
 	//
@@ -156,7 +160,7 @@ var TagsPrototype = {
 	// 	- component order is maintained.
 	//
 	// Example:
-	// 		set			match		no match
+	// 		path		match		no match
 	// 		--------------------------------
 	// 		a			a			z
 	// 					a/b			b/c
@@ -192,8 +196,8 @@ var TagsPrototype = {
 		var that = this
 
 		// get matching tags...
-		if(b == null){
-			return this.tags()
+		if(b == null || b instanceof Array){
+			return (b || this.tags())
 				.filter(function(tag){ 
 					return that.match(a, tag)})
 
