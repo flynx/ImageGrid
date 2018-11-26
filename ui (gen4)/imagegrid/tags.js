@@ -129,41 +129,108 @@ var TagsPrototype = {
 	// XXX Q: should this be .normalizeTags(..) ???
 	normalize: function(...tags){
 		return this.constructor.normalize.call(this, ...tags) },
-	// Match two tags...
+
+	// Match tags...
+	//
+	// 	Match two tags...
+	// 	.match(tag, tag)
+	// 		-> bool
+	//
+	// 	Get all matching tags...
+	// 	.match(tag)
+	// 		-> tags
+	//
+	//
+	// Query syntax:
+	// 	a		- tag
+	// 	a/b		- path, defines a directional relation between a and b
+	// 	a:b		- set, defines a non-directional relation between a and b
+	// 	*		- tag placeholder, matches one and only one tag name
+	//
+	// NOTE: a tag is also a singular path and a singular set.
+	// NOTE: paths have priority over sets: a/b:c -> a / b:c
+	//
+	//
+	// Two paths match iff:
+	// 	- all of the components of the first are contained in the second and
+	// 	- component order is maintained.
+	//
+	// Example:
+	// 		set			match		no match
+	// 		--------------------------------
+	// 		a			a			z
+	// 					a/b			b/c
+	// 					x/a/y		...
+	// 					x/a
+	// 					...
+	// 		--------------------------------
+	// 		a/b			a/b			b/a
+	// 					x/a/y/b/z	b/x
+	// 					...			...
+	//
+	//
+	// Two sets match iff:
+	// 	- all of the components of the first are contained in the second.
+	//
+	// Example:
+	// 		set			match		no match
+	// 		--------------------------------
+	// 		a			a			z
+	// 					a:b			b:c
+	// 					x:a			...
+	// 					x:a:z
+	// 					...
+	// 		--------------------------------
+	// 		a:b			a:b			a:x
+	// 					b:c			z:b:m
+	// 					a:x:b		...
+	// 					...
+	//
 	//
 	// NOTE: this is not symmetric e.g. a will match a:b but not vice-versa.
-	//
-	// XXX add support for * in sets...
 	match: function(a, b){
-		// normalized match...
-		a = this.normalize(a)
-		b = this.normalize(b)
-		if(a == b){
-			return true
+		var that = this
+
+		// get matching tags...
+		if(b == null){
+			return this.tags()
+				.filter(function(tag){ 
+					return that.match(a, tag)})
+
+		// match two tags...
+		} else {
+			// normalized match...
+			a = this.normalize(a)
+			b = this.normalize(b)
+			if(a == b){
+				return true
+			}
+
+			// set matching...
+			// 	a matches b iff each element of a exists in b.
+			var matchSet = function(a, b){
+				a = a.split(/:/g) 
+				b = b.split(/:/g)
+				return a.length <= b.length
+					&& a.filter(function(e){ 
+						return e != '*' 
+							&& b.indexOf(e) < 0 }).length == 0 }
+
+			// path matching...
+			// 	a matches b iff each element in a exists in b and in the same 
+			// 	order as in a.
+			a = a.split(/[\/\\]/g) 
+			b = b.split(/[\/\\]/g)
+
+			return b
+				.reduce(function(a, e){
+					return (a[0] 
+							&& (a[0] == '*' 
+								|| matchSet(a[0], e))) ? 
+						a.slice(1) 
+						: a
+				}, a).length == 0
 		}
-
-		// set matching...
-		// 	a matches b iff each element of a exists in b.
-		var matchSet = function(a, b){
-			a = a.split(/:/g) 
-			b = b.split(/:/g)
-			return a
-				.filter(function(e){ 
-					return e == '*' 
-						|| b.indexOf(e) < 0 }).length == 0 }
-
-		// path matching...
-		// 	a matches b iff each element in a exists in b and in the same 
-		// 	order as in a.
-		a = a.split(/[\/\\]/g) 
-		b = b.split(/[\/\\]/g)
-
-		return b
-			.reduce(function(a, e){
-				return a[0] && matchSet(a[0], e) ? 
-					a.slice(1) 
-					: a
-			}, a).length == 0
 	},
 
 
