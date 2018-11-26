@@ -412,6 +412,19 @@ var TagsPrototype = {
 	//					['or', 'a', 'b'],
 	//					['not', 'z']])
 	query: function(){
+		// XXX each of the arguments can be:
+		// 		- tag				-> resolves to list of values
+		// 		- query				-> resolves to list of values
+		// 		- list of values
+		var ns = {
+			and: function(...e){
+			},
+			or: function(...e){
+			},
+			not: function(...e){
+			},
+		}
+
 		// XXX
 	},
 
