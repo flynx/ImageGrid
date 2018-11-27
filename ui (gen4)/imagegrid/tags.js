@@ -1,11 +1,18 @@
 /**********************************************************************
 * 
+* Goals:
+* 	- minimum tagging
+* 	- maximum expressiveness
+* 	- fully serializable
+* 	- customizable
+*
 * Features:
 * 	- tag paths
 * 		a/b/c
 * 	- tag sets/relations
 * 		a:b
 * 	- serializable tag queries
+* 	- serializable tag data
 *
 *
 **********************************************************************/
