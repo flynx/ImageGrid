@@ -20,6 +20,8 @@ if((typeof(process) != 'undefined' ? process : {}).__nwjs){
 //
 // NOTE: no need to do this in browser...
 if(typeof(process) != 'undefined'){
+	//require('v8-compile-cache')
+
 	requirejs = 
 	global.requirejs = 
 	window.requirejs = 

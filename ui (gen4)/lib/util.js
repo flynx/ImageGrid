@@ -214,6 +214,19 @@ Array.prototype.sortAs = function(other){
 }
 
 
+// Set set operation shorthands...
+Set.prototype.unite = function(other){ 
+	return new Set([...this, ...other]) }
+Set.prototype.intersect = function(other){
+	var test = other.has ?  'has' : 'includes'
+	return new Set([...this]
+		.filter(function(e){ return other[test](e) })) }
+Set.prototype.subtract = function(other){
+	var test = other.has ?  'has' : 'includes'
+	return new Set([...this]
+		.filter(function(e){ return !other[test](e) })) }
+
+
 module.chainCmp = function(cmp_chain){
 	return function(a, b, get, data){
 		var res

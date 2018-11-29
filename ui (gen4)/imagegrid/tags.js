@@ -27,6 +27,29 @@ var util = require('lib/util')
 
 /*********************************************************************/
 
+// XXX a Set-like back-end...
+// 		API:
+// 			.has(..)
+// 				-> bool
+//
+// 			Unite two sets...
+// 			.unite(..)
+// 				-> new
+//
+// 			Intersection of two sets...
+// 			.intersect(..)
+// 				-> new
+//
+// 			Difference of two sets...
+// 			.subtract(..)
+// 				-> new
+
+// extend Set to support the needed basics...
+
+
+
+/*********************************************************************/
+
 var TagsClassPrototype = {
 	// Utils...
 	//

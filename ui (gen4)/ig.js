@@ -8,6 +8,8 @@
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
+//require('v8-compile-cache')
+
 require('./cfg/requirejs')
 
 nodeRequire =
