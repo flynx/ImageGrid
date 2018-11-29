@@ -287,6 +287,18 @@ var URLHistoryActions = actions.Actions({
 				}
 			}
 		}],
+	openPreviousLoadedURL: ['History/Load previously loaded url',
+		core.doc`
+
+			NOTE: this will only work if .config['url-history-last-loaded'] is 
+				present in .url_history, otherwise this is a no-op.
+			`,
+		function(){
+			var last = this.config['url-history-last-loaded']
+
+			last in this.url_history
+				&& this.openURLFromHistory(last)
+		}],	
 	clearURLHistory: ['History/', 
 		function(){ this.url_history = null }],
 })
@@ -308,6 +320,20 @@ module.URLHistory = core.ImageGridFeatures.Feature({
 	],
 
 	actions: URLHistoryActions,
+
+	handlers: [
+		// maintain .config['url-history-last-loaded']
+		['load.pre',
+			function(){
+				var prev = (this.location && this.location.path) ?
+					this.location.path 
+					: null
+				return prev 
+					&& function(){
+						prev != this.config['url-history-last-loaded'] 
+							&& (this.config['url-history-last-loaded'] = prev) }
+			}],
+	],
 })
 
 
@@ -321,6 +347,8 @@ var URLHistoryLocalStorageActions = actions.Actions({
 		'url-history-local-storage-key': 'url-history',
 		'url-history-loaded-local-storage-key': 'url-history-loaded',
 		'url-history-load-current': true,
+
+		'url-history-last-loaded': null,
 	},
 
 	__url_history: null,
@@ -405,7 +433,7 @@ var URLHistoryLocalStorageActions = actions.Actions({
 			} else {
 				this.openURLFromHistory(0)
 			}
-		}]
+		}],
 })
 
 var URLHistoryLocalStorage = 

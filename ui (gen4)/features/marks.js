@@ -366,9 +366,11 @@ var ImageMarkEditActions = actions.Actions({
 	toggleMarkLoaded: ['Mark/Invert marks', 
 		'toggleMark: "loaded" ...' ],
 
-	markRibbon: ['Mark/Mark $ribbon', 
+	// NOTE: we do not need a menu hotkey as these are easy to access 
+	// 		directly (via ctrl-a/ctrl-shift-a)
+	markRibbon: ['Mark/Mark ribbon', 
 		'toggleMark: "ribbon" "on"' ],
-	markLoaded: ['Mark/Mark $all', 
+	markLoaded: ['Mark/Mark all', 
 		'toggleMark: "loaded" "on"' ],
 
 	markTagged: ['- Mark/Mark images by tags',

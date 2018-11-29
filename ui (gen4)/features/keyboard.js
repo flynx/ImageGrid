@@ -239,6 +239,8 @@ module.GLOBAL_KEYBOARD = {
 		// history...
 		ctrl_H: 'listURLHistory',
 		ctrl_shift_H: 'listSaveHistory',
+		'ctrl_#6': 'openPreviousLoadedURL',
+
 
 		U: 'undo',
 		ctrl_Z: 'undo',
