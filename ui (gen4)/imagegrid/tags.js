@@ -106,6 +106,94 @@ var TagsClassPrototype = {
 			res.pop() 
 			: res
 	},
+
+	// Query parser...
+	//
+	// NOTE: this is loosely based on Slang's parser...
+	// 		...see for details: https://github.com/flynx/Slang
+	__query_lexer: RegExp([
+			/* XXX there are two ways to deal with comments:
+			//			1) lexer-based -- this section commented, next uncommented...
+			//			2) macro-based -- this section uncommented, next commented...
+			//		#2 is a bit buggy...
+			// terms to keep in the stream...
+			'\\s*('+[
+				'\\n',
+				'--',
+			].join('|')+')',
+			//*/
+
+			// lexer comments...
+			'\\s*\\(\\*[^\\)]*\\*\\)\\s*',
+			'\\s*--.*[\\n$]',
+			//*/
+
+			// quoted strings...
+			// NOTE: we do not support escaped quotes...
+			'\\s*"([^"]*)"\\s*',
+			"\\s*'([^']*)'\\s*",
+
+			// quote...
+			'\\s*(\\\\)',
+
+			// braces...
+			'\([\\[\\]()]\)',
+
+			// whitespace...
+			'\\s+',
+		].join('|'),
+		'm'),
+	parseQuery: function(query){
+		// lex the input... 
+		query = query instanceof Array ? 
+			query 
+			: query
+				// split by strings whitespace and block comments...
+				.split(this.__query_lexer || this.constructor.__query_lexer)
+				// parse numbers...
+				// XXX do we need number parsing???
+				.map(function(e){ 
+					// numbers...
+					if(/^[-+]?[0-9]+\.[0-9]+$/.test(e)){
+						e = parseFloat(e)
+					} else if(/^[-+]?[0-9]+$/.test(e)){
+						e = parseInt(e)
+					}
+					return e
+				})
+				// remove undefined groups...
+				.filter(function(e){ 
+					// NOTE: in JS 0 == '' is true ;)
+					return e !== undefined && e !== '' })
+
+		var brace = function(code, b){
+			var res = []
+
+			while(code.length > 0){
+				c = code.shift()
+				if(c == '[' || c == '('){
+					res.push( brace(code, c == '[' ? ']' : ')') )
+
+				} else if(c == b){
+					return res
+
+				} else if(c == ']' || c == ')'){
+					throw new SyntaxError(`Tag Query: Unexpected "${c}".`)
+
+				} else {
+					res.push(c) 
+				}
+			}
+
+			if(b != null){
+				throw new SyntaxError(`Tag Query: Expecting "${b}" got end of query.`)
+			}
+
+			return res
+		}
+
+		return brace(query)
+	},
 }
 
 
@@ -487,9 +575,10 @@ var TagsPrototype = {
 	// 	values...
 	//
 	// 	Example:
-	// 		.query(['and', 
-	// 				['values', 'a', 'b', 'c'], 
-	// 				['values', 'b', 'c', 'd']])
+	// 		.query(`
+	// 			(and 
+	// 				(values a b c), 
+	// 				(values b c d))`)
 	// 			-> ['b', 'c']
 	//
 	//
@@ -518,11 +607,11 @@ var TagsPrototype = {
 		values: function(...args){ return args },
 		flat: function(...args){ return args.flat() },
 	},
-	// XXX add support for string queries...
+	// NOTE: the query parser is generic and thus is implemented in the
+	// 		constructor...
 	parseQuery: function(query){
-		// XXX
-	},
-	query: function(query){
+		return this.constructor.parseQuery.call(this, query) },
+	query: function(query, raw){
 		var that = this
 		var ns = this.__query_ns
 		var sns = this.__query_ns_special
@@ -545,9 +634,14 @@ var TagsPrototype = {
 
 		return QL(query instanceof Array ? 
 				query 
-				: [query] )
-			// XXX should this be here???
-			//.flat(1)
+				: this.parseQuery(query) )
+			.run(function(){
+				return raw ?
+					this
+					: (this
+						// XXX should these be here???
+						.flat(1)
+						.unique()) })
 	},
 
 
