@@ -611,6 +611,15 @@ var TagsPrototype = {
 	// 		constructor...
 	parseQuery: function(query){
 		return this.constructor.parseQuery.call(this, query) },
+	//
+	//	Execute query...
+	//	.query(query)
+	//		-> values
+	//
+	//	Execute the query and return raw/structured results...
+	//	.query(query, true)
+	//		-> values
+	//
 	query: function(query, raw){
 		var that = this
 		var ns = this.__query_ns
@@ -640,7 +649,7 @@ var TagsPrototype = {
 					this
 					: (this
 						// XXX should these be here???
-						.flat(1)
+						.flat()
 						.unique()) })
 	},
 
