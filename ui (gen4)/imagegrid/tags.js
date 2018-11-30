@@ -668,22 +668,74 @@ var TagsPrototype = {
 	// serialization...
 	//
 	// 	.json()
-	// 	.json('full')
-	// 		-> json
-	//
-	// 	.json('tags')
 	// 		-> json
 	//
 	//
 	// Format:
 	// 	{
+	// 		// optional
+	// 		aliases: null | {
+	// 			<alias>: <value>,	
+	// 			...
+	// 		},
+	//
+	// 		// optional
+	// 		persistent: null | [ <tag>, .. ],
+	//
+	// 		tags: {
+	// 			<tag>, [ <value>, .. ],
+	// 			...
+	// 		},
 	// 	}
 	//
-	json: function(mode){
-		// XXX
+	//
+	// NOTE: to get the current tags use .tags()
+	//
+	//
+	// XXX do we need mode???
+	// 		...in the current implementation it is pointless to set 
+	// 		empty sets for tags as they will get cleared...
+	// XXX should this serialize recursively down???
+	// 		...it might be a good idea to decide on a serialization 
+	// 		protocol and use it throughout...
+	json: function(){
+		var res = {}
+
+		// aliases...
+		this.__aliases && Object.keys(this.__aliases).length > 0
+			&& (res.aliases = Object.assign({}, this.__aliases))
+
+		// persistent tags...
+		this.__persistent_tags && this.__persistent_tags.length > 0
+			&& (res.persistent = this.__persistent_tags.slice())
+
+		// tags...
+		res.tags = {}
+		Object.entries(this.__index)
+			.forEach(function(e){
+				// XXX should we serialize the items here???
+				res.tags[e[0]] = [...e[1]] })
+
+		return res
 	},
 	load: function(json){
-		// XXX
+		var that = this
+
+		// aliases...
+		json.aliases
+			&& (this.__aliases = Object.assign({}, json.aliases))
+
+		// persistent tags...
+		json.persistent
+			&& (this.__persistent_tags = json.persistent.slice())
+
+		// tags...
+		json.tags
+			&& (this.__index = {})
+			&& Object.entries(json.tags)
+				.forEach(function(e){
+					that.__index[e[0]] = new Set(e[1]) })
+
 		return this
 	},
 
