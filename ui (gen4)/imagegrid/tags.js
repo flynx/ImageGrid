@@ -598,10 +598,8 @@ var TagsPrototype = {
 		or: function(...args){
 			return [...new Set(args.flat(1))] },
 		not: function(...args){
-			return [...args
-				.reduce(function(res, l){
-						return res.subtract(l.flat(1)) }, 
-					new Set(args.shift()))] },
+			return new Set(args.shift() || [])
+				.subtract(args.flat()) },
 	},
 	__query_ns_special: {
 		values: function(...args){ return args },
