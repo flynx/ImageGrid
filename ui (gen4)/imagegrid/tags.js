@@ -329,6 +329,15 @@ var TagsPrototype = {
 				.map(function(s){ return [...s[1]] })
 				.flat())] },
 
+	has: function(value){
+		for(var v in Object.values(this.__index)){
+			if(v.has(value)){
+				return true
+			}
+		}
+		return false
+	},
+
 
 	// Add/Remove/Modify tags API...
 	// 
@@ -424,32 +433,56 @@ var TagsPrototype = {
 
 	// Query API...
 	//
-	// XXX not sure about the format...
-	// 		...we can use diff:
-	// 			tags.query(
-	// 				AND('x', 
-	// 					OR('a', 'b'),
-	// 					NOT('z')))
-	// 		the algorithm would be something like:
-	// 			- get individual tags from query
-	// 			- match tags
-	// 			- build item list
-	// 		another syntax variants might be:
-	// 			tags.query(
-	// 				{and: [
-	// 					'x',
-	//					{or: ['a', 'b']},
-	//					{not: 'z'} ]})
-	// 			// lisp-like...
-	// 			tags.query(
-	// 				['and',
-	// 					'x',
-	//					['or', 'a', 'b'],
-	//					['not', 'z']])
-	// XXX each of the arguments can be:
-	// 		- tag				-> resolves to list of values
-	// 		- query				-> resolves to list of values
-	// 		- list of values
+	// The language (JS):
+	// 	<query> ::= <tag> 
+	// 		| <call> 
+	// 		| <list>
+	//
+	// 	<tag> ::= string
+	//
+	// 	<call> ::= [ <function-name> ]
+	// 		| [ <function-name>, <query>, .. ]
+	//
+	// 	<list> ::= []
+	// 		| [ <query>, .. ]
+	//
+	//
+	// Values resolution:
+	// 	tag		-> resolves to list of matching values as returned by .values(tag)
+	// 	list	-> resolved to list of resolved items
+	// 	call	-> resolves to list of values returned by the called function
+	//
+	//
+	// Functions:
+	// 	(and ..)
+	// 		resolves to the list of values present in each of the arguments
+	// 	(or ..)
+	// 		resolves to the list of all the values of all the arguments
+	// 	(not a ..)
+	// 		resolves to list of values in a not present in any of the 
+	// 		other arguments
+	// 
+	//
+	// Special forms:
+	// 	(values ..)
+	// 		resolves to the list of values as-is.
+	// 		this makes it possible to pass in a set of values as-is 
+	// 		without resolving them as tags.
+	//
+	//
+	// Testing queries:
+	// 	(values ..) adds the ability to test queries independently of 
+	// 	the actual content of the Tags object by passing in explicit 
+	// 	values...
+	//
+	// 	Example:
+	// 		.query(['and', 
+	// 				['values', 'a', 'b', 'c'], 
+	// 				['values', 'b', 'c', 'd']])
+	// 			-> ['b', 'c']
+	//
+	//
+	// XXX not sure about the .flat(1) calls...
 	__query_ns: {
 		and: function(...args){
 			// NOTE: we are sorting the lists here to start with the 
@@ -460,15 +493,19 @@ var TagsPrototype = {
 				.sort(function(a, b){ return a.length - b.length })
 			return [...args
 				.reduce(function(res, l){
-						return res.intersect(l) }, 
+						return res.intersect(l.flat(1)) }, 
 					new Set(args.pop()))] },
 		or: function(...args){
-			return [...new Set(args.flat())] },
+			return [...new Set(args.flat(1))] },
 		not: function(...args){
 			return [...args
 				.reduce(function(res, l){
-						return res.subtract(l) }, 
+						return res.subtract(l.flat(1)) }, 
 					new Set(args.shift()))] },
+	},
+	__query_ns_special: {
+		values: function(...args){ return args },
+		flat: function(...args){ return args.flat() },
 	},
 	// XXX add support for string queries...
 	parseQuery: function(query){
@@ -477,21 +514,29 @@ var TagsPrototype = {
 	query: function(query){
 		var that = this
 		var ns = this.__query_ns
+		var sns = this.__query_ns_special
 
 		// Query Language Executor...
 		var QL = function(args){
-			return args[0] in ns ?
-					ns[args[0]].call(ns, ...QL(args.slice(1)))
+			return (
+				// function -> query args and call...
+				args[0] in ns ?
+					ns[args[0]].call(that, ...QL(args.slice(1)))
+				// special form -> pass args as-is...
+				: args[0] in sns ?
+					sns[args[0]].call(that, ...args.slice(1))
+				// list of tags -> query each arg...
 				: args
 					.map(function(arg){
 						return arg instanceof Array ?
 								QL(arg)
-							: that.values(arg) }) }
+							: that.values(arg) }) ) }
 
 		return QL(query instanceof Array ? 
 				query 
 				: [query] )
-			.flat()
+			// XXX should this be here???
+			//.flat(1)
 	},
 
 
