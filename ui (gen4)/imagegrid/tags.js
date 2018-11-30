@@ -152,19 +152,6 @@ var TagsPrototype = {
 	// 	}
 	__index: null,
 
-	// XXX each of the arguments can be:
-	// 		- tag				-> resolves to list of values
-	// 		- query				-> resolves to list of values
-	// 		- list of values
-	__query_ns: {
-		and: function(...args){
-		},
-		or: function(...args){
-		},
-		not: function(...args){
-		},
-	},
-
 
 	// Utils...
 	//
@@ -337,7 +324,8 @@ var TagsPrototype = {
 		return [...new Set(
 			Object.entries(this.__index || {})
 				.filter(function(e){ 
-					return tag == '*' || that.match(tag, e[0]) })
+					return tag == '*' 
+						|| that.match(tag, e[0]) })
 				.map(function(s){ return [...s[1]] })
 				.flat())] },
 
@@ -458,8 +446,52 @@ var TagsPrototype = {
 	// 					'x',
 	//					['or', 'a', 'b'],
 	//					['not', 'z']])
-	query: function(){
+	// XXX each of the arguments can be:
+	// 		- tag				-> resolves to list of values
+	// 		- query				-> resolves to list of values
+	// 		- list of values
+	__query_ns: {
+		and: function(...args){
+			// NOTE: we are sorting the lists here to start with the 
+			// 		largest and smallest lists (head/tail) to drop the 
+			// 		majority of the values the earliest and speed things 
+			// 		up...
+			args = args
+				.sort(function(a, b){ return a.length - b.length })
+			return [...args
+				.reduce(function(res, l){
+						return res.intersect(l) }, 
+					new Set(args.pop()))] },
+		or: function(...args){
+			return [...new Set(args.flat())] },
+		not: function(...args){
+			return [...args
+				.reduce(function(res, l){
+						return res.subtract(l) }, 
+					new Set(args.shift()))] },
+	},
+	// XXX add support for string queries...
+	parseQuery: function(query){
 		// XXX
+	},
+	query: function(query){
+		var that = this
+		var ns = this.__query_ns
+
+		// Query Language Executor...
+		var QL = function(args){
+			return args[0] in ns ?
+					ns[args[0]].call(ns, ...QL(args.slice(1)))
+				: args
+					.map(function(arg){
+						return arg instanceof Array ?
+								QL(arg)
+							: that.values(arg) }) }
+
+		return QL(query instanceof Array ? 
+				query 
+				: [query] )
+			.flat()
 	},
 
 

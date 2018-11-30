@@ -215,6 +215,7 @@ Array.prototype.sortAs = function(other){
 
 
 // Set set operation shorthands...
+// XXX should these accept lists of sets???
 Set.prototype.unite = function(other){ 
 	return new Set([...this, ...other]) }
 Set.prototype.intersect = function(other){
