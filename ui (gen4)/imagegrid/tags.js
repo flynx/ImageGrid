@@ -600,10 +600,11 @@ var TagsPrototype = {
 		not: function(...args){
 			return [...new Set(args.shift() || [])
 				.subtract(args.flat())] },
+
+		flat: function(...args){ return args.flat() },
 	},
 	__query_ns_special: {
 		values: function(...args){ return args },
-		flat: function(...args){ return args.flat() },
 	},
 	// NOTE: the query parser is generic and thus is implemented in the
 	// 		constructor...
