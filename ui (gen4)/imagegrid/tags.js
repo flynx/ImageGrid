@@ -329,8 +329,19 @@ var TagsPrototype = {
 				.map(function(s){ return [...s[1]] })
 				.flat())] },
 
+	// Testing...
+	// XXX can these be faster???
+	// XXX should these take multiple values???
+	hasTag: function(tag){
+		for(var t of this.tags()){
+			if(this.match(tag, t)){
+				return true
+			}
+		}
+		return false
+	},
 	has: function(value){
-		for(var v in Object.values(this.__index)){
+		for(var v of Object.values(this.__index)){
 			if(v.has(value)){
 				return true
 			}
