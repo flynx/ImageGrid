@@ -646,8 +646,8 @@ var TagsPrototype = {
 			.run(function(){
 				return raw ?
 					this
+					// normalize results by default...
 					: (this
-						// XXX should these be here???
 						.flat()
 						.unique()) })
 	},
