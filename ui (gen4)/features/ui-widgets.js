@@ -1285,6 +1285,8 @@ module.UIIntrospection = core.ImageGridFeatures.Feature({
 // XXX should we also add a hide-path config feature???
 var BrowseActionsActions = actions.Actions({
 	config: {
+		// XXX need to define an interface verb/keyword language and use
+		// 		it to sort an prioritize stuff...
 		'action-category-order': [
 			'99:$File',
 				// We can order any sub-tree we want in the same manner 
@@ -1293,11 +1295,34 @@ var BrowseActionsActions = actions.Actions({
 				'File/-90:Close viewer',
 				// Non existing elements will not get drawn...
 				//'File/-99:moo',
+			// XXX this seems over-crowded -- revise!!!
 			'99:$Edit',
-				'Edit/Undo',
-				'Edit/Redo',
+				'Edit/90:Undo',
+				'Edit/90:Redo',
+				'Edit/85:.*base.*',
+				'Edit/80:.*sort.*',
+				'Edit/80:.*order.*',
+				'Edit/75:.*group.*',
+				'Edit/70:.*shift.*marked.*',
+				'Edit/70:.*shift.*',
+				'Edit/60:.*rotate.*',
+				'Edit/50:.*flip.*',
 			'$Navigate',
+				'Navigate/90:.*image.*',
+				'Navigate/80:.*screen.*',
+				'Navigate/70:.*ribbon.*',
 			'$Image',
+				'Image/98:.*editor.*',
+				'Image/98:.*folder.*',
+				'Image/95:.*metadata.*',
+				'Image/90:.*image mark.*',
+				'Image/85:.*image bookmark.*',
+				'Image/80:.*tags.*',
+				'Image/75:.*image.*collection.*',
+				'Image/70:.*shift.*marked.*',
+				'Image/65:.*shift.*',
+				'Image/60:.*rotate.*',
+				'Image/55:.*flip.*',
 				'Image/-70:---',
 				'Image/-70:.*remove.*',
 			'$Ribbon',
