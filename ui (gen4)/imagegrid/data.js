@@ -3289,7 +3289,7 @@ var DataWithTags2Prototype = {
 		return (this.__tags = this.__tags || new tags.Tags()) },
 
 	hasTag: function(gid, ...tags){
-		return this.tags.tagged(this.getImage(gid), ...tags) },
+		return this.tags.tags(this.getImage(gid), ...tags) },
 	getTags: function(gids){
 		var that = this
 		gids = arguments.length > 1 ? [...arguments] 
@@ -3306,8 +3306,26 @@ var DataWithTags2Prototype = {
 	},
 
 	tag: function(tags, gids){
+		var that = this
+		gids = gids == null || gids == 'current' ? this.getImage() : gids
+		gids = gids instanceof Array ? gids : [gids]
+
+		gids
+			.forEach(function(gid){
+				this.tags.tag(tags, gid) })
+
+		return this
 	},
 	untag: function(tags, gids){
+		var that = this
+		gids = gids == null || gids == 'current' ? this.getImage() : gids
+		gids = gids instanceof Array ? gids : [gids]
+
+		gids
+			.forEach(function(gid){
+				this.tags.untag(tags, gid) })
+
+		return this
 	},
 
 	toggleTag: function(){},

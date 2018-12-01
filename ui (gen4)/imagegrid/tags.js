@@ -247,6 +247,10 @@ var TagsPrototype = {
 	// XXX Q: should this be .normalizeTags(..) ???
 	normalize: function(...tags){
 		return this.constructor.normalize.call(this, ...tags) },
+	// NOTE: the query parser is generic and thus is implemented in the
+	// 		constructor...
+	parseQuery: function(query){
+		return this.constructor.parseQuery.call(this, query) },
 
 	// Match tags...
 	//
@@ -391,13 +395,13 @@ var TagsPrototype = {
 			tags = tags.length == 1 && tags[0] instanceof Array ?
 				tags.shift()
 				: tags
-			// XXX is this the new version???
 			var u = this.tags(value)
-			return tags
-				.reduce(function(res, tag){ 
-					return res === false ?
-						res
-						: that.match(tag, u).length > 0 }, true)
+			while(tags.length > 0){
+				if(this.match(tags.shift(), u).length == 0){
+					return false
+				}
+			}
+			return true
 
 		// get tags of specific value...
 		} else if(value){
@@ -455,26 +459,6 @@ var TagsPrototype = {
 			}
 		}
 		return false
-	},
-	//
-	//	Check if value is tagged by tag/tags...
-	//	.tagged(value, tag)
-	//	.tagged(value, tag, ..)
-	//	.tagged(value, [tag, ..])
-	//		-> bool
-	//
-	// XXX not sure if this is optimal...
-	tagged: function(value, ...tags){
-		tags = tags.length == 1 && tags[0] instanceof Array ?
-			tags.shift()
-			: tags
-		var u = this.tags(value)
-		while(tags.length > 0){
-			if(this.match(tags.shift(), u).length == 0){
-				return false
-			}
-		}
-		return true
 	},
 
 
@@ -646,10 +630,6 @@ var TagsPrototype = {
 	__query_ns_special: {
 		values: function(...args){ return args },
 	},
-	// NOTE: the query parser is generic and thus is implemented in the
-	// 		constructor...
-	parseQuery: function(query){
-		return this.constructor.parseQuery.call(this, query) },
 	//
 	//	Execute query...
 	//	.query(query)
