@@ -16,6 +16,7 @@ var sha1 = require('ext-lib/sha1')
 
 var object = require('lib/object')
 
+var tags = require('imagegrid/tags')
 var formats = require('imagegrid/formats')
 
 
@@ -3278,6 +3279,50 @@ var DataWithTagsPrototype = {
 	},
 }
 DataWithTagsPrototype.__proto__ = DataPrototype
+
+
+// XXX use tags...
+var DataWithTags2Prototype = {
+	__proto__: DataPrototype,
+
+	get tags(){
+		return (this.__tags = this.__tags || new tags.Tags()) },
+
+	hasTag: function(gid, ...tags){
+		return this.tags.tagged(this.getImage(gid), ...tags) },
+	getTags: function(gids){
+		var that = this
+		gids = arguments.length > 1 ? [...arguments] 
+			: gids == null || gids == 'current' ? this.getImage() 
+			: gids
+		gids = gids == null ? [] : gids
+		gids = gids instanceof Array ? gids : [gids]
+
+		return gids
+			.map(function(gid){
+				return that.tags.tags(gid) })
+			.flat()
+			.unique()
+	},
+
+	tag: function(tags, gids){
+	},
+	untag: function(tags, gids){
+	},
+
+	toggleTag: function(){},
+
+	// XXX should these be .tags.query(..) ???
+	tagQuery: function(query){},
+
+	// Utils...
+	tagsFromImages: function(){},
+	tagsToImages: function(){},
+
+	// XXX serialization...
+
+	// XXX init...
+}
 
 
 

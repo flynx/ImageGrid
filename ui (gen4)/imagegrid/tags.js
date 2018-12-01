@@ -436,6 +436,25 @@ var TagsPrototype = {
 		}
 		return false
 	},
+	//
+	//	Check if value is tagged by tag/tags...
+	//	.tagged(value, tag)
+	//	.tagged(value, tag, ..)
+	//	.tagged(value, [tag, ..])
+	//		-> bool
+	//
+	// XXX not sure if this is optimal...
+	tagged: function(value, ...tags){
+		var that = this
+		tags = tags.length == 1 && tags[0] instanceof Array ?
+			tags.shift()
+			: tags
+		return tags
+			.reduce(function(res, tag){ 
+				return res === false ?
+					res
+					// XXX do not like the back and forth set conversion here... 
+					: new Set(that.values(tag)).has(value) }, true) },
 
 
 	// Add/Remove/Modify tags API...
