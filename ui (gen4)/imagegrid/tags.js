@@ -375,12 +375,32 @@ var TagsPrototype = {
 	//	.tags(value)
 	//		-> tags
 	//
+	//	Check value tags...
+	//	.tags(value, tag)
+	//	.tags(value, tag, ..)
+	//	.tags(value, [tag, ..])
+	//		-> tags
+	//
 	// NOTE: this includes all the .persistent tags as well as all the 
 	// 		tags actually used.
-	tags: function(value){
+	tags: function(value, ...tags){
 		var that = this
+
+		// check if value is tagged by tags..,
+		if(value && tags.length > 0){
+			tags = tags.length == 1 && tags[0] instanceof Array ?
+				tags.shift()
+				: tags
+			// XXX is this the new version???
+			var u = this.tags(value)
+			return tags
+				.reduce(function(res, tag){ 
+					return res === false ?
+						res
+						: that.match(tag, u).length > 0 }, true)
+
 		// get tags of specific value...
-		if(value){
+		} else if(value){
 			return Object.entries(this.__index || {})
 				.filter(function(e){ return e[1].has(value) })
 				.map(function(e){ return e[0] })
