@@ -445,16 +445,17 @@ var TagsPrototype = {
 	//
 	// XXX not sure if this is optimal...
 	tagged: function(value, ...tags){
-		var that = this
 		tags = tags.length == 1 && tags[0] instanceof Array ?
 			tags.shift()
 			: tags
-		return tags
-			.reduce(function(res, tag){ 
-				return res === false ?
-					res
-					// XXX do not like the back and forth set conversion here... 
-					: new Set(that.values(tag)).has(value) }, true) },
+		var u = this.tags(value)
+		while(tags.length > 0){
+			if(this.match(tags.shift(), u).length == 0){
+				return false
+			}
+		}
+		return true
+	},
 
 
 	// Add/Remove/Modify tags API...
