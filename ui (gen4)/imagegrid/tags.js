@@ -258,6 +258,9 @@ var TagsPrototype = {
 	//
 	// NOTE: a tag is also a singular path and a singular set.
 	// NOTE: paths have priority over sets: a/b:c -> a / b:c
+	// NOTE: there is a special case pattern '*a*' that matches the same 
+	// 		way as 'a', this is used in cases where 'a' is used as an 
+	// 		explicit match (see: .untag(..))
 	//
 	//
 	// Two paths match iff:
@@ -311,6 +314,12 @@ var TagsPrototype = {
 			// normalized match...
 			a = this.normalize(a)
 			b = this.normalize(b)
+
+			// special case: *tag* pattern...
+			a = /^\*[^:\\\/]*\*$/.test(a) ? 
+				a.slice(1, -1) 
+				: a
+
 			if(a == b){
 				return true
 			}
@@ -366,7 +375,7 @@ var TagsPrototype = {
 	//	.tags(value, tag)
 	//	.tags(value, tag, ..)
 	//	.tags(value, [tag, ..])
-	//		-> tags
+	//		-> bool
 	//
 	// NOTE: this includes all the .persistent tags as well as all the 
 	// 		tags actually used.
@@ -516,25 +525,68 @@ var TagsPrototype = {
 	// XXX when value is not given, add tags to persistent tags...
 	tag: function(tags, value){
 		var that = this
-		this.__index = this.__index || {}
-		this.normalize(tags instanceof Array ? tags : [tags])
-			.forEach(function(tag){
-				(that.__index[tag] = that.__index[tag] || new Set()).add(value) })
+		value = value instanceof Array ? value : [value]
+		tags = this.normalize(tags instanceof Array ? tags : [tags])
+		var index = this.__index = this.__index || {}
+
+		value.forEach(function(value){
+			tags
+				.forEach(function(tag){
+					(index[tag] = index[tag] || new Set()).add(value) }) })
+
 		return this
 	},
+	// NOTE: this supports tag patterns (see: ,match(..))
+	// NOTE: non-pattern tags are matched explicitly.
 	untag: function(tags, value){
 		var that = this
-		this.normalize(tags instanceof Array ? tags : [tags])
-			.forEach(function(tag){
-				var s = that.__index[tag] || new Set()
-				s.delete(value) 
-				// remove empty sets...
-				if(s.size == 0){
-					delete that.__index[tag]
-				}
-			})
+		var index = this.__index = this.__index || {}
+
+		value = value instanceof Array ? value : [value]
+		tags = this.normalize(tags instanceof Array ? tags : [tags])
+			.map(function(tag){
+				return /\*/.test(tag) ? 
+					// resolve tag patterns...
+					that.match(tag) 
+					: tag })
+			.flat()
+
+		value.forEach(function(value){
+			tags
+				.forEach(function(tag){
+					var s = index[tag] || new Set()
+					s.delete(value) 
+					// remove empty sets...
+					if(s.size == 0){
+						delete index[tag]
+					}
+				}) })
+
 		return this
 	},
+
+	// NOTE: this supports tag patterns (see: ,match(..))
+	// XXX this is not consistent...
+	// 		...should either use explicit matching for everything...
+	toggleTag: function(tag, values, action){
+		var that = this
+		values = values instanceof Array ? values : [values]
+
+		return action == 'on' ?
+				this.tag(tag, values)
+			: action == 'off' ?
+				this.untag(tag, values)
+			: action == '?' ?
+				values
+					.map(function(v){ 
+						// XXX need to explicitly test tags... (???)
+						return that.tags(v, tag) })
+			// toggle each...
+			: values
+				.map(function(v){ 
+					return that.tags(v, tag) ? 
+						(that.untag(tag, v), false) 
+						: (that.tag(tag, v), true) }) },
 	
 
 	// Query API...
@@ -694,10 +746,6 @@ var TagsPrototype = {
 	//
 	// NOTE: to get the current tags use .tags()
 	//
-	//
-	// XXX do we need mode???
-	// 		...in the current implementation it is pointless to set 
-	// 		empty sets for tags as they will get cleared...
 	// XXX should this serialize recursively down???
 	// 		...it might be a good idea to decide on a serialization 
 	// 		protocol and use it throughout...

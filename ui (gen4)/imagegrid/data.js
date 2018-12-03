@@ -2887,6 +2887,7 @@ var DataPrototype = {
 /*********************************************************************/
 
 var DataWithTagsPrototype = {
+	__proto__: DataPrototype,
 
 	// tags store...
 	//
@@ -3278,10 +3279,10 @@ var DataWithTagsPrototype = {
 			: this.getImages(res)
 	},
 }
-DataWithTagsPrototype.__proto__ = DataPrototype
 
 
-// XXX use tags...
+// XXX make a API compatible replacement to the above -- to access 
+// 		compatibility and performance...
 var DataWithTags2Prototype = {
 	__proto__: DataPrototype,
 
@@ -3328,14 +3329,47 @@ var DataWithTags2Prototype = {
 		return this
 	},
 
-	toggleTag: function(){},
+	// XXX
+	toggleTag: function(){
+		// XXX
+	},
 
 	// XXX should these be .tags.query(..) ???
-	tagQuery: function(query){},
+	tagQuery: function(query){
+		return this.tags.query(query) },
 
 	// Utils...
+	// XXX
 	tagsFromImages: function(){},
 	tagsToImages: function(){},
+
+
+	// XXX compatibility...
+	// XXX check if these are ever used without raw...
+	getTaggedByAll: function(tags, raw){
+		var res = this.tags.query(['and', ...tags])
+		return raw ? 
+			res 
+			: this.getImages(res) },
+	getTaggedByAny: function(tags, raw){
+		var res = this.tags.query(['or', ...tags])
+		return raw ? 
+			res 
+			: this.getImages(res) },
+
+
+	// NOTE: this is here only to make the tags mutable...
+	crop: function(){
+		var crop = DataWithTags2Prototype.__proto__.crop.apply(this, arguments)
+
+		// make the tags mutable...
+		if(this.tags != null){
+			crop.tags = this.tags
+		}
+
+		return crop
+	},
+
 
 	// XXX serialization...
 
@@ -3348,6 +3382,9 @@ var DataWithTags2Prototype = {
 
 // Proxy Data API to one of the target data objects...
 var DataProxyPrototype = {
+	//__proto__: DataPrototype,
+	__proto__: DataWithTagsPrototype,
+
 	datasets: null,
 
 	get order(){
@@ -3355,8 +3392,6 @@ var DataProxyPrototype = {
 	},
 
 }
-//DataProxyPrototype.__proto__ = DataPrototype
-DataProxyPrototype.__proto__ = DataWithTagsPrototype
 
 
 /*********************************************************************/
