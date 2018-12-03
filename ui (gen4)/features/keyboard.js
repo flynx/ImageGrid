@@ -89,6 +89,7 @@ module.GLOBAL_KEYBOARD = {
 		// NOTE: we need to handle these explicitly...
 		alt_C: 'NEXT',
 		ctrl_C: 'NEXT',
+		'ctrl+#6': 'NEXT',
 
 		// zooming...
 		'#1': 'fitScreen',

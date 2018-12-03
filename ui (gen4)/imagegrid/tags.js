@@ -161,7 +161,7 @@ var TagsClassPrototype = {
 					return res
 
 				} else if(c == ']' || c == ')'){
-					throw new SyntaxError(`Tag Query: Unexpected "${c}".`)
+					throw new SyntaxError(`.parseQuery(..): Unexpected "${c}".`)
 
 				} else {
 					res.push(c) 
@@ -169,7 +169,7 @@ var TagsClassPrototype = {
 			}
 
 			if(b != null){
-				throw new SyntaxError(`Tag Query: Expecting "${b}" got end of query.`)
+				throw new SyntaxError(`.parseQuery(..): Expecting "${b}" got end of query.`)
 			}
 
 			return res
@@ -476,7 +476,7 @@ var TagsPrototype = {
 			seen = seen || []
 			// check for loops...
 			if(seen.indexOf(tag) >= 0){
-				throw new Error(`Recursive alias chain: "${ 
+				throw new Error(`.alias(..): Recursive alias chain: "${ 
 					seen
 						.concat([seen[0]])
 						.join('" -> "') }"`) }
@@ -508,7 +508,7 @@ var TagsPrototype = {
 			var chain = []
 			var target = resolve(value, chain)
 			if(target == tag || target == this.normalize(tag)){
-				throw new Error(`Creating a recursive alias chain: "${ 
+				throw new Error(`.alias(..): Creating a recursive alias chain: "${ 
 					chain
 						.concat([chain[0]])
 						.join('" -> "') }"`) }
@@ -564,13 +564,51 @@ var TagsPrototype = {
 
 		return this
 	},
-
+	//
+	//	Toggle tag for each values...
+	//	.toggleTag(tag, value)
+	//	.toggleTag(tag, values)
+	//		-> [bool|null, ..]
+	//		NOTE: if tag is a tag pattern (contains '*') this will toggle
+	//			matching tags values off as expected but ignore toggling 
+	//			tags on in which case null will be  returned for the 
+	//			corresponding position.
+	//
+	//	Toggle tag on for all values...
+	//	.toggleTag(tag, value, 'on')
+	//	.toggleTag(tag, values, 'on')
+	//		-> this
+	//		NOTE: this will throw an exception if tag is a tag pattern,
+	//			this is not symmetrical to how .toggleTag(.., .., 'off')
+	//			behaves.
+	//
+	//	Toggle tag off for all values...
+	//	.toggleTag(tag, value, 'off')
+	//	.toggleTag(tag, values, 'off')
+	//		-> this
+	//		NOTE: if tag is a tag pattern this will remove all matching 
+	//			tags, this is not fully symmetrical to .toggleTag(.., .., 'on')
+	//
+	//	Check if tag is set on value(s)...
+	//	.toggleTag(tag, value, '?')
+	//	.toggleTag(tag, values, '?')
+	//		-> [bool, ..]
+	//
+	//
 	// NOTE: this supports tag patterns (see: ,match(..))
-	// XXX this is not consistent...
-	// 		...should either use explicit matching for everything...
+	//
+	// XXX do we need this???
+	// 		...seems a bit overcomplicated...
 	toggleTag: function(tag, values, action){
 		var that = this
 		values = values instanceof Array ? values : [values]
+		var pattern = /\*/.test(tag)
+		var ntag = this.normalize(tag)
+
+		// can't set pattern as tag...
+		if(pattern && action != 'on'){
+			throw new TypeError(`.toggleTag(..): will not toggle on "${tag}": pattern and not a tag.`)
+		}
 
 		return action == 'on' ?
 				this.tag(tag, values)
@@ -579,14 +617,20 @@ var TagsPrototype = {
 			: action == '?' ?
 				values
 					.map(function(v){ 
-						// XXX need to explicitly test tags... (???)
-						return that.tags(v, tag) })
+						return pattern ? 
+							// non-strict pattern search...
+							that.tags(v, tag) 
+							// strict test...
+							: that.tags(v).indexOf(ntag) >= 0 })
 			// toggle each...
 			: values
 				.map(function(v){ 
 					return that.tags(v, tag) ? 
 						(that.untag(tag, v), false) 
-						: (that.tag(tag, v), true) }) },
+						// NOTE: we set only if we are not a pattern...
+						: (pattern ? 
+							(that.tag(tag, v), true) 
+							: null) }) },
 	
 
 	// Query API...
