@@ -11,8 +11,14 @@
 * 		a/b/c
 * 	- tag sets/relations
 * 		a:b
-* 	- serializable tag queries
+* 	- serializable tag queries (text/json)
 * 	- serializable tag data
+*
+*
+* TODO:
+* 	- investigate support for sqlite3
+* 		- is it faster?
+*
 *
 *
 **********************************************************************/
@@ -22,29 +28,6 @@
 
 var object = require('lib/object')
 var util = require('lib/util')
-
-
-
-/*********************************************************************/
-
-// XXX a Set-like back-end...
-// 		API:
-// 			.has(..)
-// 				-> bool
-//
-// 			Unite two sets...
-// 			.unite(..)
-// 				-> new
-//
-// 			Intersection of two sets...
-// 			.intersect(..)
-// 				-> new
-//
-// 			Difference of two sets...
-// 			.subtract(..)
-// 				-> new
-
-// extend Set to support the needed basics...
 
 
 
