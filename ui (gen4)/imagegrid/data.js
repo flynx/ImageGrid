@@ -3399,6 +3399,8 @@ var DataWithTags2Prototype = {
 	},
 	join: function(...others){
 		var res = DataWithTags2Prototype.__proto__.join.apply(this, arguments)
+		!(others[0] instanceof Data)
+			&& others.shift()
 		res.tags.join(...others
 			.map(function(other){ 
 				return other.tags }))

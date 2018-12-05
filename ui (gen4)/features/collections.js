@@ -1982,7 +1982,9 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 					// load local_tags...
 					local_tag_names
 						.forEach(function(tag){ 
-							tags[tag] = new Set(local_tags[tag] || [])
+							tags[tag] = new Set(local_tags[tag] 
+								|| (that.data.tags.__index || {})[tag] 
+								|| [])
 						})
 
 					;(this.crop_stack || [])
@@ -2109,13 +2111,14 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 							}
 							var t = (c.data || {}).tags || {}
 
+							/* XXX do we need this???
 							c.local_tags = c.local_tags || {}
 							;(that.config['collection-local-tags'] || [])
 								.forEach(function(tag){
 									c.local_tags[tag] = new Set(c.local_tags[tag] || t[tag] || []) })
+							//*/
 						})
 			}],
-		//*/
 	],
 })
 

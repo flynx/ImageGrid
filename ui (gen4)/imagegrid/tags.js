@@ -445,7 +445,7 @@ var TagsPrototype = {
 		return false
 	},
 	has: function(value){
-		for(var v of Object.values(this.__index)){
+		for(var v of Object.values(this.__index || {})){
 			if(v.has(value)){
 				return true
 			}
@@ -754,19 +754,22 @@ var TagsPrototype = {
 
 	join: function(...others){
 		var that = this
-		var index = this.__index
+		var index = this.__index || {}
 		others
 			.forEach(function(other){
-				Object.entries(other.__index)
+				Object.entries(other.__index || {})
 					.forEach(function(e){
 						index[e[0]] = new Set([...(index[e[0]] || []), ...e[1]]) }) })
+		Object.keys(index).length > 0 
+			&& this.__index == null
+			&& (this.__index = index)
 		return this
 	},
 	// XXX create a new tagset with only the given values...
 	// XXX this should support a function...
 	filter: function(values){
 		var res = this.clone()
-		Object.values(res.__index)
+		Object.values(res.__index || {})
 			.forEach(function(s){
 				values.forEach(function(v){ s.delete(v) }) })
 		return res
