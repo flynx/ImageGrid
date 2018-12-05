@@ -361,17 +361,17 @@ actions.Actions({
 
 
 		This will collect JSON data from every available attribute supporting
-		the .dumpJSON() method.
-		Attributes starting with '__' will be ignored.
+		the .json() method.
+		Attributes starting with '_' will be ignored.
 
 		`,
 		function(mode){
 			return function(res){
 				for(var k in this){
-					if(!k.startsWith('__') 
+					if(!k.startsWith('_') 
 							&& this[k] != null 
-							&& this[k].dumpJSON != null){
-						res[k] = this[k].dumpJSON()
+							&& this[k].json != null){
+						res[k] = this[k].json()
 					}
 				}
 			}
@@ -588,7 +588,7 @@ actions.Actions({
 		NOTE: this is .symmetrical to .nextImage(..) see it for docs.
 		`,
 		{browseMode: 'firstImage'},
-		function(a){ 
+		function(a, mode){ 
 			// keep track of traverse direction...
 			this.direction = 'left'
 
@@ -597,6 +597,10 @@ actions.Actions({
 				this.focusImage(this.data.getImage('current', -a)
 						// go to the first image if it's closer than s...
 						|| this.data.getImage('first'))
+
+			} else if(a instanceof Array && mode){
+				mode = mode == 'ribbon' ? 'current' : mode
+				this.focusImage('prev', this.data.getImages(a, mode))
 
 			} else {
 				this.focusImage('prev', a) 
@@ -617,10 +621,17 @@ actions.Actions({
 			Focus next image globally...
 			.nextImage('global')
 
+			Focus next image in list...
+			.nextImage(list)
+
+			Focus next image in list constrained to current ribbon...
+			.nextImage(list, 'ribbon')
+			.nextImage(list, <ribbon-gid>)
+
 		NOTE: this also modifies .direction
 		`,
 		{browseMode: 'lastImage'},
-		function(a){ 
+		function(a, mode){ 
 			// keep track of traverse direction...
 			this.direction = 'right'
 
@@ -629,6 +640,10 @@ actions.Actions({
 				this.focusImage(this.data.getImage('current', a)
 						// go to the first image if it's closer than s...
 						|| this.data.getImage('last'))
+
+			} else if(a instanceof Array && mode){
+				mode = mode == 'ribbon' ? 'current' : mode
+				this.focusImage('next', this.data.getImages(a, mode))
 
 			} else {
 				this.focusImage('next', a) 
@@ -1161,23 +1176,12 @@ var makeTagWalker =
 module.makeTagWalker =
 function(direction, dfl_tag){
 	var meth = direction == 'next' ? 'nextImage' : 'prevImage'
-
 	return function(tag, mode){
-		mode = mode == null ? 'all' : mode
-		tag = tag || dfl_tag
-
-		// account for no tags or no images tagged...
-		var lst = this.data.tags != null ? this.data.tags[tag] : []
-		lst = lst || []
-
-		if(mode == 'ribbon'){
-			this[meth](this.data.getImages(lst, 'current'))
-
-		} else {
-			this[meth](lst)
-		}
-	}
-}
+		this[meth](
+			this.data.version >= '3.1' ?
+				this.data.tags.values(tag || dfl_tag)
+				: (this.data.tags || {})[tag || dfl_tag] || [],
+			mode) } }
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -1550,12 +1554,12 @@ module.CropActions = actions.Actions({
 		return function(res){
 			if(this.cropped){
 				if(mode == 'base'){
-					res.data = this.crop_stack[0].dumpJSON()
+					res.data = this.crop_stack[0].json()
 
 				} else if(mode == 'full'){
 					res.crop_stack = this.crop_stack.map(function(c){
 						return c
-							.dumpJSON()
+							.json()
 							.run(function(){
 								delete this.tags })
 					})
@@ -1790,6 +1794,12 @@ module.CropActions = actions.Actions({
 		}],
 	
 	// XXX should this be here???
+	/*
+	cropTagged: ['- Tag|Crop/Crop tagged images',
+		function(query, flatten){
+			return this.crop(this.data.tagQuery(query), flatten) }],
+	//*/
+	//*
 	cropTagged: ['- Tag|Crop/Crop tagged images',
 		function(tags, mode, flatten){
 			if(this.data.length == 0){
@@ -1798,6 +1808,7 @@ module.CropActions = actions.Actions({
 			var selector = mode == 'any' ? 'getTaggedByAny' : 'getTaggedByAll'
 			this.crop(this.data[selector](tags), flatten)
 		}],
+	//*/
 
 
 	// crop edit actions...

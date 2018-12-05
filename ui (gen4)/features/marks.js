@@ -79,6 +79,7 @@ function makeTagTogglerAction(tag){
 			return action == '??' ? ['off', 'on'] : 'off'
 
 		// special case: multiple targets and toggle action...
+		// XXX do we need this???
 		} else if((target == 'all' || target == 'loaded' || target == 'ribbon' 
 					|| target instanceof Array) 
 				&& (action == null || action == 'next' || action == 'prev' 
@@ -229,12 +230,13 @@ var ImageMarkActions = actions.Actions({
 	// 		chunk of memory...
 	get marked(){
 		if(this.data == null 
-				|| this.data.tags == null
-				|| !('marked' in this.data.tags)){
+				|| this.data.tags == null){
 			return []
 		}
-		//return this.data.tags['marked'].slice()
-		return this.data.getImages(this.data.tags['marked'])
+		// XXX remove the version test here....
+		return this.data.version >= '3.1' ?
+			this.data.tagQuery('marked')
+			: this.data.getImages((this.data.tags || {marked:[]})['marked'])
 	},
 
 	markedInRibbon: ['- Mark|Ribbon/',
@@ -508,12 +510,14 @@ var ImageBookmarkActions = actions.Actions({
 	// 		chunk of memory...
 	get bookmarked(){
 		if(this.data == null 
-				|| this.data.tags == null
-				|| !('bookmark' in this.data.tags)){
+				|| this.data.tags == null){
 			return []
 		}
 		//return this.data.tags['bookmark'].slice()
-		return this.data.getImages(this.data.tags['bookmark'])
+		// XXX remove the version test here....
+		return this.data.version >= '3.1' ?
+			this.data.tagQuery('bookmark')
+			: this.data.getImages((this.data.tags || {bookmark:[]})['bookmark'])
 	},
 
 	prevBookmarked: ['Bookmark|Navigate/Previous bookmarked image',

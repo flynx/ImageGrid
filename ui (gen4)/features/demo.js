@@ -21,7 +21,7 @@ var core = require('features/core')
 
 var demo_data =
 module.demo_data = {
-	varsion: '3.0',
+	version: '3.0',
 
 	current: '3',
 	base: 'r0',
@@ -76,7 +76,7 @@ module.demo_images = {
 //demo_data = data.Data(demo_data)
 //	.tagsToImages(demo_images, 'merge')
 //	.tagsFromImages(demo_images, 'merge')
-//	.dumpJSON()
+//	.json()
 
 
 

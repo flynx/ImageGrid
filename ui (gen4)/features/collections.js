@@ -1195,7 +1195,7 @@ var CollectionActions = actions.Actions({
 				res.data =  (main.crop_stack ? 
 						(main.crop_stack[0] || main.data)
 						: main.data)
-					.dumpJSON()
+					.json()
 
 				delete res.location.collection
 			}
@@ -1225,7 +1225,7 @@ var CollectionActions = actions.Actions({
 						(state.crop_stack[0] || state.data)
 						: state.data)
 				if(data){
-					s.data = data.dumpJSON()
+					s.data = data.json()
 					s.count = data.length
 
 				} else if(state.count) {
@@ -1236,7 +1236,7 @@ var CollectionActions = actions.Actions({
 				// NOTE: in base mode, crop_stack is ignored...
 				if(mode != 'base' && state.crop_stack){
 					s.crop_stack = state.crop_stack
-						.map(function(d){ return d.dumpJSON() })
+						.map(function(d){ return d.json() })
 				}
 			})
 		}

@@ -628,7 +628,7 @@ var TagsPrototype = {
 					return that.tags(v, tag) ? 
 						(that.untag(tag, v), false) 
 						// NOTE: we set only if we are not a pattern...
-						: (pattern ? 
+						: (!pattern ? 
 							(that.tag(tag, v), true) 
 							: null) }) },
 	

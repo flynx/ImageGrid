@@ -344,7 +344,7 @@ module.ImagesClassPrototype = {
 		return images
 	},
 	fromJSON: function(data){
-		return new this().loadJSON(data)
+		return new this().load(data)
 	},
 }
 
@@ -689,7 +689,7 @@ module.ImagesPrototype = {
 
 
 	clone: function(){
-		return (new Images()).loadJSON(this.dumpJSON()) },
+		return (new Images()).load(this.json()) },
 	// NOTE: this will join the other data into the current object in-place,
 	// 		use .clone() to preserve current data...
 	join: function(other){
@@ -703,7 +703,7 @@ module.ImagesPrototype = {
 	},
 
 	// serialization...
-	loadJSON: function(data){
+	load: function(data){
 		data = typeof(data) == typeof('str') 
 			? JSON.parse(data) 
 			: JSON.parse(JSON.stringify(data))
@@ -727,7 +727,7 @@ module.ImagesPrototype = {
 	},
 	// XXX this is really odd: renaming this to 'toJSON' breaks JavaScript
 	// 		making chrome/node just say: "<error>" and a filename...
-	dumpJSON: function(data){
+	json: function(data){
 		var res = JSON.parse(JSON.stringify(this))
 		// XXX
 		res.version = '3.0'
@@ -742,7 +742,7 @@ module.ImagesPrototype = {
 	__init__: function(json){
 		// load initial state...
 		if(json != null){
-			this.loadJSON(json)
+			this.load(json)
 		} else {
 			this._reset()
 		}

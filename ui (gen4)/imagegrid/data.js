@@ -11,7 +11,6 @@
 (function(require){ var module={} // make module AMD/node compatible...
 /*********************************************************************/
 
-
 var sha1 = require('ext-lib/sha1')
 
 var object = require('lib/object')
@@ -20,7 +19,19 @@ var tags = require('imagegrid/tags')
 var formats = require('imagegrid/formats')
 
 
+
+/*********************************************************************/
+
+// NOTE: this actively indicates the format used, changing this will 
+// 		affect the loading of serialized data, do not change unless you
+// 		know what you are doing.
+// 		...this is done to gradually migrate to new format versions with
+// 		minimal changes.
+var DATA_VERSION =
+// XXX 3.1 not ready for production yet...
+//module.DATA_VERSION = '3.1'
 module.DATA_VERSION = '3.0'
+
 
 
 /*********************************************************************/
@@ -46,6 +57,20 @@ module.DATA_VERSION = '3.0'
 //
 //
 // Data format change history:
+// 	3.1 - Moved to the new tag implementation -- changed the tag JSON 
+// 		format:
+// 			{
+// 				aliases: {
+// 					<alias>: <tag>,
+// 				},
+// 				persistent: [<tag>, ...],
+// 				tags: {
+// 					<tag>: [<gid>, ...],
+// 					...
+// 				}
+// 			}
+// 			(see: tags.js for more info)
+// 			(still in development)
 // 	3.0	- Gen4 DATA format, introduced several backwards incompatible 
 // 		changes:
 // 			- added ribbon GIDs, .ribbons now is a gid indexed object
@@ -129,8 +154,8 @@ var DataClassPrototype = {
 	},
 	// XXX is this the right way to construct data???
 	fromJSON: function(data){
-		//return new Data().loadJSON(data)
-		return new this().loadJSON(data)
+		//return new Data().load(data)
+		return new this().load(data)
 	},
 }
 
@@ -141,6 +166,10 @@ var DataClassPrototype = {
 // Data object methods and API...
 //
 var DataPrototype = {
+
+	get version(){ 
+		return DATA_VERSION },
+
 
 	/*****************************************************************/
 	//
@@ -2769,7 +2798,8 @@ var DataPrototype = {
 	// Clone/copy the data object...
 	//
 	clone: function(){
-		var res = new Data()
+		//var res = new Data()
+		var res = new this.constructor()
 		res.base = this.base
 		res.current = this.current
 		res.order = this.order.slice()
@@ -2806,10 +2836,10 @@ var DataPrototype = {
 	//
 	// NOTE: this loads in-place, use .fromJSON(..) to create new data...
 	// XXX should this process defaults for unset values???
-	loadJSON: function(data, clean){
+	load: function(data, clean){
 		var that = this
 		data = typeof(data) == typeof('str') ? JSON.parse(data) : data
-		data = formats.updateData(data)
+		data = formats.updateData(data, DATA_VERSION)
 		this.base = data.base
 		this.order = data.order.slice()
 		this.ribbon_order = data.ribbon_order.slice()
@@ -2842,11 +2872,9 @@ var DataPrototype = {
 
 	// Generate JSON from data...
 	//
-	// NOTE: if mode is either 'str' or 'string' then this will stringify
-	// 		the result...
-	dumpJSON: function(mode){
+	json: function(){
 		var res = {
-			version: module.DATA_VERSION,
+			version: DATA_VERSION,
 			base: this.base,
 			current: this.current,
 			order: this.order.slice(),
@@ -2860,9 +2888,6 @@ var DataPrototype = {
 			}
 			res[s][k] = lst.compact()
 		})
-		if(mode == 'string' || mode == 'str'){
-			res = JSON.stringify(res)
-		}
 		return res
 	},
 	
@@ -2873,7 +2898,7 @@ var DataPrototype = {
 	__init__: function(json){
 		// load initial state...
 		if(json != null){
-			this.loadJSON(json)
+			this.load(json)
 
 		} else {
 			this._reset()
@@ -2886,6 +2911,7 @@ var DataPrototype = {
 
 /*********************************************************************/
 
+// XXX should this handle .split(..) / .join(..)
 var DataWithTagsPrototype = {
 	__proto__: DataPrototype,
 
@@ -3288,7 +3314,10 @@ var DataWithTags2Prototype = {
 
 	get tags(){
 		return (this.__tags = this.__tags || new tags.Tags()) },
+	set tags(value){
+		this.__tags = value },
 
+	// XXX do we need these???
 	hasTag: function(gid, ...tags){
 		return this.tags.tags(this.getImage(gid), ...tags) },
 	getTags: function(gids){
@@ -3309,29 +3338,37 @@ var DataWithTags2Prototype = {
 	tag: function(tags, gids){
 		var that = this
 		gids = gids == null || gids == 'current' ? this.getImage() : gids
-		gids = gids instanceof Array ? gids : [gids]
 
-		gids
+		;(gids instanceof Array ? gids : [gids])
 			.forEach(function(gid){
-				this.tags.tag(tags, gid) })
+				that.tags.tag(tags, gid) })
 
 		return this
 	},
 	untag: function(tags, gids){
 		var that = this
 		gids = gids == null || gids == 'current' ? this.getImage() : gids
-		gids = gids instanceof Array ? gids : [gids]
 
-		gids
+		;(gids instanceof Array ? gids : [gids])
 			.forEach(function(gid){
-				this.tags.untag(tags, gid) })
+				that.tags.untag(tags, gid) })
 
 		return this
 	},
+	// XXX should all togglers return true/false or 'on'/'off'???
+	toggleTag: function(tag, gids, action){
+		gids = gids == null || gids == 'current' ? this.getImage() : gids
 
-	// XXX
-	toggleTag: function(){
-		// XXX
+		var res = this.tags.toggleTag(tag, gids, action)
+
+		return res === this.tags ? 
+				this 
+			: res === true ? 
+				'on'
+			: res === false ? 
+				'off'
+			: res
+				.map(function(r){ return r ? 'on' : 'off' })
 	},
 
 	// XXX should these be .tags.query(..) ???
@@ -3340,8 +3377,10 @@ var DataWithTags2Prototype = {
 
 	// Utils...
 	// XXX
-	tagsFromImages: function(){},
-	tagsToImages: function(){},
+	tagsFromImages: function(){
+		throw Error('.tagsFromImages(..): Not implemented.') },
+	tagsToImages: function(){
+		throw Error('.tagsToImages(..): Not implemented.') },
 
 
 	// XXX compatibility...
@@ -3358,22 +3397,49 @@ var DataWithTags2Prototype = {
 			: this.getImages(res) },
 
 
-	// NOTE: this is here only to make the tags mutable...
+	// Extended methods...
+	//
+	// special case: make the tags mutable...
 	crop: function(){
 		var crop = DataWithTags2Prototype.__proto__.crop.apply(this, arguments)
-
-		// make the tags mutable...
-		if(this.tags != null){
-			crop.tags = this.tags
-		}
-
+		crop.tags = this.tags
 		return crop
 	},
-
-
-	// XXX serialization...
-
-	// XXX init...
+	// XXX
+	join: function(){
+		var res = DataWithTags2Prototype.__proto__.join.apply(this, arguments)
+		// XXX
+		throw Error('.join(..): Not implemented.')
+		return res
+	},
+	// XXX
+	split: function(){
+		var res = DataWithTags2Prototype.__proto__.split.apply(this, arguments)
+		// XXX
+		throw Error('.split(..): Not implemented.')
+		return res
+	},
+	clone: function(){
+		var res = DataWithTags2Prototype.__proto__.clone.apply(this, arguments)
+		res.tags = this.tags.clone()
+		return res
+	},
+	_reset: function(){
+		var res = DataWithTags2Prototype.__proto__._reset.apply(this, arguments)
+		delete this.__tags
+		return res
+	},
+	json: function(){
+		var json = DataWithTags2Prototype.__proto__.json.apply(this, arguments)
+		json.tags = this.tags.json()
+		return json
+	},
+	load: function(data, clean){
+		var res = DataWithTags2Prototype.__proto__.load.apply(this, arguments)
+		data.tags
+			&& res.tags.load(data.tags)
+		return res
+	},
 }
 
 
@@ -3408,7 +3474,10 @@ var DataWithTags =
 module.DataWithTags = 
 object.makeConstructor('DataWithTags', 
 		DataClassPrototype, 
-		DataWithTagsPrototype)
+		// XXX remove the version test here....
+		DATA_VERSION >= '3.1' ?
+			DataWithTags2Prototype
+			: DataWithTagsPrototype)
 
 
 var Data =

@@ -42,6 +42,7 @@ function(data){
 module.VERSIONS['2.0'] =
 function(data, cmp){
 	//data = data.version < '2.0' ? module.VERSIONS['2.0'](data) : data
+	console.log('Updating data to: ', '2.0')
 
 	var res = {
 		data: {
@@ -102,10 +103,13 @@ function(data){
 
 	var res = {}
 	res.version = '3.0'
+	console.log('Updating data to: ', res.version)
+
 	res.current = data.current
 	res.order = data.order.slice()
 	res.ribbon_order = data.ribbon_order == null ? [] : data.ribbon_order.slice()
 	res.ribbons = {} 
+
 
 	// generate gids...
 	// NOTE: this will use the structures stored in data if available, 
@@ -128,13 +132,26 @@ function(data){
 }
 
 
-
-/* XXX template...
 module.VERSIONS['3.1'] =
 function(data){
 	var res = data.version < '3.0' ? module.VERSIONS['3.0'](data) : data
 
 	res.version = '3.1'
+	console.log('Updating data to: ', res.version)
+
+	data.tags
+		&& (res.tags = { tags: data.tags })
+
+	return res
+}
+
+
+/* XXX template...
+module.VERSIONS['3.2'] =
+function(data){
+	var res = data.version < '3.1' ? module.VERSIONS['3.1'](data) : data
+
+	res.version = '3.2'
 
 	// XXX
 
@@ -165,8 +182,8 @@ module.getLatestUpdaterVersion = function(){
 // format.
 // NOTE: if data is already in the latest format this will return it 
 // 		as-is.
-module.updateData = function(data, clean){
-	var v = module.getLatestUpdaterVersion()
+module.updateData = function(data, version, clean){
+	var v = version || module.getLatestUpdaterVersion()
 	var res = data.version < v
 		? module.VERSIONS[v](data) 
 		: completeData(data)
