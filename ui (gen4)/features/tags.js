@@ -160,7 +160,7 @@ var TagUIActions = actions.Actions({
 				// split tag paths...
 				.map(function(e){ return e.split(/[\\\/]/g) })
 				.flat()) 
-			.concat(Object.keys((this.data || {}).tags || {}))
+			.concat(this.data ? this.data.tags.tags() : [])
    			.unique() },
 
 	// XXX add support for tag sets and paths...
@@ -265,7 +265,7 @@ var TagUIActions = actions.Actions({
 				that.tags
 					.sort()
 					// prep for sort...
-					.map(function(t, i){ return [t, i, (that.data.tags[t] || {}).len] })
+					.map(function(t, i){ return [t, i, (that.data.tags.values(t) || {}).len] })
 					// XXX add ability to sort by popularity, both local
 					//		(selected tags) and global...
 					.run(function(){

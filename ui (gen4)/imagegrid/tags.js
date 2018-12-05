@@ -153,7 +153,7 @@ var TagsClassPrototype = {
 			var res = []
 
 			while(code.length > 0){
-				c = code.shift()
+				var c = code.shift()
 				if(c == '[' || c == '('){
 					res.push( brace(code, c == '[' ? ']' : ')') )
 
