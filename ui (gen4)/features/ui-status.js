@@ -751,7 +751,7 @@ module.StatusBar = core.ImageGridFeatures.Feature({
 			function(){
 				this.toggleStatusBar(this.config['status-bar'])
 			}],
-		['focusImage clear markChanged',
+		['focusImage clear markChanged refresh',
 			function(){
 				this.updateStatusBar()
 			}],

@@ -279,6 +279,8 @@ var FileSystemLoaderActions = actions.Actions({
 			//file.loadIndex(path, this.config['index-dir'], logger)
 			return file.loadIndex(path, index_dir, from_date, logger)
 				.then(function(res){
+					var force_full_save = false
+
 					// XXX if res is empty load raw...
 
 					// XXX use the logger...
@@ -333,6 +335,14 @@ var FileSystemLoaderActions = actions.Actions({
 							}
 						}
 
+						// prepare to do a full save if format version updated...
+						if(res[k].data.version != that.data.version){
+							logger && logger.emit('Date version changed:',
+								res[k].data.version, '->', that.data.version)
+
+							force_full_save = true
+						}
+
 						var part = that.prepareIndexForLoad(res[k], k)
 
 						// load the first index...
@@ -384,6 +394,10 @@ var FileSystemLoaderActions = actions.Actions({
 					// this is the critical section, after this point we
 					// are doing the actual loading....
 					that.loadOrRecover(index) 
+						.then(function(){
+							force_full_save
+								&& that.markChanged('all')
+						})
 				})
 		}],
 
@@ -580,7 +594,7 @@ var FileSystemLoaderActions = actions.Actions({
 							}
 						})
 						.then(function(){
-							delete that.changes
+							that.markChanged('none')
 						})
 				})
 		}],

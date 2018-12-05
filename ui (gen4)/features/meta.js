@@ -177,6 +177,8 @@ core.ImageGridFeatures.Feature('imagegrid-testing', [
 	//----------------------------------------------------- testing ---
 	'experiments',
 	'-tests',
+	// XXX this is really slow on load, need to speed the search up...
+	'-comments',
 
 	// missing suggested feature test -- should show up in .features.missing...
 	'missing-feature',

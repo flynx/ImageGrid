@@ -229,15 +229,9 @@ var ImageMarkActions = actions.Actions({
 	// 		the problem is that on large sets this may take up quite a 
 	// 		chunk of memory...
 	get marked(){
-		if(this.data == null 
-				|| this.data.tags == null){
-			return []
-		}
-		// XXX remove the version test here....
-		return this.data.version >= '3.1' ?
-			this.data.tagQuery('marked')
-			: this.data.getImages((this.data.tags || {marked:[]})['marked'])
-	},
+		return this.data == null ?
+			[]
+			: this.data.tagQuery('marked') },
 
 	markedInRibbon: ['- Mark|Ribbon/',
 		function(ribbon){
@@ -261,7 +255,8 @@ var ImageMarkActions = actions.Actions({
 	cropMarked: ['Mark|Crop/Crop $marked images',
 		{browseMode: function(target){ 
 			return this.marked.length == 0 && 'disabled' }},
-		function(flatten){ this.cropTagged('marked', 'any', flatten) }],
+		function(flatten){ this.cropTagged('marked', flatten) }],
+		//function(flatten){ this.cropTagged('marked', 'any', flatten) }],
 
 	removeMarkedFromCrop: ['Mark|Crop/Remove marked from crop',
 		{browseMode: function(target){ 
@@ -376,14 +371,11 @@ var ImageMarkEditActions = actions.Actions({
 		'toggleMark: "loaded" "on"' ],
 
 	markTagged: ['- Mark/Mark images by tags',
-		function(tags, mode){
-			var selector = mode == 'any' ? 'getTaggedByAny' : 'getTaggedByAll'
-
+		function(query){
 			var that = this
-			this.data[selector](tags).forEach(function(gid){
-				that.toggleMark(gid, 'on')
-			})
-		}],
+			this.data.tagQuery(query)
+				.forEach(function(gid){
+					that.toggleMark(gid, 'on') }) }],
 
 	shiftMarkedUp: ['Mark/Shift marked u$p',
 		{undo: undoShift('shiftMarkedDown'),
@@ -509,16 +501,9 @@ var ImageBookmarkActions = actions.Actions({
 	// 		the problem is that on large sets this may take up quite a 
 	// 		chunk of memory...
 	get bookmarked(){
-		if(this.data == null 
-				|| this.data.tags == null){
-			return []
-		}
-		//return this.data.tags['bookmark'].slice()
-		// XXX remove the version test here....
-		return this.data.version >= '3.1' ?
-			this.data.tagQuery('bookmark')
-			: this.data.getImages((this.data.tags || {bookmark:[]})['bookmark'])
-	},
+		return this.data == null ?
+			[]
+			: this.data.tagQuery('bookmark') },
 
 	prevBookmarked: ['Bookmark|Navigate/Previous bookmarked image',
 		{browseMode: function(target){ 
@@ -532,7 +517,8 @@ var ImageBookmarkActions = actions.Actions({
 	cropBookmarked: ['Bookmark|Crop/Crop $bookmarked images',
 		{browseMode: function(target){ 
 			return this.bookmarked.length == 0 && 'disabled' }},
-		function(flatten){ this.cropTagged('bookmark', 'any', flatten) }],
+		//function(flatten){ this.cropTagged('bookmark', 'any', flatten) }],
+		function(flatten){ this.cropTagged('bookmark', flatten) }],
 })
 
 // NOTE: this is usable without ribbons...
@@ -569,8 +555,7 @@ var ImageBookmarkEditActions = actions.Actions({
 	toggleBookmarkOnMarked: ['Bookmark|Mark/-70:Toggle bookmark on maked images',
 		{browseMode: 'cropMarked'},
 		function(action){ 
-			return this.toggleBookmark(this.data.getTaggedByAny('marked'), action) 
-		}],
+			return this.toggleBookmark(this.marked, action) }],
 })
 
 var ImageBookmarksEdit = 

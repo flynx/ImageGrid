@@ -1916,11 +1916,11 @@ var CollectionTagsActions = actions.Actions({
 	},
 
 	collectTagged: ['- Collections|Tag/',
-		function(tags, collection){
-			return this.collect(this.data.getTaggedByAll(tags), collection) }],
+		function(query, collection){
+			return this.collect(this.data.tagQuery(query), collection) }],
 	uncollectTagged: ['- Collections|Tag/',
-		function(tags, collection){
-			return this.uncollect(this.data.getTaggedByAll(tags), collection) }],
+		function(query, collection){
+			return this.uncollect(this.data.tagQuery(query), collection) }],
 })
 
 var CollectionTags = 
@@ -1971,7 +1971,7 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 			function(title){
 				var that = this
 				var local_tag_names = this.config['collection-local-tags'] || []
-				var tags = this.data.tags
+				var tags = this.data.tags.__index
 
 				// NOTE: this is done at the .pre stage as we need to grab 
 				// 		the tags BEFORE the data gets cleared (in the case 
@@ -1982,14 +1982,12 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 					// load local_tags...
 					local_tag_names
 						.forEach(function(tag){ 
-							tags[tag] = local_tags[tag] || [] 
+							tags[tag] = new Set(local_tags[tag] || [])
 						})
 
 					;(this.crop_stack || [])
-						.forEach(function(d){ d.tags = tags })
-					this.data.tags = tags
-
-					this.data.sortTags()
+						.forEach(function(d){ d.tags.__index = tags })
+					this.data.tags.__index = tags
 				}
 			}],
 		// remove tags from unloaded collections...
@@ -2021,11 +2019,11 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 					local_tag_names
 						.forEach(function(tag){ 
 							local_tags[tag] = (!new_set || title == MAIN_COLLECTION_TITLE) ? 
-								((that.data.tags || {})[tag] || []) 
-								: []
+								((that.data.tags.__index || {})[tag] || new Set()) 
+								: new Set()
 						})
 
-					delete (this.collections[title].data || {}).tags
+					delete (this.collections[title].data || {}).__tags || {}
 				}
 			}],
 		// prevent .uncollect(..) from removing global tags...
@@ -2045,7 +2043,6 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 						tags[tag] = that.data.makeSparseImages(tags[tag], true) })
 
 					this.data.tags = tags
-					this.data.sortTags()
 				}
 			}],
 		// save .local_tags to json...
@@ -2065,35 +2062,33 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 				if(mode == 'base' 
 						&& this.collection != null
 						&& this.collection != MAIN_COLLECTION_TITLE){
-					var tags = this.data.tags || {}
+					var tags = this.data.tags.json()
 					var ltags = c[MAIN_COLLECTION_TITLE].local_tags || {}
 					var rtags = res.data.tags = {}
 
 					// move all the tags...
-					Object.keys(tags)
+					Object.keys(tags.tags)
 						.filter(function(tag){ return ltags[tag] == null })
-						.forEach(function(tag){ rtags[tag] = tags[tag].compact() })
+						.forEach(function(tag){ rtags[tag] = tags.tags[tag] })
 					// overwrite the local tags for the base...
 					Object.keys(ltags)
-						.forEach(function(tag){ rtags[tag] = ltags[tag].compact() })
+						.forEach(function(tag){ rtags[tag] = ltags[tag] })
 				}
 
-				// clear and compact tags for all collections...
+				// clear tags for all collections...
 				rc
 					&& Object.keys(rc || {})
 						// XXX skip unloaded collections...
 						.filter(function(title){ return !!rc[title].data })
 						.forEach(function(title){
-							var tags = c[title].local_tags || {}
-							var rtags = {}
-
-							// compact the local tags...
-							Object.keys(tags)
-								.forEach(function(tag){
-									rtags[tag] = tags[tag].compact() })
-
+							// convert sets to arrays...
+							var local_tags = {}
+							Object.entries(c[title].local_tags || {})
+								.forEach(function(e){
+									local_tags[e[0]] = [...e[1]]
+								})
 							// move .local_tags to .data.tags
-							rc[title].data.tags = rtags
+							rc[title].data.tags.tags = local_tags
 						})
 			}],
 		// load collection local tags from .data.tags to .local_tags...
@@ -2117,9 +2112,10 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 							c.local_tags = c.local_tags || {}
 							;(that.config['collection-local-tags'] || [])
 								.forEach(function(tag){
-									c.local_tags[tag] = c.local_tags[tag] || t[tag] || [] })
+									c.local_tags[tag] = new Set(c.local_tags[tag] || t[tag] || []) })
 						})
 			}],
+		//*/
 	],
 })
 
@@ -2216,9 +2212,7 @@ var AutoCollectionsActions = actions.Actions({
 					.filter(function(tag){ 
 						return local_tag_names.indexOf(tag) < 0 })
 
-				// XXX should this be a real tag query???
-				//var gids = this.data.getTaggedByAll(tags, true)
-				var gids = this.data.getTaggedByAll(tags)
+				var gids = this.data.tagQuery(tags)
 
 				// get items that topped matching the query...
 				var remove = state.data ?

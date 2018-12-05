@@ -752,6 +752,27 @@ var TagsPrototype = {
 	},
 
 
+	join: function(...others){
+		var that = this
+		var index = this.__index
+		others
+			.forEach(function(other){
+				Object.entries(other.__index)
+					.forEach(function(e){
+						index[e[0]] = new Set([...(index[e[0]] || []), ...e[1]]) }) })
+		return this
+	},
+	// XXX create a new tagset with only the given values...
+	// XXX this should support a function...
+	filter: function(values){
+		var res = this.clone()
+		Object.values(res.__index)
+			.forEach(function(s){
+				values.forEach(function(v){ s.delete(v) }) })
+		return res
+	},
+
+
 	// Object utility API...
 	//
 	// 	.clone()
@@ -806,7 +827,7 @@ var TagsPrototype = {
 
 		// tags...
 		res.tags = {}
-		Object.entries(this.__index)
+		Object.entries(this.__index || {})
 			.forEach(function(e){
 				// XXX should we serialize the items here???
 				res.tags[e[0]] = [...e[1]] })

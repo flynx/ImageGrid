@@ -1177,11 +1177,7 @@ module.makeTagWalker =
 function(direction, dfl_tag){
 	var meth = direction == 'next' ? 'nextImage' : 'prevImage'
 	return function(tag, mode){
-		this[meth](
-			this.data.version >= '3.1' ?
-				this.data.tags.values(tag || dfl_tag)
-				: (this.data.tags || {})[tag || dfl_tag] || [],
-			mode) } }
+		this[meth](this.data.tags.values(tag || dfl_tag), mode) } }
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -1381,33 +1377,36 @@ module.TagsEdit = core.ImageGridFeatures.Feature({
 
 				// XXX should we save an empty list *iff* changes.marked is true???
 				if(changes === true || changes.marked){
-					res.index.marked = (res.raw.data.tags || {}).marked || []
+					res.index.marked = 
+						(res.raw.data.tags.tags || {}).marked || []
 				}
 				// XXX should we save an empty list *iff* changes.bookmarked is true???
 				if(changes === true || changes.bookmarked){
 					res.index.bookmarked = [
-						(res.raw.data.tags || {}).bookmark || [],
+						(res.raw.data.tags.tags || {}).bookmark || [],
 						{},
 					]
 				}
 
 				// cleanup...
 				if(res.index.data && res.index.data.tags){
-					delete res.index.data.tags.marked
-					delete res.index.data.tags.bookmark
-					//delete res.index.data.tags.bookmark_data
+					delete res.index.data.tags.tags.marked
+					delete res.index.data.tags.tags.bookmark
 					delete res.index.data.tags
 				}
 			}],
+		// merge the tags into data...
+		['prepareIndexForLoad.pre',
+			function(json){
+				// NOTE: this is done before we build the data to let 
+				// 		Data handle format conversion...
+				json.data.tags = json.tags || {}
+			}],
+		// merge in marked and bookmark tags...
 		['prepareIndexForLoad',
 			function(res, json){
-				res.data.tags = json.tags || {}
-
-				res.data.tags.marked = json.marked || []
-				res.data.tags.bookmark = json.bookmarked ? json.bookmarked[0] : []
-				//res.data.tags.bookmark_data = json.bookmarked ? json.bookmarked[1] : {}
-
-				res.data.sortTags()
+				res.data.tag('marked', json.marked || [])
+				res.data.tag('bookmark', json.bookmarked ? json.bookmarked[0] : [])
 			}],
 	],
 })
@@ -1794,22 +1793,9 @@ module.CropActions = actions.Actions({
 		}],
 	
 	// XXX should this be here???
-	/*
 	cropTagged: ['- Tag|Crop/Crop tagged images',
 		function(query, flatten){
 			return this.crop(this.data.tagQuery(query), flatten) }],
-	//*/
-	//*
-	cropTagged: ['- Tag|Crop/Crop tagged images',
-		function(tags, mode, flatten){
-			if(this.data.length == 0){
-				return
-			}
-			var selector = mode == 'any' ? 'getTaggedByAny' : 'getTaggedByAll'
-			this.crop(this.data[selector](tags), flatten)
-		}],
-	//*/
-
 
 	// crop edit actions...
 	// XXX BUG? order does odd things...

@@ -28,9 +28,7 @@ var formats = require('imagegrid/formats')
 // 		...this is done to gradually migrate to new format versions with
 // 		minimal changes.
 var DATA_VERSION =
-// XXX 3.1 not ready for production yet...
-//module.DATA_VERSION = '3.1'
-module.DATA_VERSION = '3.0'
+module.DATA_VERSION = '3.1'
 
 
 
@@ -3304,6 +3302,10 @@ var DataWithTagsPrototype = {
 			res 
 			: this.getImages(res)
 	},
+
+	// XXX re-implement the above in this...
+	tagQuery: function(query){
+		throw Error('.tagQuery(..): Not implemented.') },
 }
 
 
@@ -3316,6 +3318,11 @@ var DataWithTags2Prototype = {
 		return (this.__tags = this.__tags || new tags.Tags()) },
 	set tags(value){
 		this.__tags = value },
+
+	get untagged(){
+		var v = new Set(this.tags.values())
+		return this.getImages()
+			.filter(function(gid){ return !v.has(gid) }) },
 
 	// XXX do we need these???
 	hasTag: function(gid, ...tags){
@@ -3382,21 +3389,6 @@ var DataWithTags2Prototype = {
 	tagsToImages: function(){
 		throw Error('.tagsToImages(..): Not implemented.') },
 
-
-	// XXX compatibility...
-	// XXX check if these are ever used without raw...
-	getTaggedByAll: function(tags, raw){
-		var res = this.tags.query(['and', ...tags])
-		return raw ? 
-			res 
-			: this.getImages(res) },
-	getTaggedByAny: function(tags, raw){
-		var res = this.tags.query(['or', ...tags])
-		return raw ? 
-			res 
-			: this.getImages(res) },
-
-
 	// Extended methods...
 	//
 	// special case: make the tags mutable...
@@ -3405,18 +3397,18 @@ var DataWithTags2Prototype = {
 		crop.tags = this.tags
 		return crop
 	},
-	// XXX
-	join: function(){
+	join: function(...others){
 		var res = DataWithTags2Prototype.__proto__.join.apply(this, arguments)
-		// XXX
-		throw Error('.join(..): Not implemented.')
+		res.tags.join(...others
+			.map(function(other){ 
+				return other.tags }))
 		return res
 	},
-	// XXX
+	// XXX should this account for crop???
+	// XXX test...
 	split: function(){
 		var res = DataWithTags2Prototype.__proto__.split.apply(this, arguments)
-		// XXX
-		throw Error('.split(..): Not implemented.')
+		res.tags = res.tags.filter(res.order)
 		return res
 	},
 	clone: function(){
@@ -3474,10 +3466,7 @@ var DataWithTags =
 module.DataWithTags = 
 object.makeConstructor('DataWithTags', 
 		DataClassPrototype, 
-		// XXX remove the version test here....
-		DATA_VERSION >= '3.1' ?
-			DataWithTags2Prototype
-			: DataWithTagsPrototype)
+		DataWithTags2Prototype)
 
 
 var Data =
