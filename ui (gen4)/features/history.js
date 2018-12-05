@@ -331,6 +331,7 @@ module.URLHistory = core.ImageGridFeatures.Feature({
 				return prev 
 					&& function(){
 						prev != this.config['url-history-last-loaded'] 
+							&& prev != this.location.path
 							&& (this.config['url-history-last-loaded'] = prev) }
 			}],
 	],
