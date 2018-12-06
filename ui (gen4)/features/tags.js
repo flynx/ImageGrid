@@ -297,7 +297,8 @@ var TagUIActions = actions.Actions({
 								opacity: tags.indexOf(tag) >= 0 ? '' : '0.3'
 							},
 							attrs: {
-								count: opts.hideTagCount || count,
+								count: opts.hideTagCount 
+									|| (count == 0 ? null : count),
 							},
 							open: function(){
 								var e = $(this)
