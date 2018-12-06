@@ -396,6 +396,8 @@ var FileSystemLoaderActions = actions.Actions({
 					that.loadOrRecover(index) 
 						.then(function(){
 							force_full_save
+								// XXX remove as soon as merged index save is done...
+								&& loaded.length == 1
 								&& that.markChanged('all')
 						})
 				})

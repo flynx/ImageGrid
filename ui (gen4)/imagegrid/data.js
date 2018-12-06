@@ -3557,7 +3557,7 @@ var DataWithTags2Prototype = {
 	// XXX test...
 	split: function(){
 		var res = DataWithTags2Prototype.__proto__.split.apply(this, arguments)
-		res.tags = res.tags.filter(res.order)
+		res.tags = res.tags.keep(res.order)
 		return res
 	},
 	clone: function(){

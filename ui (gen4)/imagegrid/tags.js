@@ -633,6 +633,60 @@ var TagsPrototype = {
 							: null) }) },
 	
 
+	// Tag set/list API...
+	//
+	// XXX should this be join or add???
+	join: function(...others){
+		var that = this
+		var index = this.__index || {}
+		others
+			.forEach(function(other){
+				Object.entries(other.__index || {})
+					.forEach(function(e){
+						index[e[0]] = new Set([...(index[e[0]] || []), ...e[1]]) }) })
+		Object.keys(index).length > 0 
+			&& this.__index == null
+			&& (this.__index = index)
+		return this
+	},
+	// Keep only the given values...
+	//
+	// 	.keep(value, ..)
+	// 	.keep([value, ..])
+	// 		-> this
+	//
+	keep: function(...values){
+		values = (values.length == 1 && values[0] instanceof Array) ? 
+			values.pop() 
+			: values
+		var res = this.clone()
+
+		Object.entries(res.__index || {})
+			.forEach(function(e){
+				res.__index[e[0]] = e[1].intersect(values) })
+
+		return res
+	},
+	// Remove the given values...
+	//
+	// 	.remove(value, ..)
+	// 	.remove([value, ..])
+	// 		-> this
+	//
+	remove: function(...values){
+		values = (values.length == 1 && values[0] instanceof Array) ? 
+			values.pop() 
+			: values
+		var res = this.clone()
+
+		Object.entries(res.__index || {})
+			.forEach(function(e){
+				res.__index[e[0]] = e[1].subtract(values) })
+
+		return res
+	},
+
+
 	// Query API...
 	//
 	// The language (JS):
@@ -749,30 +803,6 @@ var TagsPrototype = {
 					: (this
 						.flat()
 						.unique()) })
-	},
-
-
-	join: function(...others){
-		var that = this
-		var index = this.__index || {}
-		others
-			.forEach(function(other){
-				Object.entries(other.__index || {})
-					.forEach(function(e){
-						index[e[0]] = new Set([...(index[e[0]] || []), ...e[1]]) }) })
-		Object.keys(index).length > 0 
-			&& this.__index == null
-			&& (this.__index = index)
-		return this
-	},
-	// XXX create a new tagset with only the given values...
-	// XXX this should support a function...
-	filter: function(values){
-		var res = this.clone()
-		Object.values(res.__index || {})
-			.forEach(function(s){
-				values.forEach(function(v){ s.delete(v) }) })
-		return res
 	},
 
 

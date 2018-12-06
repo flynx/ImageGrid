@@ -42,7 +42,6 @@ function(data){
 module.VERSIONS['2.0'] =
 function(data, cmp){
 	//data = data.version < '2.0' ? module.VERSIONS['2.0'](data) : data
-	console.log('Updating data to: ', '2.0')
 
 	var res = {
 		data: {
@@ -103,8 +102,6 @@ function(data){
 
 	var res = {}
 	res.version = '3.0'
-	console.log('Updating data to: ', res.version)
-
 	res.current = data.current
 	res.order = data.order.slice()
 	res.ribbon_order = data.ribbon_order == null ? [] : data.ribbon_order.slice()
@@ -137,7 +134,6 @@ function(data){
 	var res = data.version < '3.0' ? module.VERSIONS['3.0'](data) : data
 
 	res.version = '3.1'
-	console.log('Updating data to: ', res.version)
 
 	data.tags
 		&& (res.tags = { tags: data.tags })

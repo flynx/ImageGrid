@@ -2034,17 +2034,20 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 			function(_, gids, title){
 				var that = this
 				var local_tag_names = this.config['collection-local-tags'] || []
+				gids = gids || this.current
+				gids = gids instanceof Array ? gids : [gids]
 
 				// prevent global tag removal...
-				var tags = this.data.tags
-				delete this.data.tags
+				var tags = this.data.tags.__index
+				// XXX do we need this??? (leftover from prev tak implementation)
+				//delete this.data.tags
 
 				return function(){
 					// update local tags...
 					local_tag_names.forEach(function(tag){
-						tags[tag] = that.data.makeSparseImages(tags[tag], true) })
+						tags[tag] = tags[tag].subtract(gids) })
 
-					this.data.tags = tags
+					//this.data.tags.__index = tags
 				}
 			}],
 		// save .local_tags to json...
