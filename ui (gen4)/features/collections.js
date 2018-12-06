@@ -2097,6 +2097,9 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 						})
 			}],
 		// load collection local tags from .data.tags to .local_tags...
+		// ...this is needed if the collections are fully loaded as part 
+		// of the index...
+		// XXX do we actually need this???
 		['load',
 			function(_, json){
 				var that = this
@@ -2109,17 +2112,17 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 						// do the loading...
 						.forEach(function(title){
 							var c = that.collections[title]
-							if(!c){
+
+							if(!c || !c.data){
 								return
 							}
-							var t = (c.data || {}).tags || {}
 
-							/* XXX do we need this???
-							c.local_tags = c.local_tags || {}
+							var t = (c.data.tags || {}).tags || {}
+							var lt = c.local_tags = c.local_tags || {}
+
 							;(that.config['collection-local-tags'] || [])
 								.forEach(function(tag){
-									c.local_tags[tag] = new Set(c.local_tags[tag] || t[tag] || []) })
-							//*/
+									lt[tag] = new Set(lt[tag] || t[tag] || []) })
 						})
 			}],
 	],

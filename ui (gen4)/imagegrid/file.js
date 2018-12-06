@@ -354,6 +354,8 @@ function(path, index_dir, logger){
 				.on('end', function(files){
 					var data = groupByDate(files)
 
+					console.log('>>>>>', data)
+
 					// XXX should we mark the root timestamp in any way???
 					if('root' in data && data.root.length > 0){
 						// XXX handle stat error...

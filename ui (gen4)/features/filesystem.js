@@ -1038,7 +1038,7 @@ var CommentsActions = actions.Actions({
 	// 			...
 	// 		},
 	//
-	// 		<keywork>: <data>,
+	// 		<keyword>: <data>,
 	// 		...
 	// 	}
 	__comments: null,
@@ -1158,22 +1158,24 @@ var FileSystemCommentsActions = actions.Actions({
 			return Promise.all(loaded.map(function(path){
 				var comments_dir = that.config['index-dir'] +'/comments'
 
-				return file.loadIndex(path, that.config['index-dir'] +'/comments', date, logger)
+				return file.loadIndex(path +'/'+ comments_dir, false, date, logger)
 					.then(function(res){
+						var c = res[path +'/'+ comments_dir]
+
 						// no comments present...
-						if(res[path] == null){
+						if(c == null){
 							return res
 						}
 
 						// if we have no sub-indexes just load the 
 						// comments as-is...
 						if(loaded.length == 1){
-							that.comments = JSON.parse(JSON.stringify(res[path]))
-							that.comments.raw = {path: res[path]}
+							that.comments = JSON.parse(JSON.stringify(c))
+							that.comments.raw = {path: c}
 
 						// sub-indexes -> let the client merge their stuff...
 						} else {
-							that.comments.raw[path] = res[path]
+							that.comments.raw[path] = c
 						} 
 
 						return res
@@ -1287,9 +1289,19 @@ var FileSystemSaveHistoryActions = actions.Actions({
 
 	loadSaveHistoryList: ['- File/',
 		function(path){
-			path = path || this.location.path
+			var index_dir = this.config['index-dir']
+			path = path || this.location.loaded
+			path = path instanceof Array ? path : [path]
 
-			return file.loadSaveHistoryList(path)
+			var res = {}
+			return Promise
+				.all(this.location.loaded
+					.map(function(path){
+						return file.loadSaveHistoryList(path +'/'+ index_dir)
+							.then(function(data){
+								res[path] = data }) }))
+				.then(function(){
+					return res })
 		}],
 })
 
