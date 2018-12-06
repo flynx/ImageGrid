@@ -3378,16 +3378,162 @@ var DataWithTags2Prototype = {
 				.map(function(r){ return r ? 'on' : 'off' })
 	},
 
+
 	// XXX should these be .tags.query(..) ???
 	tagQuery: function(query){
 		return this.tags.query(query) },
 
+
 	// Utils...
-	// XXX
-	tagsFromImages: function(){
-		throw Error('.tagsFromImages(..): Not implemented.') },
-	tagsToImages: function(){
-		throw Error('.tagsToImages(..): Not implemented.') },
+	//
+	// Load tags from images...
+	//
+	// 	Merge image tags to data...
+	// 	.tagsFromImages(images)
+	// 		-> data
+	//
+	// 	Load image tags to data dropping any changes in data...
+	// 	.tagsFromImages(images, 'reset')
+	// 		-> data
+	//
+	// XXX should this be here???
+	// XXX this depends on image structure...
+	tagsFromImages: function(images, mode){
+		if(mode == 'reset'){
+			delete this.__tags
+		}
+		for(var gid in images){
+			var img = images[gid]
+			if(img.tags != null){
+				this.tag(img.tags, gid)
+			}
+		}
+		return this
+	},
+	// Transfer tags to images...
+	//
+	// 	Merge data tags to images...
+	// 	.tagsToImages(images)
+	// 	.tagsToImages(images, true)
+	// 	.tagsToImages(images, 'merge')
+	// 		-> data
+	//
+	// 	Merge data tags to images without buffering...
+	// 	.tagsToImages(images, 'unbuffered')
+	// 		-> data
+	//
+	// 	Reset image tags from data...
+	// 	.tagsToImages(images, 'reset')
+	// 		-> data
+	//
+	// XXX should this be here???
+	// XXX this depends on image structure...
+	// XXX should this use image API for creating images???
+	// XXX migrate to new tag API...
+	tagsToImages: function(images, mode, updated){
+		throw Error('.tagsToImages(..): Not implemented.')
+		mode = mode || 'merge'
+		updated = updated || []
+
+		// mark gid as updated...
+		var _updated = function(gid){
+			if(updated != null && updated.indexOf(gid) < 0){
+				updated.push(gid)
+			}
+		}
+		// get or create an image with tags...
+		// XXX should this use image API for creating???
+		var _get = function(images, gid){
+			var img = images[gid]
+			// create a new image...
+			if(img == null){
+				img = images[gid] = {}
+				_updated(gid)
+			}
+
+			var tags = img.tags
+			// no prior tags...
+			if(tags == null){
+				tags = img.tags = []
+				_updated(gid)
+			}
+
+			return img
+		}
+
+		// buffered mode...
+		// 	- uses more memory
+		// 	+ one write mer image
+		if(mode != 'unbuffered'){
+			// build the buffer...
+			var buffer = {}
+			this.tagsToImages(buffer, 'unbuffered')
+
+			// reset mode...
+			if(mode == 'reset'){
+				// iterate through all the gids (both images and buffer/data)
+				for(var gid in Object.keys(images)
+						.concat(Object.keys(buffer))
+						.unique()){
+					// no tags / remove...
+					if(buffer[gid] == null || buffer[gid].tags.length == 0){
+						// the image exists and has tags...
+						if(images[gid] != null && images[gid].tags != null){
+							delete images[gid].tags
+							_updated(gid)
+						}
+
+					// tags / set...
+					} else {
+						var img = _get(images, gid)
+						var before = img.tags.slice()
+
+						img.tags = buffer[gid].tags
+
+						// check if we actually changed anything...
+						if(!before.setCmp(img.tags)){
+							_updated(gid)
+						}
+					}
+				}
+
+			// merge mode...
+			} else {
+				for(var gid in buffer){
+					var img = _get(images, gid)
+					var l = img.tags.length
+					img.tags = img.tags
+						.concat(buffer[gid].tags)
+						.unique()
+					// we are updated iff length changed...
+					// NOTE: this is true as we are not removing anything 
+					// 		thus the length can only increase if changes are
+					// 		made...
+					if(l != img.tags.length){
+						_updated(gid)
+					}
+				}
+			}
+
+		// unbuffered (brain-dead) mode...
+		// 	+ no extra memory
+		// 	- multiple writes per image (one per tag)
+		} else {
+			var tagset = this.tags
+			for(var tag in tagset){
+				tagset[tag].forEach(function(gid){
+					var img = _get(images, gid)
+
+					if(img.tags.indexOf(tag) < 0){
+						img.tags.push(tag)
+						_updated(gid)
+					}
+				})
+			}
+		}
+		return this
+	},
+
 
 	// Extended methods...
 	//
@@ -3399,6 +3545,7 @@ var DataWithTags2Prototype = {
 	},
 	join: function(...others){
 		var res = DataWithTags2Prototype.__proto__.join.apply(this, arguments)
+		// clear out the align mode...
 		!(others[0] instanceof Data)
 			&& others.shift()
 		res.tags.join(...others

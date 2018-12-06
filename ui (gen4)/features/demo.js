@@ -21,7 +21,7 @@ var core = require('features/core')
 
 var demo_data =
 module.demo_data = {
-	version: '3.0',
+	version: '3.1',
 
 	current: '3',
 	base: 'r0',
@@ -37,8 +37,10 @@ module.demo_data = {
 	},
 
 	tags: {
-		marked: ['b', 'z'],
-		bookmark: ['1', 'c', 'z'],
+		tags: {
+			marked: ['b', 'z'],
+			bookmark: ['1', 'c', 'z'],
+		},
 	},
 
 	// NOTE: group gids do not have to be present in .order, they will 
