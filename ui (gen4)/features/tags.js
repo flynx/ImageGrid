@@ -265,7 +265,12 @@ var TagUIActions = actions.Actions({
 				that.tags
 					.sort()
 					// prep for sort...
-					.map(function(t, i){ return [t, i, (that.data.tags.values(t) || {}).len] })
+					.map(function(t, i){ 
+						return [
+							t, 
+							i, 
+							(that.data.tags.values(t) || []).length,
+							tags.indexOf(t) >= 0] })
 					// XXX add ability to sort by popularity, both local
 					//		(selected tags) and global...
 					.run(function(){
@@ -278,10 +283,16 @@ var TagUIActions = actions.Actions({
 
 								return ac != null && bc != null ? 
 										bc - ac
-									// keep used tags before unused...
-									: ac == null ?
+									// keep set tags before unset...
+									// XXX these do not seem to work...
+									: a[3] && !b[3] ?
 										1
-									: bc == null ?
+									: !a[3] && b[3] ?
+										-1
+									// keep used tags before unused...
+									: ac == null || (!a[3] && b[3]) ?
+										1
+									: bc == null || (a[3] && !b[3]) ?
 										-1
 									// sort by position...
 									: a[0] - b[0] 
@@ -289,12 +300,13 @@ var TagUIActions = actions.Actions({
 					.map(function(tag){
 						// normalize...
 						var count = tag[2]
+						var tagged = tag[3]
 						tag = tag[0]
 
 						return make(tag, {
-							cls: tags.indexOf(tag) >= 0 ? 'tagged' : '',
+							cls: tagged ? 'tagged' : '',
 							style: {
-								opacity: tags.indexOf(tag) >= 0 ? '' : '0.3'
+								opacity: tagged ? '' : '0.3'
 							},
 							attrs: {
 								count: opts.hideTagCount 
