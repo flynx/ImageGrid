@@ -270,33 +270,33 @@ var TagUIActions = actions.Actions({
 							t, 
 							i, 
 							(that.data.tags.values(t) || []).length,
-							tags.indexOf(t) >= 0] })
+							tags.indexOf(t) >= 0 ] })
 					// XXX add ability to sort by popularity, both local
 					//		(selected tags) and global...
 					.run(function(){
 						return opts.sortTagsBy == 'name' ?
 								this
-							// count...
+							// usage and count...
 							: this.sort(function(a, b){
 								var ac = a[2]
 								var bc = b[2]
 
-								return ac != null && bc != null ? 
-										bc - ac
+								return (
 									// keep set tags before unset...
-									// XXX these do not seem to work...
-									: a[3] && !b[3] ?
-										1
+									a[3] && !b[3] ?
+										-1
 									: !a[3] && b[3] ?
-										-1
-									// keep used tags before unused...
-									: ac == null || (!a[3] && b[3]) ?
 										1
-									: bc == null || (a[3] && !b[3]) ?
+									// sort by usage count...
+									: ac != null && bc != null ? 
+										bc - ac
+									// keep used tags before unused...
+									: ac == null ?
+										1
+									: bc == null ?
 										-1
-									// sort by position...
-									: a[0] - b[0] 
-							}) })
+									// keep position...
+									: a[0] - b[0] ) }) })
 					.map(function(tag){
 						// normalize...
 						var count = tag[2]
