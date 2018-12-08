@@ -163,6 +163,12 @@ var TagUIActions = actions.Actions({
 			.concat(this.data ? this.data.tags.tags() : [])
    			.unique() },
 
+	// XXX lazy tag search/add dialog...
+	// 		- initially empty
+	// 		- focus dialog search
+	// 		- on update show list of matching tags
+	// XXX
+
 	// XXX add support for tag sets and paths...
 	showTagCloud: ['Tag|Edit|Image/$Tags...',
 		core.doc`Show tags in cloud format...

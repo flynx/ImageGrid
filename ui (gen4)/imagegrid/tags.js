@@ -351,6 +351,27 @@ var TagsPrototype = {
 		}
 	},
 
+	//
+	// 	.search(str)
+	// 	.search(regexp)
+	// 		-> matches
+	//
+	// 	.search(str, list)
+	// 	.search(regexp, list)
+	// 		-> matches
+	//
+	// XXX should this return a list of matching tags of a list of values???
+	// 		....or should we have a similar method to search values??
+	// XXX should we .match(..) the results???
+	// 		...not sure if this is needed as we are taking .tags() as input...
+	// 		on the other hand we'd need to normalize the search string somehow...
+	search: function(str, tags){
+		// XXX should we do any pre-processing???
+		str = str instanceof RegExp ? str : RegExp(str)
+		return (tags || this.tags())
+			.filter(function(tag){
+				return str.test(tag) }) },
+
 
 	// Introspection...
 	//
