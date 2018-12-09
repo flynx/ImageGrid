@@ -41,7 +41,8 @@ function(data){
 //module.convertDataGen1 =
 module.VERSIONS['2.0'] =
 function(data, cmp){
-	//data = data.version < '2.0' ? module.VERSIONS['2.0'](data) : data
+	// XXX there should be a better way to report this...
+	console.log('\t\tUpdating to:', '2.0')
 
 	var res = {
 		data: {
@@ -102,11 +103,12 @@ function(data){
 
 	var res = {}
 	res.version = '3.0'
+	// XXX there should be a better way to report this...
+	console.log('\t\tUpdating to:', res.version)
 	res.current = data.current
 	res.order = data.order.slice()
 	res.ribbon_order = data.ribbon_order == null ? [] : data.ribbon_order.slice()
 	res.ribbons = {} 
-
 
 	// generate gids...
 	// NOTE: this will use the structures stored in data if available, 
@@ -134,6 +136,8 @@ function(data){
 	var res = data.version < '3.0' ? module.VERSIONS['3.0'](data) : data
 
 	res.version = '3.1'
+	// XXX there should be a better way to report this...
+	console.log('\t\tUpdating to:', res.version)
 
 	data.tags
 		&& (res.tags = { tags: data.tags })
@@ -180,6 +184,17 @@ module.getLatestUpdaterVersion = function(){
 // 		as-is.
 module.updateData = function(data, version, clean){
 	var v = version || module.getLatestUpdaterVersion()
+
+	// patch a typo (.varsion -> .version)...
+	//
+	// NOTE: this was discovered during the transition to v3.1, thus 
+	// 		anything later than that (201812) is OK...
+	// 		...this affects pre-release versions only.
+	// NOTE: yes, it's a typo in the format version =)
+	var version = data.version || data.varsion
+	data.version = version
+	delete data.varsion
+
 	var res = data.version < v
 		? module.VERSIONS[v](data) 
 		: completeData(data)
