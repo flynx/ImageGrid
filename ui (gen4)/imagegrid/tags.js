@@ -52,8 +52,8 @@ var TagsClassPrototype = {
 	// 			c:b/a -> b:c/a 		- sort sets within pats (current)
 	// 		or
 	// 			c:b/a -> b/a:c		- sort paths within sets
-	// XXX should this be .normalizeTags(..) ???
 	// XXX should we support priority braces, i.e. c:(b/a)
+	// XXX should this be .normalizeTags(..) ???
 	normalize: function(...tags){
 		var that = this
 		var tagRemovedChars = (this.config || {})['tagRemovedChars']
@@ -72,10 +72,10 @@ var TagsClassPrototype = {
 					.toLowerCase()
 					.replace(tagRemovedChars, '')
 					// sort sets within paths...
-					.split(/[\\\/]/g)
+					.split(/[\\\/]+/g)
 						.map(function(e){
 							return e
-								.split(/:/g)
+								.split(/:+/g)
 								.sort()
 								.join(':') })
 						.join('/') })
@@ -89,6 +89,15 @@ var TagsClassPrototype = {
 			res.pop() 
 			: res
 	},
+	splitTag: function(...tags){
+		tags = (tags.length == 1 && tags[0] instanceof Array) ? 
+			tags.pop() 
+			: tags
+		return this.normalize(tags)
+			.map(function(tag){
+				return tag.split(/[:\\\/]/g) })
+			.flat()
+			.unique() },
 
 	// Query parser...
 	//
@@ -226,10 +235,12 @@ var TagsPrototype = {
 
 	// Utils...
 	//
-	// proxy to Tags.normalize(..)
+	// proxies to class methods...
 	// XXX Q: should this be .normalizeTags(..) ???
 	normalize: function(...tags){
 		return this.constructor.normalize.call(this, ...tags) },
+	splitTag: function(...tags){
+		return this.constructor.splitTag.call(this, ...tags) },
 	// NOTE: the query parser is generic and thus is implemented in the
 	// 		constructor...
 	parseQuery: function(query){
@@ -365,12 +376,28 @@ var TagsPrototype = {
 	// XXX should we .match(..) the results???
 	// 		...not sure if this is needed as we are taking .tags() as input...
 	// 		on the other hand we'd need to normalize the search string somehow...
+	// 		...this will likely force us into using a special regexp-like 
+	// 		search syntax with special meanings given to ':' and '/' (and '\\')
 	search: function(str, tags){
 		// XXX should we do any pre-processing???
 		str = str instanceof RegExp ? str : RegExp(str)
-		return (tags || this.tags())
+		return (tags || this._tags())
 			.filter(function(tag){
 				return str.test(tag) }) },
+
+	// XXX find a logical name...
+	// 		.searchable(..)
+	// 		.searchableTags(..)
+	// 		.expandedTags(..)
+	// 		...
+	// XXX should we combine this with tags???
+	_tags: function(...args){
+		var that = this
+		return this.tags(...args)
+			// include original list...
+			.run(function(){
+				return this.concat(that.splitTag(this)) })
+			.unique() },
 
 
 	// Introspection...
@@ -400,6 +427,9 @@ var TagsPrototype = {
 	//
 	// NOTE: this includes all the .persistent tags as well as all the 
 	// 		tags actually used.
+	//
+	// XXX should this return split values???
+	// 		i.e. 'red:car' -> ['red', 'car']
 	tags: function(value, ...tags){
 		var that = this
 
