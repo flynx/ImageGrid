@@ -337,8 +337,10 @@ var FileSystemLoaderActions = actions.Actions({
 
 						// prepare to do a full save if format version updated...
 						if(res[k].data.version != that.data.version){
-							logger && logger.emit('Date version changed:',
-								res[k].data.version, '->', that.data.version)
+							// compensate for a typo that was discovered in v3.1
+							var v = res[k].data.version || res[k].data.varsion
+							logger && logger.emit('Data version changed:',
+								v, '->', that.data.version)
 
 							force_full_save = true
 						}
