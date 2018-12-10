@@ -17,7 +17,7 @@
 *
 * TODO:
 * 	- investigate support for sqlite3
-* 		- is it faster?
+* 		- will it be faster?
 *
 *
 *
@@ -36,11 +36,11 @@ var util = require('lib/util')
 var TagsClassPrototype = {
 	// Utils...
 	//
-	// 	.normalize(tag)
+	// 	.normalizeTags(tag)
 	// 		-> ntag
 	//
-	// 	.normalize(tag, ...)
-	// 	.normalize([tag, ...])
+	// 	.normalizeTags(tag, ...)
+	// 	.normalizeTags([tag, ...])
 	// 		-> [ntag, ...]
 	//
 	// NOTE: tag set order is not significant.
@@ -53,8 +53,7 @@ var TagsClassPrototype = {
 	// 		or
 	// 			c:b/a -> b/a:c		- sort paths within sets
 	// XXX should we support priority braces, i.e. c:(b/a)
-	// XXX should this be .normalizeTags(..) ???
-	normalize: function(...tags){
+	normalizeTags: function(...tags){
 		var that = this
 		var tagRemovedChars = (this.config || {})['tagRemovedChars']
 		tagRemovedChars = tagRemovedChars instanceof RegExp ? 
@@ -93,7 +92,7 @@ var TagsClassPrototype = {
 		tags = (tags.length == 1 && tags[0] instanceof Array) ? 
 			tags.pop() 
 			: tags
-		return this.normalize(tags)
+		return this.normalizeTags(tags)
 			.map(function(tag){
 				return tag.split(/[:\\\/]/g) })
 			.flat()
@@ -189,16 +188,6 @@ var TagsClassPrototype = {
 }
 
 
-// XXX this should have the following sections:
-// 		- tag-tag relations -- persistent
-// 			- tags
-// 			- paths
-// 			- sets/relations
-// 		- content (tag-object) -- volatile
-// 			- tags
-// 			- paths
-// 			- sets/relations
-// 			- tag-object references
 // XXX should we store normalized and non-normalized tags for reference???
 // 		...there are two ways to think of this:
 // 			1) both (a-la flickr) -- keep both, use normalized internally
@@ -236,15 +225,13 @@ var TagsPrototype = {
 	// Utils...
 	//
 	// proxies to class methods...
-	// XXX Q: should this be .normalizeTags(..) ???
-	normalize: function(...tags){
-		return this.constructor.normalize.call(this, ...tags) },
+	normalizeTags: function(...tags){
+		return this.constructor.normalizeTags.call(this, ...tags) },
 	subTags: function(...tags){
 		return this.constructor.subTags.call(this, ...tags) },
-	// NOTE: the query parser is generic and thus is implemented in the
-	// 		constructor...
 	parseQuery: function(query){
 		return this.constructor.parseQuery.call(this, query) },
+
 
 	// Match tags...
 	//
@@ -328,8 +315,8 @@ var TagsPrototype = {
 		// match two tags...
 		} else {
 			// normalized match...
-			a = this.normalize(a)
-			b = this.normalize(b)
+			a = this.normalizeTags(a)
+			b = this.normalizeTags(b)
 
 			// special case: *tag* pattern...
 			a = /^\*[^:\\\/]*\*$/.test(a) ? 
@@ -372,6 +359,7 @@ var TagsPrototype = {
 				.length == 0
 		}
 	},
+
 	// Search tags...
 	//
 	// 	Search the tags...
@@ -449,6 +437,27 @@ var TagsPrototype = {
 	persistent: function(){
 		// XXX
 	},
+
+	// XXX can these be faster???
+	// XXX should these take multiple values???
+	hasTag: function(tag){
+		for(var t of this.tags()){
+			if(this.match(tag, t)){
+				return true
+			}
+		}
+		return false
+	},
+	has: function(value){
+		for(var v of Object.values(this.__index || {})){
+			if(v.has(value)){
+				return true
+			}
+		}
+		return false
+	},
+
+
 	// Tags present in the system...
 	//
 	//	Get all tags...
@@ -499,7 +508,7 @@ var TagsPrototype = {
 			return Object.keys(this.__index || {})
 				.concat((this.__persistent_tags || [])
 					.map(function(t){ 
-						return that.normalize(t) }))
+						return that.normalizeTags(t) }))
 				.unique()
 		}
 	},
@@ -519,7 +528,7 @@ var TagsPrototype = {
 	// NOTE: this does not support any query syntax...
 	values: function(tag){
 		var that = this
-		tag = this.normalize(tag || '*')
+		tag = this.normalizeTags(tag || '*')
 		return [...new Set(
 			Object.entries(this.__index || {})
 				.filter(function(e){ 
@@ -527,26 +536,6 @@ var TagsPrototype = {
 						|| that.match(tag, e[0]) })
 				.map(function(s){ return [...s[1]] })
 				.flat())] },
-
-	// Testing...
-	// XXX can these be faster???
-	// XXX should these take multiple values???
-	hasTag: function(tag){
-		for(var t of this.tags()){
-			if(this.match(tag, t)){
-				return true
-			}
-		}
-		return false
-	},
-	has: function(value){
-		for(var v of Object.values(this.__index || {})){
-			if(v.has(value)){
-				return true
-			}
-		}
-		return false
-	},
 
 
 	// Add/Remove/Modify tags API...
@@ -576,7 +565,7 @@ var TagsPrototype = {
 						.concat([seen[0]])
 						.join('" -> "') }"`) }
 			var next = aliases[tag] 
-				|| aliases[this.normalize(tag)]
+				|| aliases[this.normalizeTags(tag)]
 			seen.push(tag)
 			return next != null ?
 					resolve(next, seen)
@@ -592,17 +581,17 @@ var TagsPrototype = {
 		// remove...
 		} else if(value == null){
 			delete aliases[tag.trim()]
-			delete aliases[this.normalize(tag)]
+			delete aliases[this.normalizeTags(tag)]
 
 		// set...
 		} else {
 			tag = tag.trim()
-			value = this.normalize(value)
+			value = this.normalizeTags(value)
 
 			// check for recursion...
 			var chain = []
 			var target = resolve(value, chain)
-			if(target == tag || target == this.normalize(tag)){
+			if(target == tag || target == this.normalizeTags(tag)){
 				throw new Error(`.alias(..): Creating a recursive alias chain: "${ 
 					chain
 						.concat([chain[0]])
@@ -612,16 +601,12 @@ var TagsPrototype = {
 		}
 		return this
 	},
-
-
-	// Add/Remove/Modify content API...
-	//
 	// XXX save un-normalized tags as aliases...
 	// XXX when value is not given, add tags to persistent tags...
 	tag: function(tags, value){
 		var that = this
 		value = value instanceof Array ? value : [value]
-		tags = this.normalize(tags instanceof Array ? tags : [tags])
+		tags = this.normalizeTags(tags instanceof Array ? tags : [tags])
 		var index = this.__index = this.__index || {}
 
 		value.forEach(function(value){
@@ -638,7 +623,7 @@ var TagsPrototype = {
 		var index = this.__index = this.__index || {}
 
 		value = value instanceof Array ? value : [value]
-		tags = this.normalize(tags instanceof Array ? tags : [tags])
+		tags = this.normalizeTags(tags instanceof Array ? tags : [tags])
 			.map(function(tag){
 				return /\*/.test(tag) ? 
 					// resolve tag patterns...
@@ -698,7 +683,7 @@ var TagsPrototype = {
 		var that = this
 		values = values instanceof Array ? values : [values]
 		var pattern = /\*/.test(tag)
-		var ntag = this.normalize(tag)
+		var ntag = this.normalizeTags(tag)
 
 		// can't set pattern as tag...
 		if(pattern && action != 'on'){
@@ -744,6 +729,7 @@ var TagsPrototype = {
 			&& (this.__index = index)
 		return this
 	},
+
 	// Keep only the given values...
 	//
 	// 	.keep(value, ..)
@@ -762,6 +748,7 @@ var TagsPrototype = {
 
 		return res
 	},
+
 	// Remove the given values...
 	//
 	// 	.remove(value, ..)
@@ -913,7 +900,7 @@ var TagsPrototype = {
 	clone: function(mode){
 		return new this.constructor(this.json(mode)) },
 
-	// serialization...
+	// Serialization...
 	//
 	// 	.json()
 	// 		-> json
@@ -983,7 +970,6 @@ var TagsPrototype = {
 		return this
 	},
 
-	// constructor...
 	__init__: function(json){
 		json 
 			&& this.load(json) },
