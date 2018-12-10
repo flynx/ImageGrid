@@ -787,6 +787,9 @@ var TagsPrototype = {
 	// 		| (<query> .. )
 	//
 	//
+	// NOTE: all lists are treated as sets in that any item can be present 
+	// 		only once and all duplicates are discarded.
+	//
 	//
 	//
 	// Execution model:
@@ -820,6 +823,19 @@ var TagsPrototype = {
 	// 		will resolve to a literal 'a'
 	// 		NOTE: this is not the same as (values a) because (values ..)
 	// 			returns a list while quoting will place the value as-is
+	//
+	//
+	// Expansion:
+	// 	^( .. )
+	// 		will expand the contents to the containing list
+	//
+	// 		Example:
+	// 			(a b ^(c d) c e)
+	// 				-> (a b c d e)
+	//
+	// 		NOTE: that the repeating value 'c' is discarded.
+	// 		NOTE: @( .. ) can be used to expand values at the pre-processor
+	// 				stage.
 	//
 	//
 	//
@@ -894,7 +910,8 @@ var TagsPrototype = {
 	// 		avoid the parse stage...
 	//
 	//
-	// XXX do we need quoting???
+	// XXX would be nice to have access to the forming argument list to 
+	// 		be able to expand list (a-la ...list in JS)
 	// XXX not sure about the .flat(1) calls...
 	__query_ns_pre: {
 		search: function(...args){
@@ -917,7 +934,6 @@ var TagsPrototype = {
 			t = t instanceof Array ? t : [t]
 			return [...args
 				.reduce(function(res, l){
-						//return res.intersect(l.flat(1)) }, 
 						return res
 							.intersect(l instanceof Array ? 
 								l.flat(1) 
@@ -943,18 +959,30 @@ var TagsPrototype = {
 	//	.query(query, true)
 	//		-> values
 	//
+	// XXX do we need expand(..) ???
 	query: function(query, raw){
 		var that = this
 		var pre = this.__query_ns_pre
 		var ns = this.__query_ns
 		var sns = this.__query_ns_special
 
+		var expand = function(prefix, list){
+			return prefix == null ?
+				list
+				: list
+					.reduce(function(res, e){
+						return res[res.length-1] == prefix ?
+							res.slice(0, -1).concat(e instanceof Array ? e : [e])
+							: res.concat([e]) }, [])
+					.filter(function(e){
+						return e != prefix }) }
+
 		// Query Language pre-processor...
 		var PreQL = function(args){
 			return (
 				// function -> query args and call...
 				args[0] in pre ?
-					pre[args[0]].call(that, ...PreQL(args.slice(1)))
+					pre[args[0]].call(that, ...expand('@', PreQL(args.slice(1))))
 				// list of tags -> query each arg...
 				: args
 					.map(function(arg){
@@ -970,17 +998,16 @@ var TagsPrototype = {
 			return (
 				// function -> query args and call...
 				args[0] in ns ?
-					ns[args[0]].call(that, ...QL(args.slice(1)))
+					ns[args[0]].call(that, ...expand('^', QL(args.slice(1))))
 				// special form -> pass args as-is...
 				: args[0] in sns ?
-					sns[args[0]].call(that, ...args.slice(1))
+					sns[args[0]].call(that, ...expand('^', args.slice(1)))
 				// list of tags -> query each arg...
 				: args
 					.map(function(arg){
 						return arg instanceof Array ?
 								QL(arg)
 							// quoting...
-							// XXX this should be a lexer directive (???)
 							: arg.startsWith('`') ?
 								arg.slice(1)
 							: that.values(arg) }) ) }
