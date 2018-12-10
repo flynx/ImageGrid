@@ -771,41 +771,94 @@ var TagsPrototype = {
 
 	// Query API...
 	//
-	// The language (JS):
+	//
+	// The language (String):
 	// 	<query> ::= <tag> 
 	// 		| <call> 
 	// 		| <list>
+	// 	<query> ::= <query> ..
 	//
 	// 	<tag> ::= string
 	//
-	// 	<call> ::= [ <function-name> ]
-	// 		| [ <function-name>, <query>, .. ]
+	// 	<call> ::= (<function-name>)
+	// 		| (<function-name> <query> .. )
 	//
-	// 	<list> ::= []
-	// 		| [ <query>, .. ]
+	// 	<list> ::= ()
+	// 		| (<query> .. )
 	//
 	//
-	// Values resolution:
+	//
+	//
+	// Execution model:
+	// 	Pre-processor stage
+	// 		Executes before the main stage and produces code to be run 
+	// 		on the main stage.
+	// 	Main stage
+	// 		Executes after the pre-processor and produces a list of values.
+	//
+	//
+	//
+	// The language supports three types of "functions":
+	// 	Pre-processor function
+	// 		this is processed prior to query execution and generates valid 
+	// 		code to be executed on the next stage
+	// 	Function (normal)
+	// 		gets a list of resolved arguments and resolves to a list
+	// 	Special form
+	// 		gets a list of unresolved arguments (as-is) and resolves to a list
+	//
+	//
+	//
+	// Value resolution:
 	// 	tag		-> resolves to list of matching values as returned by .values(tag)
 	// 	list	-> resolved to list of resolved items
 	// 	call	-> resolves to list of values returned by the called function
 	//
 	//
+	// Quoting:
+	// 	`a
+	// 		will resolve to a literal 'a'
+	// 		NOTE: this is not the same as (values a) because (values ..)
+	// 			returns a list while quoting will place the value as-is
+	//
+	//
+	//
+	// Pre-processor function:
+	// 	(search ..)
+	// 		resolves to an (or ..) call passed a list of tags matching 
+	// 		the arguments.
+	//
+	// 		Shorthand:
+	// 			`a` -> (search a)
+	//
+	//
+	//
 	// Functions:
 	// 	(and ..)
 	// 		resolves to the list of values present in each of the arguments
+	//
 	// 	(or ..)
 	// 		resolves to the list of all the values of all the arguments
+	//
 	// 	(not a ..)
 	// 		resolves to list of values in a not present in any of the 
 	// 		other arguments
 	// 
+	//
 	//
 	// Special forms:
 	// 	(values ..)
 	// 		resolves to the list of values as-is.
 	// 		this makes it possible to pass in a set of values as-is 
 	// 		without resolving them as tags.
+	//
+	// 		Shorthand:
+	// 			(`a `b `c)
+	// 				-> (values a b c)
+	//
+	// 		NOTE: the braces in the shorthand, (values ..) always produces 
+	// 			a list while quoting a value is always a single value.
+	//
 	//
 	//
 	// Testing queries:
@@ -821,7 +874,37 @@ var TagsPrototype = {
 	// 			-> ['b', 'c']
 	//
 	//
+	//
+	// The language AST:
+	// 	<query> ::= <tag> 
+	// 		| <call> 
+	// 		| <list>
+	// 	<query> ::= [ <query>, .. ] 
+	//
+	// 	<tag> ::= string
+	//
+	// 	<call> ::= [ <function-name> ]
+	// 		| [ <function-name>, <query>, .. ]
+	//
+	// 	<list> ::= []
+	// 		| [ <query>, .. ]
+	//
+	//
+	// NOTE: the AST can be used as a query format as-is, this will 
+	// 		avoid the parse stage...
+	//
+	//
+	// XXX do we need quoting???
 	// XXX not sure about the .flat(1) calls...
+	__query_ns_pre: {
+		search: function(...args){
+			return ['or',
+				...args
+					.map(function(t){ 
+						return this.search(t) }.bind(this))
+					.flat()
+					.unique() ] },
+	},
 	__query_ns: {
 		and: function(...args){
 			// NOTE: we are sorting the lists here to start with the 
@@ -830,10 +913,16 @@ var TagsPrototype = {
 			// 		up...
 			args = args
 				.sort(function(a, b){ return a.length - b.length })
+			var t = args.pop()
+			t = t instanceof Array ? t : [t]
 			return [...args
 				.reduce(function(res, l){
-						return res.intersect(l.flat(1)) }, 
-					new Set(args.pop()))] },
+						//return res.intersect(l.flat(1)) }, 
+						return res
+							.intersect(l instanceof Array ? 
+								l.flat(1) 
+								: [l]) }, 
+					new Set(t))] },
 		or: function(...args){
 			return [...new Set(args.flat(1))] },
 		not: function(...args){
@@ -856,8 +945,25 @@ var TagsPrototype = {
 	//
 	query: function(query, raw){
 		var that = this
+		var pre = this.__query_ns_pre
 		var ns = this.__query_ns
 		var sns = this.__query_ns_special
+
+		// Query Language pre-processor...
+		var PreQL = function(args){
+			return (
+				// function -> query args and call...
+				args[0] in pre ?
+					pre[args[0]].call(that, ...PreQL(args.slice(1)))
+				// list of tags -> query each arg...
+				: args
+					.map(function(arg){
+						return arg instanceof Array ?
+								PreQL(arg)
+							// search shorthand...
+							: arg.startsWith('`') && arg.endsWith('`') ?
+								PreQL(['search', arg.slice(1, -1)])
+							: arg }) ) }
 
 		// Query Language Executor...
 		var QL = function(args){
@@ -873,11 +979,15 @@ var TagsPrototype = {
 					.map(function(arg){
 						return arg instanceof Array ?
 								QL(arg)
+							// quoting...
+							// XXX this should be a lexer directive (???)
+							: arg.startsWith('`') ?
+								arg.slice(1)
 							: that.values(arg) }) ) }
 
-		return QL(query instanceof Array ? 
+		return QL(PreQL(query instanceof Array ? 
 				query 
-				: this.parseQuery(query) )
+				: this.parseQuery(query) ))
 			.run(function(){
 				return raw ?
 					this
