@@ -311,8 +311,13 @@ var TagsPrototype = {
 	//
 	//
 	// NOTE: this is not symmetric e.g. a will match a:b but not vice-versa.
-	match: function(a, b){
+	match: function(a, b, cmp){
 		var that = this
+
+		if(b instanceof Function){
+			cmp = b
+			b = null
+		}
 
 		// get matching tags...
 		if(b == null || b instanceof Array){
@@ -343,14 +348,19 @@ var TagsPrototype = {
 				return a.length <= b.length
 					&& a.filter(function(e){ 
 						return e != '*' 
-							&& b.indexOf(e) < 0 }).length == 0 }
+							&& b.indexOf(e) < 0
+				   			&& !(cmp 
+								&& b.filter(cmp.bind(null, e)).length > 0) })
+						.length == 0 }
 
 			// path matching...
 			// 	a matches b iff each element in a exists in b and in the same 
 			// 	order as in a.
+			//
+			// NOTE: we do not need to use cmp(..) here as we are testing 
+			// 		tag compatibility deeper in matchSet(..)...
 			a = a.split(/[\/\\]/g) 
 			b = b.split(/[\/\\]/g)
-
 			return b
 				.reduce(function(a, e){
 					return (a[0] 
@@ -358,60 +368,77 @@ var TagsPrototype = {
 								|| matchSet(a[0], e))) ? 
 						a.slice(1) 
 						: a
-				}, a).length == 0
+				}, a)
+				.length == 0
 		}
 	},
-
+	// Search tags...
 	//
+	// 	Search the tags...
 	// 	.search(str)
-	// 	.search(regexp)
 	// 		-> matches
 	//
-	// 	.search(str, list)
-	// 	.search(regexp, list)
+	// 	Search the given list...
+	// 	.search(str, tag)
+	// 	.search(str, [tag, ..])
 	// 		-> matches
 	//
-	// XXX should this return a list of matching tags of a list of values???
-	// 		....or should we have a similar method to search values??
-	// XXX should we .match(..) the results???
-	// 		...not sure if this is needed as we are taking .tags() as input...
-	// 		on the other hand we'd need to normalize the search string somehow...
-	// 		...this will likely force us into using a special regexp-like 
-	// 		search syntax with special meanings given to ':' and '/' (and '\\')
-	// XXX should we merge this with .match(..) ???
+	//
+	// This is almost the same as .match(..) but each tag is treated as 
+	// a regexp...
+	// The rest of the tag set/path matching rules apply as-is.
+	//
+	//
+	// Signature differences between this and .match(..):
+	// 	1) .match(..) can return a bool:
+	// 			.match(tag, tag)
+	// 				-> bool
+	//
+	// 		while in the same conditions .search(..) will return a list:
+	// 			.search(tag, tag)
+	// 				-> list
+	//
+	// 		where list is empty list if not match was found.
+	//
+	// 	2) .search(..) will return individual matching tags:
+	// 			// setup a trivial example...
+	// 			var t = new Tags()
+	// 				.tag('a:b:c', 'x')
+	//
+	// 			// returns only the actual used tags...
+	// 			t.match('a')	// -> ['a:b:c']
+	//
+	// 			// also returns individual tag matches...
+	// 			t.search('a')	// -> ['a:b:c', 'a']
+	//
+	// 		NOTE: .search(..) will not build up all the possible matches
+	// 			(i.e. ['a:b:c', 'a:b', 'a:c', 'a']) and will only return
+	// 			the actual full match and an individual tag match...
+	// 			XXX should it???
 	search: function(query, tags){
 		var that = this
+	   	tags = tags == null ?
+				this.tags()
+			: tags instanceof Array ?
+				tags
+			: [tags]
 
-		var test = 
-			// predicate...
-			query instanceof Function ?
-				query
-			// regexp pattern...
-			// XXX should this be here???
-			: query instanceof RegExp ?
-				function(tag){ 
-					return query.test(tag) }
-			// string query...
-			: (function(){
-				query = query.split(/[\\\/]/g)
-					.map(function(t){
-						return t.includes(':') ?
-							t.split(/:+/g)
-							: t })
+		// build the search...
+		var index = new Map()
+		var cmp = function(a, b){
+			index.has(a)
+				|| index.set(a, new RegExp(a))
+			return index.get(a).test(b) }
 
-				return function(tag){
-					// XXX do the test...	
-					// XXX
-				} }())
-
-
-		return (tags || this.tags())
+		return tags
 			// split tags + include original list...
 			.run(function(){
 				return this
 					.concat(that.subTags(this)) 
 					.unique() })
-			.filter(test.bind(this)) },
+			.filter(function(t){
+				return that.match(query, t, cmp) }) },
+
 
 	// Introspection...
 	//
