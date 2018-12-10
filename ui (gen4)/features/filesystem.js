@@ -830,9 +830,7 @@ var makeBrowseProxy = function(action, callback){
 				var res = that[action](path, logger) 
 				callback && callback.call(that, path)
 				return res
-			})
-	})
-}
+			}) }) }
 
 
 // XXX show list of indexes when more than one are found....

@@ -89,7 +89,7 @@ var TagsClassPrototype = {
 			res.pop() 
 			: res
 	},
-	splitTag: function(...tags){
+	subTags: function(...tags){
 		tags = (tags.length == 1 && tags[0] instanceof Array) ? 
 			tags.pop() 
 			: tags
@@ -239,8 +239,8 @@ var TagsPrototype = {
 	// XXX Q: should this be .normalizeTags(..) ???
 	normalize: function(...tags){
 		return this.constructor.normalize.call(this, ...tags) },
-	splitTag: function(...tags){
-		return this.constructor.splitTag.call(this, ...tags) },
+	subTags: function(...tags){
+		return this.constructor.subTags.call(this, ...tags) },
 	// NOTE: the query parser is generic and thus is implemented in the
 	// 		constructor...
 	parseQuery: function(query){
@@ -378,27 +378,40 @@ var TagsPrototype = {
 	// 		on the other hand we'd need to normalize the search string somehow...
 	// 		...this will likely force us into using a special regexp-like 
 	// 		search syntax with special meanings given to ':' and '/' (and '\\')
-	search: function(str, tags){
-		// XXX should we do any pre-processing???
-		str = str instanceof RegExp ? str : RegExp(str)
-		return (tags || this._tags())
-			.filter(function(tag){
-				return str.test(tag) }) },
-
-	// XXX find a logical name...
-	// 		.searchable(..)
-	// 		.searchableTags(..)
-	// 		.expandedTags(..)
-	// 		...
-	// XXX should we combine this with tags???
-	_tags: function(...args){
+	// XXX should we merge this with .match(..) ???
+	search: function(query, tags){
 		var that = this
-		return this.tags(...args)
-			// include original list...
-			.run(function(){
-				return this.concat(that.splitTag(this)) })
-			.unique() },
 
+		var test = 
+			// predicate...
+			query instanceof Function ?
+				query
+			// regexp pattern...
+			// XXX should this be here???
+			: query instanceof RegExp ?
+				function(tag){ 
+					return query.test(tag) }
+			// string query...
+			: (function(){
+				query = query.split(/[\\\/]/g)
+					.map(function(t){
+						return t.includes(':') ?
+							t.split(/:+/g)
+							: t })
+
+				return function(tag){
+					// XXX do the test...	
+					// XXX
+				} }())
+
+
+		return (tags || this.tags())
+			// split tags + include original list...
+			.run(function(){
+				return this
+					.concat(that.subTags(this)) 
+					.unique() })
+			.filter(test.bind(this)) },
 
 	// Introspection...
 	//
@@ -463,6 +476,10 @@ var TagsPrototype = {
 				.unique()
 		}
 	},
+	// Same as .tags(..) but returns a list of single tags...
+	// XXX should we combine this with .tags(..) ???
+	singleTags: function(value, ...tags){
+		return this.subTags(this.tags(...arguments)).unique() },
 	//
 	// 	Get all values...
 	// 	.values()
