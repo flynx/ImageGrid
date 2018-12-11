@@ -323,7 +323,15 @@ var LifeCycleActions = actions.Actions({
 		return !this.__stop_handler },
 	isReady: function(){ 
 		return !!this.__ready },
-	
+	// XXX is this the right name for this???
+	get runtimeState(){
+		return this.isStarted() ? 
+				'started'
+			: this.isStarted() ? 
+				'stopped'
+			: this.isReady() ? 
+				'ready'
+			: undefined },
 
 	start: ['- System/', 
 		doc`Start core action/event

@@ -59,7 +59,7 @@ var URLHistoryActions = actions.Actions({
 	// 		will have no effect...
 	get url_history_pinned(){
 		var url_history = this.url_history
-		return Object.keys(url_history)
+		return Object.keys(url_history || {})
 			.reduce(function(res, k){ 
 				if(url_history[k].pinned){
 					res[k] = url_history[k]

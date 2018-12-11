@@ -114,6 +114,9 @@ module.CLI = core.ImageGridFeatures.Feature({
 					var argv = process.argv
 				}
 
+
+				var keep_running = false
+
 				// XXX this is not portable...
 				//var package = requirejs('fs-extra').readJSONSync('./package.json')
 
@@ -200,8 +203,7 @@ module.CLI = core.ImageGridFeatures.Feature({
 					})
 
 					.option('repl, --repl', 'start an ImageGrid REPL', function(){
-						// XXX this is broken in node for some reason...
-						var repl = requirejs('repl')
+						var repl = nodeRequire('repl')
 
 						// setup the global ns...
 						global.ig =
@@ -216,6 +218,8 @@ module.CLI = core.ImageGridFeatures.Feature({
 						repl.start({
 							prompt: 'ig> ',
 
+							useGlobal: true,
+
 							input: process.stdin,
 							output: process.stdout,
 
@@ -229,11 +233,15 @@ module.CLI = core.ImageGridFeatures.Feature({
 					// 			npm link nwjs
 					// 			nw install 0.14.5-sdk
 					.option('gui, --gui', 'start ImageGrid.Viewer', function(){
+						throw new Error('ig: GUI startup not implemented.')
+
 						var path = requirejs('path')
 
 						requirejs('child_process')
 							.spawn(requirejs('nwjs'), [
 								path.dirname(process.argv[1]).replace(/\\/g, '/') + '/'])
+
+						keep_running = true
 					})
 
 					// XXX the problem with this is that it still tires 
@@ -251,11 +259,19 @@ module.CLI = core.ImageGridFeatures.Feature({
 					.action(function(action, args){
 						// XXX
 						//console.log('>>>>', action, args, !!that[action])
+						if(!that[action]){
+							console.error('No such action:', action)
+							return
+						}
 
 						that[action](args)
 					})
 
 					.parse(argv)
+
+
+				!keep_running
+					&& this.stop()
 			}]
 	],
 })
