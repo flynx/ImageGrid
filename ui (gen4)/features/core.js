@@ -325,12 +325,12 @@ var LifeCycleActions = actions.Actions({
 		return !!this.__ready },
 	// XXX is this the right name for this???
 	get runtimeState(){
-		return this.isStarted() ? 
-				'started'
-			: this.isStarted() ? 
+		return this.isStopped() ? 
 				'stopped'
 			: this.isReady() ? 
 				'ready'
+			: this.isStarted() ? 
+				'started'
 			: undefined },
 
 	start: ['- System/', 

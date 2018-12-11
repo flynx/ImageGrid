@@ -36,9 +36,9 @@ var ExampleActions = actions.Actions({
 	// 		i.e. once defined it can't be overwritten...
 	exampleAction: ['Test/Action',
 		function(){
-			console.log('>>>', [...arguments])
+			console.log('>>>', ...arguments)
 			return function(){
-				console.log('<<<', [...arguments]) }}],
+				console.log('<<<', ...arguments) }}],
 	exampleActionFull: ['- Test/',
 		core.doc`Example full action long documentation string
 		`,
@@ -61,6 +61,22 @@ var ExampleActions = actions.Actions({
 		})],
 	exampleAliasDebounced: ['Test/',
 		core.debounce(1000, 'exampleAction: ...')],
+
+	exampleAfterActionCall: ['Test/',
+		function(){
+			// schedule a call after the action is done...
+			this.afterAction('local',
+				function(){ console.log('exampleAfterActionCall: done.') })
+			// schedule a call after the top action call...
+			this.afterAction('top', 
+				function(){ console.log('exampleAfterActionCall: final done.') })
+		}],
+	exampleNestedAfterActionCall: ['Test/',
+		function(){
+			this.afterAction(function(){ console.log('exampleNestedAfterActionCall: done.') })
+
+			this.exampleAfterActionCall()
+		}],
 
 	// a normal method...
 	exampleMethod: function(){
@@ -284,7 +300,11 @@ module.Example = core.ImageGridFeatures.Feature({
 	// XXX make this not applicable in production...
 
 	handlers: [
-		['exampleAsyncAction.pre exampleSyncAction.pre',
+		[[
+			'exampleAsyncAction.pre',
+			'exampleSyncAction.pre',
+			'exampleAfterActionCall.pre',
+		], 
 			function(){
 				console.log('PRE')
 				return function(){

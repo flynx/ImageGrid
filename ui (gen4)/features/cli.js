@@ -98,7 +98,7 @@ module.CLI = core.ImageGridFeatures.Feature({
 	actions: CLIActions,
 
 	handlers: [
-		['start',
+		['ready',
 			function(){
 				var that = this
 				// get the arguments...
@@ -205,6 +205,8 @@ module.CLI = core.ImageGridFeatures.Feature({
 					.option('repl, --repl', 'start an ImageGrid REPL', function(){
 						var repl = nodeRequire('repl')
 
+						keep_running = true
+
 						// setup the global ns...
 						global.ig =
 						global.ImageGrid = 
@@ -214,17 +216,21 @@ module.CLI = core.ImageGridFeatures.Feature({
 						global.ImageGridFeatures = core.ImageGridFeatures
 
 						//var ig = core.ImageGridFeatures
+						
+						repl
+							.start({
+								prompt: 'ig> ',
 
-						repl.start({
-							prompt: 'ig> ',
+								useGlobal: true,
 
-							useGlobal: true,
+								input: process.stdin,
+								output: process.stdout,
 
-							input: process.stdin,
-							output: process.stdout,
-
-							//ignoreUndefined: true,
-						})
+								//ignoreUndefined: true,
+							})
+							.on('exit', function(){
+								ig.stop()
+							})
 					})
 
 					// XXX this needs both a local/linked nwjs installed and an 
@@ -270,9 +276,16 @@ module.CLI = core.ImageGridFeatures.Feature({
 					.parse(argv)
 
 
+				// XXX is this the right way to trigger state change 
+				// 		from within a state action...
 				!keep_running
-					&& this.stop()
-			}]
+					&& this.afterAction(function(){ process.exit() })
+			}],
+		/*
+		['stop',
+			function(){
+				console.log('STOP') }],
+		//*/
 	],
 })
 

@@ -10,8 +10,6 @@
 
 require('v8-compile-cache')
 // NOTE: this fixes several issues with lib/util conflicting with stuff...
-// 		XXX this might also pose some other issues within the repl, needs
-// 		testing...
 require('repl')
 
 require('./cfg/requirejs')

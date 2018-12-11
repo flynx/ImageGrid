@@ -200,7 +200,7 @@ var TagsPrototype = {
 	// data...
 	//
 	// Format:
-	// 	[ <tag>, ... ]
+	// 	Set([ <tag>, ... ])
 	//
 	// XXX Q: should these be normalized???
 	__persistent_tags: null,
@@ -220,6 +220,43 @@ var TagsPrototype = {
 	// 		...
 	// 	}
 	__index: null,
+
+	// XXX
+	// XXX need a way to edit the compound tag...
+	__special_tag_handlers__: {
+		'*persistent*': function(action, tag, value){
+			// XXX remove the tag...
+			// XXX add the tag to .__persistent_tags
+			// XXX return the new tag for normal handling...
+		},
+	},
+	handleSpecialTag: function(action, tag, value){
+		var that = this
+		var handlers = this.__special_tag_handlers__ || {}
+
+		// get the matching handler key...
+		var key = Object.keys(handlers)
+			.filter(function(k){ 
+				return that.match(k, tag) })
+			// XXX should we handle multiple matches???
+			.shift()
+
+		// resolve handler aliases...
+		var match = key
+		do {
+			match = handlers[match]	
+		} while(!(match instanceof Function) && match in handlers)
+
+		// no handler...
+		if(!(match instanceof Function)){
+			// XXX
+			return false
+		}
+
+		// XXX remove key from tag...
+
+		return match.call(this, action, tag, value)
+	},
 
 
 	// Utils...
@@ -298,6 +335,8 @@ var TagsPrototype = {
 	//
 	//
 	// NOTE: this is not symmetric e.g. a will match a:b but not vice-versa.
+	//
+	// XXX BUG: /aaa matching...
 	match: function(a, b, cmp){
 		var that = this
 
@@ -433,6 +472,28 @@ var TagsPrototype = {
 	get length(){
 		return this.values().length },
 
+	// Toggle a tag to persistent/non-persistent...
+	//
+	// A persistent is not removed when untagging a value.
+	//
+	//	.togglePersistent(tag)
+	//	.togglePersistent(tag, tag, ...)
+	//	.togglePersistent([tag, tag, ...])
+	//		-> states
+	//
+	//	.togglePersistent(tag, action)
+	//	.togglePersistent(tag, tag, ..., action)
+	//	.togglePersistent([tag, tag, ...], action)
+	//		-> states
+	//
+	//
+	// action can be:
+	// 	'on'		- toggle all tags on
+	// 	'off'		- toggle all off
+	// 	'toggle'	- toggle all depending on initial state
+	// 	'?'			- return list of states
+	//
+	//
 	// XXX one way to play with this is to add a special tag to set/path
 	// 		to make it persistent...
 	// 		Example:
@@ -444,9 +505,27 @@ var TagsPrototype = {
 	// 		We would need "virtual" tags for this, i.e. tags that are 
 	// 		not actually added to the index but are used for system 
 	// 		stuff...
-	// XXX need a way to add/remove these...
-	persistent: function(){
-		// XXX
+	togglePersistent: function(...tags){
+		action = ['on', 'off', 'toggle', '?'].includes(tags[tags.length-1]) ?
+			tags.pop()
+			: 'toggle'
+		tags = tags[0] instanceof Array && tags.length == 1 ? tags.pop() : tags
+
+		var persistent = this.__persistent_tags = this.__persistent_tags || new Set()
+
+		return tags
+			.map(function(tag){
+				return action == 'on' ?
+						(persistent.add(tag), 'on')
+					: action == 'off' ?
+						(persistent.delete(tag), 'off')
+					: action == 'toggle' ?
+						(persistent.has(tag) ?
+							(persistent.delete(tag), 'off')
+							: (persistent.add(tag), 'on'))
+					: (persistent.has(tag) ?
+						'on' 
+						: 'off') })
 	},
 
 	// XXX can these be faster???
@@ -517,7 +596,7 @@ var TagsPrototype = {
 		// get all tags...
 		} else {
 			return Object.keys(this.__index || {})
-				.concat((this.__persistent_tags || [])
+				.concat([...(this.__persistent_tags || [])]
 					.map(function(t){ 
 						return that.normalizeTags(t) }))
 				.unique()
@@ -1085,8 +1164,8 @@ var TagsPrototype = {
 			&& (res.aliases = Object.assign({}, this.__aliases))
 
 		// persistent tags...
-		this.__persistent_tags && this.__persistent_tags.length > 0
-			&& (res.persistent = this.__persistent_tags.slice())
+		this.__persistent_tags && this.__persistent_tags.size > 0
+			&& (res.persistent = [...this.__persistent_tags])
 
 		// tags...
 		res.tags = {}
@@ -1106,7 +1185,7 @@ var TagsPrototype = {
 
 		// persistent tags...
 		json.persistent
-			&& (this.__persistent_tags = json.persistent.slice())
+			&& (this.__persistent_tags = new Set(json.persistent))
 
 		// tags...
 		json.tags
