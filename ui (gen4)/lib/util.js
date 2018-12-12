@@ -8,23 +8,11 @@
 /*********************************************************************/
 
 
-/*********************************************************************/
+//---------------------------------------------------------------------
+// Object...
 
-String.prototype.capitalize = function(){
-	return this == '' ? 
-		this 
-		: this[0].toUpperCase() + this.slice(1) }
-
-
-// XXX not sure if this has to be a utility or a method...
-Object.get = function(obj, name, dfl){
-	var val = obj[name]
-	if(val === undefined && dfl != null){
-		return dfl
-	}
-	return val
-}
-
+// Run a function in the context of an object...
+//
 Object.defineProperty(Object.prototype, 'run', {
 	enumerable: false,
 	value: function(func){
@@ -33,6 +21,37 @@ Object.defineProperty(Object.prototype, 'run', {
 	},
 })
 
+
+// Get all the accessible keys...
+//
+// This is different to Object.keys(..) in that this will return keys
+// from all the prototypes in the inheritance chain while .keys(..) will 
+// only return the keys defined in the current object only.
+Object.deepKeys = function(obj){
+	var res = []
+	while(obj != null){
+		res = res.concat(Object.keys(obj))
+		obj = obj.__proto__
+	}
+	return res.unique()
+}
+
+
+// Make a full key set copy of an object...
+//
+// NOTE: this will not deep-copy the values...
+Object.flatCopy = function(obj){
+	var res = {}
+	Object.deepKeys(obj).forEach(function(key){
+		res[key] = obj[key]
+	})
+	return res
+}
+
+
+
+//---------------------------------------------------------------------
+// Array...
 
 // Array.prototype.flat polyfill...
 //
@@ -46,36 +65,11 @@ Array.prototype.flat
 				: [e]) }, []) })
 
 
-// Extended map...
+// Array.prototype.includes polyfill...
 //
-// 	.emap(func)
-// 		-> array
-//
-// func has the same input signature used in .map(..) but returns an array
-// that will be merged into the resulting array. This frees us from the
-// 1:1 nature of .map(..) and adds the ability to return 0 or more items 
-// on each iteration.
-//
-//
-// Example:
-// 	// double each item... 
-// 	;[1, 2, 3]
-// 		.emap(function(e){ return [e, e] })
-// 			// -> [1, 1, 2, 2, 3, 3]
-//
-//	// filter-like behaviour...
-//	;[1, 2, 3]
-//		.emap(function(e){ retunr e%2 == 0 ? [] : e })
-//			// -> [2]
-//
-//
-// NOTE: if func returns a non-Array it will be placed in the resulting 
-// 		array as-is...
-// NOTE: to return an explicit array, wrap it in an array, e.g:
-// 		;[1, 2, 3]
-// 			.emap(function(e){ return [[e]] })
-// 				// -> [[1], [2], [3]]
-Array.prototype.emap = function(func){ return this.map(func).flat() } 
+Array.prototype.includes
+	|| (Array.prototype.includes = function(value){
+		return this.indexOf(value) >= 0 }) 
 
 
 // Compact a sparse array...
@@ -86,14 +80,6 @@ Array.prototype.compact = function(){
 
 
 // like .length but for sparse arrays will return the element count...
-// XXX make this a prop...
-/*
-Array.prototype.len = function(){
-	//return this.compact().length
-	return Object.keys(this).length
-}
-*/
-
 Object.defineProperty(Array.prototype, 'len', {
 	get : function () {
 		return Object.keys(this).length
@@ -104,7 +90,6 @@ Object.defineProperty(Array.prototype, 'len', {
 	// 		without any side-effects...
 	configurable: true,
 });
-
 
 
 // Convert an array to object...
@@ -187,6 +172,7 @@ Array.prototype.cmp = function(other){
 	return true
 }
 
+
 // Compare two Arrays as sets...
 //
 // This will ignore order
@@ -214,6 +200,10 @@ Array.prototype.sortAs = function(other){
 }
 
 
+
+//---------------------------------------------------------------------
+// Set...
+
 // Set set operation shorthands...
 // XXX should these accept lists of sets???
 Set.prototype.unite = function(other){ 
@@ -228,45 +218,8 @@ Set.prototype.subtract = function(other){
 		.filter(function(e){ return !other[test](e) })) }
 
 
-module.chainCmp = function(cmp_chain){
-	return function(a, b, get, data){
-		var res
-		for(var i=0; i < cmp_chain.length; i++){
-			res = cmp_chain[i](a, b, get, data)
-			if(res != 0){
-				return res
-			}
-		}
-		return res
-	}
-} 
-
-
-// Get all the accessible keys...
-//
-// This is different to Object.keys(..) in that this will return keys
-// from all the prototypes while .keys(..) will only return the keys
-// defined in the last layer.
-Object.deepKeys = function(obj){
-	var res = []
-	while(obj != null){
-		res = res.concat(Object.keys(obj))
-		obj = obj.__proto__
-	}
-	return res.unique()
-}
-
-// Make a full key set copy of an object...
-//
-// NOTE: this will not deep-copy the values...
-Object.flatCopy = function(obj){
-	var res = {}
-	Object.deepKeys(obj).forEach(function(key){
-		res[key] = obj[key]
-	})
-	return res
-}
-
+//---------------------------------------------------------------------
+// RegExp...
 
 // Quote a string and convert to RegExp to match self literally.
 var quoteRegExp =
@@ -277,97 +230,20 @@ function(str){
 }
 
 
-// XXX do we need to quote anything else???
-var path2url =
-module.path2url =
-function(path){
-	// test if we have a schema, and if yes return as-is...
-	if(/^(data|http|https|file|[\w-]*):[\\\/]{2}/.test(path)){
-		return path
-	}
-	// skip encoding windows drives...
-	path = path
-		.split(/[\\\/]/g)
-	drive = path[0].endsWith(':') ?
-		path.shift() + '/'
-		: ''
-	return drive + (path
-		// XXX these are too aggressive...
-		//.map(encodeURI)
-		//.map(encodeURIComponent)
-		.join('/')
-		// NOTE: keep '%' the first...
-		.replace(/%/g, '%25')
-		.replace(/#/g, '%23')
-		.replace(/&/g, '%26'))
-}
 
+//---------------------------------------------------------------------
+// String...
 
-// NOTE: we are not using node's path module as we need this to work in
-// 		all contexts, not only node... (???)
-var normalizePath = 
-module.normalizePath =
-function(path){
-	return typeof(path) == typeof('str') ? path
-			// normalize the slashes...
-			.replace(/\\/g, '/')
-			// remove duplicate '/'
-			.replace(/(\/)\1+/g, '/')
-			// remove trailing '/'
-			.replace(/\/+$/, '')
-			// take care of .
-			.replace(/\/\.\//g, '/')
-			.replace(/\/\.$/, '')
-			// take care of ..
-			.replace(/\/[^\/]+\/\.\.\//g, '/')
-			.replace(/\/[^\/]+\/\.\.$/, '')
-		: path
-}
+String.prototype.capitalize = function(){
+	return this == '' ? 
+		this 
+		: this[0].toUpperCase() + this.slice(1) }
 
 
 
-/*********************************************************************/
+//---------------------------------------------------------------------
+// Date...
 
-var selectElemText =
-module.selectElemText = 
-function(elem){
-	var range = document.createRange()
-	range.selectNodeContents(elem)
-	var sel = window.getSelection()
-	sel.removeAllRanges()
-	sel.addRange(range)
-}
-
-
-// XXX make this global...
-var getCaretOffset = 
-module.getCaretOffset =
-function(elem){
-	var s = window.getSelection()
-	if(s.rangeCount == 0){
-		return -1
-	}
-	var r = s.getRangeAt(0)
-	var pre = r.cloneRange()
-	pre.selectNodeContents(elem)
-	pre.setEnd(r.endContainer, r.endOffset)
-	return pre.toString().length || 0
-}
-
-
-var selectionCollapsed =
-module.selectionCollapsed =
-function(elem){
-		var s = window.getSelection()
-		if(s.rangeCount == 0){
-			return false
-		}
-		return s.getRangeAt(0).cloneRange().collapsed
-}
-
-
-
-/*********************************************************************/
 // NOTE: repatching a date should not lead to any side effects as this
 // 		does not add any state...
 var patchDate =
@@ -453,8 +329,115 @@ patchDate()
 
 
 
-/*********************************************************************/
+//---------------------------------------------------------------------
+// Misc...
 
+module.chainCmp = function(cmp_chain){
+	return function(a, b, get, data){
+		var res
+		for(var i=0; i < cmp_chain.length; i++){
+			res = cmp_chain[i](a, b, get, data)
+			if(res != 0){
+				return res
+			}
+		}
+		return res
+	}
+} 
+
+
+// XXX do we need to quote anything else???
+var path2url =
+module.path2url =
+function(path){
+	// test if we have a schema, and if yes return as-is...
+	if(/^(data|http|https|file|[\w-]*):[\\\/]{2}/.test(path)){
+		return path
+	}
+	// skip encoding windows drives...
+	path = path
+		.split(/[\\\/]/g)
+	drive = path[0].endsWith(':') ?
+		path.shift() + '/'
+		: ''
+	return drive + (path
+		// XXX these are too aggressive...
+		//.map(encodeURI)
+		//.map(encodeURIComponent)
+		.join('/')
+		// NOTE: keep '%' the first...
+		.replace(/%/g, '%25')
+		.replace(/#/g, '%23')
+		.replace(/&/g, '%26'))
+}
+
+
+// NOTE: we are not using node's path module as we need this to work in
+// 		all contexts, not only node... (???)
+var normalizePath = 
+module.normalizePath =
+function(path){
+	return typeof(path) == typeof('str') ? path
+			// normalize the slashes...
+			.replace(/\\/g, '/')
+			// remove duplicate '/'
+			.replace(/(\/)\1+/g, '/')
+			// remove trailing '/'
+			.replace(/\/+$/, '')
+			// take care of .
+			.replace(/\/\.\//g, '/')
+			.replace(/\/\.$/, '')
+			// take care of ..
+			.replace(/\/[^\/]+\/\.\.\//g, '/')
+			.replace(/\/[^\/]+\/\.\.$/, '')
+		: path
+}
+
+
+
+/*********************************************************************/
+// HTML/DOM/jQuery...
+
+var selectElemText =
+module.selectElemText = 
+function(elem){
+	var range = document.createRange()
+	range.selectNodeContents(elem)
+	var sel = window.getSelection()
+	sel.removeAllRanges()
+	sel.addRange(range)
+}
+
+
+// XXX make this global...
+var getCaretOffset = 
+module.getCaretOffset =
+function(elem){
+	var s = window.getSelection()
+	if(s.rangeCount == 0){
+		return -1
+	}
+	var r = s.getRangeAt(0)
+	var pre = r.cloneRange()
+	pre.selectNodeContents(elem)
+	pre.setEnd(r.endContainer, r.endOffset)
+	return pre.toString().length || 0
+}
+
+
+var selectionCollapsed =
+module.selectionCollapsed =
+function(elem){
+		var s = window.getSelection()
+		if(s.rangeCount == 0){
+			return false
+		}
+		return s.getRangeAt(0).cloneRange().collapsed
+}
+
+
+
+//---------------------------------------------------------------------
 // XXX experiment
 if(typeof(jQuery) != typeof(undefined)){
 	jQuery.fn._drag = function(){

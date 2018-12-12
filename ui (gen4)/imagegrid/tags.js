@@ -509,11 +509,15 @@ var TagsPrototype = {
 		action = ['on', 'off', 'toggle', '?'].includes(tags[tags.length-1]) ?
 			tags.pop()
 			: 'toggle'
-		tags = tags[0] instanceof Array && tags.length == 1 ? tags.pop() : tags
+		tags = (tags[0] instanceof Array && tags.length == 1) ? 
+			tags.pop() 
+			: tags
 
-		var persistent = this.__persistent_tags = this.__persistent_tags || new Set()
+		var persistent = 
+			this.__persistent_tags = 
+				this.__persistent_tags || new Set()
 
-		return tags
+		return this.normalizeTags(tags)
 			.map(function(tag){
 				return action == 'on' ?
 						(persistent.add(tag), 'on')
