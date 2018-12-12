@@ -472,66 +472,6 @@ var TagsPrototype = {
 	get length(){
 		return this.values().length },
 
-	// Toggle a tag to persistent/non-persistent...
-	//
-	// A persistent is not removed when untagging a value.
-	//
-	//	.togglePersistent(tag)
-	//	.togglePersistent(tag, tag, ...)
-	//	.togglePersistent([tag, tag, ...])
-	//		-> states
-	//
-	//	.togglePersistent(tag, action)
-	//	.togglePersistent(tag, tag, ..., action)
-	//	.togglePersistent([tag, tag, ...], action)
-	//		-> states
-	//
-	//
-	// action can be:
-	// 	'on'		- toggle all tags on
-	// 	'off'		- toggle all off
-	// 	'toggle'	- toggle all depending on initial state
-	// 	'?'			- return list of states
-	//
-	//
-	// XXX one way to play with this is to add a special tag to set/path
-	// 		to make it persistent...
-	// 		Example:
-	// 			.tag('abc', ...)	-> 'abc' is a normal tag...
-	//
-	// 			.tag('persistent:abc', ...)	-> 'abc' is persistent...
-	// 			.tag('persistent/abc', ...)	-> 'abc' is persistent...
-	//
-	// 		We would need "virtual" tags for this, i.e. tags that are 
-	// 		not actually added to the index but are used for system 
-	// 		stuff...
-	togglePersistent: function(...tags){
-		action = ['on', 'off', 'toggle', '?'].includes(tags[tags.length-1]) ?
-			tags.pop()
-			: 'toggle'
-		tags = (tags[0] instanceof Array && tags.length == 1) ? 
-			tags.pop() 
-			: tags
-
-		var persistent = 
-			this.__persistent_tags = 
-				this.__persistent_tags || new Set()
-
-		return this.normalizeTags(tags)
-			.map(function(tag){
-				return action == 'on' ?
-						(persistent.add(tag), 'on')
-					: action == 'off' ?
-						(persistent.delete(tag), 'off')
-					: action == 'toggle' ?
-						(persistent.has(tag) ?
-							(persistent.delete(tag), 'off')
-							: (persistent.add(tag), 'on'))
-					: (persistent.has(tag) ?
-						'on' 
-						: 'off') })
-	},
-
 	// XXX can these be faster???
 	// XXX should these take multiple values???
 	hasTag: function(tag){
@@ -550,6 +490,7 @@ var TagsPrototype = {
 		}
 		return false
 	},
+
 
 
 	// Tags present in the system...
@@ -805,6 +746,67 @@ var TagsPrototype = {
 						: (!pattern ? 
 							(that.tag(tag, v), true) 
 							: null) }) },
+
+	// Toggle a tag to persistent/non-persistent...
+	//
+	// A persistent is not removed when untagging a value.
+	//
+	//	.togglePersistent(tag)
+	//	.togglePersistent(tag, tag, ...)
+	//	.togglePersistent([tag, tag, ...])
+	//		-> states
+	//
+	//	.togglePersistent(tag, action)
+	//	.togglePersistent(tag, tag, ..., action)
+	//	.togglePersistent([tag, tag, ...], action)
+	//		-> states
+	//
+	//
+	// action can be:
+	// 	'on'		- toggle all tags on
+	// 	'off'		- toggle all off
+	// 	'toggle'	- toggle all depending on initial state
+	// 	'?'			- return list of states
+	//
+	//
+	// XXX one way to play with this is to add a special tag to set/path
+	// 		to make it persistent...
+	// 		Example:
+	// 			.tag('abc', ...)	-> 'abc' is a normal tag...
+	//
+	// 			.tag('persistent:abc', ...)	-> 'abc' is persistent...
+	// 			.tag('persistent/abc', ...)	-> 'abc' is persistent...
+	//
+	// 		We would need "virtual" tags for this, i.e. tags that are 
+	// 		not actually added to the index but are used for system 
+	// 		stuff...
+	togglePersistent: function(...tags){
+		action = ['on', 'off', 'toggle', '?'].includes(tags[tags.length-1]) ?
+			tags.pop()
+			: 'toggle'
+		tags = (tags[0] instanceof Array && tags.length == 1) ? 
+			tags.pop() 
+			: tags
+
+		var persistent = 
+			this.__persistent_tags = 
+				this.__persistent_tags || new Set()
+
+		return this.normalizeTags(tags)
+			.map(function(tag){
+				return action == 'on' ?
+						(persistent.add(tag), 'on')
+					: action == 'off' ?
+						(persistent.delete(tag), 'off')
+					: action == 'toggle' ?
+						(persistent.has(tag) ?
+							(persistent.delete(tag), 'off')
+							: (persistent.add(tag), 'on'))
+					: (persistent.has(tag) ?
+						'on' 
+						: 'off') })
+	},
+
 	
 
 	// Tag set/list API...
