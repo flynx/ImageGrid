@@ -53,6 +53,7 @@ var TagsClassPrototype = {
 	// 		or
 	// 			c:b/a -> b/a:c		- sort paths within sets
 	// XXX should we support priority braces, i.e. c:(b/a)
+	// XXX do we support leading '/' ???
 	normalizeTags: function(...tags){
 		var that = this
 		var tagRemovedChars = (this.config || {})['tagRemovedChars']
@@ -75,13 +76,16 @@ var TagsClassPrototype = {
 						.map(function(e){
 							return e
 								.split(/:+/g)
+								// remove empty set members...
+								.filter(function(t){ 
+									return t != '' })
+								.unique()
 								.sort()
 								.join(':') })
+						// NOTE: this also kills the leading '/'
+						.filter(function(t){ 
+							return t != '' })
 						.join('/') })
-					// sort sets containing paths...
-					//.split(/:/g)
-					//	.sort()
-					//	.join(':') })
 			.unique()
 		return (tags.length == 1 && !(tags[0] instanceof Array)) ? 
 			// NOTE: if we got a single tag return it as a single tag...
@@ -509,6 +513,7 @@ var TagsPrototype = {
 	//	.tags(value, [tag, ..])
 	//		-> bool
 	//
+	//
 	// NOTE: this includes all the .persistent tags as well as all the 
 	// 		tags actually used.
 	//
@@ -806,6 +811,101 @@ var TagsPrototype = {
 						'on' 
 						: 'off') })
 	},
+
+	//
+	// 	Rename tag...
+	// 	.renameTag(from, to)
+	// 		-> this
+	//
+	// 	Rename a tag in list of tags...
+	// 	.renameTag(from, to, tag, ...)
+	// 	.renameTag(from, to, [tag, ...])
+	// 		-> tags
+	//
+	// NOTE: if to is '' this will remove all occurrences of from.
+	// NOTE: if any renamed tag is renamed to '' it will be removed 
+	// 		untagging all relevant values...
+	//
+	// XXX need to sanitize from -- it can not contain regex characters...
+	// 		...should we guard against this???
+	// XXX should both sides of the alias be renamed???
+	renameTag: function(from, to, ...tags){
+		var that = this
+
+		from = this.normalizeTags(from)
+		if(from == ''){
+			throw new Error(`.renameTag(..): first argument can not be an empty string.`) }
+		if(/[:\\\/]/.test(from)){
+			throw new Error(
+				`.renameTag(..): only support singular tag renaming, got: "${from}"`) }
+		// XXX too strict???
+		if(!/^[a-z0-9]+$/.test(from)){
+			throw new Error(
+				`.renameTag(..): first argument must be a valid single tag, got: "${from}"`) }
+
+		to = this.normalizeTags(to)
+		if(/[\\\/]/.test(to)){
+			throw new Error(
+				`.renameTag(..): only support tags and tag sets as renaming target, got: "${to}"`) }
+
+		tags = new Set((tags[0] instanceof Array && tags.length == 1) ? 
+			tags[0]
+			: tags)
+
+		// prepare for the replacement...
+		var pattern = new RegExp(`(^|[:\\\\\\/])${from}(?=$|[:\\\\\\/])`, 'g')
+		var target = `$1${to}` 
+
+		var patchSet = function(s){
+			that.match(from, [...s || []])
+				.forEach(function(tag){
+					s.delete(tag)
+					var t = that.normalizeTags(tag.replace(pattern, target))
+					t != ''
+						&& s.add(t)
+				}) 
+			return s 
+		}
+		var patchObj = function(o, patchValue){
+			that.match(from, Object.keys(o || {}))
+				.forEach(function(tag){
+					var value = o[tag]
+					delete o[tag]
+					var t = that.normalizeTags(tag.replace(pattern, target))
+					t != ''
+						&& (o[t] = value)
+				}) 
+			patchValue 
+				&& Object.keys(o || {})
+					.forEach(function(tag){
+						var v = o[tag]
+						if(that.match(from, v)){
+							var t = that.normalizeTags(v.replace(pattern, target))
+							t == '' ?
+								(delete o[tag])
+								: (o[tag] = t)
+						}
+					})
+			return o 
+		}
+
+		// rename tags in list...
+		if(arguments.length > 2){
+			return [...patchSet(tags)]
+
+		// rename actual data...
+		} else {
+			patchSet(this.__persistent_tags || [])
+			patchObj(this.__index || {})
+			patchObj(this.__aliases || {}, true)
+		}
+		
+		return this
+	},
+	// NOTE: this is a short hand to .renameTag(tag, '', ..) for extra 
+	// 		docs see that...
+	removeTag: function(tag, ...tags){
+		return this.renameTag(tag, '', ...tags) },
 
 	
 
