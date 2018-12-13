@@ -32,6 +32,17 @@ var util = require('lib/util')
 
 
 /*********************************************************************/
+// Helpers...
+
+// normalize a split to either contain multiple values or a list...
+var splitOrList = function(args){
+	return (args.length == 1 && args[0] instanceof Array) ? 
+		args.pop() 
+		: args }
+
+
+
+/*********************************************************************/
 
 var TagsClassPrototype = {
 	// Utils...
@@ -62,10 +73,7 @@ var TagsClassPrototype = {
 			: typeof(tagRemovedChars) == typeof('str') ?
 				new RegExp(tagRemovedChars, 'g')
 			: /[\s-_]/g
-		var res = (tags.length == 1 && tags[0] instanceof Array) ? 
-			tags.pop() 
-			: tags
-		res = res
+		var res = splitOrList(tags)
 			.map(function(tag){
 				return tag
 					.trim()
@@ -93,10 +101,7 @@ var TagsClassPrototype = {
 			: res
 	},
 	subTags: function(...tags){
-		tags = (tags.length == 1 && tags[0] instanceof Array) ? 
-			tags.pop() 
-			: tags
-		return this.normalize(tags)
+		return this.normalize(splitOrList(tags))
 			.map(function(tag){
 				return tag.split(/[:\\\/]/g) })
 			.flat()
@@ -595,9 +600,7 @@ var TagsPrototype = {
 
 		// check if value is tagged by tags..,
 		if(value && tags.length > 0){
-			tags = tags.length == 1 && tags[0] instanceof Array ?
-				tags.shift()
-				: tags
+			tags = splitOrList(tags)
 			var u = this.tags(value)
 			while(tags.length > 0){
 				if(this.match(tags.shift(), u).length == 0){
@@ -634,7 +637,7 @@ var TagsPrototype = {
 		return this.tags(value)
 			.filter(function(tag){ return /[\\\/]/.test(tag) }) },
 	// XXX should this support ...tags???
-	sets: function(){
+	sets: function(value){
 		return this.tags(value)
 			.filter(function(tag){ return tag.includes(':') }) },
 	//
@@ -870,9 +873,7 @@ var TagsPrototype = {
 		action = ['on', 'off', 'toggle', '?'].includes(tags[tags.length-1]) ?
 			tags.pop()
 			: 'toggle'
-		tags = (tags[0] instanceof Array && tags.length == 1) ? 
-			tags.pop() 
-			: tags
+		tags = splitOrList(tags)
 
 		var persistent = 
 			this.__persistent_tags = 
@@ -930,9 +931,7 @@ var TagsPrototype = {
 			throw new Error(
 				`.rename(..): only support tags and tag sets as renaming target, got: "${to}"`) }
 
-		tags = new Set((tags[0] instanceof Array && tags.length == 1) ? 
-			tags[0]
-			: tags)
+		tags = new Set(splitOrList(tags))
 
 		// prepare for the replacement...
 		var pattern = new RegExp(`(^|[:\\\\\\/])${tag}(?=$|[:\\\\\\/])`, 'g')
@@ -997,9 +996,7 @@ var TagsPrototype = {
 	// 		-> this
 	//
 	remove: function(...values){
-		values = (values.length == 1 && values[0] instanceof Array) ? 
-			values.pop() 
-			: values
+		values = splitOrList(values)
 		var res = this.clone()
 
 		Object.entries(res.__index || {})
@@ -1016,9 +1013,7 @@ var TagsPrototype = {
 	// 		-> this
 	//
 	keep: function(...values){
-		values = (values.length == 1 && values[0] instanceof Array) ? 
-			values.pop() 
-			: values
+		values = splitOrList(values)
 		var res = this.clone()
 
 		Object.entries(res.__index || {})
@@ -1030,11 +1025,14 @@ var TagsPrototype = {
 
 	// Join 1 or more Tags objects...
 	//
-	// XXX should this be join or add???
+	//	.join(other, ..)
+	//	.join([other, ..])
+	//		-> this
+	//
 	join: function(...others){
 		var that = this
 		var index = this.__index || {}
-		others
+		splitOrList(others)
 			.forEach(function(other){
 				Object.entries(other.__index || {})
 					.forEach(function(e){
