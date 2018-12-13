@@ -441,6 +441,7 @@ var TagsPrototype = {
 			return that.directMatch(tag, cmp)
 				.filter(function(t){ 
 					return /[\\\/]/.test(t) }) }
+
 		// search the path tree...
 		// NOTE: this will stop the search on first hit...
 		var search = function(tag, seen){
@@ -514,7 +515,6 @@ var TagsPrototype = {
 	// 			(i.e. ['a:b:c', 'a:b', 'a:c', 'a']) and will only return
 	// 			the actual full match and an individual tag match...
 	// 			XXX should it???
-	// XXX should this search up the path???
 	search: function(query, tags){
 		var that = this
 	   	tags = tags == null ?
@@ -984,28 +984,29 @@ var TagsPrototype = {
 		
 		return this
 	},
+
 	// NOTE: this is a short hand to .rename(tag, '', ..) for extra 
 	// 		docs see that...
 	removeTag: function(tag, ...tags){
 		return this.rename(tag, '', ...tags) },
 
-	
-
-	// Tag set/list API...
+	// Remove the given values...
 	//
-	// XXX should this be join or add???
-	join: function(...others){
-		var that = this
-		var index = this.__index || {}
-		others
-			.forEach(function(other){
-				Object.entries(other.__index || {})
-					.forEach(function(e){
-						index[e[0]] = new Set([...(index[e[0]] || []), ...e[1]]) }) })
-		Object.keys(index).length > 0 
-			&& this.__index == null
-			&& (this.__index = index)
-		return this
+	// 	.remove(value, ..)
+	// 	.remove([value, ..])
+	// 		-> this
+	//
+	remove: function(...values){
+		values = (values.length == 1 && values[0] instanceof Array) ? 
+			values.pop() 
+			: values
+		var res = this.clone()
+
+		Object.entries(res.__index || {})
+			.forEach(function(e){
+				res.__index[e[0]] = e[1].subtract(values) })
+
+		return res
 	},
 
 	// Keep only the given values...
@@ -1027,24 +1028,23 @@ var TagsPrototype = {
 		return res
 	},
 
-	// Remove the given values...
+	// Join 1 or more Tags objects...
 	//
-	// 	.remove(value, ..)
-	// 	.remove([value, ..])
-	// 		-> this
-	//
-	remove: function(...values){
-		values = (values.length == 1 && values[0] instanceof Array) ? 
-			values.pop() 
-			: values
-		var res = this.clone()
-
-		Object.entries(res.__index || {})
-			.forEach(function(e){
-				res.__index[e[0]] = e[1].subtract(values) })
-
-		return res
+	// XXX should this be join or add???
+	join: function(...others){
+		var that = this
+		var index = this.__index || {}
+		others
+			.forEach(function(other){
+				Object.entries(other.__index || {})
+					.forEach(function(e){
+						index[e[0]] = new Set([...(index[e[0]] || []), ...e[1]]) }) })
+		Object.keys(index).length > 0 
+			&& this.__index == null
+			&& (this.__index = index)
+		return this
 	},
+
 
 
 	// Query API...
