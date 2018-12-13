@@ -274,18 +274,18 @@ var TagsPrototype = {
 		return this.constructor.parseQuery.call(this, query) },
 
 
-	// Match tags...
+	// Match tags directly...
 	//
 	// 	Check if tags match...
-	// 	.match(tag, tag)
+	// 	.directMatch(tag, tag)
 	// 		-> bool
 	//
 	// 	Get all matching tags...
-	// 	.match(tag)
+	// 	.directMatch(tag)
 	// 		-> tags
 	//
 	// 	Filter out non-matching from tags...
-	// 	.match(tag, tags)
+	// 	.directMatch(tag, tags)
 	// 		-> tags
 	//
 	//
@@ -339,9 +339,9 @@ var TagsPrototype = {
 	//
 	//
 	// NOTE: this is not symmetric e.g. a will match a:b but not vice-versa.
-	//
-	// XXX BUG: /aaa matching...
-	match: function(a, b, cmp){
+	// NOTE: this does not try to match outside the scope of the actual 
+	// 		given tags, to search taking paths into account use .match(..)
+	directMatch: function(a, b, cmp){
 		var that = this
 
 		if(b instanceof Function){
@@ -353,7 +353,7 @@ var TagsPrototype = {
 		if(b == null || b instanceof Array){
 			return (b || this.tags())
 				.filter(function(tag){ 
-					return that.match(a, tag)})
+					return that.directMatch(a, tag, cmp)})
 
 		// match two tags...
 		} else {
@@ -389,18 +389,86 @@ var TagsPrototype = {
 			//
 			// NOTE: we do not need to use cmp(..) here as we are testing 
 			// 		tag compatibility deeper in matchSet(..)...
-			a = a.split(/[\/\\]/g) 
-			b = b.split(/[\/\\]/g)
-			return b
-				.reduce(function(a, e){
-					return (a[0] 
-							&& (a[0] == '*' 
-								|| matchSet(a[0], e))) ? 
-						a.slice(1) 
-						: a
-				}, a)
-				.length == 0
+			var sa = a.split(/[\/\\]/g) 
+			var sb = b.split(/[\/\\]/g)
+			return sb
+					.reduce(function(a, e){
+						return (a[0] 
+								&& (a[0] == '*' 
+									|| matchSet(a[0], e))) ? 
+							a.slice(1) 
+							: a
+					}, sa)
+					.length == 0
 		}
+	},
+
+	// Match tags directly or indirectly...
+	//
+	// This is the same as .directMatch(..) but also uses paths to check
+	// tag "reachability"...
+	//
+	// Matching rule:
+	// 	a and b match iff both a and b are reachable on a single path 
+	// 	where a is above b.
+	//
+	//
+	// Example:
+	// 		ts.togglePersistent('a/b/c', 'a/x/y', 'c/d/e')
+	//
+	// 		// see if 'a' directly matches 'c'...
+	// 		ts.directMatch('a', 'c')	// -> false
+	//
+	// 		// indirect matches... 
+	// 		ts.match('a', 'c')			// -> true
+	// 		ts.match('a', 'y')			// -> true
+	// 		// indirect extended match... 
+	// 		ts.match('a', 'e')			// -> true
+	//
+	// 		// two different paths...
+	// 		ts.match('c', 'y')			// -> false
+	// 		// path search is directional...
+	// 		ts.match('c', 'a')			// -> false
+	//
+	//
+	match: function(a, b, cmp){
+		var that = this
+
+		var res = this.directMatch(...arguments) 
+
+		// get paths with tag...
+		var paths = function(tag){
+			return that.directMatch(tag, cmp)
+				.filter(function(t){ 
+					return /[\\\/]/.test(t) }) }
+		// search the path tree...
+		// NOTE: this will stop the search on first hit...
+		var search = function(tag, seen){
+			seen = seen || new Set()
+			return paths(tag)
+				.reduce(function(res, path){
+					if(res == true){
+						return res
+					}
+
+					path = path.split(/[\\\/]/g) 
+					// restrict direction...
+					path = path.slice(0, path.indexOf(tag))
+
+					// check current set of reachable tags...
+					return (that.directMatch(a, path, cmp).length != 0)
+						|| path
+							// search next level...
+							.reduce(function(res, tag){
+								return res ? 
+										res
+									: seen.has(tag) ?
+										false
+									: search(tag, seen.add(tag)) }, false) }, false) }
+
+		return res === false ?
+			search(b)
+			: res 
 	},
 
 	// Search tags...
@@ -446,6 +514,7 @@ var TagsPrototype = {
 	// 			(i.e. ['a:b:c', 'a:b', 'a:c', 'a']) and will only return
 	// 			the actual full match and an individual tag match...
 	// 			XXX should it???
+	// XXX should this search up the path???
 	search: function(query, tags){
 		var that = this
 	   	tags = tags == null ?
@@ -468,6 +537,8 @@ var TagsPrototype = {
 					.concat(that.subTags(this)) 
 					.unique() })
 			.filter(function(t){
+				// XXX should this search up the path???
+				//return that.directMatch(query, t, cmp) }) },
 				return that.match(query, t, cmp) }) },
 
 
@@ -556,6 +627,16 @@ var TagsPrototype = {
 	// XXX should we combine this with .tags(..) ???
 	singleTags: function(value, ...tags){
 		return this.subTags(this.tags(...arguments)).unique() },
+	// XXX should this support ...tags???
+	// XXX should this expand paths???
+	// 		...i.e. show all the paths a value participates in...
+	paths: function(value){
+		return this.tags(value)
+			.filter(function(tag){ return /[\\\/]/.test(tag) }) },
+	// XXX should this support ...tags???
+	sets: function(){
+		return this.tags(value)
+			.filter(function(tag){ return tag.includes(':') }) },
 	//
 	// 	Get all values...
 	// 	.values()
@@ -641,7 +722,7 @@ var TagsPrototype = {
 		}
 		return this
 	},
-	// XXX save un-normalized tags as aliases...
+	// XXX save un-normalized tags as aliases... ???
 	// XXX when value is not given, add tags to persistent tags...
 	tag: function(tags, value){
 		var that = this
@@ -812,6 +893,7 @@ var TagsPrototype = {
 						: 'off') })
 	},
 
+	// Rename a tag...
 	//
 	// 	Rename tag...
 	// 	.rename(from, to)
