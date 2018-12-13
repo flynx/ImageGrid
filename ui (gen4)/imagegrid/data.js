@@ -240,7 +240,6 @@ var DataPrototype = {
 
 	// XXX should this default to top or bottom ribbon???
 	get base(){
-		//return this.__base || this.ribbon_order.slice(-1)[0] },
 		return this.__base || this.ribbon_order[0] },
 	set base(value){
 		this.__base = value },
@@ -412,7 +411,6 @@ var DataPrototype = {
 			if(skip_undefined && lst[i] == null){
 				continue
 			}
-			//if(lst.indexOf(lst[i]) != i){
 			if(lst_idx[lst[i]] != i){
 				lst.splice(i, 1)
 				i -= 1
@@ -736,11 +734,9 @@ var DataPrototype = {
 	/*********************************************** Introspection ***/
 
 	get length(){
-		return this.order.length
-	},
+		return this.order.length },
 	get ribbonLength(){
-		return this.getImages(this.getRibbon()).len
-	},
+		return this.getImages(this.getRibbon()).len },
 
 
 	// Get image
@@ -3366,7 +3362,7 @@ var DataWithTags2Prototype = {
 	toggleTag: function(tag, gids, action){
 		gids = gids == null || gids == 'current' ? this.getImage() : gids
 
-		var res = this.tags.toggleTag(tag, gids, action)
+		var res = this.tags.toggle(tag, gids, action)
 
 		return res === this.tags ? 
 				this 

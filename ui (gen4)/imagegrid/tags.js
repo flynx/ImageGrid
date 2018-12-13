@@ -36,11 +36,11 @@ var util = require('lib/util')
 var TagsClassPrototype = {
 	// Utils...
 	//
-	// 	.normalizeTags(tag)
+	// 	.normalize(tag)
 	// 		-> ntag
 	//
-	// 	.normalizeTags(tag, ...)
-	// 	.normalizeTags([tag, ...])
+	// 	.normalize(tag, ...)
+	// 	.normalize([tag, ...])
 	// 		-> [ntag, ...]
 	//
 	// NOTE: tag set order is not significant.
@@ -54,7 +54,7 @@ var TagsClassPrototype = {
 	// 			c:b/a -> b/a:c		- sort paths within sets
 	// XXX should we support priority braces, i.e. c:(b/a)
 	// XXX do we support leading '/' ???
-	normalizeTags: function(...tags){
+	normalize: function(...tags){
 		var that = this
 		var tagRemovedChars = (this.config || {})['tagRemovedChars']
 		tagRemovedChars = tagRemovedChars instanceof RegExp ? 
@@ -96,7 +96,7 @@ var TagsClassPrototype = {
 		tags = (tags.length == 1 && tags[0] instanceof Array) ? 
 			tags.pop() 
 			: tags
-		return this.normalizeTags(tags)
+		return this.normalize(tags)
 			.map(function(tag){
 				return tag.split(/[:\\\/]/g) })
 			.flat()
@@ -266,8 +266,8 @@ var TagsPrototype = {
 	// Utils...
 	//
 	// proxies to class methods...
-	normalizeTags: function(...tags){
-		return this.constructor.normalizeTags.call(this, ...tags) },
+	normalize: function(...tags){
+		return this.constructor.normalize.call(this, ...tags) },
 	subTags: function(...tags){
 		return this.constructor.subTags.call(this, ...tags) },
 	parseQuery: function(query){
@@ -358,8 +358,8 @@ var TagsPrototype = {
 		// match two tags...
 		} else {
 			// normalized match...
-			a = this.normalizeTags(a)
-			b = this.normalizeTags(b)
+			a = this.normalize(a)
+			b = this.normalize(b)
 
 			// special case: *tag* pattern...
 			a = /^\*[^:\\\/]*\*$/.test(a) ? 
@@ -548,7 +548,7 @@ var TagsPrototype = {
 			return Object.keys(this.__index || {})
 				.concat([...(this.__persistent_tags || [])]
 					.map(function(t){ 
-						return that.normalizeTags(t) }))
+						return that.normalize(t) }))
 				.unique()
 		}
 	},
@@ -568,7 +568,7 @@ var TagsPrototype = {
 	// NOTE: this does not support any query syntax...
 	values: function(tag){
 		var that = this
-		tag = this.normalizeTags(tag || '*')
+		tag = this.normalize(tag || '*')
 		return [...new Set(
 			Object.entries(this.__index || {})
 				.filter(function(e){ 
@@ -605,7 +605,7 @@ var TagsPrototype = {
 						.concat([seen[0]])
 						.join('" -> "') }"`) }
 			var next = aliases[tag] 
-				|| aliases[this.normalizeTags(tag)]
+				|| aliases[this.normalize(tag)]
 			seen.push(tag)
 			return next != null ?
 					resolve(next, seen)
@@ -621,17 +621,17 @@ var TagsPrototype = {
 		// remove...
 		} else if(value == null){
 			delete aliases[tag.trim()]
-			delete aliases[this.normalizeTags(tag)]
+			delete aliases[this.normalize(tag)]
 
 		// set...
 		} else {
 			tag = tag.trim()
-			value = this.normalizeTags(value)
+			value = this.normalize(value)
 
 			// check for recursion...
 			var chain = []
 			var target = resolve(value, chain)
-			if(target == tag || target == this.normalizeTags(tag)){
+			if(target == tag || target == this.normalize(tag)){
 				throw new Error(`.alias(..): Creating a recursive alias chain: "${ 
 					chain
 						.concat([chain[0]])
@@ -646,7 +646,7 @@ var TagsPrototype = {
 	tag: function(tags, value){
 		var that = this
 		value = value instanceof Array ? value : [value]
-		tags = this.normalizeTags(tags instanceof Array ? tags : [tags])
+		tags = this.normalize(tags instanceof Array ? tags : [tags])
 		var index = this.__index = this.__index || {}
 
 		value.forEach(function(value){
@@ -663,7 +663,7 @@ var TagsPrototype = {
 		var index = this.__index = this.__index || {}
 
 		value = value instanceof Array ? value : [value]
-		tags = this.normalizeTags(tags instanceof Array ? tags : [tags])
+		tags = this.normalize(tags instanceof Array ? tags : [tags])
 			.map(function(tag){
 				return /\*/.test(tag) ? 
 					// resolve tag patterns...
@@ -686,8 +686,8 @@ var TagsPrototype = {
 	},
 	//
 	//	Toggle tag for each values...
-	//	.toggleTag(tag, value)
-	//	.toggleTag(tag, values)
+	//	.toggle(tag, value)
+	//	.toggle(tag, values)
 	//		-> [bool|null, ..]
 	//		NOTE: if tag is a tag pattern (contains '*') this will toggle
 	//			matching tags values off as expected but ignore toggling 
@@ -695,23 +695,23 @@ var TagsPrototype = {
 	//			corresponding position.
 	//
 	//	Toggle tag on for all values...
-	//	.toggleTag(tag, value, 'on')
-	//	.toggleTag(tag, values, 'on')
+	//	.toggle(tag, value, 'on')
+	//	.toggle(tag, values, 'on')
 	//		-> this
 	//		NOTE: this will throw an exception if tag is a tag pattern,
-	//			this is not symmetrical to how .toggleTag(.., .., 'off')
+	//			this is not symmetrical to how .toggle(.., .., 'off')
 	//			behaves.
 	//
 	//	Toggle tag off for all values...
-	//	.toggleTag(tag, value, 'off')
-	//	.toggleTag(tag, values, 'off')
+	//	.toggle(tag, value, 'off')
+	//	.toggle(tag, values, 'off')
 	//		-> this
 	//		NOTE: if tag is a tag pattern this will remove all matching 
-	//			tags, this is not fully symmetrical to .toggleTag(.., .., 'on')
+	//			tags, this is not fully symmetrical to .toggle(.., .., 'on')
 	//
 	//	Check if tag is set on value(s)...
-	//	.toggleTag(tag, value, '?')
-	//	.toggleTag(tag, values, '?')
+	//	.toggle(tag, value, '?')
+	//	.toggle(tag, values, '?')
 	//		-> [bool, ..]
 	//
 	//
@@ -719,15 +719,15 @@ var TagsPrototype = {
 	//
 	// XXX do we need this???
 	// 		...seems a bit overcomplicated...
-	toggleTag: function(tag, values, action){
+	toggle: function(tag, values, action){
 		var that = this
 		values = values instanceof Array ? values : [values]
 		var pattern = /\*/.test(tag)
-		var ntag = this.normalizeTags(tag)
+		var ntag = this.normalize(tag)
 
 		// can't set pattern as tag...
 		if(pattern && action != 'on'){
-			throw new TypeError(`.toggleTag(..): will not toggle on "${tag}": pattern and not a tag.`)
+			throw new TypeError(`.toggle(..): will not toggle on "${tag}": pattern and not a tag.`)
 		}
 
 		return action == 'on' ?
@@ -797,7 +797,7 @@ var TagsPrototype = {
 			this.__persistent_tags = 
 				this.__persistent_tags || new Set()
 
-		return this.normalizeTags(tags)
+		return this.normalize(tags)
 			.map(function(tag){
 				return action == 'on' ?
 						(persistent.add(tag), 'on')
@@ -814,12 +814,12 @@ var TagsPrototype = {
 
 	//
 	// 	Rename tag...
-	// 	.renameTag(from, to)
+	// 	.rename(from, to)
 	// 		-> this
 	//
 	// 	Rename a tag in list of tags...
-	// 	.renameTag(from, to, tag, ...)
-	// 	.renameTag(from, to, [tag, ...])
+	// 	.rename(from, to, tag, ...)
+	// 	.rename(from, to, [tag, ...])
 	// 		-> tags
 	//
 	// NOTE: if to is '' this will remove all occurrences of from.
@@ -829,61 +829,61 @@ var TagsPrototype = {
 	// XXX need to sanitize from -- it can not contain regex characters...
 	// 		...should we guard against this???
 	// XXX should both sides of the alias be renamed???
-	renameTag: function(from, to, ...tags){
+	rename: function(tag, to, ...tags){
 		var that = this
 
-		from = this.normalizeTags(from)
-		if(from == ''){
-			throw new Error(`.renameTag(..): first argument can not be an empty string.`) }
-		if(/[:\\\/]/.test(from)){
+		tag = this.normalize(tag)
+		if(tag == ''){
+			throw new Error(`.rename(..): first argument can not be an empty string.`) }
+		if(/[:\\\/]/.test(tag)){
 			throw new Error(
-				`.renameTag(..): only support singular tag renaming, got: "${from}"`) }
+				`.rename(..): only support singular tag renaming, got: "${tag}"`) }
 		// XXX too strict???
-		if(!/^[a-z0-9]+$/.test(from)){
+		if(!/^[a-z0-9]+$/.test(tag)){
 			throw new Error(
-				`.renameTag(..): first argument must be a valid single tag, got: "${from}"`) }
+				`.rename(..): first argument must be a valid single tag, got: "${tag}"`) }
 
-		to = this.normalizeTags(to)
+		to = this.normalize(to)
 		if(/[\\\/]/.test(to)){
 			throw new Error(
-				`.renameTag(..): only support tags and tag sets as renaming target, got: "${to}"`) }
+				`.rename(..): only support tags and tag sets as renaming target, got: "${to}"`) }
 
 		tags = new Set((tags[0] instanceof Array && tags.length == 1) ? 
 			tags[0]
 			: tags)
 
 		// prepare for the replacement...
-		var pattern = new RegExp(`(^|[:\\\\\\/])${from}(?=$|[:\\\\\\/])`, 'g')
+		var pattern = new RegExp(`(^|[:\\\\\\/])${tag}(?=$|[:\\\\\\/])`, 'g')
 		var target = `$1${to}` 
 
 		var patchSet = function(s){
-			that.match(from, [...s || []])
+			that.match(tag, [...s || []])
 				.forEach(function(tag){
 					s.delete(tag)
-					var t = that.normalizeTags(tag.replace(pattern, target))
+					var t = that.normalize(tag.replace(pattern, target))
 					t != ''
 						&& s.add(t)
 				}) 
 			return s 
 		}
 		var patchObj = function(o, patchValue){
-			that.match(from, Object.keys(o || {}))
-				.forEach(function(tag){
-					var value = o[tag]
-					delete o[tag]
-					var t = that.normalizeTags(tag.replace(pattern, target))
+			that.match(tag, Object.keys(o || {}))
+				.forEach(function(m){
+					var value = o[m]
+					delete o[m]
+					var t = that.normalize(m.replace(pattern, target))
 					t != ''
 						&& (o[t] = value)
 				}) 
 			patchValue 
 				&& Object.keys(o || {})
-					.forEach(function(tag){
-						var v = o[tag]
-						if(that.match(from, v)){
-							var t = that.normalizeTags(v.replace(pattern, target))
+					.forEach(function(m){
+						var v = o[m]
+						if(that.match(tag, v)){
+							var t = that.normalize(v.replace(pattern, target))
 							t == '' ?
-								(delete o[tag])
-								: (o[tag] = t)
+								(delete o[m])
+								: (o[m] = t)
 						}
 					})
 			return o 
@@ -902,10 +902,10 @@ var TagsPrototype = {
 		
 		return this
 	},
-	// NOTE: this is a short hand to .renameTag(tag, '', ..) for extra 
+	// NOTE: this is a short hand to .rename(tag, '', ..) for extra 
 	// 		docs see that...
 	removeTag: function(tag, ...tags){
-		return this.renameTag(tag, '', ...tags) },
+		return this.rename(tag, '', ...tags) },
 
 	
 
