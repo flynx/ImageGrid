@@ -40,7 +40,7 @@ var util = require('lib/util')
 // 		.someMethod(arg, ..)
 // 		.someMethod([arg, ..])
 //
-var splitOrList = function(args){
+var normalizeSplit = function(args){
 	return (args.length == 1 && args[0] instanceof Array) ? 
 		args.pop() 
 		: args }
@@ -78,7 +78,7 @@ var TagsClassPrototype = {
 			: typeof(tagRemovedChars) == typeof('str') ?
 				new RegExp(tagRemovedChars, 'g')
 			: /[\s-_]/g
-		var res = splitOrList(tags)
+		var res = normalizeSplit(tags)
 			.map(function(tag){
 				return tag
 					.trim()
@@ -106,7 +106,7 @@ var TagsClassPrototype = {
 			: res
 	},
 	subTags: function(...tags){
-		return this.normalize(splitOrList(tags))
+		return this.normalize(normalizeSplit(tags))
 			.map(function(tag){
 				return tag.split(/[:\\\/]/g) })
 			.flat()
@@ -202,6 +202,7 @@ var TagsClassPrototype = {
 }
 
 
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 // XXX should we store normalized and non-normalized tags for reference???
 // 		...there are two ways to think of this:
 // 			1) both (a-la flickr) -- keep both, use normalized internally
@@ -235,7 +236,9 @@ var TagsPrototype = {
 	// 	}
 	__index: null,
 
-	// XXX
+
+
+	// XXX EXPERIMENTAL...
 	// XXX need a way to edit the compound tag...
 	__special_tag_handlers__: {
 		'*persistent*': function(action, tag, value){
@@ -271,6 +274,7 @@ var TagsPrototype = {
 
 		return match.call(this, action, tag, value)
 	},
+
 
 
 	// Utils...
@@ -603,7 +607,7 @@ var TagsPrototype = {
 
 		// check if value is tagged by tags..,
 		if(value && tags.length > 0){
-			tags = splitOrList(tags)
+			tags = normalizeSplit(tags)
 			var u = this.tags(value)
 			while(tags.length > 0){
 				if(this.match(tags.shift(), u).length == 0){
@@ -877,7 +881,7 @@ var TagsPrototype = {
 		action = ['on', 'off', 'toggle', '?'].includes(tags[tags.length-1]) ?
 			tags.pop()
 			: 'toggle'
-		tags = splitOrList(tags)
+		tags = normalizeSplit(tags)
 
 		var persistent = 
 			this.__persistent_tags = 
@@ -935,7 +939,7 @@ var TagsPrototype = {
 			throw new Error(
 				`.rename(..): only support tags and tag sets as renaming target, got: "${to}"`) }
 
-		tags = new Set(splitOrList(tags))
+		tags = new Set(normalizeSplit(tags))
 
 		// prepare for the replacement...
 		var pattern = new RegExp(`(^|[:\\\\\\/])${tag}(?=$|[:\\\\\\/])`, 'g')
@@ -1000,7 +1004,7 @@ var TagsPrototype = {
 	// 		-> this
 	//
 	remove: function(...values){
-		values = splitOrList(values)
+		values = normalizeSplit(values)
 		var res = this.clone()
 
 		Object.entries(res.__index || {})
@@ -1017,7 +1021,7 @@ var TagsPrototype = {
 	// 		-> this
 	//
 	keep: function(...values){
-		values = splitOrList(values)
+		values = normalizeSplit(values)
 		var res = this.clone()
 
 		Object.entries(res.__index || {})
@@ -1027,6 +1031,9 @@ var TagsPrototype = {
 		return res
 	},
 
+
+	// Tags - Tags API...
+	//
 	// Join 1 or more Tags objects...
 	//
 	//	.join(other, ..)
@@ -1036,7 +1043,7 @@ var TagsPrototype = {
 	join: function(...others){
 		var that = this
 		var index = this.__index || {}
-		splitOrList(others)
+		normalizeSplit(others)
 			.forEach(function(other){
 				Object.entries(other.__index || {})
 					.forEach(function(e){
@@ -1046,7 +1053,6 @@ var TagsPrototype = {
 			&& (this.__index = index)
 		return this
 	},
-
 
 
 	// Query API...
@@ -1305,7 +1311,6 @@ var TagsPrototype = {
 	},
 
 
-
 	// Object utility API...
 	//
 	//
@@ -1318,6 +1323,7 @@ var TagsPrototype = {
 	//
 	clone: function(mode){
 		return new this.constructor(this.json(mode)) },
+
 
 	// Serialization...
 	//
@@ -1391,13 +1397,13 @@ var TagsPrototype = {
 	},
 
 
-
 	__init__: function(json){
 		json 
 			&& this.load(json) },
 }
 
 
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 var Tags = 
 module.Tags = 
 object.makeConstructor('Tags', 
