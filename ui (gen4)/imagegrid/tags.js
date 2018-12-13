@@ -34,7 +34,12 @@ var util = require('lib/util')
 /*********************************************************************/
 // Helpers...
 
-// normalize a split to either contain multiple values or a list...
+// Normalize a split that contains either multiple values or a list to 
+// a list enabling the following method signature:
+//
+// 		.someMethod(arg, ..)
+// 		.someMethod([arg, ..])
+//
 var splitOrList = function(args){
 	return (args.length == 1 && args[0] instanceof Array) ? 
 		args.pop() 
@@ -547,7 +552,7 @@ var TagsPrototype = {
 				return that.match(query, t, cmp) }) },
 
 
-	// Introspection...
+	// Introspection and Access API...
 	//
 	get length(){
 		return this.values().length },
@@ -570,8 +575,6 @@ var TagsPrototype = {
 		}
 		return false
 	},
-
-
 
 	// Tags present in the system...
 	//
@@ -662,8 +665,9 @@ var TagsPrototype = {
 				.flat())] },
 
 
-	// Add/Remove/Modify tags API...
+	// Edit API...
 	// 
+	//
 	// 	Resolve alias (recursive)...
 	// 	.alias(tag)
 	// 		-> value
@@ -1301,7 +1305,9 @@ var TagsPrototype = {
 	},
 
 
+
 	// Object utility API...
+	//
 	//
 	// 	.clone()
 	// 	.clone('full')
@@ -1314,6 +1320,7 @@ var TagsPrototype = {
 		return new this.constructor(this.json(mode)) },
 
 	// Serialization...
+	//
 	//
 	// 	.json()
 	// 		-> json
@@ -1382,6 +1389,8 @@ var TagsPrototype = {
 
 		return this
 	},
+
+
 
 	__init__: function(json){
 		json 
