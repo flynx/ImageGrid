@@ -80,16 +80,13 @@ Array.prototype.compact = function(){
 
 
 // like .length but for sparse arrays will return the element count...
-Object.defineProperty(Array.prototype, 'len', {
-	get : function () {
-		return Object.keys(this).length
-	},
-	set : function(val){},
-
-	// NOTE: this is hear to enable running this module multiple times 
-	// 		without any side-effects...
-	configurable: true,
-});
+'len' in Array.prototype
+	|| Object.defineProperty(Array.prototype, 'len', {
+		get : function () {
+			return Object.keys(this).length
+		},
+		set : function(val){},
+	})
 
 
 // Convert an array to object...

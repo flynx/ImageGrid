@@ -1218,6 +1218,7 @@ module.TagsEditActions = actions.Actions({
 		function(tags, gids){
 			gids = gids || this.current
 			gids = gids instanceof Array ? gids : [gids]
+			// XXX this is slow for very large data sets...
 			gids = this.data.getImages(gids)
 
 			tags = tags instanceof Array ? tags : [tags]

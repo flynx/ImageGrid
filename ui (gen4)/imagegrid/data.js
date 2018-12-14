@@ -244,6 +244,15 @@ var DataPrototype = {
 	set base(value){
 		this.__base = value },
 
+	get order(){
+		return this.__order },
+	set order(value){
+		delete this.__order_index
+		this.__order = value
+	},
+	get order_index(){
+		return this.__order_index = this.__order_index || this.order.toKeys() },
+
 
 
 	/******************************************************* Utils ***/
@@ -346,7 +355,8 @@ var DataPrototype = {
 		target = target == null ? [] : target
 
 		order = this.order
-		var order_idx = order.toKeys()
+		//var order_idx = order.toKeys()
+		var order_idx = this.order_index || order.toKeys()
 
 		var rest = []
 
@@ -399,6 +409,24 @@ var DataPrototype = {
 
 		return target
 	},
+
+	// Merge sparse images...
+	//
+	// NOTE: this expects the lists to already be sparse and consistent,
+	// 		if not this will return rubbish...
+	mergeSparseImages: function(...lists){
+		var res = []
+		for(var i=0; i < this.order.length; i++){
+			var e = null
+			lists
+				.forEach(function(l){
+					e = e == null ? l[i] : e })
+			e 
+				&& (res[i] = e)
+		}
+		return res
+	},
+
 
 	// Remove duplicate items from list in-place...
 	//
@@ -1145,17 +1173,14 @@ var DataPrototype = {
 
 		// get loaded only gids...
 		} else if(target === 'loaded'){
-			var res = []
-			var ribbons = this.ribbons
-			for(var k in ribbons){
-				this.makeSparseImages(ribbons[k], res)
-			}
-			list = res.compact()
+			list = this
+				.mergeSparseImages(...Object.values(this.ribbons))
+				.compact()
 			target = null
 
 		// filter out the unloaded gids from given list...
 		} else if(target instanceof Array){
-			var loaded = (count == 'current' ? 
+			var loaded = new Set(count == 'current' ? 
 						this.getImages('current')
 					: count == 'all' || count == 'global' ? 
 						this.getImages('all')
@@ -1164,14 +1189,12 @@ var DataPrototype = {
 					: typeof(count) == typeof(123) ? 
 						this.ribbons[this.getRibbon(count)].compact()
 					: this.getImages('loaded'))
-				// index the loaded gids for fast lookup...
-				.toKeys()
 
 			list = target
 				.map(function(e){
 					// primary path -- gids...
 					// NOTE: this is the most probable path...
-					if(e in loaded){
+					if(loaded.has(e)){
 						return e
 					}
 
@@ -1181,9 +1204,9 @@ var DataPrototype = {
 						that.getImage(e, 'global')
 						: that.getImage(e)
 
-					return e in loaded ? e : null
+					return loaded.has(e) ? e : []
 				})
-				.filter(function(e){ return e !== null })
+				.flat()
 
 			count = null 
 			target = null 
@@ -2774,6 +2797,7 @@ var DataPrototype = {
 	// 		XXX is this correct???
 	//
 	// XXX should there be a way to set the base ribbon???
+	// XXX TEST
 	mergeRibbonCrop: function(crop){
 		var b = this.ribbon_order.indexOf(this.base)
 		var that = this
@@ -2905,409 +2929,9 @@ var DataPrototype = {
 
 /*********************************************************************/
 
-// XXX should this handle .split(..) / .join(..)
-var DataWithTagsPrototype = {
-	__proto__: DataPrototype,
-
-	// tags store...
-	//
-	// Format:
-	// 	{
-	// 		<tag>: [<gid>, ...],
-	// 		...
-	// 	}
-	tags: null,
-
-	// XXX hate manual super calls...
-	// 		....is there a way not to say DataPrototype here???
-	__gid_lists: DataPrototype.__gid_lists.concat(['tags']),
-
-
-	// Load tags from images...
-	//
-	// 	Merge image tags to data...
-	// 	.tagsFromImages(images)
-	// 		-> data
-	//
-	// 	Load image tags to data dropping any changes in data...
-	// 	.tagsFromImages(images, 'reset')
-	// 		-> data
-	//
-	// XXX should this be here???
-	// XXX this depend on image structure...
-	tagsFromImages: function(images, mode){
-		if(mode == 'reset'){
-			this.tags = {}
-		}
-		for(var gid in images){
-			var img = images[gid]
-			if(img.tags != null){
-				this.tag(img.tags, gid)
-			}
-		}
-		return this
-			.sortTags()
-	},
-
-	// Transfer tags to images...
-	//
-	// 	Merge data tags to images...
-	// 	.tagsToImages(images)
-	// 	.tagsToImages(images, true)
-	// 	.tagsToImages(images, 'merge')
-	// 		-> data
-	//
-	// 	Merge data tags to images without buffering...
-	// 	.tagsToImages(images, 'unbuffered')
-	// 		-> data
-	//
-	// 	Reset image tags from data...
-	// 	.tagsToImages(images, 'reset')
-	// 		-> data
-	//
-	// XXX should this be here???
-	// XXX this depend on image structure...
-	// XXX should this use image API for creating images???
-	tagsToImages: function(images, mode, updated){
-		mode = mode || 'merge'
-		updated = updated || []
-
-		// mark gid as updated...
-		var _updated = function(gid){
-			if(updated != null && updated.indexOf(gid) < 0){
-				updated.push(gid)
-			}
-		}
-		// get or create an image with tags...
-		// XXX should this use image API for creating???
-		var _get = function(images, gid){
-			var img = images[gid]
-			// create a new image...
-			if(img == null){
-				img = images[gid] = {}
-				_updated(gid)
-			}
-
-			var tags = img.tags
-			// no prior tags...
-			if(tags == null){
-				tags = img.tags = []
-				_updated(gid)
-			}
-
-			return img
-		}
-
-		// buffered mode...
-		// 	- uses more memory
-		// 	+ one write mer image
-		if(mode != 'unbuffered'){
-			// build the buffer...
-			var buffer = {}
-			this.tagsToImages(buffer, 'unbuffered')
-
-			// reset mode...
-			if(mode == 'reset'){
-				// iterate through all the gids (both images and buffer/data)
-				for(var gid in Object.keys(images)
-						.concat(Object.keys(buffer))
-						.unique()){
-					// no tags / remove...
-					if(buffer[gid] == null || buffer[gid].tags.length == 0){
-						// the image exists and has tags...
-						if(images[gid] != null && images[gid].tags != null){
-							delete images[gid].tags
-							_updated(gid)
-						}
-
-					// tags / set...
-					} else {
-						var img = _get(images, gid)
-						var before = img.tags.slice()
-
-						img.tags = buffer[gid].tags
-
-						// check if we actually changed anything...
-						if(!before.setCmp(img.tags)){
-							_updated(gid)
-						}
-					}
-				}
-
-			// merge mode...
-			} else {
-				for(var gid in buffer){
-					var img = _get(images, gid)
-					var l = img.tags.length
-					img.tags = img.tags
-						.concat(buffer[gid].tags)
-						.unique()
-					// we are updated iff length changed...
-					// NOTE: this is true as we are not removing anything 
-					// 		thus the length can only increase if changes are
-					// 		made...
-					if(l != img.tags.length){
-						_updated(gid)
-					}
-				}
-			}
-
-		// unbuffered (brain-dead) mode...
-		// 	+ no extra memory
-		// 	- multiple writes per image (one per tag)
-		} else {
-			var tagset = this.tags
-			for(var tag in tagset){
-				tagset[tag].forEach(function(gid){
-					var img = _get(images, gid)
-
-					if(img.tags.indexOf(tag) < 0){
-						img.tags.push(tag)
-						_updated(gid)
-					}
-				})
-			}
-		}
-		return this
-	},
-
-
-	// NOTE: this is here only to make the tags mutable...
-	crop: function(){
-		var crop = DataWithTagsPrototype.__proto__.crop.apply(this, arguments)
-
-		// make the tags mutable...
-		if(this.tags != null){
-			crop.tags = this.tags
-		}
-
-		return crop
-	},
-
-
-	sortTags: function(){
-		var that = this
-		var tags = this.tags
-
-		if(tags == null){
-			return this
-		}
-
-		Object.keys(tags).forEach(function(tag){
-			tags[tag] = that.makeSparseImages(tags[tag])
-		})
-		return this
-	},
-
-	tag: function(tags, gids){
-		tags = tags instanceof Array ? tags : [tags]
-
-		gids = gids == null || gids == 'current' ? this.getImage() : gids
-		gids = gids instanceof Array ? gids : [gids]
-
-		if(this.tags == null){
-			this.tags = {}
-		}
-
-		var that = this
-		var tagset = this.tags
-		var order = this.order.toKeys()
-		tags.forEach(function(tag){
-			var t = tagset[tag] = tagset[tag] || []
-			gids.forEach(function(gid){
-				var i = order[gid]
-				gid = i != null ? gid : that.getImage(gid)
-				t[i != null ? i : order[gid]] = gid
-			})
-		})
-
-		return this
-	},
-	untag: function(tags, gids){
-		if(this.tags == null){
-			return this
-		}
-		tags = tags instanceof Array ? tags : [tags]
-
-		gids = gids == null || gids == 'current' ? this.getImage() : gids
-		gids = gids instanceof Array ? gids : [gids]
-
-		var that = this
-		var tagset = this.tags
-		var order = this.order.toKeys()
-		tags.forEach(function(tag){
-			if(tag in tagset){
-				var t = tagset[tag]
-				gids
-					.forEach(function(gid){ 
-						delete t[order[gid]] })
-				if(t.len == 0){
-					delete tagset[tag]
-				}
-			}
-		})
-
-		return this
-	},
-
-	// NOTE: this does not support multiple tags at this point...
-	toggleTag: function(tag, gids, action){
-		gids = gids == null || gids == 'current' ? this.getImage() : gids
-		gids = gids instanceof Array ? gids : [gids]
-
-		// tag all...
-		if(action == 'on'){
-			this.tag(tag, gids)
-			return action
-
-		// untag all...
-		} else if(action == 'off'){
-			this.untag(tag, gids)
-			return action
-
-		// get tag state...
-		} else if(action == '?'){
-			if(this.tags == null){
-				return gids.length > 1 ? gids.map(function(gid){ return 'off' }) : 'off'
-			}
-			var that = this
-			var tagset = this.tags || {}
-			var order = this.order
-			var order_idx = order.toKeys()
-			var res = tag in tagset ?
-				gids.map(function(gid){
-					gid = that.getImage(gid)
-					return tagset[tag][order_idx[gid]] != null ?  'on' : 'off'
-				})
-				: gids.map(function(){ return 'off' })
-
-		// toggle each...
-		} else {
-			var that = this
-			var tagset = this.tags
-			var order = this.order
-			var order_idx = order.toKeys()
-			var res = gids.map(function(gid){
-				gid = that.getImage(gid)
-				var t = tagset == null || !(tag in tagset) ? 'on'
-					: tagset[tag][order_idx[gid]] == null ? 'on'
-					: 'off'
-				if(t == 'on'){
-					that.tag(tag, gid)
-				} else {
-					that.untag(tag, gid)
-				}
-				return t
-			})
-		}
-
-		return res.length == 1 ? res[0] : res
-	},
-
-	hasTag: function(gid, tag){
-		return ((this.tags || {})[tag] || []).indexOf(this.getImage(gid)) >= 0 },
-	getTags: function(gids){
-		gids = arguments.length > 1 ? [...arguments] 
-			: gids == null || gids == 'current' ? this.getImage() 
-			: gids
-		gids = gids == null ? [] : gids
-		gids = gids instanceof Array ? gids : [gids]
-
-		if(this.tags == null){
-			return []
-		}
-
-		var tags = this.tags
-		var order = this.order
-
-		// index the gids...
-		var indexes = gids.map(function(gid){ return order.indexOf(gid) })
-
-		// return only those tags that have at least one non-null gid index...
-		return Object.keys(tags).filter(function(tag){
-			return indexes.filter(function(i){ 
-				return tags[tag][i] != null 
-			}).length > 0
-		})
-	},
-
-	// selectors...
-	//
-	// NOTE: if raw is set to true then this will return all the tagged 
-	// 		gids even if they are not loaded in ribbons (i.e. cropped out)...
-	getTaggedByAny: function(tags, raw){
-		tags = arguments.length > 1 ? [...arguments] : tags
-		tags = tags instanceof Array ? tags : [tags]
-
-		var res = []
-
-		if(this.tags == null){
-			return res
-		}
-
-		var that = this
-		var tagset = this.tags
-		tags.forEach(function(tag){
-			if(tag in tagset){
-				that.makeSparseImages(tagset[tag], res)
-			}
-		})
-
-		return raw ? 
-			res.compact() 
-			: this.getImages(res.compact())
-	},
-	getTaggedByAll: function(tags, raw){
-		tags = arguments.length > 1 ? [...arguments] : tags
-		tags = tags instanceof Array ? tags : [tags]
-
-		if(this.tags == null){
-			return []
-		}
-
-		var index = []
-		var l = tags.length
-
-		// count how many of the tags each image is tagged...
-		var that = this
-		var tagset = this.tags
-		tags.forEach(function(tag){
-			if(tag in tagset){
-				Object.keys(tagset[tag]).forEach(function(n){
-					if(index[n] == null){
-						index[n] = 1
-					} else {
-						index[n] += 1
-					}
-				})
-			}
-		})
-
-		// filter only the images tagged by all of the tags...
-		var order = this.order
-		var res = []
-		var i = index.indexOf(l)
-		while(i != -1){
-			res.push(order[i])
-			delete index[i]
-
-			i = index.indexOf(l)
-		}
-
-		return raw ? 
-			res 
-			: this.getImages(res)
-	},
-
-	// XXX re-implement the above in this...
-	tagQuery: function(query){
-		throw Error('.tagQuery(..): Not implemented.') },
-}
-
-
 // XXX make a API compatible replacement to the above -- to access 
 // 		compatibility and performance...
-var DataWithTags2Prototype = {
+var DataWithTagsPrototype = {
 	__proto__: DataPrototype,
 
 	get tags(){
@@ -3338,29 +2962,44 @@ var DataWithTags2Prototype = {
 			.unique()
 	},
 
+	// XXX should these normalize the list of gids via .getImages(gids)
+	// 		or stay optimistic...
 	tag: function(tags, gids){
-		var that = this
-		gids = gids == null || gids == 'current' ? this.getImage() : gids
-
-		;(gids instanceof Array ? gids : [gids])
-			.forEach(function(gid){
-				that.tags.tag(tags, gid) })
-
+		this.tags.tag(tags,
+			gids == null || gids == 'current' ? 
+				this.current
+			: gids == 'ribbon' ?
+				this.getImages('current')
+			: gids == 'loaded' ?
+				this.getImages('loaded')
+			: gids == 'all' ?
+				this.getImages('all')
+			: gids)
 		return this
 	},
 	untag: function(tags, gids){
-		var that = this
-		gids = gids == null || gids == 'current' ? this.getImage() : gids
-
-		;(gids instanceof Array ? gids : [gids])
-			.forEach(function(gid){
-				that.tags.untag(tags, gid) })
-
+		this.tags.untag(tags, 
+			gids == null || gids == 'current' ? 
+				this.current
+			: gids == 'ribbon' ?
+				this.getImages('current')
+			: gids == 'loaded' ?
+				this.getImages('loaded')
+			: gids == 'all' ?
+				this.getImages('all')
+			: gids)
 		return this
 	},
-	// XXX should all togglers return true/false or 'on'/'off'???
 	toggleTag: function(tag, gids, action){
-		gids = gids == null || gids == 'current' ? this.getImage() : gids
+		gids = gids == null || gids == 'current' ? 
+				this.current
+			: gids == 'ribbon' ?
+				this.getImages('current')
+			: gids == 'loaded' ?
+				this.getImages('loaded')
+			: gids == 'all' ?
+				this.getImages('all')
+			: gids
 
 		var res = this.tags.toggle(tag, gids, action)
 
@@ -3535,12 +3174,12 @@ var DataWithTags2Prototype = {
 	//
 	// special case: make the tags mutable...
 	crop: function(){
-		var crop = DataWithTags2Prototype.__proto__.crop.apply(this, arguments)
+		var crop = DataWithTagsPrototype.__proto__.crop.apply(this, arguments)
 		crop.tags = this.tags
 		return crop
 	},
 	join: function(...others){
-		var res = DataWithTags2Prototype.__proto__.join.apply(this, arguments)
+		var res = DataWithTagsPrototype.__proto__.join.apply(this, arguments)
 		// clear out the align mode...
 		!(others[0] instanceof Data)
 			&& others.shift()
@@ -3552,27 +3191,27 @@ var DataWithTags2Prototype = {
 	// XXX should this account for crop???
 	// XXX test...
 	split: function(){
-		var res = DataWithTags2Prototype.__proto__.split.apply(this, arguments)
+		var res = DataWithTagsPrototype.__proto__.split.apply(this, arguments)
 		res.tags = res.tags.keep(res.order)
 		return res
 	},
 	clone: function(){
-		var res = DataWithTags2Prototype.__proto__.clone.apply(this, arguments)
+		var res = DataWithTagsPrototype.__proto__.clone.apply(this, arguments)
 		res.tags = this.tags.clone()
 		return res
 	},
 	_reset: function(){
-		var res = DataWithTags2Prototype.__proto__._reset.apply(this, arguments)
+		var res = DataWithTagsPrototype.__proto__._reset.apply(this, arguments)
 		delete this.__tags
 		return res
 	},
 	json: function(){
-		var json = DataWithTags2Prototype.__proto__.json.apply(this, arguments)
+		var json = DataWithTagsPrototype.__proto__.json.apply(this, arguments)
 		json.tags = this.tags.json()
 		return json
 	},
 	load: function(data, clean){
-		var res = DataWithTags2Prototype.__proto__.load.apply(this, arguments)
+		var res = DataWithTagsPrototype.__proto__.load.apply(this, arguments)
 		data.tags
 			&& res.tags.load(data.tags)
 		return res
@@ -3611,7 +3250,7 @@ var DataWithTags =
 module.DataWithTags = 
 object.makeConstructor('DataWithTags', 
 		DataClassPrototype, 
-		DataWithTags2Prototype)
+		DataWithTagsPrototype)
 
 
 var Data =
