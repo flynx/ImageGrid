@@ -741,10 +741,11 @@ var TagsPrototype = {
 		tags = this.normalize(tags instanceof Array ? tags : [tags])
 		var index = this.__index = this.__index || {}
 
-		value.forEach(function(value){
-			tags
-				.forEach(function(tag){
-					(index[tag] = index[tag] || new Set()).add(value) }) })
+		tags
+			.forEach(function(tag){
+				index[tag] = tag in index ?
+					index[tag].unite(value) 
+					: new Set(value) })
 
 		return this
 	},
@@ -753,26 +754,30 @@ var TagsPrototype = {
 	untag: function(tags, value){
 		var that = this
 		var index = this.__index = this.__index || {}
-
 		value = value instanceof Array ? value : [value]
-		tags = this.normalize(tags instanceof Array ? tags : [tags])
+
+		this
+			.normalize(tags instanceof Array ? tags : [tags])
+			// resolve/match tags...
 			.map(function(tag){
 				return /\*/.test(tag) ? 
 					// resolve tag patterns...
 					that.match(tag) 
 					: tag })
 			.flat()
+			// do the untagging...
+			.forEach(function(tag){
+				var s = (index[tag] || new Set()).subtract(value)
 
-		value.forEach(function(value){
-			tags
-				.forEach(function(tag){
-					var s = index[tag] || new Set()
-					s.delete(value) 
-					// remove empty sets...
-					if(s.size == 0){
-						delete index[tag]
-					}
-				}) })
+				// remove empty sets...
+				if(s.size == 0){
+					delete index[tag]
+
+				// update...
+				} else {
+					index[tag] = s
+				}
+			})
 
 		return this
 	},
