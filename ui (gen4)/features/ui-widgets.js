@@ -758,6 +758,21 @@ var DialogsActions = actions.Actions({
 		`,
 		makeUIDialog(function(list, options){
 			return browse.makeList(null, list, options) })],
+	showTree: ['- Interface/',
+		makeUIDialog(function(list, options){
+			return browse.makePathList(null, 
+				list, 
+				Object.assign({
+					/*
+					cls: 'browse-actions',
+					//path: '/',
+					flat: false,
+					traversable: true,
+					pathPrefix: '/',
+					//fullPathEdit: true,
+					//*/
+				}, options || {})) })],
+
 	// XXX do we need to split the options???
 	showEditableList: ['- Interface/', 
 		core.doc`Show editable list dialog...

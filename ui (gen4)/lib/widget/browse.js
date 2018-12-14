@@ -4389,7 +4389,7 @@ PathListPrototype.options = {
 		var match = function(a, path){
 			var marker = that.options.itemShortcutMarker 
 			marker = marker && RegExp(marker, 'g')
-			path = marker ? e.replace(marker, '$1') : path
+			path = marker ? path.replace(marker, '$1') : path
 			// NOTE: might be good to make this recursive when expanding
 			// 		pattern support...
 			return a
