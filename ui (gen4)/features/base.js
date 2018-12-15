@@ -35,25 +35,6 @@ var core = require('features/core')
 
 /*********************************************************************/
 
-// Generate an undo function for shift operations...
-//
-// NOTE: {undo: 'shiftImageDown'}, will not do here because we need to 
-// 		pass an argument to the shift action, as without an argument 
-// 		these actions will shift focus to a different image in the same 
-// 		ribbon...
-// 			.shiftImageDown(x)
-// 				shift image x without changing focus, i.e. the focused
-// 				image before the action will stay focused after.
-// 			.focusImage(x).shiftImageDown()
-// 				focus image x, then shift it down (current image default)
-// 				this will shift focus to .direction of current image.
-var undoShift = function(undo){
-	return function(a){ 
-		this[undo](a.args.length == 0 ? a.current : a.args[0]) }}
-
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-
 // XXX split this into read and write actions...
 var BaseActions = 
 module.BaseActions = 
@@ -62,6 +43,8 @@ actions.Actions({
 		// XXX should this be here???
 		// 		...where should this be stored???
 		version: version.version || '4.0.0a',
+
+		'default-direction': 'right',
 
 		// Number of steps to change default direction...
 		//
@@ -138,55 +121,63 @@ actions.Actions({
 	// Assigning 'left!' or 'right!' ('!' appended) will reset the counter
 	// and force direction change.
 	//
-	// Configuration (.config):
-	// 	'steps-to-change-direction' 	
+	// Configuration:
+	// 	.config['steps-to-change-direction']
 	// 		Sets the number of steps to change direction (N)
 	//
-	//	'shifts-affect-direction'
+	//	.config['shifts-affect-direction']
 	//		If 'on', add last direction change before vertical shift to 
 	//		direction counter (N)
 	//		This makes the direction change after several shifts up/down
 	//		"backwards" a bit faster.
 	//
+	__direction: null,
+	__direction_last: null,
 	get direction(){
-		return this._direction >= 0 ? 'right'
-			: this._direction < 0 ? 'left'
-			: 'right' },
+		return this.__direction == null ? 
+			(this.config['default-direction'] || 'right') 
+			: this.__direction[0] },
 	set direction(value){
-		// repeat last direction...
-		if(value == '!'){
-			if(this._direction_last == null){
-				return
-			}
-			this.direction = this._direction_last
-			// NOTE: this stabilizes the .direction, preventing repeating
-			// 		the last explicitly set value over and over again...
-			this._direction_last = this.direction
+		value = value.trim()
+		// test input value...
+		if(!/^(left!?|right!?|!)$/.test(value)){
+			throw new Error('.direction: unexpected value:', value) }
+		// value is '!' -> repeat last direction...
+		value = value == '!' ? 
+			this.__direction_last 
+				|| (this.__direction || [])[0] 
+				|| this.config['default-direction'] 
+				|| 'right'
+			: value
 
-		// force direction change...
-		} else if(typeof(value) == typeof('str') 
-				&& value.slice(-1) == '!'){
-			value = this._direction = value == 'left!' ? -1
-				: value == 'right!' ? 0
-				: this._direction
-			this._direction_last = value >= 0 ? 'right' : 'left'
+		var steps = this.config['steps-to-change-direction']
+		var direction = this.__direction || new Array(steps)
 
-		// 'update' direction...
-		} else {
-			value = value == 'left' ? -1 
-				: value == 'right' ? 1
-				: 0
-			this._direction_last = value >= 0 ? 'right' : 'left'
-			var d = (this._direction || 0) + value
-			var s = this.config['steps-to-change-direction']
-			s = s < 1 ? 1 : s
-			// cap the direction value between -s and s-1...
-			// NOTE: we use s-1 instead of s as 0/null is a positive 
-			// 		direction...
-			d = d >= s ? s-1 : d
-			d = d < -s ? -s : d
-			this._direction = d
-		}
+		// value ends with '!' -> force direction change...
+		direction = (value.endsWith('!') 
+				&& direction[0] != value.slice(0, -1)) ? 
+			new Array(steps)
+			: direction
+
+		// normalize value...
+		value = this.__direction_last = 
+			value.endsWith('!') ? value.slice(0, -1) : value
+
+		// update direction...
+		this.__direction =
+				// fill empty state...
+				direction[0] == null ?
+					direction.fill(value)
+				// update direction...
+				: direction[0] == value ?
+					direction
+						.concat([value])
+						.slice(-steps)
+				// reset direction...
+				: direction.length == 1 ?
+					(new Array(steps)).fill(value)
+				// step in the opposite direction...
+				: direction.slice(0, -1)
 	},
 
 
@@ -800,6 +791,25 @@ core.ImageGridFeatures.Feature({
 //---------------------------------------------------------------------
 // Edit...
 
+// Generate an undo function for shift operations...
+//
+// NOTE: {undo: 'shiftImageDown'}, will not do here because we need to 
+// 		pass an argument to the shift action, as without an argument 
+// 		these actions will shift focus to a different image in the same 
+// 		ribbon...
+// 			.shiftImageDown(x)
+// 				shift image x without changing focus, i.e. the focused
+// 				image before the action will stay focused after.
+// 			.focusImage(x).shiftImageDown()
+// 				focus image x, then shift it down (current image default)
+// 				this will shift focus to .direction of current image.
+var undoShift = function(undo){
+	return function(a){ 
+		this[undo](a.args.length == 0 ? a.current : a.args[0]) }}
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
 var BaseEditActions = 
 module.BaseEditActions = 
 actions.Actions({
@@ -810,9 +820,12 @@ actions.Actions({
 	//
 	// NOTE: for all of these, current/ribbon image is a default...
 
-	// XXX add undo...
 	setBaseRibbon: ['Edit|Ribbon/Set base ribbon', {
 		journal: true,
+		getUndoState: function(state){ 
+			state.base = this.base },
+		undo: function(state){ 
+			this.setBaseRibbon(state.base) },
 		browseMode: function(target){ 
 			return this.current_ribbon == this.base && 'disabled' }},
 		function(target){ this.data.setBase(target) }],
@@ -822,10 +835,8 @@ actions.Actions({
 		core.makeConfigToggler('shifts-affect-direction', 
 			['off', 'on'],
 			function(action){
-				if(action == 'on'){
-					delete this._direction_last
-				}
-			})],
+				action == 'on'
+					&& (delete this.__direction_last) })],
 
 
 	// NOTE: this does not retain direction information, handle individual
@@ -874,8 +885,9 @@ actions.Actions({
 
 				this.data.shiftImageUp(cur)
 				this.focusImage(next)
+
 				this.config['shifts-affect-direction'] == 'on' 
-					&& (this.direction = '!')
+					&& (this.direction = this.direction)
 
 			// if a specific target is given, just shift it...
 			} else {
@@ -903,7 +915,9 @@ actions.Actions({
 
 				this.data.shiftImageDown(cur)
 				this.focusImage(next)
-				this.config['shifts-affect-direction'] == 'on' && (this.direction = '!')
+
+				this.config['shifts-affect-direction'] == 'on' 
+					&& (this.direction = this.direction)
 
 			// if a specific target is given, just shift it...
 			} else {

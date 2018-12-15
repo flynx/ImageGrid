@@ -552,7 +552,7 @@ var URLHistoryUIActions = actions.Actions({
 
 	// XXX add option to force full update on dialog.update() (???)
 	listURLHistory: ['History|File/Location history...',
-		widgets.makeUIDialog(function(){
+		widgets.makeUIDialog(function(mode){
 			var that = this
 			var data
 			var orig_pins
@@ -706,6 +706,10 @@ var URLHistoryUIActions = actions.Actions({
 
 			return dialog
 		})],
+	/*/ XXX
+	listURLHistoryPinned: ['History|File/Location history (pinned)...',
+		'listURLHistoryPinned: "pinned"'],
+	//*/
 })
 
 var URLHistoryUI = 
