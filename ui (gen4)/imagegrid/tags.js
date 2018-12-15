@@ -922,12 +922,13 @@ var TagsPrototype = {
 	// NOTE: if any renamed tag is renamed to '' it will be removed 
 	// 		untagging all relevant values...
 	//
-	// XXX need to sanitize from -- it can not contain regex characters...
+	// XXX need to sanitize tag -- it can not contain regex characters...
 	// 		...should we guard against this???
 	// XXX should both sides of the alias be renamed???
 	rename: function(tag, to, ...tags){
 		var that = this
 
+		// XXX should we bo more pedantic here???
 		tag = this.normalize(tag)
 		if(tag == ''){
 			throw new Error(`.rename(..): first argument can not be an empty string.`) }

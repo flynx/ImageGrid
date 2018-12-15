@@ -772,6 +772,10 @@ var DialogsActions = actions.Actions({
 					//fullPathEdit: true,
 					//*/
 				}, options || {})) })],
+	// XXX
+	showCloud: ['- Interface/',
+		makeUIDialog(function(list, options){
+			throw new Error('.showCloud(..): not implemented.') })],
 
 	// XXX do we need to split the options???
 	showEditableList: ['- Interface/', 

@@ -6,7 +6,6 @@
 * 	- base
 * 		map to data and images
 * 	- crop
-* 	- tags
 * 	- groups
 * 		XXX experimental...
 *
@@ -100,9 +99,7 @@ actions.Actions({
 	
 	// Data...
 	get data(){ 
-		var d = this.__data = this.__data || data.Data() 
-		return d 
-	},
+		return (this.__data = this.__data || data.Data()) },
 	set data(value){ 
 		this.__data = value },
 
@@ -154,8 +151,7 @@ actions.Actions({
 	get direction(){
 		return this._direction >= 0 ? 'right'
 			: this._direction < 0 ? 'left'
-			: 'right'
-	},
+			: 'right' },
 	set direction(value){
 		// repeat last direction...
 		if(value == '!'){
@@ -473,7 +469,6 @@ actions.Actions({
 			has a slightly different signature to the above, this is done
 			for simplicity...
 		`,
-		//function(img, list){ this.data.focusImage.apply(this.data, arguments) }],
 		function(img, list){ this.data.focusImage(...arguments) }],
 	// Focuses a ribbon by selecting an image in it...
 	//
@@ -1006,45 +1001,30 @@ actions.Actions({
 
 	// basic image editing...
 	//
-	// Rotate image...
-	//
-	//	Rotate current image clockwise...
-	//	.rotate()
-	//	.rotate('cw')
-	//		-> actions
-	//
-	//	Rotate current image counterclockwise...
-	//	.rotate('ccw')
-	//		-> actions
-	//
-	//	Rotate target image clockwise...
-	//	.rotate(target)
-	//	.rotate(target, 'cw')
-	//		-> actions
-	//
-	//	Rotate target image counterclockwise...
-	//	.rotate(target, 'ccw')
-	//		-> actions
-	//
-	//
-	// Flip is similar...
-	//
-	// 	Flip current image ('horizontal' is default)...
-	//	.flip()
-	//	.flip('horizontal')
-	//	.flip('vertical')
-	//		-> actions
-	//
-	//	Flip target...
-	//	.flip(target)
-	//	.flip(target, 'horizontal')
-	//	.flip(target, 'vertical')
-	//		-> actions
-	//
-	//
-	// NOTE: target must be .data.getImage(..) compatible, see it for docs...
 	// XXX correct undo???
 	rotate: ['- Image|Edit/Rotate image',
+		core.doc`Rotate image...
+
+			Rotate current image clockwise...
+			.rotate()
+			.rotate('cw')
+				-> actions
+
+			Rotate current image counterclockwise...
+			.rotate('ccw')
+				-> actions
+
+			Rotate target image clockwise...
+			.rotate(target)
+			.rotate(target, 'cw')
+				-> actions
+
+			Rotate target image counterclockwise...
+			.rotate(target, 'ccw')
+				-> actions
+
+		NOTE: target must be .data.getImage(..) compatible, see it for docs...
+		`,
 		{journal: true},
 		function(target, direction){
 			if(arguments.length == 0){
@@ -1060,6 +1040,22 @@ actions.Actions({
 				&& this.images.rotateImage(target, direction || 'cw')
 		}],
 	flip: ['- Image|Edit/Flip image',
+		core.doc`Flip image...
+		
+			Flip current image ('horizontal' is default)...
+			 .flip()
+			 .flip('horizontal')
+			 .flip('vertical')
+				-> actions
+			
+			 Flip target...
+			 .flip(target)
+			 .flip(target, 'horizontal')
+			 .flip(target, 'vertical')
+				-> actions
+		
+		NOTE: target must be .data.getImage(..) compatible, see it for docs...
+		`,
 		{journal: true},
 		function(target, direction){
 			if(target == 'vertical' || target == 'horizontal'){
@@ -1159,256 +1155,6 @@ core.ImageGridFeatures.Feature({
 			'flipVertical',
 		], 
 			function(_, target){ this.markChanged('images', [this.data.getImage(target)]) }],
-	],
-})
-
-
-
-//---------------------------------------------------------------------
-// Tags...
-
-// mode can be:
-// 	"ribbon"	- next marked in current ribbon (default)
-// 	"all"		- next marked in sequence
-//
-// XXX add support for tag lists...
-var makeTagWalker =
-module.makeTagWalker =
-function(direction, dfl_tag){
-	var meth = direction == 'next' ? 'nextImage' : 'prevImage'
-	return function(tag, mode){
-		this[meth](this.data.tags.values(tag || dfl_tag), mode) } }
-
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-
-var TagsActions = 
-module.TagsActions = actions.Actions({
-	prevTagged: ['- Navigate/Previous image tagged with tag',
-		makeTagWalker('prev')],
-	nextTagged: ['- Navigate/Next image tagged with tag',
-		makeTagWalker('next')],
-})
-
-var Tags =
-module.Tags = core.ImageGridFeatures.Feature({
-	title: '',
-
-	tag: 'tags',
-	depends: [
-		'base',
-	],
-	suggested: [
-		'tags-edit',
-	],
-
-	actions: TagsActions,
-})
-
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-
-var TagsEditActions = 
-module.TagsEditActions = actions.Actions({
-	// tags...
-	//
-	// XXX mark updated...
-	tag: ['- Tag/Tag image(s)',
-		{journal: true},
-		function(tags, gids){
-			gids = gids || this.current
-			gids = gids instanceof Array ? gids : [gids]
-			// XXX this is slow for very large data sets...
-			gids = this.data.getImages(gids)
-
-			tags = tags instanceof Array ? tags : [tags]
-
-			var that = this
-
-			if(gids.length == 0){
-				return
-			}
-
-			// data...
-			this.data.tag(tags, gids)
-
-			// images...
-			var images = this.images
-			gids.forEach(function(gid){
-				var img = images[gid] = images[gid] || {}
-				img.tags = img.tags || []
-
-				img.tags = img.tags.concat(tags).unique()
-
-				// XXX mark updated...
-			})
-		}],
-	// XXX mark updated...
-	untag: ['- Tag/Untag image(s)',
-		{journal: true},
-		function(tags, gids){
-			gids = gids || this.current
-			gids = gids instanceof Array ? gids : [gids]
-			tags = tags instanceof Array ? tags : [tags]
-
-			// data...
-			this.data.untag(tags, gids)
-
-			// images...
-			var images = this.images
-			gids.forEach(function(gid){
-				var img = images[gid]
-				if(img == null || img.tags == null){
-					return
-				}
-
-				img.tags = img.tags.filter(function(tag){ return tags.indexOf(tag) < 0 })
-
-				if(img.tags.length == 0){
-					delete img.tags
-				}
-
-				// XXX mark updated...
-			})
-		}],
-	// Sync tags...
-	//
-	// 	Sync both ways...
-	//	.syncTags()
-	//	.syncTags('both')
-	//
-	//	Sync from .data
-	//	.syncTags('data')
-	//
-	//	Sync from .images
-	//	.syncTags('images')
-	//
-	//	Sync from <images> object
-	//	.syncTags(<images>)
-	//
-	// NOTE: mode is data.tagsToImages(..) / data.tagsFromImages(..) 
-	// 		compatible...
-	// NOTE: setting source to 'both' and mode to 'reset' is the same as
-	// 		'images' and 'reset' as all .data tags will be lost on first 
-	// 		pass...
-	syncTags: ['Tag/-10:Synchoronize tags between data and images',
-		{journal: true},
-		function(source, mode){
-			// can't do anything if either .data or .images are not 
-			// defined...
-			if(this.images == null){
-				return
-			}
-
-			source = source || 'both'
-			mode = mode || 'merge'
-
-			var images = this.images
-
-			if(typeof(source) != typeof('str')){
-				images = source
-				source = 'images'
-			}
-
-			if(source == 'data' || source == 'both'){
-				this.data.tagsToImages(images, mode)
-			}
-			if(source == 'images' || source == 'both'){
-				this.data.tagsFromImages(images, mode)
-			}
-		}],
-	
-})
-
-var TagsEdit =
-module.TagsEdit = core.ImageGridFeatures.Feature({
-	title: '',
-
-	tag: 'tags-edit',
-	depends: [
-		'tags',
-		'edit',
-	],
-
-	actions: TagsEditActions,
-
-	handlers: [
-		// tags and images...
-		// NOTE: tags are also stored in images...
-		['tag untag',
-			function(_, tags, gids){
-				var that = this
-				var changes = []
-
-				gids = gids || this.current
-				gids = gids instanceof Array ? gids : [gids]
-				gids = this.data.getImages(gids)
-
-				tags = tags || []
-				tags = tags instanceof Array ? tags : [tags]
-
-				// tags...
-				if(tags.length > 0){
-					this.markChanged('tags')
-
-					tags.indexOf('marked') >= 0
-						&& this.markChanged('marked')
-
-					tags.indexOf('bookmark') >= 0
-						&& this.markChanged('bookmarked')
-				}
-
-				this.markChanged('images', gids)
-			}],
-
-		// store .tags and .tags.marked / .tags.bookmark separately from .data...
-		//
-		// XXX see if this can be automated...
-		['prepareIndexForWrite', 
-			function(res){
-				var changes = res.changes
-
-				if(!changes || !res.raw.data){
-					return
-				}
-
-				if((changes === true || changes.tags) && res.raw.data.tags){
-					res.index.tags = res.raw.data.tags
-				}
-
-				// XXX should we save an empty list *iff* changes.marked is true???
-				if(changes === true || changes.marked){
-					res.index.marked = 
-						(res.raw.data.tags.tags || {}).marked || []
-				}
-				// XXX should we save an empty list *iff* changes.bookmarked is true???
-				if(changes === true || changes.bookmarked){
-					res.index.bookmarked = [
-						(res.raw.data.tags.tags || {}).bookmark || [],
-						{},
-					]
-				}
-
-				// cleanup...
-				if(res.index.data && res.index.data.tags){
-					delete res.index.data.tags.tags.marked
-					delete res.index.data.tags.tags.bookmark
-					delete res.index.data.tags
-				}
-			}],
-		// merge the tags into data...
-		['prepareIndexForLoad.pre',
-			function(json){
-				// NOTE: this is done before we build the data to let 
-				// 		Data handle format conversion...
-				json.data.tags = json.tags || {}
-			}],
-		// merge in marked and bookmark tags...
-		['prepareIndexForLoad',
-			function(res, json){
-				res.data.tag('marked', json.marked || [])
-				res.data.tag('bookmark', json.bookmarked ? json.bookmarked[0] : [])
-			}],
 	],
 })
 
