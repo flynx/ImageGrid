@@ -816,6 +816,15 @@ actions.Actions({
 	config: {
 	},
 
+	// NOTE: resetting this option will clear the last direction...
+	toggleShiftsAffectDirection: ['Interface/Shifts affect direction',
+		core.makeConfigToggler('shifts-affect-direction', 
+			['off', 'on'],
+			function(action){
+				action == 'on'
+					&& (delete this.__direction_last) })],
+
+
 	// basic ribbon editing...
 	//
 	// NOTE: for all of these, current/ribbon image is a default...
@@ -829,15 +838,6 @@ actions.Actions({
 		browseMode: function(target){ 
 			return this.current_ribbon == this.base && 'disabled' }},
 		function(target){ this.data.setBase(target) }],
-
-	// NOTE: resetting this option will clear the last direction...
-	toggleShiftsAffectDirection: ['Interface/Shifts affect direction',
-		core.makeConfigToggler('shifts-affect-direction', 
-			['off', 'on'],
-			function(action){
-				action == 'on'
-					&& (delete this.__direction_last) })],
-
 
 	// NOTE: this does not retain direction information, handle individual
 	// 		actions if that info is needed.

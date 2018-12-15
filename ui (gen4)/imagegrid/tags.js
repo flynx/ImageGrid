@@ -306,6 +306,8 @@ var TagsPrototype = {
 	// Query syntax:
 	// 	a		- tag
 	// 	a/b		- path, defines a directional relation between a and b
+	// 	/a		- path special case, matches iff a is at path root
+	// 	a/		- path special case, matches iff a is at path base
 	// 	a:b		- set, defines a non-directional relation between a and b
 	// 	*		- tag placeholder, matches one and only one tag name
 	//
@@ -371,6 +373,9 @@ var TagsPrototype = {
 
 		// match two tags...
 		} else {
+			var root = /^\s*[\\\/]/.test(a)
+			var base = /[\\\/]\s*$/.test(a)
+
 			// normalized match...
 			a = this.normalize(a)
 			b = this.normalize(b)
@@ -405,7 +410,13 @@ var TagsPrototype = {
 			// 		tag compatibility deeper in matchSet(..)...
 			var sa = a.split(/[\/\\]/g) 
 			var sb = b.split(/[\/\\]/g)
-			return sb
+			return (
+				// fail if base/root fails...
+				(root && !matchSet(sa[0], sb[0]) 
+						|| (base && !matchSet(sa[sa.length-1], sb[sb.length-1]))) ?
+					false
+				// normal test...
+				: sb
 					.reduce(function(a, e){
 						return (a[0] 
 								&& (a[0] == '*' 
@@ -413,7 +424,7 @@ var TagsPrototype = {
 							a.slice(1) 
 							: a
 					}, sa)
-					.length == 0
+					.length == 0)
 		}
 	},
 
@@ -448,6 +459,8 @@ var TagsPrototype = {
 	match: function(a, b, cmp){
 		var that = this
 
+		var edge = /^\s*[\\\/]/.test(a) || /[\\\/]\s*$/.test(a)
+
 		var res = this.directMatch(...arguments) 
 
 		// get paths with tag...
@@ -462,7 +475,8 @@ var TagsPrototype = {
 			seen = seen || new Set()
 			return paths(tag)
 				.reduce(function(res, path){
-					if(res == true){
+					if(res == true
+							|| (edge && !that.directMatch(a, path))){
 						return res
 					}
 
