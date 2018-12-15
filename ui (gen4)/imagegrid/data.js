@@ -132,9 +132,8 @@ if(typeof(sha1) != 'undefined'){
 
 
 /*********************************************************************/
+// Data...
 
-// Data class methods and API...
-//
 var DataClassPrototype = {
 	// NOTE: we consider the input list sorted...
 	fromArray: function(list){
@@ -157,12 +156,6 @@ var DataClassPrototype = {
 	},
 }
 
-
-
-/*********************************************************************/
-
-// Data object methods and API...
-//
 var DataPrototype = {
 
 	get version(){ 
@@ -231,6 +224,9 @@ var DataPrototype = {
 	//
 	/*****************************************************************/
 
+	ribbon_order: null,
+	ribbons: null,
+
 	get current(){
 		return this.__current = this.__current 
 			|| this.getImages(this.ribbon_order[0])[0]
@@ -238,11 +234,12 @@ var DataPrototype = {
 	set current(value){
 		this.focusImage(value) },
 
-	// XXX should this default to top or bottom ribbon???
 	get base(){
 		return this.__base || this.ribbon_order[0] },
 	set base(value){
-		this.__base = value },
+		this.__base = value in this.ribbons ?
+			this.getRibbon(value)
+			: value },
 
 	get order(){
 		return this.__order },
@@ -426,7 +423,6 @@ var DataPrototype = {
 		}
 		return res
 	},
-
 
 	// Remove duplicate items from list in-place...
 	//
@@ -1554,10 +1550,7 @@ var DataPrototype = {
 	// This is signature compatible with .getRibbon(..), see it for more
 	// info...
 	setBase: function(target, offset){
-		var base = this.getRibbon(target, offset)
-		if(base in this.ribbons){
-			this.base = base
-		}
+		this.base = this.getRibbon(target, offset)
 		return this
 	},
 
@@ -2858,7 +2851,6 @@ var DataPrototype = {
 		var that = this
 		data = typeof(data) == typeof('str') ? JSON.parse(data) : data
 		data = formats.updateData(data, DATA_VERSION)
-		this.base = data.base
 		this.order = data.order.slice()
 		this.ribbon_order = data.ribbon_order.slice()
 
@@ -2876,6 +2868,7 @@ var DataPrototype = {
 		})
 
 		this.current = data.current
+		this.base = data.base
 
 		// extra data...
 		!clean
@@ -2926,8 +2919,17 @@ var DataPrototype = {
 }
 
 
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
-/*********************************************************************/
+var BaseData = 
+module.BaseData = 
+object.makeConstructor('BaseData', 
+		DataClassPrototype, 
+		DataPrototype)
+
+
+
+//---------------------------------------------------------------------
 
 // XXX make a API compatible replacement to the above -- to access 
 // 		compatibility and performance...
@@ -3220,7 +3222,17 @@ var DataWithTagsPrototype = {
 
 
 
-/*********************************************************************/
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+var DataWithTags = 
+module.DataWithTags = 
+object.makeConstructor('DataWithTags', 
+		DataClassPrototype, 
+		DataWithTagsPrototype)
+
+
+
+//---------------------------------------------------------------------
 
 // Proxy Data API to one of the target data objects...
 var DataProxyPrototype = {
@@ -3236,26 +3248,11 @@ var DataProxyPrototype = {
 }
 
 
-/*********************************************************************/
 
-// Main Data object...
-var BaseData = 
-module.BaseData = 
-object.makeConstructor('BaseData', 
-		DataClassPrototype, 
-		DataPrototype)
-
-
-var DataWithTags = 
-module.DataWithTags = 
-object.makeConstructor('DataWithTags', 
-		DataClassPrototype, 
-		DataWithTagsPrototype)
-
+//---------------------------------------------------------------------
 
 var Data =
 module.Data = DataWithTags
-
 
 
 

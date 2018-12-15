@@ -49,7 +49,7 @@ var normalizeSplit = function(args){
 
 /*********************************************************************/
 
-var TagsClassPrototype = {
+var BaseTagsClassPrototype = {
 	// Utils...
 	//
 	// 	.normalize(tag)
@@ -207,74 +207,42 @@ var TagsClassPrototype = {
 // 		...there are two ways to think of this:
 // 			1) both (a-la flickr) -- keep both, use normalized internally
 // 			2) only normalized -- simpler but may surprise the user and not be as pretty...
-var TagsPrototype = {
+// XXX should we split out the non-basic stuff???
+// 		like:
+// 			.makePathsPersistent()
+// 			.optimizeTags()
+// 			...
+var BaseTagsPrototype = {
 	config: {
 		tagRemovedChars: '[\\s-_]',
 	},
 
-	// data...
+	// Tag index...
 	//
-	// Format:
-	// 	Set([ <tag>, ... ])
-	//
-	// XXX Q: should these be normalized???
-	__persistent_tags: null,
-
-	// Format:
-	// 	{
-	// 		<alias>: <normalized-tag>,
-	// 	}
-	//
-	// XXX need introspection for this...
-	// 		...should this be .aliases ???
-	__aliases: null,
-
 	// Format:
 	// 	{
 	// 		<tag>: [ <item>, ... ],
 	// 		...
 	// 	}
+	//
 	__index: null,
 
 
+	// Persistent tags...
+	//
+	// Format:
+	// 	Set([ <tag>, ... ])
+	//
+	persistent: null,
 
-	// XXX EXPERIMENTAL...
-	// XXX need a way to edit the compound tag...
-	__special_tag_handlers__: {
-		'*persistent*': function(action, tag, value){
-			// XXX remove the tag...
-			// XXX add the tag to .__persistent_tags
-			// XXX return the new tag for normal handling...
-		},
-	},
-	handleSpecialTag: function(action, tag, value){
-		var that = this
-		var handlers = this.__special_tag_handlers__ || {}
-
-		// get the matching handler key...
-		var key = Object.keys(handlers)
-			.filter(function(k){ 
-				return that.match(k, tag) })
-			// XXX should we handle multiple matches???
-			.shift()
-
-		// resolve handler aliases...
-		var match = key
-		do {
-			match = handlers[match]	
-		} while(!(match instanceof Function) && match in handlers)
-
-		// no handler...
-		if(!(match instanceof Function)){
-			// XXX
-			return false
-		}
-
-		// XXX remove key from tag...
-
-		return match.call(this, action, tag, value)
-	},
-
+	// Tag aliases...
+	//
+	// Format:
+	// 	{
+	// 		<alias>: <normalized-tag>,
+	// 	}
+	//
+	aliases: null,
 
 
 	// Utils...
@@ -569,6 +537,41 @@ var TagsPrototype = {
 				//return that.directMatch(query, t, cmp) }) },
 				return that.match(query, t, cmp) }) },
 
+	// Keep only the longest matching paths...
+	//
+	// 	.uniquePaths(path, ..)
+	// 	.uniquePaths([path, ..])
+	// 		-> paths
+	//
+	// Algorithm:
+	// 	- sort by path length descending
+	// 	- take top path (head)
+	// 	- remove all paths that match it after it (tail)
+	// 	- next path
+	//
+	uniquePaths: function(...list){
+		var that = this
+		return that.normalize(normalizeSplit(list))
+			// sort by number of path elements (longest first)...
+			.map(function(p){ return p.split(/[\\\/]/g) })
+				.sort(function(a, b){ return b.length - a.length })
+				.map(function(p){ return p.join('/') })
+			// remove all paths in tail that match the current...
+			.map(function(p, i, list){
+				// skip []...
+				!(p instanceof Array)
+					&& list
+						// only handle the tail...
+						.slice(i+1)
+						.forEach(function(o, j){
+							// skip []...
+							!(p instanceof Array)
+								&& that.directMatch(o, p)
+								// match -> replace the matching elem with []
+								&& (list[i+j+1] = []) })
+				return p })
+			.flat() },
+
 
 	// Introspection and Access API...
 	//
@@ -611,7 +614,7 @@ var TagsPrototype = {
 	//		-> bool
 	//
 	//
-	// NOTE: this includes all the .persistent tags as well as all the 
+	// NOTE: this includes all the persistent tags as well as all the 
 	// 		tags actually used.
 	//
 	// XXX should this return split values???
@@ -641,7 +644,7 @@ var TagsPrototype = {
 		// get all tags...
 		} else {
 			return Object.keys(this.__index || {})
-				.concat([...(this.__persistent_tags || [])]
+				.concat([...(this.persistent || [])]
 					.map(function(t){ 
 						return that.normalize(t) }))
 				.unique()
@@ -700,7 +703,7 @@ var TagsPrototype = {
 	// 		-> this
 	//
 	alias: function(tag, value){
-		var aliases = this.__aliases = this.__aliases || {}
+		var aliases = this.aliases = this.aliases || {}
 		// XXX this seems a bit ugly...
 		var resolve = function(tag, seen){
 			seen = seen || []
@@ -903,8 +906,8 @@ var TagsPrototype = {
 		tags = normalizeSplit(tags)
 
 		var persistent = 
-			this.__persistent_tags = 
-				this.__persistent_tags || new Set()
+			this.persistent = 
+				this.persistent || new Set()
 
 		return this.normalize(tags)
 			.map(function(tag){
@@ -1004,9 +1007,9 @@ var TagsPrototype = {
 
 		// rename actual data...
 		} else {
-			patchSet(this.__persistent_tags || [])
+			patchSet(this.persistent || [])
 			patchObj(this.__index || {})
-			patchObj(this.__aliases || {}, true)
+			patchObj(this.aliases || {}, true)
 		}
 		
 		return this
@@ -1051,8 +1054,45 @@ var TagsPrototype = {
 		return res
 	},
 
+	// Keep only the longest tag paths per value...
+	//
+	// 	Optimize tags for all values...
+	// 	.optimizeTags()
+	// 		-> values
+	//
+	// 	Optimize tags for specific values...
+	// 	.optimizeTags(value, ..)
+	// 	.optimizeTags([value, ..])
+	// 		-> values
+	//
+	//
+	// Example:
+	// 		var ts = new Tags()
+	// 		ts.tag(['a/b/c', 'a/c'], x)
+	//
+	// 		ts.optimizeTags()	// will remove 'a/c' form x as it is fully 
+	// 							// contained within 'a/b/c'...
+	//
+	// XXX should this be done on .tag(..) and friends???
+	optimizeTags: function(...values){
+		var that = this
+		return (normalizeSplit(values) || this.values())
+			.filter(function(value){
+				var tags = new Set(that.paths(value))
+				tags = [...tags.subtract(that.uniquePaths(...tags))]
+				tags.length > 0
+					&& that.untag(tags, value) 
+				return tags.length > 0 }) },
 
-	// Tags - Tags API...
+	// Make all paths persistent...
+	//
+	// NOTE: this will add only longest unique paths (see: .uniquePaths(..))
+	makePathsPersistent: function(){
+		this.persistent = new Set(this.uniquePaths(this.paths()))
+		return this },
+
+
+	// Tags-Tags API...
 	//
 	// Join 1 or more Tags objects...
 	//
@@ -1379,12 +1419,12 @@ var TagsPrototype = {
 		var res = {}
 
 		// aliases...
-		this.__aliases && Object.keys(this.__aliases).length > 0
-			&& (res.aliases = Object.assign({}, this.__aliases))
+		this.aliases && Object.keys(this.aliases).length > 0
+			&& (res.aliases = Object.assign({}, this.aliases))
 
 		// persistent tags...
-		this.__persistent_tags && this.__persistent_tags.size > 0
-			&& (res.persistent = [...this.__persistent_tags])
+		this.persistent && this.persistent.size > 0
+			&& (res.persistent = [...this.persistent])
 
 		// tags...
 		res.tags = {}
@@ -1400,11 +1440,11 @@ var TagsPrototype = {
 
 		// aliases...
 		json.aliases
-			&& (this.__aliases = Object.assign({}, json.aliases))
+			&& (this.aliases = Object.assign({}, json.aliases))
 
 		// persistent tags...
 		json.persistent
-			&& (this.__persistent_tags = new Set(json.persistent))
+			&& (this.persistent = new Set(json.persistent))
 
 		// tags...
 		json.tags
@@ -1424,11 +1464,90 @@ var TagsPrototype = {
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-var Tags = 
-module.Tags = 
-object.makeConstructor('Tags', 
-		TagsClassPrototype, 
-		TagsPrototype)
+var BaseTags = 
+module.BaseTags = 
+object.makeConstructor('BaseTags', 
+		BaseTagsClassPrototype, 
+		BaseTagsPrototype)
+
+
+
+//---------------------------------------------------------------------
+
+// XXX EXPERIMENTAL...
+var TagsWithHandlersPrototype = {
+	__proto__: BaseTagsPrototype,
+
+	// XXX docs...
+	__special_tag_handlers__: {
+		// print and remove tag...
+		'test': function(tag, action, value){
+			console.log('TEST TAG:', tag, action, value)
+			return this.removeTag('test', tag)[0]
+		},
+		// terminate handling...
+		'stop': function(tag, action, value){
+			console.log('STOP:', tag, action, value)
+			return false 
+		},
+		// print the tag...
+		'*': function(tag, action, value){
+			console.log('TAG:', tag, action, value)
+			return tag 
+		},
+	},
+
+	// NOTE: handlers are called in order of handler occurrence and not 
+	// 		in the order the tags are in the given chain/path...
+	handleSpecialTag: function(tag, ...args){
+		var that = this
+		var handlers = this.__special_tag_handlers__
+		tag = this.normalize(tag)
+		return Object.keys(handlers)
+				.filter(function(p){
+					// keep only valid tag patterns...
+					// NOTE: this enables us to create special handlers 
+					// 		that will not be used for matching but are more 
+					// 		mnemonic...
+					return p == that.normalize(p)
+						// get the matching handler keys...
+						&& that.directMatch(p, tag)
+				})
+				// resolve handler aliases...
+				.map(function(match){
+					do {
+						match = handlers[match]	
+					} while(!(match instanceof Function) && match in handlers)
+
+					return match instanceof Function ? 
+						match 
+						// no handler...
+						: [] })
+				.flat()
+				// call the handlers...
+				// NOTE: we are threading tag through the handlers...
+				.reduce(function(tag, handler){
+					return tag && handler.call(that, tag, ...args) }, tag) 
+			// no handlers -> return as-is...
+			|| tag },
+
+}
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+var TagsWithHandlers = 
+module.TagsWithHandlers = 
+object.makeConstructor('TagsWithHandlers', 
+		BaseTagsClassPrototype,
+		TagsWithHandlersPrototype)
+
+
+
+//---------------------------------------------------------------------
+
+var Tags =
+module.Tags = TagsWithHandlers
 
 
 
