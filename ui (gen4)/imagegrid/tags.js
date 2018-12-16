@@ -539,6 +539,11 @@ var BaseTagsPrototype = {
 
 	// Keep only the longest matching paths...
 	//
+	// 	List all the unique paths...
+	// 	.uniquePaths()
+	// 		-> paths
+	//
+	// 	Return only unique paths...
 	// 	.uniquePaths(path, ..)
 	// 	.uniquePaths([path, ..])
 	// 		-> paths
@@ -551,7 +556,9 @@ var BaseTagsPrototype = {
 	//
 	uniquePaths: function(...list){
 		var that = this
-		return that.normalize(normalizeSplit(list))
+		return (list.length == 0 ? 
+				this.paths() 
+				: this.normalize(normalizeSplit(list)))
 			// sort by number of path elements (longest first)...
 			.map(function(p){ return p.split(/[\\\/]/g) })
 				.sort(function(a, b){ return b.length - a.length })
@@ -565,7 +572,7 @@ var BaseTagsPrototype = {
 						.slice(i+1)
 						.forEach(function(o, j){
 							// skip []...
-							!(p instanceof Array)
+							!(o instanceof Array)
 								&& that.directMatch(o, p)
 								// match -> replace the matching elem with []
 								&& (list[i+j+1] = []) })
@@ -1054,7 +1061,7 @@ var BaseTagsPrototype = {
 		return res
 	},
 
-	// Keep only the longest tag paths per value...
+	// Optimize tags...
 	//
 	// 	Optimize tags for all values...
 	// 	.optimizeTags()
@@ -1066,14 +1073,25 @@ var BaseTagsPrototype = {
 	// 		-> values
 	//
 	//
-	// Example:
-	// 		var ts = new Tags()
-	// 		ts.tag(['a/b/c', 'a/c'], x)
+	// Optimizations:
+	// 	- Keep only the longest tag paths per value...
+	// 		Example:
+	// 			var ts = new Tags()
+	// 			ts.tag(['a/b/c', 'a/c'], x)
 	//
-	// 		ts.optimizeTags()	// will remove 'a/c' form x as it is fully 
-	// 							// contained within 'a/b/c'...
+	// 			ts.optimizeTags()	// will remove 'a/c' form x as it is 
+	// 								// fully contained within 'a/b/c'...
 	//
-	// XXX should this be done on .tag(..) and friends???
+	//
+	// XXX Q: should this be done on .tag(..) and friends???
+	// 		...currently I do not think so
+	// 			+ would keep the tags consistent...
+	// 			- slow things down on large numbers of tags
+	// 			- would seem inconsistent
+	// 				.tag('a/c', 'x')
+	// 				.tag('a/b/c', 'x')
+	// 				.tags(x)			// -> ['a/b/c']
+	// 		might be good to add this as an option...
 	optimizeTags: function(...values){
 		var that = this
 		return (normalizeSplit(values) || this.values())
@@ -1084,11 +1102,11 @@ var BaseTagsPrototype = {
 					&& that.untag(tags, value) 
 				return tags.length > 0 }) },
 
-	// Make all paths persistent...
+	// Make paths persistent...
 	//
-	// NOTE: this will add only longest unique paths (see: .uniquePaths(..))
+	// NOTE: this will touch only longest unique paths (see: .uniquePaths(..))
 	makePathsPersistent: function(){
-		this.persistent = new Set(this.uniquePaths(this.paths()))
+		this.persistent = new Set(this.uniquePaths())
 		return this },
 
 
