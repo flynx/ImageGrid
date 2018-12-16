@@ -1496,59 +1496,95 @@ object.makeConstructor('BaseTags',
 var TagsWithHandlersPrototype = {
 	__proto__: BaseTagsPrototype,
 
-	// XXX docs...
-	__special_tag_handlers__: {
-		// print and remove tag...
-		'test': function(tag, action, value){
-			console.log('TEST TAG:', tag, action, value)
-			return this.removeTag('test', tag)[0]
-		},
-		// terminate handling...
-		'stop': function(tag, action, value){
-			console.log('STOP:', tag, action, value)
-			return false 
-		},
-		// print the tag...
-		'*': function(tag, action, value){
-			console.log('TAG:', tag, action, value)
-			return tag 
-		},
-	},
+	//
+	// Example handlers:
+	// 	{
+	//		// remove the 'test' tag...
+	//		//
+	//		'test': function(tag, action, ...other){
+	//		    return this.removeTag('test', tag)[0] },
+	//
+	//		// terminate handling on 'stop'...
+	//		//
+	//		// NOTE: this will not prevent the method execution, only special
+	//		// 		tag handling will be stopped...
+	//		'stop': function(tag, action, ...other){
+	//			return false },
+	//
+	//		// print the tag operation info...
+	//		//
+	//		'*': function(tag, action, ...other){
+	//			console.log('TAG:', action, tag, ...other)
+	//			return tag },
+	//
+	//		...
+	//	}
+	//
+	__special_tag_handlers__: null,
+
 
 	// NOTE: handlers are called in order of handler occurrence and not 
 	// 		in the order the tags are in the given chain/path...
-	handleSpecialTag: function(tag, ...args){
+	handleSpecialTag: function(tags, ...args){
 		var that = this
-		var handlers = this.__special_tag_handlers__
-		tag = this.normalize(tag)
-		return Object.keys(handlers)
-				.filter(function(p){
-					// keep only valid tag patterns...
-					// NOTE: this enables us to create special handlers 
-					// 		that will not be used for matching but are more 
-					// 		mnemonic...
-					return p == that.normalize(p)
-						// get the matching handler keys...
-						&& that.directMatch(p, tag)
-				})
-				// resolve handler aliases...
-				.map(function(match){
-					do {
-						match = handlers[match]	
-					} while(!(match instanceof Function) && match in handlers)
+		var handlers = this.__special_tag_handlers__ || {}
+		tags = this.normalize(tags)
+		return tags instanceof Array ?
+			tags.map(function(tag){
+				return that.handleSpecialTag(tag, ...args) })
+			: (Object.keys(handlers)
+					.filter(function(p){
+						// keep only valid tag patterns...
+						// NOTE: this enables us to create special handlers 
+						// 		that will not be used for matching but are more 
+						// 		mnemonic...
+						return p == that.normalize(p)
+							// get the matching handler keys...
+							&& that.directMatch(p, tags)
+					})
+					// resolve handler aliases...
+					.map(function(match){
+						do {
+							match = handlers[match]	
+						} while(!(match instanceof Function) 
+							&& match in handlers)
+						return match instanceof Function ? 
+							match 
+							// no handler...
+							: [] })
+					.flat()
+					// call the handlers...
+					// NOTE: we are threading tag through the handlers...
+					.reduce(function(tag, handler){
+						return tag 
+							&& handler.call(that, tag, ...args) }, tags) 
+				// no handlers -> return as-is...
+				|| tags) },
 
-					return match instanceof Function ? 
-						match 
-						// no handler...
-						: [] })
-				.flat()
-				// call the handlers...
-				// NOTE: we are threading tag through the handlers...
-				.reduce(function(tag, handler){
-					return tag && handler.call(that, tag, ...args) }, tag) 
-			// no handlers -> return as-is...
-			|| tag },
-
+	//
+	// Handler actions: 
+	// 	[method]		[action]
+	// 	.tag(..)		-> 'tag'
+	// 	.untag(..)		-> 'untag'
+	// 	.rename(..)		-> 'rename'
+	// 					-> 'remove'
+	//
+	tag: function(tags, value){
+		var that = this
+		return TagsWithHandlersPrototype.__proto__.tag.call(this, 
+			that.handleSpecialTag(tags, 'tag', value),
+			...[...arguments].slice(1)) },
+	untag: function(tags, value){
+		var that = this
+		return TagsWithHandlersPrototype.__proto__.untag.call(this, 
+			that.handleSpecialTag(tags, 'untag', value),
+			...[...arguments].slice(1)) },
+	rename: function(tag, to, ...tags){
+		return TagsWithHandlersPrototype.__proto__.rename.call(this,
+			tags.length == 0 ?
+				this.handleSpecialTag(tag, to == '' ? 'remove' : 'rename', to)
+				: tag,
+			...[...arguments].slice(1)) },
 }
 
 
@@ -1565,7 +1601,10 @@ object.makeConstructor('TagsWithHandlers',
 //---------------------------------------------------------------------
 
 var Tags =
-module.Tags = TagsWithHandlers
+module.Tags = 
+	TagsWithHandlers
+	//BaseTags
+
 
 
 
