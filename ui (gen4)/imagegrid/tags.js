@@ -1496,11 +1496,24 @@ object.makeConstructor('BaseTags',
 var TagsWithHandlersPrototype = {
 	__proto__: BaseTagsPrototype,
 
+	// Special tag handlers...
 	//
 	// Example handlers:
 	// 	{
+	//		// print the tag operation info...
+	//		//
+	//		// NOTE: the key here is not a normalized tag thus this will 
+	//		//		never get called directly...
+	//		'PrintTag': function(tag, action, ...other){
+	//			console.log('TAG:', action, tag, ...other) },
+	//
+	//		// alias...
+	//		'*': 'PrintTag',
+	//
 	//		// remove the 'test' tag...
 	//		//
+	//		// NOTE: we can return a new value for the tag, if a handler
+	//		//		returns null or undefined the tag will not get changed...
 	//		'test': function(tag, action, ...other){
 	//		    return this.removeTag('test', tag)[0] },
 	//
@@ -1511,20 +1524,22 @@ var TagsWithHandlersPrototype = {
 	//		'stop': function(tag, action, ...other){
 	//			return false },
 	//
-	//		// print the tag operation info...
-	//		//
-	//		'*': function(tag, action, ...other){
-	//			console.log('TAG:', action, tag, ...other)
-	//			return tag },
-	//
 	//		...
 	//	}
 	//
-	__special_tag_handlers__: null,
+	//__special_tag_handlers__: null,
+	__special_tag_handlers__: {
+	 	//'PrintTag': function(tag, action, ...other){
+	 	//	console.log('TAG:', action, tag, ...other) },
+		//'*': 'PrintTag',
+	},
 
 
+	// Call the matching special tag handlers...
+	//
 	// NOTE: handlers are called in order of handler occurrence and not 
 	// 		in the order the tags are in the given chain/path...
+	// NOTE: if no handlers are defined this is a no-op (almost)
 	handleSpecialTag: function(tags, ...args){
 		var that = this
 		var handlers = this.__special_tag_handlers__ || {}
@@ -1556,8 +1571,13 @@ var TagsWithHandlersPrototype = {
 					// call the handlers...
 					// NOTE: we are threading tag through the handlers...
 					.reduce(function(tag, handler){
-						return tag 
-							&& handler.call(that, tag, ...args) }, tags) 
+						// update the returned tag in case we stop prematurely...
+						tags = tag || tags
+						// if tag is falsy then stop handling... 
+						var cur = tag 
+							&& handler.call(that, tag, ...args)
+						// if a handler returned null continue with tag as-is...
+						return cur == null ? tag : cur }, tags) 
 				// no handlers -> return as-is...
 				|| tags) },
 
