@@ -202,7 +202,6 @@ Array.prototype.sortAs = function(other){
 // Set...
 
 // Set set operation shorthands...
-// XXX should these accept lists of sets???
 Set.prototype.unite = function(other){ 
 	return new Set([...this, ...other]) }
 Set.prototype.intersect = function(other){
@@ -210,9 +209,9 @@ Set.prototype.intersect = function(other){
 	return new Set([...this]
 		.filter(function(e){ return other[test](e) })) }
 Set.prototype.subtract = function(other){
-	var test = other.has ?  'has' : 'includes'
+	other = new Set(other)
 	return new Set([...this]
-		.filter(function(e){ return !other[test](e) })) }
+		.filter(function(e){ return !other.has(e) })) }
 
 
 //---------------------------------------------------------------------

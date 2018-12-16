@@ -1493,6 +1493,8 @@ object.makeConstructor('BaseTags',
 //---------------------------------------------------------------------
 
 // XXX EXPERIMENTAL...
+// 		try using this to implement local tags in collections by defining
+// 		a '/local/*' handler...
 var TagsWithHandlersPrototype = {
 	__proto__: BaseTagsPrototype,
 
