@@ -235,7 +235,7 @@ var BaseTagsPrototype = {
 	//
 	persistent: null,
 
-	// Tag aliases...
+	// Tag definitions...
 	//
 	// Format:
 	// 	{
@@ -243,7 +243,7 @@ var BaseTagsPrototype = {
 	// 		...
 	// 	}
 	//
-	aliases: null,
+	definitions: null,
 
 
 	// Utils...
@@ -342,28 +342,41 @@ var BaseTagsPrototype = {
 
 		// match two tags...
 		} else {
+			var definitions = this.definitions
+
 			var root = /^\s*[\\\/]/.test(a)
 			var base = /[\\\/]\s*$/.test(a)
 
 			// normalized match...
 			a = this.normalize(a)
-			b = this.normalize(b)
-
 			// special case: *tag* pattern...
 			a = /^\*[^:\\\/]*\*$/.test(a) ? 
 				a.slice(1, -1) 
 				: a
+			b = this.normalize(b)
 
 			if(a == b){
 				return true
 			}
 
-			// set matching...
+			// set/definition matching...
 			// 	a matches b iff each element of a exists in b.
+			//
+			// NOTE: this does not care about order...
+			// NOTE: this matches single tags too...
 			var matchSet = function(a, b){
 				a = a.split(/:/g) 
 				b = b.split(/:/g)
+				// extend b with definitions...
+				b = b
+					.concat(!definitions ? [] : (b
+						.map(function(v){
+							return v in definitions ? 
+								definitions[v].split(/:/g) 
+								: [] })
+						.flat()))
 				return a.length <= b.length
+					// keep only the non-matches -> if at least one exists we fail...
 					&& a.filter(function(e){ 
 						return e != '*' 
 							&& b.indexOf(e) < 0
@@ -428,16 +441,15 @@ var BaseTagsPrototype = {
 	match: function(a, b, cmp){
 		var that = this
 
-		var edge = /^\s*[\\\/]/.test(a) || /[\\\/]\s*$/.test(a)
-
-		var res = this.directMatch(...arguments) 
+		// root or base?
+		var edge = /^\s*[\\\/]/.test(a) 
+			|| /[\\\/]\s*$/.test(a)
 
 		// get paths with tag...
 		var paths = function(tag){
 			return that.directMatch(tag, cmp)
 				.filter(function(t){ 
 					return /[\\\/]/.test(t) }) }
-
 		// search the path tree...
 		// NOTE: this will stop the search on first hit...
 		var search = function(tag, seen){
@@ -464,6 +476,7 @@ var BaseTagsPrototype = {
 										false
 									: search(tag, seen.add(tag)) }, false) }, false) }
 
+		var res = this.directMatch(...arguments) 
 		return res === false ?
 			search(b)
 			: res 
@@ -586,6 +599,7 @@ var BaseTagsPrototype = {
 	get length(){
 		return this.values().length },
 
+	// Direct tag/value check...
 	// XXX can these be faster???
 	// XXX should these take multiple values???
 	hasTag: function(tag){
@@ -696,22 +710,34 @@ var BaseTagsPrototype = {
 
 	// Edit API...
 	// 
+	// Get/set/remove tag definitions...
 	//
-	// 	Resolve alias (recursive)...
+	// A definition is a single tag that is defined by ("means") a tag set.
+	//
+	// 	Resolve definition (recursive)...
 	// 	.alias(tag)
 	// 		-> value
 	// 		-> undefined
 	//
-	// 	Set alias...
+	// 	Set definition...
 	// 	.alias(tag, value)
 	// 		-> this
 	//
-	// 	Remove alias...
+	// 	Remove definition...
 	// 	.alias(tag, null)
 	// 		-> this
 	//
-	alias: function(tag, value){
-		var aliases = this.aliases = this.aliases || {}
+	//
+	// Example:
+	// 		ts.define('birds', 'bird:many')
+	//
+	// 		ts.match('bird', ['bird', 'birds', 'animal'])	// -> ['bird', 'birds']
+	//
+	//
+	// XXX revise recursion testing and if it is needed...
+	define: function(tag, value){
+		var definitions = this.definitions = this.definitions || {}
+
 		// XXX this seems a bit ugly...
 		var resolve = function(tag, seen){
 			seen = seen || []
@@ -721,8 +747,8 @@ var BaseTagsPrototype = {
 					seen
 						.concat([seen[0]])
 						.join('" -> "') }"`) }
-			var next = aliases[tag] 
-				|| aliases[this.normalize(tag)]
+			var next = definitions[tag] 
+				|| definitions[this.normalize(tag)]
 			seen.push(tag)
 			return next != null ?
 					resolve(next, seen)
@@ -731,19 +757,23 @@ var BaseTagsPrototype = {
 				: undefined
 		}.bind(this)
 
+		tag = this.normalize(tag)
+		if(/[:\\\/]/.test(tag)){
+			throw new Error(`.alias(..): tag must be a single tag, got: "${tag}`) }
+
 		// resolve...
 		if(arguments.length == 1){
-			return resolve(tag.trim())
+			return resolve(tag)
 
 		// remove...
 		} else if(value == null){
-			delete aliases[tag.trim()]
-			delete aliases[this.normalize(tag)]
+			delete definitions[tag]
 
 		// set...
 		} else {
-			tag = tag.trim()
 			value = this.normalize(value)
+			if(/[\\\/]/.test(tag)){
+				throw new Error(`.alias(..): value must not be a path, got: "${value}`) }
 
 			// check for recursion...
 			var chain = []
@@ -754,12 +784,11 @@ var BaseTagsPrototype = {
 						.concat([chain[0]])
 						.join('" -> "') }"`) }
 
-			aliases[tag] = value
+			definitions[tag] = value
 		}
 		return this
 	},
-	// XXX save un-normalized tags as aliases... ???
-	// XXX when value is not given, add tags to persistent tags...
+	// XXX save un-normalized tags to dict... ???
 	tag: function(tags, value){
 		var that = this
 		value = value instanceof Array ? value : [value]
@@ -1017,7 +1046,7 @@ var BaseTagsPrototype = {
 		} else {
 			patchSet(this.persistent || [])
 			patchObj(this.__index || {})
-			patchObj(this.aliases || {}, true)
+			patchObj(this.definitions || {}, true)
 		}
 		
 		return this
@@ -1414,8 +1443,8 @@ var BaseTagsPrototype = {
 	// Format:
 	// 	{
 	// 		// optional
-	// 		aliases: null | {
-	// 			<alias>: <value>,	
+	// 		definitions: null | {
+	// 			<single-tag>: <tag-set>,	
 	// 			...
 	// 		},
 	//
@@ -1437,9 +1466,9 @@ var BaseTagsPrototype = {
 	json: function(){
 		var res = {}
 
-		// aliases...
-		this.aliases && Object.keys(this.aliases).length > 0
-			&& (res.aliases = Object.assign({}, this.aliases))
+		// definitions...
+		this.definitions && Object.keys(this.definitions).length > 0
+			&& (res.definitions = Object.assign({}, this.definitions))
 
 		// persistent tags...
 		this.persistent && this.persistent.size > 0
@@ -1457,9 +1486,9 @@ var BaseTagsPrototype = {
 	load: function(json){
 		var that = this
 
-		// aliases...
-		json.aliases
-			&& (this.aliases = Object.assign({}, json.aliases))
+		// definitions...
+		json.definitions
+			&& (this.definitions = Object.assign({}, json.definitions))
 
 		// persistent tags...
 		json.persistent
