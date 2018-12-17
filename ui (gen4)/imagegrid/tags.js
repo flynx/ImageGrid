@@ -20,6 +20,12 @@
 * 		- will it be faster?
 *
 *
+* XXX should we .optimizeTags(tag) on .tag(tag)???
+* XXX should this serialize recursively down???
+* 		...it might be a good idea to decide on a serialization 
+* 		protocol and use it throughout...
+*
+*
 *
 **********************************************************************/
 ((typeof define)[0]=='u'?function(f){module.exports=f(require)}:define)
@@ -50,6 +56,17 @@ var normalizeSplit = function(args){
 /*********************************************************************/
 
 var BaseTagsClassPrototype = {
+
+	PATH_SEPARATOR: /[\\\/]+/g,
+	SET_SEPARATOR: /:+/g,
+	COMBINED_SEPARATOR: /[:\\\/]+/g,
+
+	splitSet: function(str){
+		return str.split(this.SET_SEPARATOR) },
+	splitPath: function(str){
+		return str.split(this.PATH_SEPARATOR) },
+
+
 	// Utils...
 	//
 	// 	.normalize(tag)
@@ -85,10 +102,10 @@ var BaseTagsClassPrototype = {
 					.toLowerCase()
 					.replace(tagRemovedChars, '')
 					// sort sets within paths...
-					.split(/[\\\/]+/g)
+					.split(that.PATH_SEPARATOR)
 						.map(function(e){
 							return e
-								.split(/:+/g)
+								.split(that.SET_SEPARATOR)
 								// remove empty set members...
 								.filter(function(t){ 
 									return t != '' })
@@ -106,9 +123,10 @@ var BaseTagsClassPrototype = {
 			: res
 	},
 	subTags: function(...tags){
+		var that = this
 		return this.normalize(normalizeSplit(tags))
 			.map(function(tag){
-				return tag.split(/[:\\\/]/g) })
+				return tag.split(that.COMBINED_SEPARATOR) })
 			.flat()
 			.unique() },
 
@@ -217,6 +235,11 @@ var BaseTagsPrototype = {
 		tagRemovedChars: '[\\s-_]',
 	},
 
+	PATH_SEPARATOR: BaseTagsClassPrototype.PATH_SEPARATOR,
+	SET_SEPARATOR: BaseTagsClassPrototype.SET_SEPARATOR,
+	COMBINED_SEPARATOR: BaseTagsClassPrototype.COMBINED_SEPARATOR,
+
+
 	// Tag index...
 	//
 	// Format:
@@ -239,7 +262,7 @@ var BaseTagsPrototype = {
 	//
 	// Format:
 	// 	{
-	// 		<single-tag>: <tag-set>,
+	// 		<tag>: [<tag>, ..],
 	// 		...
 	// 	}
 	//
@@ -248,13 +271,28 @@ var BaseTagsPrototype = {
 
 	// Utils...
 	//
-	// proxies to class methods...
+	// XXX should these be proxies or simply refs???
+	// 		- proxies would make it possible to change stuff in the 
+	// 			constructor and affect all the instances...
+	//		- refs would make things a bit faster but would isolate
+	//			the instances from the constructor...
+	splitSet: BaseTagsClassPrototype.splitSet, 
+	splitPath: BaseTagsClassPrototype.splitPath, 
+	normalize: BaseTagsClassPrototype.normalize, 
+	subTags: BaseTagsClassPrototype.subTags, 
+	parseQuery: BaseTagsClassPrototype.parseQuery, 
+	/*// proxies to class methods...
+	splitSet: function(str){
+		return this.constructor.splitSet.call(this, str) },
+	splitPath: function(str){
+		return this.constructor.splitPath.call(this, str) },
 	normalize: function(...tags){
 		return this.constructor.normalize.call(this, ...tags) },
 	subTags: function(...tags){
 		return this.constructor.subTags.call(this, ...tags) },
 	parseQuery: function(query){
 		return this.constructor.parseQuery.call(this, query) },
+	//*/
 
 
 	// Tag matching and filtering...
@@ -367,14 +405,14 @@ var BaseTagsPrototype = {
 			// NOTE: this does not care about order...
 			// NOTE: this matches single tags too...
 			var matchSet = function(a, b){
-				a = a.split(/:/g) 
-				b = b.split(/:/g)
+				a = that.splitSet(a)
+				b = that.splitSet(b)
 				// extend b with definitions...
 				b = b
 					.concat(!definitions ? [] : (b
 						.map(function(v){
 							return v in definitions ? 
-								definitions[v].split(/:/g) 
+								definitions[v]
 								: [] })
 						.flat()))
 				return a.length <= b.length
@@ -392,8 +430,8 @@ var BaseTagsPrototype = {
 			//
 			// NOTE: we do not need to use cmp(..) here as we are testing 
 			// 		tag compatibility deeper in matchSet(..)...
-			var sa = a.split(/[\/\\]/g) 
-			var sb = b.split(/[\/\\]/g)
+			var sa = that.splitPath(a)
+			var sb = that.splitPath(b)
 			return (
 				// fail if base/root fails...
 				(root && !matchSet(sa[0], sb[0]) 
@@ -463,7 +501,7 @@ var BaseTagsPrototype = {
 						return res
 					}
 
-					path = path.split(/[\\\/]/g) 
+					path = that.splitPath(path)
 					// restrict direction...
 					path = path.slice(0, path.indexOf(tag))
 
@@ -576,7 +614,7 @@ var BaseTagsPrototype = {
 				this.paths() 
 				: this.normalize(normalizeSplit(list)))
 			// sort by number of path elements (longest first)...
-			.map(function(p){ return p.split(/[\\\/]/g) })
+			.map(that.splitPath)
 				.sort(function(a, b){ return b.length - a.length })
 				.map(function(p){ return p.join('/') })
 			// remove all paths in tail that match the current...
@@ -641,7 +679,7 @@ var BaseTagsPrototype = {
 	// NOTE: this includes all the persistent tags as well as all the 
 	// 		tags actually used.
 	//
-	// XXX should this return split values???
+	// XXX should this return split values / combined with .singleTags(..)???
 	// 		i.e. 'red:car' -> ['red', 'car']
 	tags: function(value, ...tags){
 		var that = this
@@ -675,16 +713,11 @@ var BaseTagsPrototype = {
 		}
 	},
 	// Same as .tags(..) but returns a list of single tags...
-	// XXX should we combine this with .tags(..) ???
 	singleTags: function(value, ...tags){
 		return this.subTags(this.tags(...arguments)).unique() },
-	// XXX should this support ...tags???
-	// XXX should this expand paths???
-	// 		...i.e. show all the paths a value participates in...
 	paths: function(value){
 		return this.tags(value)
 			.filter(function(tag){ return /[\\\/]/.test(tag) }) },
-	// XXX should this support ...tags???
 	sets: function(value){
 		return this.tags(value)
 			.filter(function(tag){ return tag.includes(':') }) },
@@ -712,89 +745,11 @@ var BaseTagsPrototype = {
 
 	// Edit API...
 	// 
-	// Get/set/remove tag definitions...
-	//
-	// A definition is a single tag that is defined by ("means") a tag set.
-	//
-	// 	Resolve definition (recursive)...
-	// 	.alias(tag)
-	// 		-> value
-	// 		-> undefined
-	//
-	// 	Set definition...
-	// 	.alias(tag, value)
-	// 		-> this
-	//
-	// 	Remove definition...
-	// 	.alias(tag, null)
-	// 		-> this
-	//
-	//
-	// Example:
-	// 		ts.define('birds', 'bird:many')
-	//
-	// 		ts.match('bird', ['bird', 'birds', 'animal'])	// -> ['bird', 'birds']
-	//
-	//
-	// XXX revise recursion testing and if it is needed...
-	define: function(tag, value){
-		var definitions = this.definitions = this.definitions || {}
-
-		// XXX this seems a bit ugly...
-		var resolve = function(tag, seen){
-			seen = seen || []
-			// check for loops...
-			if(seen.indexOf(tag) >= 0){
-				throw new Error(`.alias(..): Recursive alias chain: "${ 
-					seen
-						.concat([seen[0]])
-						.join('" -> "') }"`) }
-			var next = definitions[tag] 
-				|| definitions[this.normalize(tag)]
-			seen.push(tag)
-			return next != null ?
-					resolve(next, seen)
-				: seen.length > 1 ? 
-					tag
-				: undefined
-		}.bind(this)
-
-		tag = this.normalize(tag)
-		if(/[:\\\/]/.test(tag)){
-			throw new Error(`.alias(..): tag must be a single tag, got: "${tag}`) }
-
-		// resolve...
-		if(arguments.length == 1){
-			return resolve(tag)
-
-		// remove...
-		} else if(value == null){
-			delete definitions[tag]
-
-		// set...
-		} else {
-			value = this.normalize(value)
-			if(/[\\\/]/.test(tag)){
-				throw new Error(`.alias(..): value must not be a path, got: "${value}`) }
-
-			// check for recursion...
-			var chain = []
-			var target = resolve(value, chain)
-			if(target == tag || target == this.normalize(tag)){
-				throw new Error(`.alias(..): Creating a recursive alias chain: "${ 
-					chain
-						.concat([chain[0]])
-						.join('" -> "') }"`) }
-
-			definitions[tag] = value
-		}
-		return this
-	},
 	// XXX save un-normalized tags to dict... ???
 	tag: function(tags, value){
 		var that = this
 		value = value instanceof Array ? value : [value]
-		tags = this.normalize(tags instanceof Array ? tags : [tags])
+		tags = this.normalize(tags)
 		var index = this.__index = this.__index || {}
 
 		tags
@@ -813,7 +768,7 @@ var BaseTagsPrototype = {
 		value = value instanceof Array ? value : [value]
 
 		this
-			.normalize(tags instanceof Array ? tags : [tags])
+			.normalize(tags)
 			// resolve/match tags...
 			.map(function(tag){
 				return /\*/.test(tag) ? 
@@ -1093,6 +1048,84 @@ var BaseTagsPrototype = {
 		return res
 	},
 
+	// Get/set/remove tag definitions...
+	//
+	// A definition is a single tag that is defined by ("means") a tag set.
+	//
+	// 	Resolve definition (recursive)...
+	// 	.define(tag)
+	// 		-> value
+	// 		-> undefined
+	//
+	// 	Set definition...
+	// 	.define(tag, value)
+	// 		-> this
+	//
+	// 	Remove definition...
+	// 	.define(tag, null)
+	// 		-> this
+	//
+	//
+	// Example:
+	// 		ts.define('birds', 'bird:many')
+	//
+	// 		ts.match('bird', ['bird', 'birds', 'animal'])	// -> ['bird', 'birds']
+	//
+	// XXX revise recursion testing and if it is needed...
+	define: function(tag, value){
+		var definitions = this.definitions = this.definitions || {}
+
+		// XXX this seems a bit ugly...
+		var resolve = function(tag, seen){
+			seen = seen || []
+			// check for loops...
+			if(seen.indexOf(tag) >= 0){
+				throw new Error(`.alias(..): Recursive alias chain: "${ 
+					seen
+						.concat([seen[0]])
+						.join('" -> "') }"`) }
+			var next = definitions[tag] 
+				|| definitions[this.normalize(tag)]
+			seen.push(tag)
+			return next != null ?
+					resolve(next, seen)
+				: seen.length > 1 ? 
+					tag
+				: undefined
+		}.bind(this)
+
+		tag = this.normalize(tag)
+		if(/[:\\\/]/.test(tag)){
+			throw new Error(`.alias(..): tag must be a single tag, got: "${tag}`) }
+
+		// resolve...
+		if(arguments.length == 1){
+			return resolve(tag)
+
+		// remove...
+		} else if(value == null){
+			delete definitions[tag]
+
+		// set...
+		} else {
+			value = this.normalize(value)
+			if(/[\\\/]/.test(tag)){
+				throw new Error(`.alias(..): value must not be a path, got: "${value}`) }
+
+			// check for recursion...
+			var chain = []
+			var target = resolve(value, chain)
+			if(target == tag || target == this.normalize(tag)){
+				throw new Error(`.alias(..): Creating a recursive alias chain: "${ 
+					chain
+						.concat([chain[0]])
+						.join('" -> "') }"`) }
+
+			definitions[tag] = this.splitSet(value)
+		}
+		return this
+	},
+
 	// Optimize tags...
 	//
 	// 	Optimize tags for all values...
@@ -1115,15 +1148,6 @@ var BaseTagsPrototype = {
 	// 								// fully contained within 'a/b/c'...
 	//
 	//
-	// XXX Q: should this be done on .tag(..) and friends???
-	// 		...currently I do not think so
-	// 			+ would keep the tags consistent...
-	// 			- slow things down on large numbers of tags
-	// 			- would seem inconsistent
-	// 				.tag('a/c', 'x')
-	// 				.tag('a/b/c', 'x')
-	// 				.tags(x)			// -> ['a/b/c']
-	// 		might be good to add this as an option...
 	optimizeTags: function(...values){
 		var that = this
 		return (normalizeSplit(values) || this.values())
@@ -1229,7 +1253,7 @@ var BaseTagsPrototype = {
 	// 			(a b ^(c d) c e)
 	// 				-> (a b c d e)
 	//
-	// 		NOTE: that the repeating value 'c' is discarded.
+	// 		NOTE: the repeating value 'c' is discarded.
 	// 		NOTE: @( .. ) can be used to expand values at the pre-processor
 	// 				stage.
 	//
@@ -1355,13 +1379,13 @@ var BaseTagsPrototype = {
 	//	.query(query, true)
 	//		-> values
 	//
-	// XXX do we need expand(..) ???
 	query: function(query, raw){
 		var that = this
 		var pre = this.__query_ns_pre
 		var ns = this.__query_ns
 		var sns = this.__query_ns_special
 
+		// Expand prefixed lists into the containing list...
 		var expand = function(prefix, list){
 			return prefix == null ?
 				list
@@ -1372,7 +1396,6 @@ var BaseTagsPrototype = {
 							: res.concat([e]) }, [])
 					.filter(function(e){
 						return e != prefix }) }
-
 		// Query Language pre-processor...
 		var PreQL = function(args){
 			return (
@@ -1388,7 +1411,6 @@ var BaseTagsPrototype = {
 							: arg.startsWith('`') && arg.endsWith('`') ?
 								PreQL(['search', arg.slice(1, -1)])
 							: arg }) ) }
-
 		// Query Language Executor...
 		var QL = function(args){
 			return (
@@ -1417,8 +1439,7 @@ var BaseTagsPrototype = {
 					// normalize results by default...
 					: (this
 						.flat()
-						.unique()) })
-	},
+						.unique()) }) },
 
 
 	// Object utility API...
@@ -1466,9 +1487,6 @@ var BaseTagsPrototype = {
 	//
 	// NOTE: to get the current tags use .tags()
 	//
-	// XXX should this serialize recursively down???
-	// 		...it might be a good idea to decide on a serialization 
-	// 		protocol and use it throughout...
 	json: function(){
 		var res = {}
 
@@ -1565,12 +1583,14 @@ var TagsWithHandlersPrototype = {
 	//		...
 	//	}
 	//
-	//__special_tag_handlers__: null,
+	__special_tag_handlers__: null,
+	/*/ DEBUG...
 	__special_tag_handlers__: {
-	 	//'PrintTag': function(tag, action, ...other){
-	 	//	console.log('TAG:', action, tag, ...other) },
-		//'*': 'PrintTag',
+	 	'PrintTag': function(tag, action, ...other){
+	 		console.log('TAG:', action, tag, ...other) },
+		'*': 'PrintTag',
 	},
+	//*/
 
 
 	// Call the matching special tag handlers...
