@@ -239,7 +239,7 @@ var BaseTagsPrototype = {
 	//
 	// Format:
 	// 	{
-	// 		<alias>: <normalized-tag>,
+	// 		<single-tag>: <tag-set>,
 	// 		...
 	// 	}
 	//
@@ -257,6 +257,8 @@ var BaseTagsPrototype = {
 		return this.constructor.parseQuery.call(this, query) },
 
 
+	// Tag matching and filtering...
+	//
 	// Match tags directly...
 	//
 	// 	Check if tags match...
@@ -1435,9 +1437,13 @@ var BaseTagsPrototype = {
 
 	// Serialization...
 	//
+	// Dump/load state as JSON...
 	//
 	// 	.json()
 	// 		-> json
+	//
+	// 	.load(json)
+	// 		-> this
 	//
 	//
 	// Format:
