@@ -240,6 +240,7 @@ var BaseTagsPrototype = {
 	// Format:
 	// 	{
 	// 		<alias>: <normalized-tag>,
+	// 		...
 	// 	}
 	//
 	aliases: null,
