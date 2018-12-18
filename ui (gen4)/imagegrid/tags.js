@@ -25,6 +25,7 @@
 * XXX should this serialize recursively down???
 * 		...it might be a good idea to decide on a serialization 
 * 		protocol and use it throughout...
+* XXX should .tags() return all the used tags + .persistent or .persistentAll ???
 *
 *
 *
@@ -263,12 +264,40 @@ var BaseTagsPrototype = {
 	// Tag definitions...
 	//
 	// Format:
+	// 	Set([<tag>, ..])
+	//
+	// XXX Q: should definitions be treated as persistent tags???
+	definitions: null,
+	// Format:
 	// 	{
 	// 		<tag>: [<tag>, ..],
 	// 		...
 	// 	}
 	//
-	definitions: null,
+	__definition_index: null,
+	get definition_index(){
+		var that = this
+		return (this.definitions == null || this.definitions.size == 0) ? 
+			{}
+			: (this.__definition_index = this.__definition_index
+				|| [...this.definitions]
+					.reduce(function(res, p){
+						p = that.splitPath(p)
+						res[p.pop()] = that.splitSet(p[0])
+						return res }, {})) },
+
+
+	// Props...
+	//
+	get length(){
+		return this.values().length },
+	// XXX should this include only definition keys, values or both???
+	get persistentAll(){
+		return (this.__persistent || new Set())
+			.unite(this.definitions || []) },
+			//.unite(Object.entries(this.definitions || {})
+			//	.flat(1)
+			//	.map(function(d){ return d.join ? d.join(':') : d })) },
 
 
 	// Utils...
@@ -371,7 +400,7 @@ var BaseTagsPrototype = {
 
 		// match two tags...
 		} else {
-			var definitions = this.definitions
+			var definitions = this.definition_index
 
 			var root = /^\s*[\\\/]/.test(a)
 			var base = /[\\\/]\s*$/.test(a)
@@ -388,9 +417,12 @@ var BaseTagsPrototype = {
 				return true
 			}
 
+
 			// Expand definitions...
 			//
 			// NOTE: this does not care about infinite recursion...
+			// NOTE: this does the same job as adding .definitions to 
+			// 		.persistent but much much faster...
 			var expand = function(tags, res){
 				if(!definitions){
 					return tags
@@ -492,7 +524,7 @@ var BaseTagsPrototype = {
 		var paths = function(tag){
 			return that.directMatch(tag, cmp)
 				.filter(function(t){ 
-					return /[\\\/]/.test(t) }) }
+					return that.PATH_SEPARATOR.test(t) }) }
 		// search the path tree...
 		// NOTE: this will stop the search on first hit...
 		var search = function(tag, seen){
@@ -639,9 +671,6 @@ var BaseTagsPrototype = {
 
 	// Introspection and Access API...
 	//
-	get length(){
-		return this.values().length },
-
 	// Direct tag/value check...
 	//
 	// NOTE: these are not using for loops so as to enable "fast abort",
@@ -681,6 +710,7 @@ var BaseTagsPrototype = {
 	//
 	// XXX should we rename this to .usedTags(..) and .singleTags(..) to
 	// 		.tags(..) ???
+	// XXX should this use .persistentAll or .persistent ???
 	tags: function(value, ...tags){
 		var that = this
 
@@ -706,6 +736,7 @@ var BaseTagsPrototype = {
 		// get all tags...
 		} else {
 			return Object.keys(this.__index || {})
+				//.concat([...(this.persistentAll || [])]
 				.concat([...(this.persistent || [])]
 					.map(function(t){ 
 						return that.normalize(t) }))
@@ -1003,7 +1034,9 @@ var BaseTagsPrototype = {
 		} else {
 			patchSet(this.persistent || [])
 			patchObj(this.__index || {})
-			patchObj(this.definitions || {}, true)
+			//patchObj(this.definitions || {}, true)
+			patchSet(this.definitions || [])
+			delete this.__definition_index
 		}
 		
 		return this
@@ -1048,6 +1081,17 @@ var BaseTagsPrototype = {
 		return res
 	},
 
+
+
+	/*/ XXX there are two implementations here:
+	// 		1) using a map index...
+	// 			+ should be faster...
+	// 			- re-implements essentially the same mechanism as path 
+	// 				searching but in a different way...
+	// 		2) using the existing path mechanic...
+	// 			+ simpler
+	// 			+ less code
+	// 			- should be slower for lots of deffinitions...
 	// Get/set/remove tag definitions...
 	//
 	// A definition is a single tag that is defined by ("means") a tag set.
@@ -1136,6 +1180,111 @@ var BaseTagsPrototype = {
 		}
 		return this
 	},
+	/*/
+	// Get/set/remove tag definitions...
+	//
+	// A definition is a single tag that is defined by ("means") a tag set.
+	//
+	// 	Resolve definition (recursive)...
+	// 	.define(tag)
+	// 		-> value
+	// 		-> undefined
+	//
+	// 	Set definition...
+	// 	.define(tag, value)
+	// 		-> this
+	//
+	// 	Remove definition...
+	// 	.define(tag, null)
+	// 		-> this
+	//
+	//
+	// 	Batch call...
+	// 	.define([[tag, value], ..])
+	// 	.define({tag: value, ..})
+	// 		-> this
+	// 		NOTE: each entry should be .define(...entry) call compatible
+	// 			though there is little point to call the resolve/get mode
+	// 			in this manner...
+	//
+	//
+	// This expects and maintains one and only one definition per tag, 
+	// thus all stray definitions will be overwritten on any write 
+	// operation...
+	//
+	// 
+	// Example:
+	// 		// nested recursive definition...
+	// 		ts.define('bird', 'bird:one')
+	//
+	// 		ts.define('birds', 'bird:many')
+	//
+	// 		// filter a list...
+	// 		ts.match('bird', ['bird', 'birds', 'animal'])	// -> ['bird', 'birds']
+	//
+	// NOTE: definitions are a special case persistent path maintained 
+	// 		in a different location (.definitions), same search rules 
+	// 		apply.
+	//
+	// XXX this can be faster if we index definitions via a map...
+	define: function(tag, value){
+		var that = this
+		var definitions = this.definitions
+
+		// batch...
+		tag = tag instanceof Array ? new Map(tag) : tag
+		if(typeof(tag) != typeof('str')){
+			(tag instanceof Map ? 
+					[...tag.entries()]
+					: Object.entries(tag))
+				.forEach(function(e){
+					that.define(...e) })
+			return this
+		}
+
+		tag = this.normalize(tag)
+		if(/[:\\\/]/.test(tag)){
+			throw new Error(`.alias(..): tag must be a single tag, got: "${tag}`) }
+
+		// get/resolve...
+		if(arguments.length == 1){
+			// NOTE: we expect there to be only one definition...
+			return this.match(tag +'/', [...this.definitions || []])
+				.map(function(d){ 
+					return that.splitPath(d).shift() })[0]
+
+		// remove...
+		} else if(value == null){
+			// remove all definitions of tag...
+			this.match(tag +'/', [...this.definitions || []])
+				.forEach(function(value){
+					definitions.delete(value +'/'+ tag) })
+
+			// delete empty .definitions
+			definitions
+				&& definitions.size == 0 
+				&& (delete this.definitions)
+
+			delete this.__definition_index
+
+		// set...
+		} else {
+			value = this.normalize(value)
+			if(/[\\\/]/.test(tag)){
+				throw new Error(`.alias(..): value must not be a path, got: "${value}`) }
+
+			// clear previous definition...
+			this.define(tag, null)
+
+			this.definitions = (this.definitions || new Set())
+				.add(value +'/'+ tag)
+		}
+		return this
+	},
+	//*/
+
+	
+
 
 	// Optimize tags...
 	//
@@ -1502,8 +1651,10 @@ var BaseTagsPrototype = {
 		var res = {}
 
 		// definitions...
-		this.definitions && Object.keys(this.definitions).length > 0
-			&& (res.definitions = Object.assign({}, this.definitions))
+		//this.definitions && Object.keys(this.definitions).length > 0
+		//	&& (res.definitions = Object.assign({}, this.definitions))
+		this.definitions && this.definitions.size > 0
+			&& (res.definitions = [...this.definitions])
 
 		// persistent tags...
 		this.persistent && this.persistent.size > 0
@@ -1523,7 +1674,8 @@ var BaseTagsPrototype = {
 
 		// definitions...
 		json.definitions
-			&& (this.definitions = Object.assign({}, json.definitions))
+			//&& (this.definitions = Object.assign({}, json.definitions))
+			&& (this.definitions = new Set(json.definitions))
 
 		// persistent tags...
 		json.persistent

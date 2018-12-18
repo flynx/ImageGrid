@@ -63,6 +63,31 @@ module.Tags = core.ImageGridFeatures.Feature({
 
 
 //---------------------------------------------------------------------
+// Persistent tags (tree) 
+//
+// XXX add save/load tree to fs...
+// XXX
+var PersistentTagsActions = actions.Actions({
+})
+
+
+var PersistentTags = 
+module.PersistentTags = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'persistent-tags',
+	depends: [
+		'base',
+	],
+	actions: PersistentTagsActions, 
+
+	handlers: [],
+})
+
+
+
+//---------------------------------------------------------------------
 
 var TagsEditActions = 
 module.TagsEditActions = actions.Actions({
@@ -264,32 +289,13 @@ module.TagsEdit = core.ImageGridFeatures.Feature({
 				res.data.tag('marked', json.marked || [])
 				res.data.tag('bookmark', json.bookmarked ? json.bookmarked[0] : [])
 			}],
+		['load',
+			function(){
+				// XXX for now this is testing only...
+				//this.data.tags.togglePersistent(this.config['tags-persistent'] || [], 'on')
+				//this.data.tags.define(this.config['tags-definitions'] || [])
+			}],
 	],
-})
-
-
-
-//---------------------------------------------------------------------
-// Persistent tags (tree) 
-//
-// XXX add save/load tree to fs...
-// XXX
-var PersistentTagsActions = actions.Actions({
-})
-
-
-var PersistentTags = 
-module.PersistentTags = core.ImageGridFeatures.Feature({
-	title: '',
-	doc: '',
-
-	tag: 'persistent-tags',
-	depends: [
-		'base',
-	],
-	actions: PersistentTagsActions, 
-
-	handlers: [],
 })
 
 
@@ -342,7 +348,7 @@ var TagUIActions = actions.Actions({
 		// 			orientation:landscape / orientation:portrait / orientation:square (???)
 		// 		...these should not be settable by user...
 		// XXX do a whitepaper (RFC?) on this system when done...
-		'base-tags': [
+		'tags-persistent': [
 			'count',
 			'count/one',
 			'count/two',
@@ -399,6 +405,30 @@ var TagUIActions = actions.Actions({
 			'activity/sport/tennis',
 			// ...
 		],
+		'tags-definitions': {
+			// abstract...
+			'entity': 'entity:one',
+			'couple': 'entity:two',
+			'entities': 'entity:many',
+
+			// people...
+			'man': 'man:one',
+			'men': 'man:many',
+			'woman': 'woman:one',
+			'women': 'woman:one',
+			'child': 'child:one',
+			'children': 'child:many',
+			'girl': 'girl:one',
+			'girls': 'girl:many',
+			'boy': 'boy:one',
+			'boys': 'boy:many',
+			'baby': 'baby:one',
+			'babies': 'baby:one',
+
+			'person': 'person:man:woman:girl:boy:child:baby:entity',
+			'people': 'person:many',
+			'crowd':  'person:man:woman:girl:boy:child:entity:many',
+		}
 	},
 
 	// Tag cloud/list...
