@@ -20,7 +20,8 @@
 * 		- will it be faster?
 *
 *
-* XXX should we .optimizeTags(tag) on .tag(tag)???
+* XXX should we do .optimizeTags(tag) on .tag(tag)???
+* 		...this might lead to non-trivial behaviour...
 * XXX should this serialize recursively down???
 * 		...it might be a good idea to decide on a serialization 
 * 		protocol and use it throughout...
@@ -224,7 +225,8 @@ var BaseTagsClassPrototype = {
 // XXX should we store normalized and non-normalized tags for reference???
 // 		...there are two ways to think of this:
 // 			1) both (a-la flickr) -- keep both, use normalized internally
-// 			2) only normalized -- simpler but may surprise the user and not be as pretty...
+// 			2) only normalized -- simpler but may surprise the user and 
+// 				not be as pretty...
 // XXX should we split out the non-basic stuff???
 // 		like:
 // 			.makePathsPersistent()
@@ -271,28 +273,15 @@ var BaseTagsPrototype = {
 
 	// Utils...
 	//
-	// XXX should these be proxies or simply refs???
-	// 		- proxies would make it possible to change stuff in the 
-	// 			constructor and affect all the instances...
-	//		- refs would make things a bit faster but would isolate
-	//			the instances from the constructor...
+	// NOTE: these are not proxies to .constructor so as to make the 
+	// 		instance largely independent of its constructor and thus 
+	// 		making it possible to use it as a mix-in (copy methods)
+	// 		and other approaches...
 	splitSet: BaseTagsClassPrototype.splitSet, 
 	splitPath: BaseTagsClassPrototype.splitPath, 
 	normalize: BaseTagsClassPrototype.normalize, 
 	subTags: BaseTagsClassPrototype.subTags, 
 	parseQuery: BaseTagsClassPrototype.parseQuery, 
-	/*// proxies to class methods...
-	splitSet: function(str){
-		return this.constructor.splitSet.call(this, str) },
-	splitPath: function(str){
-		return this.constructor.splitPath.call(this, str) },
-	normalize: function(...tags){
-		return this.constructor.normalize.call(this, ...tags) },
-	subTags: function(...tags){
-		return this.constructor.subTags.call(this, ...tags) },
-	parseQuery: function(query){
-		return this.constructor.parseQuery.call(this, query) },
-	//*/
 
 
 	// Tag matching and filtering...
@@ -399,22 +388,36 @@ var BaseTagsPrototype = {
 				return true
 			}
 
-			// set/definition matching...
+			// Expand definitions...
+			//
+			// NOTE: this does not care about infinite recursion...
+			var expand = function(tags, res){
+				if(!definitions){
+					return tags
+				}
+				res = (res || new Set()).unite(tags)
+
+				tags = tags
+					.map(function(tag){
+						return tag in definitions ?
+							definitions[tag]
+							: [] })
+					.flat()
+
+				var size = res.size
+				res = res.unite(tags)
+				return res.size != size ? 
+					expand(tags, res)
+					: [...res] 
+			}
+			// Set matching...
 			// 	a matches b iff each element of a exists in b.
 			//
 			// NOTE: this does not care about order...
 			// NOTE: this matches single tags too...
 			var matchSet = function(a, b){
 				a = that.splitSet(a)
-				b = that.splitSet(b)
-				// extend b with definitions...
-				b = b
-					.concat(!definitions ? [] : (b
-						.map(function(v){
-							return v in definitions ? 
-								definitions[v]
-								: [] })
-						.flat()))
+				b = expand(that.splitSet(b))
 				return a.length <= b.length
 					// keep only the non-matches -> if at least one exists we fail...
 					&& a.filter(function(e){ 
@@ -640,24 +643,20 @@ var BaseTagsPrototype = {
 		return this.values().length },
 
 	// Direct tag/value check...
-	// XXX can these be faster???
+	//
+	// NOTE: these are not using for loops so as to enable "fast abort",
+	// 		not sure who much performance this actually gains though.
 	// XXX should these take multiple values???
 	hasTag: function(tag){
 		for(var t of this.tags()){
 			if(this.match(tag, t)){
-				return true
-			}
-		}
-		return false
-	},
+				return true } }
+		return false },
 	has: function(value){
 		for(var v of Object.values(this.__index || {})){
 			if(v.has(value)){
-				return true
-			}
-		}
-		return false
-	},
+				return true } }
+		return false },
 
 	// Tags present in the system...
 	//
@@ -675,12 +674,13 @@ var BaseTagsPrototype = {
 	//	.tags(value, [tag, ..])
 	//		-> bool
 	//
-	//
+	// NOTE: this will return the list of actual tags used and will not 
+	// 		generate any new values (like .singleTags(..) and friends do).
 	// NOTE: this includes all the persistent tags as well as all the 
 	// 		tags actually used.
 	//
-	// XXX should this return split values / combined with .singleTags(..)???
-	// 		i.e. 'red:car' -> ['red', 'car']
+	// XXX should we rename this to .usedTags(..) and .singleTags(..) to
+	// 		.tags(..) ???
 	tags: function(value, ...tags){
 		var that = this
 
@@ -749,7 +749,7 @@ var BaseTagsPrototype = {
 	tag: function(tags, value){
 		var that = this
 		value = value instanceof Array ? value : [value]
-		tags = this.normalize(tags)
+		tags = this.normalize(tags instanceof Array ? tags : [tags])
 		var index = this.__index = this.__index || {}
 
 		tags
@@ -768,7 +768,7 @@ var BaseTagsPrototype = {
 		value = value instanceof Array ? value : [value]
 
 		this
-			.normalize(tags)
+			.normalize(tags instanceof Array ? tags : [tags])
 			// resolve/match tags...
 			.map(function(tag){
 				return /\*/.test(tag) ? 
@@ -935,7 +935,7 @@ var BaseTagsPrototype = {
 	//
 	// XXX need to sanitize tag -- it can not contain regex characters...
 	// 		...should we guard against this???
-	// XXX should both sides of the alias be renamed???
+	// XXX should both sides of the definition be renamed???
 	rename: function(tag, to, ...tags){
 		var that = this
 
@@ -1065,13 +1065,24 @@ var BaseTagsPrototype = {
 	// 	.define(tag, null)
 	// 		-> this
 	//
+	// 
+	// Nested recursive definitions (i.e. left side is part of the right 
+	// side) are supported, but literal definition recursion are not (i.e. 
+	// left side is literally reachable in the definitionchain):
+	// 		a -> a:b:c		- nested (recursive) definition, this is fine.
+	// 		a -> a			- type A literal recursion, this will fail.
+	// 		a -> b -> a		- type B literal recursion will fail too.
+	//
 	//
 	// Example:
+	// 		// nested recursive definition...
+	// 		ts.define('bird', 'bird:one')
+	//
 	// 		ts.define('birds', 'bird:many')
 	//
+	// 		// filter a list...
 	// 		ts.match('bird', ['bird', 'birds', 'animal'])	// -> ['bird', 'birds']
 	//
-	// XXX revise recursion testing and if it is needed...
 	define: function(tag, value){
 		var definitions = this.definitions = this.definitions || {}
 
@@ -1088,7 +1099,7 @@ var BaseTagsPrototype = {
 				|| definitions[this.normalize(tag)]
 			seen.push(tag)
 			return next != null ?
-					resolve(next, seen)
+					resolve(next.join(':'), seen)
 				: seen.length > 1 ? 
 					tag
 				: undefined
@@ -1536,6 +1547,7 @@ var BaseTagsPrototype = {
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
 var BaseTags = 
 module.BaseTags = 
 object.makeConstructor('BaseTags', 
