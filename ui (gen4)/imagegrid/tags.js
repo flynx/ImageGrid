@@ -16,6 +16,11 @@
 *
 *
 * TODO:
+* 	- stress test / optimize this for:
+* 		- large number of tags, paths
+* 		- larger number of definitions
+* 		- extremely large numbers of values 
+* 			...values should have the least impact on performance.
 * 	- investigate support for sqlite3
 * 		- will it be faster?
 *
@@ -264,27 +269,28 @@ var BaseTagsPrototype = {
 	// Tag definitions...
 	//
 	// Format:
-	// 	Set([<tag>, ..])
-	//
-	// XXX Q: should definitions be treated as persistent tags???
-	definitions: null,
-	// Format:
 	// 	{
 	// 		<tag>: [<tag>, ..],
 	// 		...
 	// 	}
 	//
-	__definition_index: null,
-	get definition_index(){
-		var that = this
-		return (this.definitions == null || this.definitions.size == 0) ? 
-			{}
-			: (this.__definition_index = this.__definition_index
-				|| [...this.definitions]
-					.reduce(function(res, p){
-						p = that.splitPath(p)
-						res[p.pop()] = that.splitSet(p[0])
-						return res }, {})) },
+	// NOTE: a definition is equivalent to a very specific path tag but 
+	// 		considering it's a special case it is handled allot faster...
+	// 			.define('birds', 'bird:many')
+	// 		is equivalent to:
+	// 			.togglePersistent('bird:many/birds')
+	//
+	// XXX Q: should definitions be displayed as persistent tags???
+	definitions: null,
+
+	// definitions as paths...
+	//
+	// XXX do we need this???
+	// XXX should we cache this???
+	get definition_paths(){
+		return [...Object.entries(this.definitions)]
+			.map(function(e){
+				return [e[1].join(':'), e[0]].join('/') }) },
 
 
 	// Props...
@@ -294,10 +300,7 @@ var BaseTagsPrototype = {
 	// XXX should this include only definition keys, values or both???
 	get persistentAll(){
 		return (this.__persistent || new Set())
-			.unite(this.definitions || []) },
-			//.unite(Object.entries(this.definitions || {})
-			//	.flat(1)
-			//	.map(function(d){ return d.join ? d.join(':') : d })) },
+			.unite(this.definition_paths || []) },
 
 
 	// Utils...
@@ -400,7 +403,7 @@ var BaseTagsPrototype = {
 
 		// match two tags...
 		} else {
-			var definitions = this.definition_index
+			var definitions = this.definitions
 
 			var root = /^\s*[\\\/]/.test(a)
 			var base = /[\\\/]\s*$/.test(a)
@@ -416,7 +419,6 @@ var BaseTagsPrototype = {
 			if(a == b){
 				return true
 			}
-
 
 			// Expand definitions...
 			//
@@ -1034,9 +1036,7 @@ var BaseTagsPrototype = {
 		} else {
 			patchSet(this.persistent || [])
 			patchObj(this.__index || {})
-			//patchObj(this.definitions || {}, true)
-			patchSet(this.definitions || [])
-			delete this.__definition_index
+			patchObj(this.definitions || {}, true)
 		}
 		
 		return this
@@ -1081,106 +1081,6 @@ var BaseTagsPrototype = {
 		return res
 	},
 
-
-
-	/*/ XXX there are two implementations here:
-	// 		1) using a map index...
-	// 			+ should be faster...
-	// 			- re-implements essentially the same mechanism as path 
-	// 				searching but in a different way...
-	// 		2) using the existing path mechanic...
-	// 			+ simpler
-	// 			+ less code
-	// 			- should be slower for lots of deffinitions...
-	// Get/set/remove tag definitions...
-	//
-	// A definition is a single tag that is defined by ("means") a tag set.
-	//
-	// 	Resolve definition (recursive)...
-	// 	.define(tag)
-	// 		-> value
-	// 		-> undefined
-	//
-	// 	Set definition...
-	// 	.define(tag, value)
-	// 		-> this
-	//
-	// 	Remove definition...
-	// 	.define(tag, null)
-	// 		-> this
-	//
-	// 
-	// Nested recursive definitions (i.e. left side is part of the right 
-	// side) are supported, but literal definition recursion are not (i.e. 
-	// left side is literally reachable in the definitionchain):
-	// 		a -> a:b:c		- nested (recursive) definition, this is fine.
-	// 		a -> a			- type A literal recursion, this will fail.
-	// 		a -> b -> a		- type B literal recursion will fail too.
-	//
-	//
-	// Example:
-	// 		// nested recursive definition...
-	// 		ts.define('bird', 'bird:one')
-	//
-	// 		ts.define('birds', 'bird:many')
-	//
-	// 		// filter a list...
-	// 		ts.match('bird', ['bird', 'birds', 'animal'])	// -> ['bird', 'birds']
-	//
-	define: function(tag, value){
-		var definitions = this.definitions = this.definitions || {}
-
-		// XXX this seems a bit ugly...
-		var resolve = function(tag, seen){
-			seen = seen || []
-			// check for loops...
-			if(seen.indexOf(tag) >= 0){
-				throw new Error(`.alias(..): Recursive alias chain: "${ 
-					seen
-						.concat([seen[0]])
-						.join('" -> "') }"`) }
-			var next = definitions[tag] 
-				|| definitions[this.normalize(tag)]
-			seen.push(tag)
-			return next != null ?
-					resolve(next.join(':'), seen)
-				: seen.length > 1 ? 
-					tag
-				: undefined
-		}.bind(this)
-
-		tag = this.normalize(tag)
-		if(/[:\\\/]/.test(tag)){
-			throw new Error(`.alias(..): tag must be a single tag, got: "${tag}`) }
-
-		// resolve...
-		if(arguments.length == 1){
-			return resolve(tag)
-
-		// remove...
-		} else if(value == null){
-			delete definitions[tag]
-
-		// set...
-		} else {
-			value = this.normalize(value)
-			if(/[\\\/]/.test(tag)){
-				throw new Error(`.alias(..): value must not be a path, got: "${value}`) }
-
-			// check for recursion...
-			var chain = []
-			var target = resolve(value, chain)
-			if(target == tag || target == this.normalize(tag)){
-				throw new Error(`.alias(..): Creating a recursive alias chain: "${ 
-					chain
-						.concat([chain[0]])
-						.join('" -> "') }"`) }
-
-			definitions[tag] = this.splitSet(value)
-		}
-		return this
-	},
-	/*/
 	// Get/set/remove tag definitions...
 	//
 	// A definition is a single tag that is defined by ("means") a tag set.
@@ -1226,7 +1126,6 @@ var BaseTagsPrototype = {
 	// 		in a different location (.definitions), same search rules 
 	// 		apply.
 	//
-	// XXX this can be faster if we index definitions via a map...
 	define: function(tag, value){
 		var that = this
 		var definitions = this.definitions
@@ -1249,23 +1148,19 @@ var BaseTagsPrototype = {
 		// get/resolve...
 		if(arguments.length == 1){
 			// NOTE: we expect there to be only one definition...
-			return this.match(tag +'/', [...this.definitions || []])
+			return this.match(tag +'/', [...Object.keys(definitions) || []])
 				.map(function(d){ 
-					return that.splitPath(d).shift() })[0]
+					return definitions[d].join(':') })[0]
 
 		// remove...
 		} else if(value == null){
-			// remove all definitions of tag...
-			this.match(tag +'/', [...this.definitions || []])
-				.forEach(function(value){
-					definitions.delete(value +'/'+ tag) })
-
 			// delete empty .definitions
 			definitions
-				&& definitions.size == 0 
+				&& Object.keys(definitions).length == 0 
 				&& (delete this.definitions)
 
-			delete this.__definition_index
+			// clear the index...
+			delete (definitions || {})[tag]
 
 		// set...
 		} else {
@@ -1274,16 +1169,19 @@ var BaseTagsPrototype = {
 				throw new Error(`.alias(..): value must not be a path, got: "${value}`) }
 
 			// clear previous definition...
+			// NOTE: this will also clear the index...
 			this.define(tag, null)
 
-			this.definitions = (this.definitions || new Set())
-				.add(value +'/'+ tag)
+			// XXX add the def...
+			//this.definitions = (this.definitions || new Set())
+			//	.add(value +'/'+ tag)
+
+			// update the index...
+			this.definitions = definitions || {}
+			this.definitions[tag] = this.splitSet(value)
 		}
 		return this
 	},
-	//*/
-
-	
 
 
 	// Optimize tags...
@@ -1651,10 +1549,8 @@ var BaseTagsPrototype = {
 		var res = {}
 
 		// definitions...
-		//this.definitions && Object.keys(this.definitions).length > 0
-		//	&& (res.definitions = Object.assign({}, this.definitions))
-		this.definitions && this.definitions.size > 0
-			&& (res.definitions = [...this.definitions])
+		this.definitions && Object.keys(this.definitions).length > 0
+			&& (res.definitions = Object.assign({}, this.definitions))
 
 		// persistent tags...
 		this.persistent && this.persistent.size > 0
@@ -1674,8 +1570,7 @@ var BaseTagsPrototype = {
 
 		// definitions...
 		json.definitions
-			//&& (this.definitions = Object.assign({}, json.definitions))
-			&& (this.definitions = new Set(json.definitions))
+			&& (this.definitions = Object.assign({}, json.definitions))
 
 		// persistent tags...
 		json.persistent
