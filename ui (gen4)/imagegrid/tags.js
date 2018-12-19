@@ -51,8 +51,23 @@ var util = require('lib/util')
 // Normalize a split that contains either multiple values or a list to 
 // a list enabling the following method signature:
 //
-// 		.someMethod(arg, ..)
-// 		.someMethod([arg, ..])
+// Example:
+//
+// 	//	func(arg, ..)
+// 	//	func([arg, ..])
+// 	//		-> args
+// 	//
+// 	var func = function(...args){
+// 		return normalizeSplit(args) }
+//
+// 	func(123)			// -> [123]
+// 	func(1, 2, 3)		// -> [1, 2, 3]
+//
+//
+// 	func([1, 2, 3])		// -> [1, 2, 3]
+//
+// 	// a more complex case...
+// 	func([1], [2], 3)		// -> [[1], [2], 3]
 //
 //
 // XXX better docs -- signature...
