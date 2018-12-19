@@ -395,8 +395,8 @@ var BaseTagsPrototype = {
 	// 					...
 	// 		--------------------------------
 	// 		a:b			a:b			a:x
-	// 					b:c			z:b:m
-	// 					a:x:b		...
+	// 					b:a			z:b:m
+	// 					a:x:b:z		...
 	// 					...
 	//
 	//
@@ -809,7 +809,7 @@ var BaseTagsPrototype = {
 
 		return this
 	},
-	// NOTE: this supports tag patterns (see: ,match(..))
+	// NOTE: this supports tag patterns (see: .match(..))
 	// NOTE: non-pattern tags are matched explicitly.
 	untag: function(tags, value){
 		var that = this
@@ -911,7 +911,7 @@ var BaseTagsPrototype = {
 
 	// Toggle a tag to persistent/non-persistent...
 	//
-	// A persistent is not removed when untagging a value.
+	// A persistent tag is not removed when untagging a value.
 	//
 	//	.togglePersistent(tag)
 	//	.togglePersistent(tag, tag, ...)
