@@ -67,7 +67,7 @@ var util = require('lib/util')
 // 	func([1, 2, 3])		// -> [1, 2, 3]
 //
 // 	// a more complex case...
-// 	func([1], [2], 3)		// -> [[1], [2], 3]
+// 	func([1], [2], 3)	// -> [[1], [2], 3]
 //
 var normalizeSplit = function(args){
 	return (args.length == 1 && args[0] instanceof Array) ? 
