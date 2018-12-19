@@ -30,7 +30,8 @@
 * XXX should this serialize recursively down???
 * 		...it might be a good idea to decide on a serialization 
 * 		protocol and use it throughout...
-* XXX should .tags() return all the used tags + .persistent or .persistentAll ???
+* XXX should .tags() return all the used tags + .persistent or 
+* 		.persistentAll ???
 *
 *
 *
@@ -53,6 +54,8 @@ var util = require('lib/util')
 // 		.someMethod(arg, ..)
 // 		.someMethod([arg, ..])
 //
+//
+// XXX better docs -- signature...
 var normalizeSplit = function(args){
 	return (args.length == 1 && args[0] instanceof Array) ? 
 		args.pop() 
@@ -968,7 +971,6 @@ var BaseTagsPrototype = {
 	//
 	// XXX need to sanitize tag -- it can not contain regex characters...
 	// 		...should we guard against this???
-	// XXX should both sides of the definition be renamed???
 	rename: function(tag, to, ...tags){
 		var that = this
 
@@ -1171,10 +1173,6 @@ var BaseTagsPrototype = {
 			// clear previous definition...
 			// NOTE: this will also clear the index...
 			this.define(tag, null)
-
-			// XXX add the def...
-			//this.definitions = (this.definitions || new Set())
-			//	.add(value +'/'+ tag)
 
 			// update the index...
 			this.definitions = definitions || {}
