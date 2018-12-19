@@ -45,6 +45,7 @@ if(typeof(process) != 'undefined'){
 function(require){ var module={} // makes module AMD/node compatible...
 /*********************************************************************/
 
+var utildom = require('lib/util-dom')
 var viewer = require('imagegrid/viewer')
 
 
