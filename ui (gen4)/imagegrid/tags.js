@@ -69,8 +69,6 @@ var util = require('lib/util')
 // 	// a more complex case...
 // 	func([1], [2], 3)		// -> [[1], [2], 3]
 //
-//
-// XXX better docs -- signature...
 var normalizeSplit = function(args){
 	return (args.length == 1 && args[0] instanceof Array) ? 
 		args.pop() 
