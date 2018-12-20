@@ -120,6 +120,13 @@ var logger = {
 
 
 var CLIActions = actions.Actions({
+
+	get cli_commands(){
+		return this.actions
+			.filter(function(action){
+				return this.getActionAttr(action, 'cli') }.bind(this)) },
+
+
 	// XXX should this be here???
 	// 		...move this to progress...
 	__progress: null,
@@ -159,6 +166,7 @@ var CLIActions = actions.Actions({
 
 
 	makeIndex: ['- System/',
+		{cli: true},
 		function(path){
 			var that = this
 
@@ -258,6 +266,10 @@ module.CLI = core.ImageGridFeatures.Feature({
 									(this.__prefix || []).concat([...arguments]))
 							}, 
 						}
+					})
+
+					.option('l, --list-commands', 'list commands', function(){
+						console.log('Commands:\n   ', that.cli_commands.join('\n\t'))
 					})
 
 					// list features...
