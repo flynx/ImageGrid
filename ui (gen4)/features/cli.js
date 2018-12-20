@@ -31,10 +31,14 @@ var logger = {
 	root: true,
 	message: null,
 	log: null,
+	ig: null,
 
 	emit: function(e, v){ 
 		var msg = this.message
 		var log = this.log = this.log || []
+
+		// XXX HACK...
+		var ig = this.ig
 
 		// report progress...
 		// XXX HACK -- need meaningful status...
@@ -158,8 +162,6 @@ var CLIActions = actions.Actions({
 		function(path){
 			var that = this
 
-			this.logger = logger
-
 			// XXX is this correct???
 			path = path || this.location.path
 
@@ -208,6 +210,10 @@ module.CLI = core.ImageGridFeatures.Feature({
 		['ready',
 			function(){
 				var that = this
+
+				this.logger = logger
+				logger.ig = that
+
 				// get the arguments...
 				if(this.runtime.nw){
 					var argv = nw.App.argv
@@ -357,13 +363,15 @@ module.CLI = core.ImageGridFeatures.Feature({
 						keep_running = true
 					})
 
-					// XXX the problem with this is that it still tires 
+					/* // XXX the problem with this is that it still tires 
 					// 		to find and run 'ig-index'...
-					/*
-					.command('index [path]', 'build an index of path', function(path){
+					.command('index [path]', 'build an index of path')
+					.action(function(path){
 						console.log('!!!!!! INDEX', path)
+
+						//this.makeIndex(path)
 					})
-					*/
+					//*/
 
 					// XXX might be a good idea to make the action call
 					// 		syntax like this:
@@ -377,7 +385,14 @@ module.CLI = core.ImageGridFeatures.Feature({
 							return
 						}
 
-						that[action](args)
+						var res = that[action](args)
+
+						if(res instanceof Promise){
+							keep_running = true
+							res.then(function(){
+								process.exit()
+							})
+						}
 					})
 
 					.parse(argv)
