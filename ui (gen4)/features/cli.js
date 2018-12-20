@@ -23,6 +23,71 @@ if(typeof(process) != 'undefined'){
 }
 
 
+/*********************************************************************/
+
+// setup logger...
+// XXX STUB...
+var logger = {
+	root: true,
+	message: null,
+	log: null,
+
+	emit: function(e, v){ 
+		var msg = this.message
+		var log = this.log = this.log || []
+
+		// report progress...
+		// XXX HACK -- need meaningful status...
+		if(e == 'queued' 
+				|| e == 'found'){
+			ig.showProgress(msg || ['Progress', e], '+0', '+1')
+
+		} else if(e == 'loaded' || e == 'done' || e == 'written' 
+				|| e == 'index'){
+			ig.showProgress(msg || ['Progress', e], '+1')
+
+		} else if(e == 'skipping' || e == 'skipped'){
+			// XXX if everything is skipped the indicator does not 
+			// 		get hidden...
+			//ig.showProgress(msg || ['Progress', e], '+0', '-1')
+			ig.showProgress(msg || ['Progress', e], '+1')
+
+		// XXX STUB...
+		} else if(e == 'error' ){
+			ig.showProgress(['Error'].concat(msg), '+0', '+1')
+			console.log(msg ? 
+				'    '+ msg.join(': ') + ':' 
+				: '', ...arguments) 
+
+		} else {
+			// console...
+			console.log(msg ? 
+				'    '+ msg.join(': ') + ':' 
+				: '', ...arguments) 
+		}
+
+		// XXX
+		//log.push([msg, e, v])
+	},
+
+	push: function(msg){
+		if(msg == null){
+			return this
+		}
+
+		var logger = Object.create(this)
+		logger.root = false
+		logger.message = logger.message == null ? [msg] : logger.message.concat([msg])
+		logger.log = this.log = this.log || []
+
+		return logger
+	},
+	pop: function(){
+		return !this.__proto__.root ? this.__proto__ : this	
+	},
+}
+
+
 
 /*********************************************************************/
 // XXX what we need here is:
@@ -51,9 +116,49 @@ if(typeof(process) != 'undefined'){
 
 
 var CLIActions = actions.Actions({
+	// XXX should this be here???
+	// 		...move this to progress...
+	__progress: null,
+	showProgress: ['- System/',
+		function(text, value, max){
+			var msg = text instanceof Array ? text.slice(1).join(': ') : null
+			text = text instanceof Array ? text[0] : text
+
+			var state = this.__progress = this.__progress || {}
+			state = state[text] = state[text] || {}
+
+			// normalize max and value...
+			max = state.max = max != null ? 
+					(typeof(max) == typeof('str') && /[+-][0-9]+/.test(max) ? 
+						(state.max || 0) + parseInt(max)
+					: max)
+				: state.max
+			value = state.value = value != null ? 
+					(typeof(value) == typeof('str') && /[+-][0-9]+/.test(value) ? 
+						(state.value || 0) + parseInt(value)
+					: value)
+				: state.value
+
+			// format the message...
+			msg = msg ? ': '+msg : ''
+			msg = ' '+ msg 
+				//+ (value && value >= (max || 0) ? ' ('+value+' done)' 
+				+ (value && value >= (max || 0) ? ' (done)' 
+					: value && max && value != max ? ' ('+ value +' of '+ max +')'
+					: '...')
+
+			msg != state.msg
+				&& console.log(msg)
+
+			state.msg = msg
+		}],
+
+
 	makeIndex: ['- System/',
 		function(path){
 			var that = this
+
+			this.logger = logger
 
 			// XXX is this correct???
 			path = path || this.location.path
@@ -67,7 +172,9 @@ var CLIActions = actions.Actions({
 				})
 				// make the previews...
 				.then(function(){
-					return that.makePreviews('all')
+					if(that.makePreviews){
+						return that.makePreviews('all')
+					}
 				})
 				.then(function(){
 					//that.readAllMetadata()

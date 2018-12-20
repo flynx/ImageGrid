@@ -444,7 +444,7 @@ core.ImageGridFeatures.Feature({
 	tag: 'ui-ribbons-render',
 	exclusive: ['ui-render'],
 	depends: [
-		// XXX BUG: for some reason this causes a dependency conflict...
+		// XXX this causes a dependency loop -- ui <-> ui-render...
 		//'ui',
 		'base',
 	],
@@ -453,6 +453,8 @@ core.ImageGridFeatures.Feature({
 		'ui-ribbons-edit-render',
 		'ui-partial-ribbons',
 	],
+
+	isApplicable: function(){ return this.runtime.browser },
 
 	actions: RibbonsActions, 
 
@@ -532,6 +534,7 @@ core.ImageGridFeatures.Feature({
 
 	tag: 'ui-ribbons-edit-render',
 	depends: [
+		'ui',
 		'edit',
 		'tags',
 		'sort',
@@ -701,7 +704,7 @@ core.ImageGridFeatures.Feature({
 	tag: 'ui-partial-ribbons',
 	exclusive: ['ui-partial-ribbons'],
 	depends: [
-		//'ui',
+		'ui',
 		'ui-ribbons-render',
 	],
 	suggested: [
@@ -769,6 +772,7 @@ module.ShiftAnimation = core.ImageGridFeatures.Feature({
 
 	tag: 'ui-animation',
 	depends: [
+		'ui',
 		'ui-ribbons-render',
 	],
 	// NOTE: this will allow the animations to start as early as possible

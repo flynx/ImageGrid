@@ -708,7 +708,7 @@ module.TagUI = core.ImageGridFeatures.Feature({
 	// XXX
 	tag: 'ui-tags',
 	depends: [
-		// XXX
+		'ui',
 	],
 
 	actions: TagUIActions, 
