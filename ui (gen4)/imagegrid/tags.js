@@ -558,12 +558,25 @@ var BaseTagsPrototype = {
 	// 		// path search is directional...
 	// 		ts.match('c', 'a')			// -> false
 	//
+	// XXX Q: should the following be true?
+	//			ts.togglePersistent('a/b/c', 'z/a/x/y', 'on')
+	//
+	//			ts.match('/a', 'y')		// -> ??? (currently false)
+	// 
+	// 		...feels like this should be true...
 	match: function(a, b, cmp){
 		var that = this
 
 		// root or base?
 		var edge = /^\s*[\\\/]/.test(a) 
 			|| /[\\\/]\s*$/.test(a)
+		// NOTE: if we have a at least once present in an edge path then
+		// 		it means the edge is reachable and thus no need to test 
+		// 		for it explicitly...
+		// XXX this is valid iff a is a single tag, if it's a sub-path 
+		// 		then we need to check only the first item... (???)
+		// XXX is this applicable to both root and base???
+		edge = !(edge && this.directMatch(a).length > 0)
 
 		// get paths with tag...
 		var paths = function(tag){
@@ -577,6 +590,8 @@ var BaseTagsPrototype = {
 			return paths(tag)
 				.reduce(function(res, path){
 					if(res == true
+							// XXX do we need this??? (I think not)
+							// 		...see the edge test above...
 							|| (edge && !that.directMatch(a, path))){
 						return res
 					}
