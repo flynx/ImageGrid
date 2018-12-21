@@ -542,41 +542,35 @@ var BaseTagsPrototype = {
 	//
 	//
 	// Example:
-	// 		ts.togglePersistent('a/b/c', 'a/x/y', 'c/d/e')
+	// 		ts.togglePersistent('a/b/c', 'a/x/y', 'c/d/e', 'on')
 	//
 	// 		// see if 'a' directly matches 'c'...
 	// 		ts.directMatch('a', 'c')	// -> false
 	//
-	// 		// indirect matches... 
+	// 		// direct match (same as .directMatch(..))...
 	// 		ts.match('a', 'c')			// -> true
+	//
+	// 		// indirect matches... 
 	// 		ts.match('a', 'y')			// -> true
-	// 		// indirect extended match... 
-	// 		ts.match('a', 'e')			// -> true
+	// 		ts.match('b', 'e')			// -> true
 	//
 	// 		// two different paths...
 	// 		ts.match('c', 'y')			// -> false
 	// 		// path search is directional...
 	// 		ts.match('c', 'a')			// -> false
 	//
-	// XXX Q: should the following be true?
-	//			ts.togglePersistent('a/b/c', 'z/a/x/y', 'on')
 	//
-	//			ts.match('/a', 'y')		// -> ??? (currently false)
-	// 
-	// 		...feels like this should be true...
+	// NOTE: matching a root/base tag will yield true if at least one 
+	// 		occurrence of the tag in the system exists as root/base.
+	//		...there is an alternative way to think about this issue 
+	//		where .match(..) would return true iff the tag is exclusively
+	//		a root/base tag respectively but this seems a bit less useful.
 	match: function(a, b, cmp){
 		var that = this
 
 		// root or base?
 		var edge = /^\s*[\\\/]/.test(a) 
 			|| /[\\\/]\s*$/.test(a)
-		// NOTE: if we have a at least once present in an edge path then
-		// 		it means the edge is reachable and thus no need to test 
-		// 		for it explicitly...
-		// XXX this is valid iff a is a single tag, if it's a sub-path 
-		// 		then we need to check only the first item... (???)
-		// XXX is this applicable to both root and base???
-		edge = !(edge && this.directMatch(a).length > 0)
 
 		// get paths with tag...
 		var paths = function(tag){
@@ -585,14 +579,11 @@ var BaseTagsPrototype = {
 					return that.PATH_SEPARATOR.test(t) }) }
 		// search the path tree...
 		// NOTE: this will stop the search on first hit...
-		var search = function(tag, seen){
+		var search = function(target, tag, seen){
 			seen = seen || new Set()
 			return paths(tag)
 				.reduce(function(res, path){
-					if(res == true
-							// XXX do we need this??? (I think not)
-							// 		...see the edge test above...
-							|| (edge && !that.directMatch(a, path))){
+					if(res == true){
 						return res
 					}
 
@@ -601,7 +592,7 @@ var BaseTagsPrototype = {
 					path = path.slice(0, path.indexOf(tag))
 
 					// check current set of reachable tags...
-					return (that.directMatch(a, path, cmp).length != 0)
+					return (that.directMatch(target, path, cmp).length != 0)
 						|| path
 							// search next level...
 							.reduce(function(res, tag){
@@ -611,33 +602,13 @@ var BaseTagsPrototype = {
 										false
 									: search(tag, seen.add(tag)) }, false) }, false) }
 
-		/* // XXX is this faster???
-		// XXX need to test for edge patterns...
-		var reachable = function(tag, seen){
-			seen = seen || new Set()
-			seen.add(tag)
-
-			// list of directly reachable tags...
-			// XXX test edge...
-			var r = paths(tag)
-				.map(function(path){
-					path = that.splitPath(path)
-					return path.slice(0, path.indexOf(tag)) })
-				.flat()
-				.filter(function(tag){ 
-					return !seen.has(tag) })
-
-			return r.includes(a)
-				|| r.reduce(function(res, tag){
-					return res
-						|| reachable(tag, seen) }, false)	
-		}
-		//*/
-
 		var res = this.directMatch(...arguments) 
-		return res === false ?
-			search(b)
-			: res 
+		return res !== false ?
+				res
+			// if there is no edge a then no point in further searching...
+			: (edge && this.match(a, cmp).length == 0) ?
+				false
+			: search(a, b)
 	},
 
 	// Search tags...
