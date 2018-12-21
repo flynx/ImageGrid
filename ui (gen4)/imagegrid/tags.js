@@ -27,7 +27,7 @@
 *
 * XXX should we do .optimizeTags(tag) on .tag(tag)???
 * 		...this might lead to non-trivial behaviour...
-* XXX should this serialize recursively down???
+* XXX should this serialize recursively down (i.e. serialize items)???
 * 		...it might be a good idea to decide on a serialization 
 * 		protocol and use it throughout...
 * XXX should .tags() return all the used tags + .persistent or 
@@ -291,7 +291,8 @@ var BaseTagsPrototype = {
 	// 	}
 	//
 	// NOTE: a definition is equivalent to a very specific path tag but 
-	// 		considering it's a special case it is handled allot faster...
+	// 		considering it's a strict special case it is optimised and
+	// 		handled allot faster...
 	// 			.define('birds', 'bird:many')
 	// 		is equivalent to:
 	// 			.togglePersistent('bird:many/birds')
@@ -299,7 +300,19 @@ var BaseTagsPrototype = {
 	// XXX Q: should definitions be displayed as persistent tags???
 	definitions: null,
 
-	// definitions as paths...
+	// Props...
+	//
+	// Number of values...
+	get length(){
+		return this.values().length },
+
+	// Definitions as paths...
+	//
+	// Each definition is effectively a path in the following form:
+	// 		<value>/<tag>
+	//
+	// Example:
+	// 	.define('tag', 'concept:tag')	// ->	'concept:tag/tag'
 	//
 	// XXX do we need this???
 	// XXX should we cache this???
@@ -308,12 +321,13 @@ var BaseTagsPrototype = {
 			.map(function(e){
 				return [e[1].join(':'), e[0]].join('/') }) },
 
-
-	// Props...
+	// All persistent tags...
 	//
-	get length(){
-		return this.values().length },
-	// XXX should this include only definition keys, values or both???
+	// This will include:
+	// 	.persistent
+	// 	.definition_paths
+	//
+	// XXX do we need this???
 	get persistentAll(){
 		return (this.__persistent || new Set())
 			.unite(this.definition_paths || []) },
@@ -349,20 +363,31 @@ var BaseTagsPrototype = {
 	// 		-> tags
 	//
 	//
-	// Query syntax:
-	// 	a		- tag
-	// 	a/b		- path, defines a directional relation between a and b
-	// 	/a		- path special case, matches iff a is at path root
-	// 	a/		- path special case, matches iff a is at path base
-	// 	a:b		- set, defines a non-directional relation between a and b
-	// 	*		- tag placeholder, matches one and only one tag name
+	// This takes tag definitions into account when matching, but does 
+	// not account for persistent tags (see: .match(..)).
+	// This does not build the path graph... (XXX)
 	//
-	// NOTE: a tag is also a singular path and a singular set.
+	//
+	// Query syntax:
+	// 	a		- single tag
+	// 				NOTE: a tag is also a unary path and a singular 
+	// 					set (see below).
+	// 	a/b		- path, 2 or more tags joined with '/' (or '\').
+	// 				defines a directional relation between a and b
+	// 	/a		- path special case, a path with a leading '/' (or '\')
+	// 	a/		- path special case, a path with a trailing '/' (or '\')
+	// 	a:b		- set, two or more tags joined with ':'
+	// 				defines a non-directional relation between a and b.
+	// 	*		- tag placeholder, matches one and only one tag
+	//
 	// NOTE: paths have priority over sets: a/b:c -> a / b:c
 	// NOTE: there is a special case pattern '*a*' that matches the same 
-	// 		way as 'a', this is used in cases where 'a' is used as an 
-	// 		explicit match (see: .untag(..))
+	// 		way as 'a', this is used in methods where 'a' is used as an 
+	// 		explicit 1:1 match (see: .untag(..))
 	//
+	//
+	//
+	// Matching:
 	//
 	// Two paths match iff:
 	// 	- all of the components of the first are contained in the second and
@@ -379,6 +404,12 @@ var BaseTagsPrototype = {
 	// 		--------------------------------
 	// 		a/b			a/b			b/a
 	// 					x/a/y/b/z	b/x
+	// 					...			...
+	// 		--------------------------------
+	// 		/a			a/b/c		b/a/c
+	// 					...			...
+	// 		--------------------------------
+	// 		a/			x/y/a		a/x
 	// 					...			...
 	//
 	//
@@ -399,19 +430,16 @@ var BaseTagsPrototype = {
 	// 					a:x:b:z		...
 	// 					...
 	//
-	//
 	// NOTE: this is not symmetric e.g. a will match a:b but not vice-versa.
-	// NOTE: this does not try to match outside the scope of the actual 
-	// 		given tags, to search taking paths into account use .match(..)
+	// 
 	directMatch: function(a, b, cmp){
 		var that = this
-
 		if(b instanceof Function){
 			cmp = b
 			b = null
 		}
 
-		// get matching tags...
+		// no given tags or multiple tags -> filter...
 		if(b == null || b instanceof Array){
 			return (b || this.tags())
 				.filter(function(tag){ 
@@ -424,7 +452,6 @@ var BaseTagsPrototype = {
 			var root = /^\s*[\\\/]/.test(a)
 			var base = /[\\\/]\s*$/.test(a)
 
-			// normalized match...
 			a = this.normalize(a)
 			// special case: *tag* pattern...
 			a = /^\*[^:\\\/]*\*$/.test(a) ? 
@@ -432,6 +459,7 @@ var BaseTagsPrototype = {
 				: a
 			b = this.normalize(b)
 
+			// the fast case...
 			if(a == b){
 				return true
 			}
@@ -503,10 +531,10 @@ var BaseTagsPrototype = {
 		}
 	},
 
-	// Match tags directly or indirectly...
+	// Match tags...
 	//
-	// This is the same as .directMatch(..) but also uses paths to check
-	// tag "reachability"...
+	// This is the same as .directMatch(..) but also uses persistent 
+	// tags and path graph to check tag "reachability"...
 	//
 	// Matching rule:
 	// 	a and b match iff both a and b are reachable on a single path 
@@ -531,6 +559,8 @@ var BaseTagsPrototype = {
 	// 		ts.match('c', 'a')			// -> false
 	//
 	//
+	// XXX MUG: the path graph search seems to happen iff all of the needed
+	// 		chains are actually used to tag values...
 	match: function(a, b, cmp){
 		var that = this
 
@@ -542,7 +572,8 @@ var BaseTagsPrototype = {
 		var paths = function(tag){
 			return that.directMatch(tag, cmp)
 				.filter(function(t){ 
-					return that.PATH_SEPARATOR.test(t) }) }
+					return /[\\\/]/.test(t) }) }
+					//return that.PATH_SEPARATOR.test(t) }) }
 		// search the path tree...
 		// NOTE: this will stop the search on first hit...
 		var search = function(tag, seen){
@@ -568,6 +599,28 @@ var BaseTagsPrototype = {
 									: seen.has(tag) ?
 										false
 									: search(tag, seen.add(tag)) }, false) }, false) }
+
+		/* // XXX is this faster???
+		var reachable = function(tag, seen){
+			seen = seen || new Set()
+			seen.add(tag)
+
+			// list of directly reachable tags...
+			var r = paths(tag)
+				.map(function(path){
+					console.log('  p:', path)
+					path = that.splitPath(path)
+					return path.slice(0, path.indexOf(tag)) })
+				.flat()
+				.filter(function(tag){ 
+					return !seen.has(tag) })
+
+			return r.includes(a)
+				|| r.reduce(function(res, tag){
+					return res
+						|| reachable(tag, seen) }, false)	
+		}
+		//*/
 
 		var res = this.directMatch(...arguments) 
 		return res === false ?

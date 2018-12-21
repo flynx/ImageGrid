@@ -271,8 +271,8 @@ module.TagsEdit = core.ImageGridFeatures.Feature({
 
 				// cleanup...
 				if(res.index.data && res.index.data.tags){
-					delete res.index.data.tags.tags.marked
-					delete res.index.data.tags.tags.bookmark
+					delete (res.index.data.tags.__index || {}).marked
+					delete (res.index.data.tags.__index || {}).bookmark
 					delete res.index.data.tags
 				}
 			}],
