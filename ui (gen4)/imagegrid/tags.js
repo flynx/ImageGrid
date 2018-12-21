@@ -601,14 +601,15 @@ var BaseTagsPrototype = {
 									: search(tag, seen.add(tag)) }, false) }, false) }
 
 		/* // XXX is this faster???
+		// XXX need to test for edge patterns...
 		var reachable = function(tag, seen){
 			seen = seen || new Set()
 			seen.add(tag)
 
 			// list of directly reachable tags...
+			// XXX test edge...
 			var r = paths(tag)
 				.map(function(path){
-					console.log('  p:', path)
 					path = that.splitPath(path)
 					return path.slice(0, path.indexOf(tag)) })
 				.flat()
