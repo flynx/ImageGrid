@@ -25,13 +25,13 @@
 * 		- will it be faster?
 *
 *
-* XXX should we do .optimizeTags(tag) on .tag(tag)???
+* XXX Q: should we do .optimizeTags(tag) on .tag(tag)???
 * 		...this might lead to non-trivial behaviour...
-* XXX should this serialize recursively down (i.e. serialize items)???
+* XXX Q: should this serialize recursively down (i.e. serialize items)???
 * 		...it might be a good idea to decide on a serialization 
 * 		protocol and use it throughout...
-* XXX should .tags() return all the used tags + .persistent or 
-* 		.persistentAll ???
+* XXX Q: should definitions be displayed as persistent tags???
+* 		...should this be an option???
 *
 *
 *
@@ -268,7 +268,7 @@ var BaseTagsPrototype = {
 	//
 	// Format:
 	// 	{
-	// 		<tag>: [ <item>, ... ],
+	// 		<tag>: Set([ <item>, ... ]),
 	// 		...
 	// 	}
 	//
@@ -296,8 +296,6 @@ var BaseTagsPrototype = {
 	// 			.define('birds', 'bird:many')
 	// 		is equivalent to:
 	// 			.togglePersistent('bird:many/birds')
-	//
-	// XXX Q: should definitions be displayed as persistent tags???
 	definitions: null,
 
 	// Props...
@@ -568,10 +566,6 @@ var BaseTagsPrototype = {
 	match: function(a, b, cmp){
 		var that = this
 
-		// root or base?
-		var edge = /^\s*[\\\/]/.test(a) 
-			|| /[\\\/]\s*$/.test(a)
-
 		// get paths with tag...
 		var paths = function(tag){
 			return that.directMatch(tag, cmp)
@@ -600,13 +594,15 @@ var BaseTagsPrototype = {
 										res
 									: seen.has(tag) ?
 										false
-									: search(tag, seen.add(tag)) }, false) }, false) }
+									: search(target, tag, seen.add(tag)) }, false) }, false) }
 
 		var res = this.directMatch(...arguments) 
 		return res !== false ?
 				res
-			// if there is no edge a then no point in further searching...
-			: (edge && this.match(a, cmp).length == 0) ?
+			// if there is no edge (root/base) a then no point in further
+			// searching...
+			: ((/^\s*[\\\/]/.test(a) || /[\\\/]\s*$/.test(a))
+					&& this.match(a, cmp).length == 0) ?
 				false
 			: search(a, b)
 	},
@@ -764,7 +760,6 @@ var BaseTagsPrototype = {
 	//
 	// XXX should we rename this to .usedTags(..) and .singleTags(..) to
 	// 		.tags(..) ???
-	// XXX should this use .persistentAll or .persistent ???
 	tags: function(value, ...tags){
 		var that = this
 
@@ -830,7 +825,7 @@ var BaseTagsPrototype = {
 
 	// Edit API...
 	// 
-	// XXX save un-normalized tags to dict... ???
+	// XXX save un-normalized tags to dict... ??? (a-la flickr)
 	tag: function(tags, value){
 		var that = this
 		value = value instanceof Array ? value : [value]
