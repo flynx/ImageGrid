@@ -80,9 +80,9 @@ var normalizeSplit = function(args){
 
 var BaseTagsClassPrototype = {
 
-	PATH_SEPARATOR: /[\\\/]+/g,
-	SET_SEPARATOR: /:+/g,
-	COMBINED_SEPARATOR: /[:\\\/]+/g,
+	PATH_SEPARATOR: /[\\\/]+/,
+	SET_SEPARATOR: /:+/,
+	COMBINED_SEPARATOR: /[:\\\/]+/,
 
 	splitSet: function(str){
 		return str.split(this.SET_SEPARATOR) },
@@ -558,9 +558,6 @@ var BaseTagsPrototype = {
 	// 		// path search is directional...
 	// 		ts.match('c', 'a')			// -> false
 	//
-	//
-	// XXX MUG: the path graph search seems to happen iff all of the needed
-	// 		chains are actually used to tag values...
 	match: function(a, b, cmp){
 		var that = this
 
@@ -572,8 +569,7 @@ var BaseTagsPrototype = {
 		var paths = function(tag){
 			return that.directMatch(tag, cmp)
 				.filter(function(t){ 
-					return /[\\\/]/.test(t) }) }
-					//return that.PATH_SEPARATOR.test(t) }) }
+					return that.PATH_SEPARATOR.test(t) }) }
 		// search the path tree...
 		// NOTE: this will stop the search on first hit...
 		var search = function(tag, seen){
