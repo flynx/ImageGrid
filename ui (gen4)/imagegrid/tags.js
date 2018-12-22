@@ -1655,6 +1655,9 @@ var TagsWithHandlersPrototype = {
 
 	// Special tag handlers...
 	//
+	// These enable triggering actions by using specific tag patterns.
+	//
+	//
 	// Example handlers:
 	// 	{
 	//		// print the tag operation info...
@@ -1684,6 +1687,10 @@ var TagsWithHandlersPrototype = {
 	//		...
 	//	}
 	//
+	//
+	// NOTE: currently there is not way for a handler to stop/change the
+	// 		actual method that triggered it in any way other than 
+	// 		manipulating the tag itself.
 	__special_tag_handlers__: null,
 	/*/ DEBUG...
 	__special_tag_handlers__: {
