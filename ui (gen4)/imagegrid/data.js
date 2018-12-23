@@ -652,6 +652,7 @@ var DataPrototype = {
 					}
 				})
 			})
+			delete this.__order_index
 
 		// clear empty ribbons only...
 		} else if(gids == 'empty'){
@@ -778,6 +779,9 @@ var DataPrototype = {
 					list[i] = to
 				}
 			})
+			// XXX EXPERIMENTAL: order_index
+			delete this.order_index[from]
+			this.order_index[to] = i
 		}
 		return this
 	},
@@ -1677,6 +1681,10 @@ var DataPrototype = {
 
 		var r = this.getRibbon('current')
 
+		// XXX EXPERIMENTAL: order_index
+		// XXX should this be optional???
+		delete this.__order_index
+
 		this.eachImageList(function(cur, key, set){
 			set = this[set]
 
@@ -1723,6 +1731,8 @@ var DataPrototype = {
 	reverseImages: function(){
 		var order = this.order
 		order.reverse()
+		// XXX EXPERIMENTAL: order_index
+		delete this.__order_index
 		var l = order.length
 
 		var that = this
@@ -1855,7 +1865,8 @@ var DataPrototype = {
 					// NOTE: we are moving left to right, thus the final order
 					// 		of images will stay the same.
 					if(f < ri){
-						order.splice(mode == 'after' ? l : ri-1, 0, order.splice(f, 1)[0])
+						var i = mode == 'after' ? l : ri-1
+						order.splice(i, 0, order.splice(f, 1)[0])
 
 					// target is right of the reference -- place each new image
 					// at an offset from reference, the offset is equal to 
@@ -1871,9 +1882,6 @@ var DataPrototype = {
 						}
 					}
 				})
-
-			// update the order data...
-			this.order.splice.apply(this.order, [0, this.order.length].concat(order))
 
 			this.updateImagePositions()
 		}
