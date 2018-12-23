@@ -231,7 +231,7 @@ var ImageMarkActions = actions.Actions({
 	get marked(){
 		return this.data == null ?
 			[]
-			: this.data.tagQuery('marked') },
+			: this.data.sortViaOrder(this.data.tagQuery('marked')) },
 
 	markedInRibbon: ['- Mark|Ribbon/',
 		function(ribbon){
@@ -503,7 +503,7 @@ var ImageBookmarkActions = actions.Actions({
 	get bookmarked(){
 		return this.data == null ?
 			[]
-			: this.data.tagQuery('bookmark') },
+			: this.data.sortViaOrder(this.data.tagQuery('bookmark')) },
 
 	prevBookmarked: ['Bookmark|Navigate/Previous bookmarked image',
 		{browseMode: function(target){ 

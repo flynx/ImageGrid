@@ -248,32 +248,12 @@ var DataPrototype = {
 			this.getRibbon(value)
 			: value },
 
-	// XXX need to figure out how to both reset the .order_index in a safe
-	// 		way and keep it to speed things up in consecutive calls that 
-	// 		do not touch the order...
 	get order(){
 		return this.__order },
 	set order(value){
 		var that = this
 		delete this.__order_index
-
-		//*
 		this.__order = value
-		/*/ 
-		// XXX this makes things substantially slower...
-		this.__order = value.isOrderProxy ?
-			value
-			: new Proxy(value, {
-				get: function(target, name){
-					return name == 'isOrderProxy' 
-						|| target[name] },
-				set: function(target, name, value){
-					that.order_index[value] = name
-					target[name] = value
-					return true
-				}, 
-			})
-		//*/
 	},
 	get order_index(){
 		return this.__order_index = this.__order_index || this.order.toKeys() },
@@ -317,6 +297,22 @@ var DataPrototype = {
 			.map(function(gid){ return that.getImage(gid) })
 	},
 
+	// Sort images via .order...
+	//
+	// NOTE: this will place non-gids at the end of the list...
+	//
+	// XXX is this faster than .makeSparseImages(gids).compact() ???
+	// 		...though this will not remove non-gids... 
+	sortViaOrder: function(gids){
+		var idx = this.order_index
+		return gids.sort(function(a, b){ 
+			return a in idx && b in idx ?
+					idx[a] - idx[b]
+				: a in idx ?
+					-1
+				: b in idx ?
+					1
+				: gids.indexOf(a) - gids.indexOf(b) }) },
 
 	// Make a sparse list of image gids...
 	//
