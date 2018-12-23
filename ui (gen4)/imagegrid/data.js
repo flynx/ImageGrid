@@ -134,6 +134,13 @@ if(typeof(sha1) != 'undefined'){
 /*********************************************************************/
 // Data...
 
+var OrderProxy = {
+	set: function(target, property, value, receiver){
+		target[property] = value
+		return true
+	}
+}
+
 var DataClassPrototype = {
 	// NOTE: we consider the input list sorted...
 	fromArray: function(list){
@@ -241,11 +248,32 @@ var DataPrototype = {
 			this.getRibbon(value)
 			: value },
 
+	// XXX need to figure out how to both reset the .order_index in a safe
+	// 		way and keep it to speed things up in consecutive calls that 
+	// 		do not touch the order...
 	get order(){
 		return this.__order },
 	set order(value){
+		var that = this
 		delete this.__order_index
+
+		//*
 		this.__order = value
+		/*/ 
+		// XXX this makes things substantially slower...
+		this.__order = value.isOrderProxy ?
+			value
+			: new Proxy(value, {
+				get: function(target, name){
+					return name == 'isOrderProxy' 
+						|| target[name] },
+				set: function(target, name, value){
+					that.order_index[value] = name
+					target[name] = value
+					return true
+				}, 
+			})
+		//*/
 	},
 	get order_index(){
 		return this.__order_index = this.__order_index || this.order.toKeys() },
@@ -351,8 +379,9 @@ var DataPrototype = {
 			: gids
 		target = target == null ? [] : target
 
-		order = this.order
+		var order = this.order
 		//var order_idx = order.toKeys()
+		// XXX to cache order index we need to update it every time we change order...
 		var order_idx = this.order_index || order.toKeys()
 
 		var rest = []
@@ -1701,7 +1730,6 @@ var DataPrototype = {
 			lst.length = l
 			lst.reverse()
 		})
-
 		return this
 	},
 
@@ -1807,6 +1835,7 @@ var DataPrototype = {
 		// horizontal shift -- gather the images horizontally...
 		if(reference != 'keep'){
 			var ref = this.getImage(reference)
+			var order = this.order
 
 			// NOTE: the reference index will not move as nothing will 
 			// 		ever change it's position relative to it...
@@ -2408,6 +2437,7 @@ var DataPrototype = {
 				n[set][key] = lst.splice(0, i)
 			})
 			n.current = n.order.indexOf(tail.current) >= 0 ? tail.current : n.order[0]
+			n.order_index = n.order.toKeys()
 			
 			res.push(n)
 		})
@@ -2470,6 +2500,7 @@ var DataPrototype = {
 			// merge order...
 			// XXX need to take care of gid conflicts... (???)
 			base.order = base.order.concat(data.order)
+			base.order_index = base.order.toKeys()
 
 			// merge .ribbons and .ribbon_order...
 			// NOTE: this is a special case, so we do not handle it in 
