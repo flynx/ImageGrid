@@ -291,6 +291,7 @@ var BaseTagsPrototype = {
 	// Format:
 	// 	Set([ <tag>, ... ])
 	//
+	// NOTE: this is expected to contain normalized values only...
 	persistent: null,
 
 	// Tag definitions...
@@ -781,6 +782,8 @@ var BaseTagsPrototype = {
 			return Object.keys(this.__index || {})
 				//.concat([...(this.persistentAll || [])]
 				.concat([...(this.persistent || [])]
+					// XXX do we need to normalize here???
+					// 		...do we trust .persistent???
 					.map(function(t){ 
 						return that.normalize(t) }))
 				.unique()
@@ -1819,10 +1822,8 @@ module.TagsWithHandlers =
 //---------------------------------------------------------------------
 
 // XXX EXPERIMENTAL...
-// XXX need a .dict cleanup strategy...
 var TagsWithDictPrototype = {
 	__proto__: BaseTagsPrototype,
-
 
 	// Tag dictionary...
 	//
@@ -1892,54 +1893,83 @@ var TagsWithDictPrototype = {
 			res[0]
 			: res },
 
-	// XXX batch remove???
-	// XXX
-
 	// Remove orphaned .dict values...
 	//
 	// NOTE: an orphan is a dict entry for a tag that is no longer used.
-	cleanupDict: function(){
-		// get tags list...
-		var tags = new Set(this.singleTags()
-			.concat(this.splitTag(this.definitionPaths())
-				.flat()))
+	// NOTE: this will not remove tags that are not orphaned...
+	// XXX check which of the branches is faster...
+	removeOrphansFromDict: function(...tags){
+		if(!this.dict){
+			return this 
+		}
+		var that = this
 		var dict = this.dict
-		dict
-			&& Object.keys(dict)
+
+		tags = tags.length == 0 ?
+			Object.keys(dict)
+			: this.normalize(this.splitTag(normalizeSplit(tags)))
+
+		// check all...
+		// XXX tune the threshold or make it dynamic...
+		// XXX do we need both branches???
+		if(tags.length > 3){
+			var index = new Set(this.splitTag(
+				...this.tags(), 
+				...this.definitionPaths()))
+			tags = tags
 				.filter(function(tag){
-					return !tags.has(tag) })
-				.forEach(function(tag){
-					delete dict[tag] })
+					return !index.has(tag) })
+
+		// check specific tags...
+		// NOTE: this is geared towards a small number of input tags...
+		} else {
+			tags = tags 
+				.filter(function(tag){
+					return that.match(tag).length == 0 })
+		}
+
+		tags
+			.forEach(function(tag){
+				delete dict[tag] })
+
 		return this
 	},
 
 
-	// Hooks...
+	// Save/clean dict on prototype methods...
 	tag: function(tags, value){
 		this.normalizeSave(tags)
 		return object.parent(TagsWithDictPrototype.tag, this).call(this, ...arguments) },
-	// XXX cleanup .dict...
 	untag: function(tags, value){
-		// XXX cleanup .dict...
-		return object.parent(TagsWithDictPrototype.untag, this).call(this, ...arguments) },
-	// XXX cleanup .dict...
+		var res = object.parent(TagsWithDictPrototype.untag, this).call(this, ...arguments) 
+		this.removeOrphansFromDict(tags)
+		return res
+	},
 	rename: function(from, to, ...tags){
 		arguments.length == 2
 			&& this.normalizeSave(to)
-			// XXX cleanup dict...
-		return object.parent(TagsWithDictPrototype.rename, this).call(this, ...arguments) },
-	// XXX cleanup .dict...
+		var res = object.parent(TagsWithDictPrototype.rename, this).call(this, ...arguments) 
+		this.removeOrphansFromDict(from)
+		return res
+	},
 	togglePersistent: function(...tags){
-		// XXX remove action...
 		this.normalizeSave(tags)
-		// XXX cleanup dict...
-		return object.parent(TagsWithDictPrototype.togglePersistent, this).call(this, ...arguments) },
-	// XXX cleanup .dict...
+		var res = object.parent(TagsWithDictPrototype.togglePersistent, this).call(this, ...arguments) 
+		this.removeOrphansFromDict(res
+			.map(function(r, i){ 
+				return r == 'off' ? tags[i] : [] })
+			.flat())
+		return res
+	},
 	define: function(tag, value){
 		arguments.length > 1 
 			&& value != null
 			&& this.normalizeSave(tag, value)
-		return object.parent(TagsWithDictPrototype.define, this).call(this, ...arguments) },
+		var res = object.parent(TagsWithDictPrototype.define, this).call(this, ...arguments) 
+		value == null
+			&& this.removeOrphansFromDict(tag)
+		return res
+	},
 }
 
 
