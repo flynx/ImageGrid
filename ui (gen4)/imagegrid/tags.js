@@ -83,6 +83,7 @@ var BaseTagsClassPrototype = {
 	// NOTE: do not include 'g' flag here, it will make the RE objects
 	// 		stateful which will yield very unpredictable results from 
 	// 		general system.
+	// XXX need separators as attrs too... 
 	PATH_SEPARATOR: /[\\\/]+/,
 	SET_SEPARATOR: /:+/,
 	COMBINED_SEPARATOR: /[:\\\/]+/,
@@ -1682,6 +1683,7 @@ object.makeConstructor('BaseTags',
 // XXX EXPERIMENTAL...
 // 		...this is a bit too generic, we need to save dict values only 
 // 		when tagging or adding tags...
+// 		...also need to clear the dict when untagging...
 var TagsWithDictPrototype = {
 	__proto__: BaseTags,
 
@@ -1721,6 +1723,28 @@ var TagsWithDictPrototype = {
 
 		return res
 	},
+	translateTag: function(...tags){
+		var that = this
+		var dict = this.dict
+		tags = normalizeSplit(tags)
+
+		var res = dict != null ?
+			tags
+				.map(function(path){
+					return path
+						.split(that.PATH_SEPARATOR) 
+						.map(function(set){
+							return set
+								.split(that.SET_SEPARATOR)
+								.map(function(tag){
+									return (dict[tag] || [tag])[0] })
+								.join(':') })
+						.join('/') })
+			: tags
+
+		return arguments.length == 1 && typeof(arguments[0]) == typeof('str') ?
+			res[0]
+			: res },
 }
 
 

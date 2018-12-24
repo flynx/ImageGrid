@@ -541,7 +541,6 @@ var TagUIActions = actions.Actions({
 			return browse.makeLister(null, function(path, make){
 				var tags = that.data.getTags(gids)
 				var tagset = that.data.tags
-				var dict = tagset.dict
 
 				// tags...
 				// XXX make this a group...
@@ -592,14 +591,8 @@ var TagUIActions = actions.Actions({
 						var tagged = tag[3]
 						tag = tag[0]
 
-						var text = dict ?
-							tag.split(tagset.PATH_SEPARATOR)
-								.map(function(s){
-									return s.split(tagset.SET_SEPARATOR)
-										.map(function(t){
-											return (dict[t] || [t])[0] })
-							   			.join(':') })
-								.join('/')
+						var text = tagset.translateTag ?
+							tagset.translateTag(tag)
 							: tag
 
 						return make(text, {
