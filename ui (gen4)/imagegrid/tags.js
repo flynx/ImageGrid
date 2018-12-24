@@ -80,6 +80,9 @@ var normalizeSplit = function(args){
 
 var BaseTagsClassPrototype = {
 
+	// NOTE: do not include 'g' flag here, it will make the RE objects
+	// 		stateful which will yield very unpredictable results from 
+	// 		general system.
 	PATH_SEPARATOR: /[\\\/]+/,
 	SET_SEPARATOR: /:+/,
 	COMBINED_SEPARATOR: /[:\\\/]+/,
@@ -99,17 +102,19 @@ var BaseTagsClassPrototype = {
 	// 	.normalize([tag, ...])
 	// 		-> [ntag, ...]
 	//
-	// NOTE: tag set order is not significant.
+	//
+	// NOTE: path sections take priority over set sections, i.e. a set is
+	// 		always contained within a path:
+	// 			a:b/c -> a:b / c
+	// NOTE: tag set order is not significant, thus tag sets are further
+	// 		normalized by sorting the elements in alphabetical order.
 	// NOTE: for mixed tags sets are sorted in-place within paths, 
 	// 		e.g.
 	// 			c:b/a -> b:c/a
+	// NOTE: no way of grouping or prioritizing is currently supported 
+	// 		by design, this is done so as to simplify the system as much 
+	// 		as possible.
 	//
-	// XXX not sure if we should do:
-	// 			c:b/a -> b:c/a 		- sort sets within pats (current)
-	// 		or
-	// 			c:b/a -> b/a:c		- sort paths within sets
-	// XXX should we support priority braces, i.e. c:(b/a)
-	// XXX do we support leading '/' ???
 	normalize: function(...tags){
 		var that = this
 		var tagRemovedChars = (this.config || {})['tagRemovedChars']
@@ -145,6 +150,11 @@ var BaseTagsClassPrototype = {
 			res.pop() 
 			: res
 	},
+	// Split the tag into individual singular tags...
+	//
+	// Example:
+	// 		'a:b/c'	-> ['a', 'b', 'c']
+	//
 	subTags: function(...tags){
 		var that = this
 		return this.normalize(normalizeSplit(tags))
@@ -256,9 +266,11 @@ var BaseTagsClassPrototype = {
 // 			...
 var BaseTagsPrototype = {
 	config: {
+		// XXX docs!
 		tagRemovedChars: '[\\s-_]',
 	},
 
+	// NOTE: for notes on structure see notes on the Utils section below...
 	PATH_SEPARATOR: BaseTagsClassPrototype.PATH_SEPARATOR,
 	SET_SEPARATOR: BaseTagsClassPrototype.SET_SEPARATOR,
 	COMBINED_SEPARATOR: BaseTagsClassPrototype.COMBINED_SEPARATOR,
@@ -273,7 +285,6 @@ var BaseTagsPrototype = {
 	// 	}
 	//
 	__index: null,
-
 
 	// Persistent tags...
 	//
@@ -306,11 +317,7 @@ var BaseTagsPrototype = {
 
 	// All persistent tags...
 	//
-	// This will include:
-	// 	.persistent
-	// 	.definitionPaths()
-	//
-	// XXX do we need this???
+	// This will combine .persistent and .definitionPaths()
 	get persistentAll(){
 		return (this.__persistent || new Set())
 			.unite(this.definitionPaths()) },
@@ -709,8 +716,7 @@ var BaseTagsPrototype = {
 	// Direct tag/value check...
 	//
 	// NOTE: these are not using for loops so as to enable "fast abort",
-	// 		not sure who much performance this actually gains though.
-	// XXX should these take multiple values???
+	// 		not sure how much performance this actually gains though.
 	hasTag: function(tag){
 		for(var t of this.tags()){
 			if(this.match(tag, t)){
@@ -738,13 +744,16 @@ var BaseTagsPrototype = {
 	//	.tags(value, [tag, ..])
 	//		-> bool
 	//
-	// NOTE: this will return the list of actual tags used and will not 
-	// 		generate any new values (like .singleTags(..) and friends do).
-	// NOTE: this includes all the persistent tags as well as all the 
-	// 		tags actually used.
 	//
-	// XXX should we rename this to .usedTags(..) and .singleTags(..) to
-	// 		.tags(..) ???
+	// This will return/search:
+	// 	- actual used tags (in .__index)
+	// 	- persistent tags (in .persistent)
+	//
+	//
+	// NOTE: persistent tags are added to the results in two cases: when
+	// 		they are explicitly used to tag a value or when we are getting
+	// 		all the tags (via .tag() without arguments).
+	//
 	tags: function(value, ...tags){
 		var that = this
 
@@ -781,11 +790,13 @@ var BaseTagsPrototype = {
 	singleTags: function(value, ...tags){
 		return this.subTags(this.tags(...arguments)).unique() },
 	paths: function(value){
+		var sp = that.PATH_SEPARATOR
 		return this.tags(value)
-			.filter(function(tag){ return /[\\\/]/.test(tag) }) },
+			.filter(function(tag){ return sp.test(tag) }) },
 	sets: function(value){
+		var sp = this.SET_SEPARATOR
 		return this.tags(value)
-			.filter(function(tag){ return tag.includes(':') }) },
+			.filter(function(tag){ return sp.test(tag) }) },
 	//
 	// 	Get all values...
 	// 	.values()
@@ -1669,8 +1680,63 @@ object.makeConstructor('BaseTags',
 //---------------------------------------------------------------------
 
 // XXX EXPERIMENTAL...
-// 		try using this to implement local tags in collections by defining
-// 		a '/local/*' handler...
+// 		...this is a bit too generic, we need to save dict values only 
+// 		when tagging or adding tags...
+var TagsWithDictPrototype = {
+	__proto__: BaseTags,
+
+	// Tag dictionary...
+	//
+	// Format:
+	// 	{
+	// 		<tag>: [<value>, ..],
+	// 		...
+	// 	}
+	//
+	dict: null,
+
+	// XXX need to only do this when adding new tags...
+	// 		...rename to .normalizeSave(..) and use in .tag(..), .toggle(..), ...
+	normalize: function(...tags){
+		var dict = this.dict = this.dict || {}
+		var res = TagsWithDict.__proto__.normalize.call(this, ...tags)
+		var sp = this.COMBINED_SEPARATOR
+
+		tags = normalizeSplit(tags)
+			.map(function(tag){ 
+				return tag.split(sp) })
+			.flat()
+		;(res instanceof Array ? res : [res])
+			.map(function(tag){
+				return tag.split(sp) })
+			.flat()
+			.forEach(function(tag, i){
+				tag = tag.trim()
+				var value = tags[i].trim()
+				// only add tags if they are not the same as normalized...
+				tag != value
+					&& (dict[tag] = [value]
+						.concat(dict[tag] || [])
+						.unique()) })
+
+		return res
+	},
+}
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+var TagsWithDict = 
+module.TagsWithDict = 
+	object.makeConstructor('TagsWithDict', 
+		BaseTagsClassPrototype,
+		TagsWithDictPrototype)
+
+
+
+//---------------------------------------------------------------------
+
+// XXX EXPERIMENTAL...
 var TagsWithHandlersPrototype = {
 	__proto__: BaseTagsPrototype,
 
@@ -1799,7 +1865,7 @@ var TagsWithHandlersPrototype = {
 
 var TagsWithHandlers = 
 module.TagsWithHandlers = 
-object.makeConstructor('TagsWithHandlers', 
+	object.makeConstructor('TagsWithHandlers', 
 		BaseTagsClassPrototype,
 		TagsWithHandlersPrototype)
 
@@ -1809,8 +1875,23 @@ object.makeConstructor('TagsWithHandlers',
 
 var Tags =
 module.Tags = 
-	TagsWithHandlers
+	//TagsWithHandlers
 	//BaseTags
+	object.makeConstructor('Tags', 
+		BaseTagsClassPrototype,
+		// XXX HACK???
+		// 		...this is not a good way to do multiple inheritance/mixins...
+		Object.assign(
+			// XXX these must not intersect...
+			// 		...intersecting methods will overwrite each other...
+			// 		...another problem with this approach is that the mixin
+			// 		methods explicitly call the base method of the prototype
+			// 		which might not be the correct method in the inheritance
+			// 		tree (of two or more of the mixins define the same 
+			// 		method only one definition will get called)...
+			{__proto__: BaseTagsPrototype},
+			TagsWithDictPrototype,
+			TagsWithHandlersPrototype))
 
 
 
