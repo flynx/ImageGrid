@@ -78,6 +78,16 @@ var normalizeSplit = function(args){
 
 /*********************************************************************/
 
+// Helpers...
+var makeSplitter = function(separator){
+	return function(...tags){
+		var sp = this[separator]
+		return normalizeSplit(tags)
+			.map(function(tag){
+				return tag.split(sp) })
+			.flat()
+			.unique() } }
+
 var BaseTagsClassPrototype = {
 
 	// NOTE: do not include 'g' flag here, it will make the RE objects
@@ -88,13 +98,20 @@ var BaseTagsClassPrototype = {
 	SET_SEPARATOR: /:+/,
 	COMBINED_SEPARATOR: /[:\\\/]+/,
 
-	splitSet: function(str){
-		return str.split(this.SET_SEPARATOR) },
-	splitPath: function(str){
-		return str.split(this.PATH_SEPARATOR) },
-
-
 	// Utils...
+	//
+	//
+	// 	.splitSet(tag)
+	// 	.splitSet(tag, ..)
+	// 	.splitSet([tag, ..])
+	// 		-> parts
+	//
+	// NOTE: these will combine the parts of all the tags...
+	splitSet: makeSplitter('SET_SEPARATOR'),
+	splitPath: makeSplitter('PATH_SEPARATOR'),
+	splitTag: makeSplitter('COMBINED_SEPARATOR'),
+
+	// Normalize tags...
 	//
 	// 	.normalize(tag)
 	// 		-> ntag
@@ -151,19 +168,6 @@ var BaseTagsClassPrototype = {
 			res.pop() 
 			: res
 	},
-	// Split the tag into individual singular tags...
-	//
-	// Example:
-	// 		'a:b/c'	-> ['a', 'b', 'c']
-	//
-	subTags: function(...tags){
-		var that = this
-		return this.normalize(normalizeSplit(tags))
-			.map(function(tag){
-				return tag.split(that.COMBINED_SEPARATOR) })
-			.flat()
-			.unique() },
-
 	// Query parser...
 	//
 	// NOTE: this is loosely based on Slang's parser...
@@ -255,11 +259,6 @@ var BaseTagsClassPrototype = {
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-// XXX should we store normalized and non-normalized tags for reference???
-// 		...there are two ways to think of this:
-// 			1) both (a-la flickr) -- keep both, use normalized internally
-// 			2) only normalized -- simpler but may surprise the user and 
-// 				not be as pretty...
 // XXX should we split out the non-basic stuff???
 // 		like:
 // 			.makePathsPersistent()
@@ -333,7 +332,7 @@ var BaseTagsPrototype = {
 	splitSet: BaseTagsClassPrototype.splitSet, 
 	splitPath: BaseTagsClassPrototype.splitPath, 
 	normalize: BaseTagsClassPrototype.normalize, 
-	subTags: BaseTagsClassPrototype.subTags, 
+	splitTag: BaseTagsClassPrototype.splitTag, 
 	parseQuery: BaseTagsClassPrototype.parseQuery, 
 
 
@@ -662,7 +661,7 @@ var BaseTagsPrototype = {
 			// split tags + include original list...
 			.run(function(){
 				return this
-					.concat(that.subTags(this)) 
+					.concat(that.splitTag(this)) 
 					.unique() })
 			.filter(function(t){
 				// XXX should this search up the path???
@@ -789,7 +788,7 @@ var BaseTagsPrototype = {
 	},
 	// Same as .tags(..) but returns a list of single tags...
 	singleTags: function(value, ...tags){
-		return this.subTags(this.tags(...arguments)).unique() },
+		return this.splitTag(this.tags(...arguments)).unique() },
 	paths: function(value){
 		var sp = that.PATH_SEPARATOR
 		return this.tags(value)
@@ -1842,19 +1841,12 @@ var TagsWithDictPrototype = {
 	// 		side-effect of saving non-normalized values to .dict
 	//
 	normalizeSave: function(...tags){
-		var sp = this.COMBINED_SEPARATOR
 		var dict = this.dict = this.dict || {}
-		var res = this.normalize(...tags)
+		var res = this.splitTag(this.normalize(...tags))
 
-		tags = normalizeSplit(tags)
-			.map(function(tag){ 
-				return tag.split(sp) })
-			.flat()
+		tags = this.splitTag(normalizeSplit(tags))
 
 		;(res instanceof Array ? res : [res])
-			.map(function(tag){
-				return tag.split(sp) })
-			.flat()
 			.forEach(function(tag, i){
 				tag = tag.trim()
 				var value = tags[i].trim()
@@ -1907,12 +1899,9 @@ var TagsWithDictPrototype = {
 	//
 	// NOTE: an orphan is a dict entry for a tag that is no longer used.
 	cleanupDict: function(){
-		// XXX is this the full list???
-		var sp = this.COMBINED_SEPARATOR
+		// get tags list...
 		var tags = new Set(this.singleTags()
-			.concat(this.definitionPaths()
-				.map(function(p){ 
-					return p.split(sp) })
+			.concat(this.splitTag(this.definitionPaths())
 				.flat()))
 		var dict = this.dict
 		dict
