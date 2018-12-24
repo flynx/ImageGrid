@@ -304,31 +304,16 @@ var BaseTagsPrototype = {
 	get length(){
 		return this.values().length },
 
-	// Definitions as paths...
-	//
-	// Each definition is effectively a path in the following form:
-	// 		<value>/<tag>
-	//
-	// Example:
-	// 	.define('tag', 'concept:tag')	// ->	'concept:tag/tag'
-	//
-	// XXX do we need this???
-	// XXX should we cache this???
-	get definition_paths(){
-		return [...Object.entries(this.definitions)]
-			.map(function(e){
-				return [e[1].join(':'), e[0]].join('/') }) },
-
 	// All persistent tags...
 	//
 	// This will include:
 	// 	.persistent
-	// 	.definition_paths
+	// 	.definitionPaths()
 	//
 	// XXX do we need this???
 	get persistentAll(){
 		return (this.__persistent || new Set())
-			.unite(this.definition_paths || []) },
+			.unite(this.definitionPaths()) },
 
 
 	// Utils...
@@ -821,6 +806,42 @@ var BaseTagsPrototype = {
 						|| that.match(tag, e[0]) })
 				.map(function(s){ return [...s[1]] })
 				.flat())] },
+
+	// Definitions as paths...
+	//
+	//	.definitionPaths()
+	//		-> paths
+	//
+	//	.definitionPaths(tag)
+	//		-> path
+	//		-> undefined
+	//
+	//	.definitionPaths(tag, ..)
+	//	.definitionPaths([tag, ..])
+	//		-> paths
+	//
+	//
+	// Each definition is effectively a path in the following form:
+	// 		<value>/<tag>
+	//
+	// Example:
+	// 	.define('tag', 'concept:tag')	// ->	'concept:tag/tag'
+	//
+	definitionPaths: function(...tags){
+		var definitions = this.definitions || {}
+		tags = normalizeSplit(tags)
+		var res = (tags.length == 0 ? 
+				Object.entries(definitions) 
+				: tags
+					.map(function(tag){ 
+						return [tag, definitions[tag]] }))
+			.map(function(e){
+				return e[1] != null ? 
+					[e[1].join(':'), e[0]].join('/') 
+					: e[1] }) 
+		return arguments.length == 1 && typeof(arguments[0]) == typeof('str') ?
+			res[0]
+			:res },
 
 
 	// Edit API...
