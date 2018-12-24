@@ -78,7 +78,7 @@ var OverlayPrototype = {
 	__init__: function(parent, client, options){
 		var that = this
 
-		object.superMethod(Overlay, '__init__').call(this, parent, client, options)
+		object.parent(OverlayPrototype.__init__, this).call(this, parent, client, options)
 
 		// Prevent closing the overlay if clicked while blurred...
 		// i.e.

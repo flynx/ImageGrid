@@ -858,7 +858,6 @@ var BaseTagsPrototype = {
 
 	// Edit API...
 	// 
-	// XXX save un-normalized tags to dict... ??? (a-la flickr)
 	tag: function(tags, value){
 		var that = this
 		value = value instanceof Array ? value : [value]
@@ -1117,7 +1116,7 @@ var BaseTagsPrototype = {
 			patchObj(this.__index || {})
 			patchObj(this.definitions || {}, true)
 		}
-		
+			
 		return this
 	},
 
@@ -1312,6 +1311,8 @@ var BaseTagsPrototype = {
 		var index = this.__index || {}
 		normalizeSplit(others)
 			.forEach(function(other){
+				other.dict
+					&& (that.dict = Object.assign(that.dict || {}, other.dict))
 				Object.entries(other.__index || {})
 					.forEach(function(e){
 						index[e[0]] = new Set([...(index[e[0]] || []), ...e[1]]) }) })
@@ -1681,11 +1682,10 @@ object.makeConstructor('BaseTags',
 //---------------------------------------------------------------------
 
 // XXX EXPERIMENTAL...
-// 		...this is a bit too generic, we need to save dict values only 
-// 		when tagging or adding tags...
-// 		...also need to clear the dict when untagging...
+// XXX need a .dict cleanup strategy...
 var TagsWithDictPrototype = {
-	__proto__: BaseTags,
+	__proto__: BaseTagsPrototype,
+
 
 	// Tag dictionary...
 	//
@@ -1697,17 +1697,22 @@ var TagsWithDictPrototype = {
 	//
 	dict: null,
 
-	// XXX need to only do this when adding new tags...
-	// 		...rename to .normalizeSave(..) and use in .tag(..), .toggle(..), ...
-	normalize: function(...tags){
-		var dict = this.dict = this.dict || {}
-		var res = TagsWithDict.__proto__.normalize.call(this, ...tags)
+
+	// Normalize tags and save their dict values...
+	//
+	// NOTE: this is signature-compatible with .normalize(..) with the 
+	// 		side-effect of saving non-normalized values to .dict
+	//
+	normalizeSave: function(...tags){
 		var sp = this.COMBINED_SEPARATOR
+		var dict = this.dict = this.dict || {}
+		var res = this.normalize(...tags)
 
 		tags = normalizeSplit(tags)
 			.map(function(tag){ 
 				return tag.split(sp) })
 			.flat()
+
 		;(res instanceof Array ? res : [res])
 			.map(function(tag){
 				return tag.split(sp) })
@@ -1717,12 +1722,23 @@ var TagsWithDictPrototype = {
 				var value = tags[i].trim()
 				// only add tags if they are not the same as normalized...
 				tag != value
-					&& (dict[tag] = [value]
-						.concat(dict[tag] || [])
+					// NOTE: we keep the first value added as main...
+					&& (dict[tag] = (dict[tag] || [])
+						.concat([value])
 						.unique()) })
 
 		return res
 	},
+
+	// Translate normalized tag to the dict form...
+	//
+	//	.translateTag(tag)
+	//		-> str
+	//
+	//	.translateTag(tag, ..)
+	//	.translateTag([tag, ..])
+	//		-> [str, ..]
+	//
 	translateTag: function(...tags){
 		var that = this
 		var dict = this.dict
@@ -1745,6 +1761,58 @@ var TagsWithDictPrototype = {
 		return arguments.length == 1 && typeof(arguments[0]) == typeof('str') ?
 			res[0]
 			: res },
+
+	// XXX batch remove???
+	// XXX
+
+	// Remove orphaned .dict values...
+	//
+	// NOTE: an orphan is a dict entry for a tag that is no longer used.
+	cleanupDict: function(){
+		// XXX is this the full list???
+		var sp = this.COMBINED_SEPARATOR
+		var tags = new Set(this.singleTags()
+			.concat(this.definitionPaths()
+				.map(function(p){ 
+					return p.split(sp) })
+				.flat()))
+		var dict = this.dict
+		dict
+			&& Object.keys(dict)
+				.filter(function(tag){
+					return !tags.has(tag) })
+				.forEach(function(tag){
+					delete dict[tag] })
+		return this
+	},
+
+
+	// Hooks...
+	tag: function(tags, value){
+		this.normalizeSave(tags)
+		return object.parent(TagsWithDictPrototype.tag, this).call(this, ...arguments) },
+	// XXX cleanup .dict...
+	untag: function(tags, value){
+		// XXX cleanup .dict...
+		return object.parent(TagsWithDictPrototype.untag, this).call(this, ...arguments) },
+	// XXX cleanup .dict...
+	rename: function(from, to, ...tags){
+		arguments.length == 2
+			&& this.normalizeSave(to)
+			// XXX cleanup dict...
+		return object.parent(TagsWithDictPrototype.rename, this).call(this, ...arguments) },
+	// XXX cleanup .dict...
+	togglePersistent: function(...tags){
+		// XXX remove action...
+		this.normalizeSave(tags)
+		// XXX cleanup dict...
+		return object.parent(TagsWithDictPrototype.togglePersistent, this).call(this, ...arguments) },
+	// XXX cleanup .dict...
+	define: function(tag, value){
+		arguments.length > 1 
+			&& value != null
+			&& this.normalizeSave(tag, value)
+		return object.parent(TagsWithDictPrototype.define, this).call(this, ...arguments) },
 }
 
 
@@ -1868,16 +1936,16 @@ var TagsWithHandlersPrototype = {
 	//
 	tag: function(tags, value){
 		var that = this
-		return TagsWithHandlersPrototype.__proto__.tag.call(this, 
+		return object.parent(TagsWithHandlersPrototype.tag, this).call(this,
 			that.handleSpecialTag(tags, 'tag', value),
 			...[...arguments].slice(1)) },
 	untag: function(tags, value){
 		var that = this
-		return TagsWithHandlersPrototype.__proto__.untag.call(this, 
+		return object.parent(TagsWithHandlersPrototype.untag, this).call(this,
 			that.handleSpecialTag(tags, 'untag', value),
 			...[...arguments].slice(1)) },
 	rename: function(tag, to, ...tags){
-		return TagsWithHandlersPrototype.__proto__.rename.call(this,
+		return object.parent(TagsWithHandlersPrototype.rename, this).call(this,
 			tags.length == 0 ?
 				this.handleSpecialTag(tag, to == '' ? 'remove' : 'rename', to)
 				: tag,
@@ -1903,19 +1971,9 @@ module.Tags =
 	//BaseTags
 	object.makeConstructor('Tags', 
 		BaseTagsClassPrototype,
-		// XXX HACK???
-		// 		...this is not a good way to do multiple inheritance/mixins...
-		Object.assign(
-			// XXX these must not intersect...
-			// 		...intersecting methods will overwrite each other...
-			// 		...another problem with this approach is that the mixin
-			// 		methods explicitly call the base method of the prototype
-			// 		which might not be the correct method in the inheritance
-			// 		tree (of two or more of the mixins define the same 
-			// 		method only one definition will get called)...
-			{__proto__: BaseTagsPrototype},
+		object.mixin(BaseTagsPrototype,
 			TagsWithDictPrototype,
-			TagsWithHandlersPrototype))
+			TagsWithHandlers))
 
 
 

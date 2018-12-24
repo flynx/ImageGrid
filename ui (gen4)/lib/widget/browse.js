@@ -1880,7 +1880,7 @@ var BrowserPrototype = {
 
 		// no items selected -- trigger event on main ui...
 		} else {
-			object.superMethod(Browser, 'trigger').apply(this, arguments)
+			object.parent(BrowserPrototype.trigger, this).apply(this, arguments)
 		}
 
 		return this
@@ -4030,7 +4030,7 @@ var BrowserPrototype = {
 	__init__: function(parent, options){
 		var that = this
 
-		object.superMethod(Browser, '__init__').call(this, parent, options)
+		object.parent(BrowserPrototype.__init__, this).call(this, parent, options)
 
 		var dom = this.dom
 		options = this.options
