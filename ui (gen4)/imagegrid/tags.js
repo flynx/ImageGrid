@@ -2010,7 +2010,7 @@ var TagsWithDictPrototype = {
 	//
 	normalizeSave: function(...tags){
 		var dict = this.dict = this.dict || {}
-		var res = this.splitTag(this.normalize(...tags))
+		var res = this.normalize(this.splitTag(...tags))
 
 		tags = this.splitTag(normalizeSplit(tags))
 
