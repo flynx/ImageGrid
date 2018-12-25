@@ -81,22 +81,29 @@ var normalizeSplit = function(args){
 // Helpers...
 var makeSplitter = function(separator){
 	return function(...tags){
-		var sp = this[separator]
+		var SP = this[separator]
 		return normalizeSplit(tags)
 			.map(function(tag){
-				return tag.split(sp) })
+				return tag.split(SP) })
 			.flat()
 			.unique() } }
+var makeJoiner = function(separator){
+	return function(...items){
+		return normalizeSplit(items).join(this[separator]) } }
+
 
 var BaseTagsClassPrototype = {
 
 	// NOTE: do not include 'g' flag here, it will make the RE objects
 	// 		stateful which will yield very unpredictable results from 
 	// 		general system.
-	// XXX need separators as attrs too... 
-	PATH_SEPARATOR: /[\\\/]+/,
-	SET_SEPARATOR: /:+/,
-	COMBINED_SEPARATOR: /[:\\\/]+/,
+	PATH_SEPARATOR: '/',
+	PATH_SEPARATOR_PATTERN: /[\\\/]+/,
+
+	SET_SEPARATOR: ':',
+	SET_SEPARATOR_PATTERN: /:+/,
+
+	COMBINED_SEPARATOR_PATTERN: /[:\\\/]+/,
 
 	// Utils...
 	//
@@ -107,9 +114,11 @@ var BaseTagsClassPrototype = {
 	// 		-> parts
 	//
 	// NOTE: these will combine the parts of all the tags...
-	splitSet: makeSplitter('SET_SEPARATOR'),
-	splitPath: makeSplitter('PATH_SEPARATOR'),
-	splitTag: makeSplitter('COMBINED_SEPARATOR'),
+	splitSet: makeSplitter('SET_SEPARATOR_PATTERN'),
+	splitPath: makeSplitter('PATH_SEPARATOR_PATTERN'),
+	splitTag: makeSplitter('COMBINED_SEPARATOR_PATTERN'),
+	joinSet: makeJoiner('SET_SEPARATOR'),
+	joinPath: makeJoiner('PATH_SEPARATOR'),
 
 	// Normalize tags...
 	//
@@ -134,7 +143,10 @@ var BaseTagsClassPrototype = {
 	// 		as possible.
 	//
 	normalize: function(...tags){
-		var that = this
+		var SS = this.SET_SEPARATOR
+		var PS = this.PATH_SEPARATOR
+		var SP = this.SET_SEPARATOR_PATTERN
+		var PP = this.PATH_SEPARATOR_PATTERN
 		var tagRemovedChars = (this.config || {})['tagRemovedChars']
 		tagRemovedChars = tagRemovedChars instanceof RegExp ? 
 				tagRemovedChars
@@ -148,20 +160,20 @@ var BaseTagsClassPrototype = {
 					.toLowerCase()
 					.replace(tagRemovedChars, '')
 					// sort sets within paths...
-					.split(that.PATH_SEPARATOR)
+					.split(PP)
 						.map(function(e){
 							return e
-								.split(that.SET_SEPARATOR)
+								.split(SP)
 								// remove empty set members...
 								.filter(function(t){ 
 									return t != '' })
 								.unique()
 								.sort()
-								.join(':') })
+								.join(SS) })
 						// NOTE: this also kills the leading '/'
 						.filter(function(t){ 
 							return t != '' })
-						.join('/') })
+						.join(PS) })
 			.unique()
 		return (tags.length == 1 && !(tags[0] instanceof Array)) ? 
 			// NOTE: if we got a single tag return it as a single tag...
@@ -272,8 +284,10 @@ var BaseTagsPrototype = {
 
 	// NOTE: for notes on structure see notes on the Utils section below...
 	PATH_SEPARATOR: BaseTagsClassPrototype.PATH_SEPARATOR,
+	PATH_SEPARATOR_PATTERN: BaseTagsClassPrototype.PATH_SEPARATOR_PATTERN,
 	SET_SEPARATOR: BaseTagsClassPrototype.SET_SEPARATOR,
-	COMBINED_SEPARATOR: BaseTagsClassPrototype.COMBINED_SEPARATOR,
+	SET_SEPARATOR_PATTERN: BaseTagsClassPrototype.SET_SEPARATOR_PATTERN,
+	COMBINED_SEPARATOR_PATTERN: BaseTagsClassPrototype.COMBINED_SEPARATOR_PATTERN,
 
 
 	// Tag index...
@@ -558,12 +572,13 @@ var BaseTagsPrototype = {
 	//		a root/base tag respectively but this seems a bit less useful.
 	match: function(a, b, cmp){
 		var that = this
+		var PP = this.PATH_SEPARATOR_PATTERN
 
 		// get paths with tag...
 		var paths = function(tag){
 			return that.directMatch(tag, cmp)
 				.filter(function(t){ 
-					return that.PATH_SEPARATOR.test(t) }) }
+					return PP.test(t) }) }
 		// search the path tree...
 		// NOTE: this will stop the search on first hit...
 		var search = function(target, tag, seen){
@@ -688,13 +703,14 @@ var BaseTagsPrototype = {
 	//
 	uniquePaths: function(...list){
 		var that = this
+		var PS = this.PATH_SEPARATOR
 		return (list.length == 0 ? 
 				this.paths() 
 				: this.normalize(normalizeSplit(list)))
 			// sort by number of path elements (longest first)...
-			.map(that.splitPath)
+			.map(function(tag){ return that.splitPath(tag) })
 				.sort(function(a, b){ return b.length - a.length })
-				.map(function(p){ return p.join('/') })
+				.map(function(p){ return p.join(PS) })
 			// remove all paths in tail that match the current...
 			.map(function(p, i, list){
 				// skip []...
@@ -793,13 +809,13 @@ var BaseTagsPrototype = {
 	singleTags: function(value, ...tags){
 		return this.splitTag(this.tags(...arguments)).unique() },
 	paths: function(value){
-		var sp = that.PATH_SEPARATOR
+		var PP = this.PATH_SEPARATOR_PATTERN
 		return this.tags(value)
-			.filter(function(tag){ return sp.test(tag) }) },
+			.filter(function(tag){ return PP.test(tag) }) },
 	sets: function(value){
-		var sp = this.SET_SEPARATOR
+		var SP = this.SET_SEPARATOR_PATTERN
 		return this.tags(value)
-			.filter(function(tag){ return sp.test(tag) }) },
+			.filter(function(tag){ return SP.test(tag) }) },
 	//
 	// 	Get all values...
 	// 	.values()
@@ -842,6 +858,8 @@ var BaseTagsPrototype = {
 	// 	.define('tag', 'concept:tag')	// ->	'concept:tag/tag'
 	//
 	definitionPaths: function(...tags){
+		var SS = this.SET_SEPARATOR
+		var PS = this.PATH_SEPARATOR
 		var definitions = this.definitions || {}
 		tags = normalizeSplit(tags)
 		var res = (tags.length == 0 ? 
@@ -851,7 +869,7 @@ var BaseTagsPrototype = {
 						return [tag, definitions[tag]] }))
 			.map(function(e){
 				return e[1] != null ? 
-					[e[1].join(':'), e[0]].join('/') 
+					[e[1].join(SS), e[0]].join(SP) 
 					: e[1] }) 
 		return arguments.length == 1 && typeof(arguments[0]) == typeof('str') ?
 			res[0]
@@ -1208,6 +1226,8 @@ var BaseTagsPrototype = {
 	//
 	define: function(tag, value){
 		var that = this
+		var SS = this.SET_SEPARATOR
+		var PS = this.PATH_SEPARATOR
 		var definitions = this.definitions
 
 		// batch...
@@ -1228,9 +1248,9 @@ var BaseTagsPrototype = {
 		// get/resolve...
 		if(arguments.length == 1){
 			// NOTE: we expect there to be only one definition...
-			return this.match(tag +'/', [...Object.keys(definitions) || []])
+			return this.match(tag +PS, [...Object.keys(definitions) || []])
 				.map(function(d){ 
-					return definitions[d].join(':') })[0]
+					return definitions[d].join(SP) })[0]
 
 		// remove...
 		} else if(value == null){
@@ -1873,7 +1893,10 @@ var TagsWithDictPrototype = {
 	//		-> [str, ..]
 	//
 	translateTag: function(...tags){
-		var that = this
+		var SS = this.SET_SEPARATOR
+		var PS = this.PATH_SEPARATOR
+		var SP = this.SET_SEPARATOR_PATTERN
+		var PP = this.PATH_SEPARATOR_PATTERN
 		var dict = this.dict
 		tags = normalizeSplit(tags)
 
@@ -1881,14 +1904,14 @@ var TagsWithDictPrototype = {
 			tags
 				.map(function(path){
 					return path
-						.split(that.PATH_SEPARATOR) 
+						.split(PP) 
 						.map(function(set){
 							return set
-								.split(that.SET_SEPARATOR)
+								.split(SP)
 								.map(function(tag){
 									return (dict[tag] || [tag])[0] })
-								.join(':') })
-						.join('/') })
+								.join(SS) })
+						.join(PS) })
 			: tags
 
 		return arguments.length == 1 && typeof(arguments[0]) == typeof('str') ?
