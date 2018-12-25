@@ -79,14 +79,15 @@ var normalizeSplit = function(args){
 /*********************************************************************/
 
 // Helpers...
-var makeSplitter = function(separator){
+var makeSplitter = function(separator, unique){
 	return function(...tags){
 		var SP = this[separator]
 		return normalizeSplit(tags)
 			.map(function(tag){
 				return tag.split(SP) })
 			.flat()
-			.unique() } }
+   			.run(function(){
+				return unique ? this.unique() : this }) } }
 var makeJoiner = function(separator){
 	return function(...items){
 		return normalizeSplit(items).join(this[separator]) } }
@@ -116,7 +117,7 @@ var BaseTagsClassPrototype = {
 	// 		-> parts
 	//
 	// NOTE: these will combine the parts of all the tags...
-	splitSet: makeSplitter('SET_SEPARATOR_PATTERN'),
+	splitSet: makeSplitter('SET_SEPARATOR_PATTERN', true),
 	splitPath: makeSplitter('PATH_SEPARATOR_PATTERN'),
 	splitTag: makeSplitter('COMBINED_SEPARATOR_PATTERN'),
 	joinSet: makeJoiner('SET_SEPARATOR'),
@@ -442,7 +443,6 @@ var BaseTagsPrototype = {
 	//
 	// NOTE: this is not symmetric e.g. a will match a:b but not vice-versa.
 	// 
-	// XXX BUG: .directMatch('a/*', 'a/a/a') -> false (should be true)
 	directMatch: function(a, b, cmp, no_definitions){
 		var that = this
 		// parse args...
@@ -548,7 +548,6 @@ var BaseTagsPrototype = {
 					.length == 0)
 		}
 	},
-
 	// Match tags...
 	//
 	// This is the same as .directMatch(..) but also uses persistent 
@@ -627,7 +626,6 @@ var BaseTagsPrototype = {
 				false
 			: search(a, b)
 	},
-
 	// Search tags...
 	//
 	// 	Search the tags...
@@ -1005,64 +1003,6 @@ var BaseTagsPrototype = {
 							(that.tag(tag, v), true) 
 							: null) }) },
 
-	// Toggle a tag to persistent/non-persistent...
-	//
-	// A persistent tag is not removed when untagging a value.
-	//
-	//	.togglePersistent(tag)
-	//	.togglePersistent(tag, tag, ...)
-	//	.togglePersistent([tag, tag, ...])
-	//		-> states
-	//
-	//	.togglePersistent(tag, action)
-	//	.togglePersistent(tag, tag, ..., action)
-	//	.togglePersistent([tag, tag, ...], action)
-	//		-> states
-	//
-	//
-	// action can be:
-	// 	'on'		- toggle all tags on
-	// 	'off'		- toggle all off
-	// 	'toggle'	- toggle all depending on initial state
-	// 	'?'			- return list of states
-	//
-	//
-	// XXX one way to play with this is to add a special tag to set/path
-	// 		to make it persistent...
-	// 		Example:
-	// 			.tag('abc', ...)	-> 'abc' is a normal tag...
-	//
-	// 			.tag('persistent:abc', ...)	-> 'abc' is persistent...
-	// 			.tag('persistent/abc', ...)	-> 'abc' is persistent...
-	//
-	// 		We would need "virtual" tags for this, i.e. tags that are 
-	// 		not actually added to the index but are used for system 
-	// 		stuff...
-	togglePersistent: function(...tags){
-		action = ['on', 'off', 'toggle', '?'].includes(tags[tags.length-1]) ?
-			tags.pop()
-			: 'toggle'
-		tags = normalizeSplit(tags)
-
-		var persistent = 
-			this.persistent = 
-				this.persistent || new Set()
-
-		return this.normalize(tags)
-			.map(function(tag){
-				return action == 'on' ?
-						(persistent.add(tag), 'on')
-					: action == 'off' ?
-						(persistent.delete(tag), 'off')
-					: action == 'toggle' ?
-						(persistent.has(tag) ?
-							(persistent.delete(tag), 'off')
-							: (persistent.add(tag), 'on'))
-					: (persistent.has(tag) ?
-						'on' 
-						: 'off') })
-	},
-
 	// Rename a tag...
 	//
 	// 	Rename tag...
@@ -1152,55 +1092,15 @@ var BaseTagsPrototype = {
 			
 		return this
 	},
-
-	// NOTE: this is a short hand to .rename(tag, '', ..) for extra 
-	// 		docs see that...
-	removeTag: function(tag, ...tags){
-		return this.rename(tag, '', ...tags) },
-
-	// Remove the given values...
-	//
-	// 	.remove(value, ..)
-	// 	.remove([value, ..])
-	// 		-> this
-	//
-	remove: function(...values){
-		values = normalizeSplit(values)
-		var res = this.clone()
-
-		Object.entries(res.__index || {})
-			.forEach(function(e){
-				res.__index[e[0]] = e[1].subtract(values) })
-
-		return res
-	},
-
-	// Keep only the given values...
-	//
-	// 	.keep(value, ..)
-	// 	.keep([value, ..])
-	// 		-> this
-	//
-	keep: function(...values){
-		values = normalizeSplit(values)
-		var res = this.clone()
-
-		Object.entries(res.__index || {})
-			.forEach(function(e){
-				res.__index[e[0]] = e[1].intersect(values) })
-
-		return res
-	},
-
 	// Replace tags...
 	//
 	//	Replace tags...
-	//	.replace(from, to)
+	//	.replace(tag, to)
 	//		-> this
 	//
 	//	Replace tags in list...
-	//	.replace(from, to, tag, ..)
-	//	.replace(from, to, [tag, ..])
+	//	.replace(tag, to, tag, ..)
+	//	.replace(tag, to, [tag, ..])
 	//		-> tags
 	//
 	//	Replace tags via func's return values...
@@ -1221,8 +1121,7 @@ var BaseTagsPrototype = {
 	// 		reachability or definitions...
 	// NOTE: this will match tags in .__index, .persistent and .definitions
 	//
-	// XXX EXPERIMENTAL...
-	replace: function(from, to, ...tags){
+	replace: function(tag, to, ...tags){
 		var that = this
 		tags = normalizeSplit(tags)
 
@@ -1233,15 +1132,18 @@ var BaseTagsPrototype = {
 
 		var local = arguments.length > 2
 
-		if(from instanceof Function){
-			to = from
-			from = '*'
+		if(tag instanceof Function){
+			to = tag
+			tag = '*'
 		}
+		to = to instanceof Function ? 
+			to 
+			: this.normalize(to)
 
 		// XXX this uses definitions to collect tags, this is too broad...
-		var res = this.directMatch(from, local ? tags : null, true)
+		var res = this.directMatch(tag, local ? tags : null, true)
 			// XXX is this needed / correct / worth it???
-			.concat(local ? [] : this.directMatch(from, 
+			.concat(local ? [] : this.directMatch(tag, 
 				Object.entries(definitions)
 					.map(function(e){ 
 						e[1] = e[1].join(that.SET_SEPARATOR)
@@ -1249,38 +1151,38 @@ var BaseTagsPrototype = {
 						return e })
 					.flat(), true))
 			.unique()
-			.map(function(from){
+			.map(function(tag){
 				var target = to instanceof Function ? 
-					to.call(that, from) 
+					that.normalize(to.call(that, tag))
 					: to
 
-				if(from == target || target == undefined){
+				if(tag == target || target == undefined){
 					return []
 				}
 
 				// persistent...
-				if(persistent.has(from)){
-					persistent.delete(from)
+				if(persistent.has(tag)){
+					persistent.delete(tag)
 					target != ''
 						&& persistent.add(target)
 				}
 
 				// index...
-				if(from in index){
+				if(tag in index){
 					target != ''
-						&& (index[target] = index[from].unite(index[target] || []))
-					delete index[from]
+						&& (index[target] = index[tag].unite(index[target] || []))
+					delete index[tag]
 				}
 				
 				// definitions (key)...
-				if(from in definitions){
+				if(tag in definitions){
 					target != ''
-						&& that.define(target, definitions[from].join(that.SET_SEPARATOR))
-					delete definitions[from]
+						&& that.define(target, definitions[tag].join(that.SET_SEPARATOR))
+					delete definitions[tag]
 				}
 				// definitions (value)...
-				if(def_index.has(from)){
-					def_index.get(from)
+				if(def_index.has(tag)){
+					def_index.get(tag)
 						.forEach(function(key){
 							that.define(key, target == '' ? null : target) })
 				}
@@ -1294,6 +1196,11 @@ var BaseTagsPrototype = {
 			res.flat() 
 			: this
 	},
+	// NOTE: this is a short hand to .rename(tag, '', ..) for extra 
+	// 		docs see that...
+	removeTag: function(tag, ...tags){
+		return this.rename(tag, '', ...tags) },
+
 	// Replace values...
 	//
 	// 	.replaceValue(from, to)
@@ -1305,6 +1212,38 @@ var BaseTagsPrototype = {
 				values.has(from)
 					&& values.delete(from)
 					&& values.add(to) }) },
+	// Keep only the given values...
+	//
+	// 	.keep(value, ..)
+	// 	.keep([value, ..])
+	// 		-> this
+	//
+	keep: function(...values){
+		values = normalizeSplit(values)
+		var res = this.clone()
+
+		Object.entries(res.__index || {})
+			.forEach(function(e){
+				res.__index[e[0]] = e[1].intersect(values) })
+
+		return res
+	},
+	// Remove the given values...
+	//
+	// 	.remove(value, ..)
+	// 	.remove([value, ..])
+	// 		-> this
+	//
+	remove: function(...values){
+		values = normalizeSplit(values)
+		var res = this.clone()
+
+		Object.entries(res.__index || {})
+			.forEach(function(e){
+				res.__index[e[0]] = e[1].subtract(values) })
+
+		return res
+	},
 
 	// Get/set/remove tag definitions...
 	//
@@ -1406,6 +1345,58 @@ var BaseTagsPrototype = {
 		return this
 	},
 
+	// Toggle a tag to persistent/non-persistent...
+	//
+	// A persistent tag is not removed when untagging a value.
+	//
+	//	.togglePersistent(tag)
+	//	.togglePersistent(tag, tag, ...)
+	//	.togglePersistent([tag, tag, ...])
+	//		-> states
+	//
+	//	.togglePersistent(tag, action)
+	//	.togglePersistent(tag, tag, ..., action)
+	//	.togglePersistent([tag, tag, ...], action)
+	//		-> states
+	//
+	//
+	// action can be:
+	// 	'on'		- toggle all tags on
+	// 	'off'		- toggle all off
+	// 	'toggle'	- toggle all depending on initial state
+	// 	'?'			- return list of states
+	//
+	//
+	togglePersistent: function(...tags){
+		action = ['on', 'off', 'toggle', '?'].includes(tags[tags.length-1]) ?
+			tags.pop()
+			: 'toggle'
+		tags = normalizeSplit(tags)
+
+		var persistent = 
+			this.persistent = 
+				this.persistent || new Set()
+
+		return this.normalize(tags)
+			.map(function(tag){
+				return action == 'on' ?
+						(persistent.add(tag), 'on')
+					: action == 'off' ?
+						(persistent.delete(tag), 'off')
+					: action == 'toggle' ?
+						(persistent.has(tag) ?
+							(persistent.delete(tag), 'off')
+							: (persistent.add(tag), 'on'))
+					: (persistent.has(tag) ?
+						'on' 
+						: 'off') })
+	},
+	// Make paths persistent...
+	//
+	// NOTE: this will touch only longest unique paths (see: .uniquePaths(..))
+	makePathsPersistent: function(){
+		this.persistent = new Set(this.uniquePaths())
+		return this },
 
 	// Optimize tags...
 	//
@@ -1438,13 +1429,6 @@ var BaseTagsPrototype = {
 				tags.length > 0
 					&& that.untag(tags, value) 
 				return tags.length > 0 }) },
-
-	// Make paths persistent...
-	//
-	// NOTE: this will touch only longest unique paths (see: .uniquePaths(..))
-	makePathsPersistent: function(){
-		this.persistent = new Set(this.uniquePaths())
-		return this },
 
 
 	// Tags-Tags API...
@@ -1836,6 +1820,7 @@ object.makeConstructor('BaseTags',
 // Add an ability to trigger handlers when working with specific (special)
 // tags.
 //
+// XXX idea: */* to make a tag persistent...
 // XXX EXPERIMENTAL...
 var TagsWithHandlersPrototype = {
 	__proto__: BaseTagsPrototype,
@@ -1870,6 +1855,11 @@ var TagsWithHandlersPrototype = {
 	//		// 		tag handling will be stopped...
 	//		'stop': function(tag, action, ...other){
 	//			return false },
+	//
+	//		// make all paths persistent...
+	//		'*/*': function(tag, action){
+	//			action == 'tag'
+	//				&& this.togglePersistent(tag) },
 	//
 	//		...
 	//	}
@@ -1934,31 +1924,50 @@ var TagsWithHandlersPrototype = {
 				// no handlers -> return as-is...
 				|| tags) },
 
-	//
-	// Handler actions: 
-	// 	[method]		[action]
-	// 	.tag(..)		-> 'tag'
-	// 	.untag(..)		-> 'untag'
-	// 	.rename(..)		-> 'rename'
-	// 					-> 'remove'
-	//
-	// NOTE: these may modify the input tags...
+	// handler: action(tag, 'tag')
 	tag: function(tags, value){
 		var that = this
 		return object.parent(TagsWithHandlersPrototype.tag, this).call(this,
 			that.handleSpecialTag(tags, 'tag', value),
 			...[...arguments].slice(1)) },
+	//  handler: action(tag, 'untag')
 	untag: function(tags, value){
 		var that = this
 		return object.parent(TagsWithHandlersPrototype.untag, this).call(this,
 			that.handleSpecialTag(tags, 'untag', value),
 			...[...arguments].slice(1)) },
+	//  handler: action(tag, 'remove')
+	//  handler: action(to, 'rename', tag)
 	rename: function(tag, to, ...tags){
 		return object.parent(TagsWithHandlersPrototype.rename, this).call(this,
-			tags.length == 0 ?
-				this.handleSpecialTag(tag, to == '' ? 'remove' : 'rename', to)
-				: tag,
-			...[...arguments].slice(1)) },
+			tag,
+			arguments.length == 2 ?
+				(to == '' ?
+					this.handleSpecialTag(tag, 'remove')
+					: this.handleSpecialTag(to, 'rename', tag))
+				: to,
+			...[...arguments].slice(2)) },
+	//  handler: action(tag, 'replace', from)
+	replace: function(tag, to, ...tags){
+		// XXX can we avoid doing this here???
+		if(tag instanceof Function){
+			to = tag
+			tag = '*'
+		}
+		return object.parent(TagsWithHandlersPrototype.replace, this).call(this, 
+			tag,
+			arguments.length == 2 ?
+				(to instanceof Function ?
+					// wrap the handler...
+					function(tag){
+						var res = to.call(this, ...arguments)
+						typeof(res) == typeof('str')
+							&& this.handleSpecialTag(res, 'replace', tag)
+						return res
+					}
+					: this.handleSpecialTag(to, 'replace', tag))
+				: to,
+			...[...arguments].slice(2)) },
 }
 
 
@@ -1978,8 +1987,8 @@ module.TagsWithHandlers =
 // Maintain non-normalized forms of tags added when tagging and provide
 // means of translating a tag back to that form.
 //
+// XXX hook tag and value removal...
 // XXX EXPERIMENTAL...
-// XXX do we need to hook .rename(..)
 var TagsWithDictPrototype = {
 	__proto__: BaseTagsPrototype,
 
@@ -2059,6 +2068,7 @@ var TagsWithDictPrototype = {
 	// NOTE: an orphan is a dict entry for a tag that is no longer used.
 	// NOTE: this will not remove tags that are not orphaned...
 	// XXX check which of the branches is faster...
+	// XXX do we want to .match(..) here???
 	removeOrphansFromDict: function(...tags){
 		if(!this.dict){
 			return this 
@@ -2107,10 +2117,34 @@ var TagsWithDictPrototype = {
 		return res
 	},
 	rename: function(from, to, ...tags){
+		var res = object.parent(TagsWithDictPrototype.rename, this).call(this, ...arguments) 
 		arguments.length == 2
 			&& this.normalizeSave(to)
-		var res = object.parent(TagsWithDictPrototype.rename, this).call(this, ...arguments) 
 		this.removeOrphansFromDict(from)
+		return res
+	},
+	replace: function(tag, to, ...tags){
+		if(tag instanceof Function){
+			to = tag
+			tag = '*'
+		}
+		var can_remove = []
+		var res = object.parent(TagsWithDictPrototype.replace, this).call(this, 
+			tag,
+			arguments.length == 2 ?
+				(to instanceof Function ?
+					// wrap the handler...
+					function(tag){
+						can_remove.push(tag)
+						var res = to.call(this, ...arguments)
+						return typeof(res) == typeof('str') ?
+							this.normalizeSave(res)	
+							: res }
+					: this.normalizeSave(to))
+				: to,
+			...[...arguments].slice(2)) 
+		typeof(tag) == typeof('str')
+			&& this.removeOrphansFromDict(can_remove)
 		return res
 	},
 	togglePersistent: function(...tags){
@@ -2131,6 +2165,8 @@ var TagsWithDictPrototype = {
 			&& this.removeOrphansFromDict(tag)
 		return res
 	},
+	// Serialization...
+	//
 	// Format:
 	// 	{
 	// 		...
