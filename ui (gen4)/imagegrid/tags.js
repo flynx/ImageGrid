@@ -1627,11 +1627,13 @@ var BaseTagsPrototype = {
 		var res = {}
 
 		// definitions...
-		this.definitions && Object.keys(this.definitions).length > 0
+		this.definitions 
+			&& Object.keys(this.definitions).length > 0
 			&& (res.definitions = Object.assign({}, this.definitions))
 
 		// persistent tags...
-		this.persistent && this.persistent.size > 0
+		this.persistent 
+			&& this.persistent.size > 0
 			&& (res.persistent = [...this.persistent])
 
 		// tags...
@@ -1969,6 +1971,31 @@ var TagsWithDictPrototype = {
 		value == null
 			&& this.removeOrphansFromDict(tag)
 		return res
+	},
+	json: function(){
+		var res = object.parent(TagsWithDictPrototype.json, this).call(this, ...arguments)
+
+		// dict...
+		this.dict 
+			&& Object.keys(this.dict).length > 0
+			&& (res.dict = {})
+			&& Object.entries(this.dict)
+				.forEach(function(e){
+					res.dict[e[0]] = e[1].slice() })
+
+		return res
+	},
+	load: function(json){
+		var that = this
+
+		// dict...
+		json.dict
+			&& (this.dict = {})
+			&& Object.entries(json.dict)
+				.forEach(function(e){
+					that.dict[e[0]] = e[1].slice() })
+
+		return object.parent(TagsWithDictPrototype.load, this).call(this, ...arguments)
 	},
 }
 
