@@ -92,6 +92,8 @@ var makeJoiner = function(separator){
 		return normalizeSplit(items).join(this[separator]) } }
 
 
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+//
 var BaseTagsClassPrototype = {
 
 	// NOTE: do not include 'g' flag here, it will make the RE objects
@@ -372,6 +374,9 @@ var BaseTagsPrototype = {
 	// not account for persistent tags (see: .match(..)).
 	// This does not build the path graph... (XXX)
 	//
+	// NOTE: to disable using definitions for a match pass true as the 
+	// 		last argument.
+	//
 	//
 	// Query syntax:
 	// 	a		- single tag
@@ -437,18 +442,27 @@ var BaseTagsPrototype = {
 	//
 	// NOTE: this is not symmetric e.g. a will match a:b but not vice-versa.
 	// 
-	directMatch: function(a, b, cmp){
+	// XXX BUG: .directMatch('a/*', 'a/a/a') -> false (should be true)
+	directMatch: function(a, b, cmp, no_definitions){
 		var that = this
+		// parse args...
 		if(b instanceof Function){
 			cmp = b
 			b = null
+		}
+		if(typeof(b) == typeof(true)){
+			no_definitions = b
+			b = null
+		} else if(typeof(cmp) == typeof(true)){
+			no_definitions = cmp
+			cmp = null
 		}
 
 		// no given tags or multiple tags -> filter...
 		if(b == null || b instanceof Array){
 			return (b || this.tags())
 				.filter(function(tag){ 
-					return that.directMatch(a, tag, cmp)})
+					return that.directMatch(a, tag, cmp, no_definitions)})
 
 		// match two tags...
 		} else {
@@ -475,9 +489,6 @@ var BaseTagsPrototype = {
 			// NOTE: this does the same job as adding .definitions to 
 			// 		.persistent but much much faster...
 			var expand = function(tags, res){
-				if(!definitions){
-					return tags
-				}
 				res = (res || new Set()).unite(tags)
 
 				tags = tags
@@ -500,7 +511,9 @@ var BaseTagsPrototype = {
 			// NOTE: this matches single tags too...
 			var matchSet = function(a, b){
 				a = that.splitSet(a)
-				b = expand(that.splitSet(b))
+				b = (no_definitions || !definitions) ? 
+					that.splitSet(b) 
+					: expand(that.splitSet(b))
 				return a.length <= b.length
 					// keep only the non-matches -> if at least one exists we fail...
 					&& a.filter(function(e){ 
@@ -869,7 +882,7 @@ var BaseTagsPrototype = {
 						return [tag, definitions[tag]] }))
 			.map(function(e){
 				return e[1] != null ? 
-					[e[1].join(SS), e[0]].join(SP) 
+					[e[1].join(SS), e[0]].join(PS) 
 					: e[1] }) 
 		return arguments.length == 1 && typeof(arguments[0]) == typeof('str') ?
 			res[0]
@@ -1178,6 +1191,120 @@ var BaseTagsPrototype = {
 
 		return res
 	},
+
+	// Replace tags...
+	//
+	//	Replace tags...
+	//	.replace(from, to)
+	//		-> this
+	//
+	//	Replace tags in list...
+	//	.replace(from, to, tag, ..)
+	//	.replace(from, to, [tag, ..])
+	//		-> tags
+	//
+	//	Replace tags via func's return values...
+	//	.replace(tag, func)
+	//		-> this
+	//
+	//	Replace tags in list via func's return values...
+	//	.replace(tag, func, tag, ..)
+	//	.replace(tag, func, [tag, ..])
+	//		-> tags
+	//
+	//
+	//	func(match)
+	//		-> tag
+	//
+	//
+	// NOTE: this will only match tags directly not accounting for 
+	// 		reachability or definitions...
+	// NOTE: this will match tags in .__index, .persistent and .definitions
+	//
+	// XXX EXPERIMENTAL...
+	replace: function(from, to, ...tags){
+		var that = this
+		tags = normalizeSplit(tags)
+
+		var index = this.__index || {} 
+		var persistent = this.persistent || new Set()
+		var definitions = this.definitions || {}
+		var def_index = new Map()
+
+		var local = arguments.length > 2
+
+		if(from instanceof Function){
+			to = from
+			from = '*'
+		}
+
+		// XXX this uses definitions to collect tags, this is too broad...
+		var res = this.directMatch(from, local ? tags : null, true)
+			// XXX is this needed / correct / worth it???
+			.concat(local ? [] : this.directMatch(from, 
+				Object.entries(definitions)
+					.map(function(e){ 
+						e[1] = e[1].join(that.SET_SEPARATOR)
+						def_index.set(e[1], (def_index.get(e[1]) || []).concat(e[0]))
+						return e })
+					.flat(), true))
+			.unique()
+			.map(function(from){
+				var target = to instanceof Function ? 
+					to.call(that, from) 
+					: to
+
+				if(from == target || target == undefined){
+					return []
+				}
+
+				// persistent...
+				if(persistent.has(from)){
+					persistent.delete(from)
+					target != ''
+						&& persistent.add(target)
+				}
+
+				// index...
+				if(from in index){
+					target != ''
+						&& (index[target] = index[from].unite(index[target] || []))
+					delete index[from]
+				}
+				
+				// definitions (key)...
+				if(from in definitions){
+					target != ''
+						&& that.define(target, definitions[from].join(that.SET_SEPARATOR))
+					delete definitions[from]
+				}
+				// definitions (value)...
+				if(def_index.has(from)){
+					def_index.get(from)
+						.forEach(function(key){
+							that.define(key, target == '' ? null : target) })
+				}
+
+				return target == '' ? 
+					[] 
+					: target
+			})
+
+		return local ? 
+			res.flat() 
+			: this
+	},
+	// Replace values...
+	//
+	// 	.replaceValue(from, to)
+	// 		-> this
+	//
+	replaceValue: function(from, to){
+		Object.values(this.__index || {})
+			.forEach(function(values){
+				values.has(from)
+					&& values.delete(from)
+					&& values.add(to) }) },
 
 	// Get/set/remove tag definitions...
 	//
@@ -1704,7 +1831,11 @@ object.makeConstructor('BaseTags',
 
 
 //---------------------------------------------------------------------
-
+// Special tag handlers...
+//
+// Add an ability to trigger handlers when working with specific (special)
+// tags.
+//
 // XXX EXPERIMENTAL...
 var TagsWithHandlersPrototype = {
 	__proto__: BaseTagsPrototype,
@@ -1842,8 +1973,13 @@ module.TagsWithHandlers =
 
 
 //---------------------------------------------------------------------
-
+// Tag dictionary...
+//
+// Maintain non-normalized forms of tags added when tagging and provide
+// means of translating a tag back to that form.
+//
 // XXX EXPERIMENTAL...
+// XXX do we need to hook .rename(..)
 var TagsWithDictPrototype = {
 	__proto__: BaseTagsPrototype,
 
