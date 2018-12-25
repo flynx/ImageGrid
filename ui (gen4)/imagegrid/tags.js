@@ -1972,6 +1972,15 @@ var TagsWithDictPrototype = {
 			&& this.removeOrphansFromDict(tag)
 		return res
 	},
+	// Format:
+	// 	{
+	// 		...
+	// 		dict: {
+	// 			<tag>: [<value>, ..],
+	// 			...
+	// 		},
+	// 		...
+	// 	}
 	json: function(){
 		var res = object.parent(TagsWithDictPrototype.json, this).call(this, ...arguments)
 
