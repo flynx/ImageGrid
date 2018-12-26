@@ -1983,8 +1983,7 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 					local_tag_names
 						.forEach(function(tag){ 
 							/* XXX for some reason this does not work...
-							tag in local_tags
-								&& tags.tag(tag, [...(local_tags[tag] 
+							tags.tag(tag, [...(local_tags[tag] 
 									|| that.data.tags.values(tag))])
 							/*/
 							// XXX this is not correct as we can have mixed tags...
@@ -2028,16 +2027,18 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 					var local_tags = this.collections[title].local_tags = {}
 					local_tag_names
 						.forEach(function(tag){ 
+							/* XXX not sure which approach is better, 
+							//		API vs. direct .__index edit...
 							local_tags[tag] = (!new_set || title == MAIN_COLLECTION_TITLE) ? 
 								// XXX this might yield a slightly wider set of values...
 								new Set(that.data.tags.values(tag))
 								: new Set()
-							/*
+							/*/
 							local_tags[tag] = (!new_set || title == MAIN_COLLECTION_TITLE) ? 
 								// XXX this is not correct as we can have mixed tags...
 								// 		...use actual tag API...
-								((that.data.tags.__index || {})[tag] || new Set()) 
-								: new Set()
+								[...(that.data.tags.__index || {})[tag] || []]
+								: []
 							//*/
 						})
 
@@ -2064,8 +2065,7 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 			}],
 		// save .local_tags to json...
 		// NOTE: we do not need to explicitly load anything as .load() 
-		// 		will load everything we need and .collectionLoading(..)
-		// 		will .sortTags() for us...
+		// 		will load everything we need...
 		['json',
 			function(res, mode){
 				var c = this.collections
@@ -2081,7 +2081,7 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 						&& this.collection != MAIN_COLLECTION_TITLE){
 					var tags = this.data.tags.json()
 					var ltags = c[MAIN_COLLECTION_TITLE].local_tags || {}
-					var rtags = res.data.tags = {}
+					var rtags = res.data.tags.tags = {}
 
 					// move all the tags...
 					Object.keys(tags.tags)
@@ -2098,15 +2098,7 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 						// XXX skip unloaded collections...
 						.filter(function(title){ return !!rc[title].data })
 						.forEach(function(title){
-							// convert sets to arrays...
-							var local_tags = {}
-							Object.entries(c[title].local_tags || {})
-								.forEach(function(e){
-									local_tags[e[0]] = [...e[1]]
-								})
-							// move .local_tags to .data.tags
-							rc[title].data.tags.tags = local_tags
-						})
+							rc[title].data.tags.tags = c[title].local_tags })
 			}],
 		// load collection local tags from .data.tags to .local_tags...
 		// ...this is needed if the collections are fully loaded as part 
