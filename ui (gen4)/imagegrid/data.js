@@ -134,13 +134,6 @@ if(typeof(sha1) != 'undefined'){
 /*********************************************************************/
 // Data...
 
-var OrderProxy = {
-	set: function(target, property, value, receiver){
-		target[property] = value
-		return true
-	}
-}
-
 var DataClassPrototype = {
 	// NOTE: we consider the input list sorted...
 	fromArray: function(list){
@@ -2966,6 +2959,7 @@ module.BaseData =
 
 //---------------------------------------------------------------------
 
+// XXX revise...
 // XXX make a API compatible replacement to the above -- to access 
 // 		compatibility and performance...
 var DataWithTagsPrototype = {
