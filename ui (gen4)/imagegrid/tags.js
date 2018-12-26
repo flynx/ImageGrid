@@ -78,7 +78,7 @@ var normalizeSplit = function(args){
 
 /*********************************************************************/
 
-// Helpers...
+// meta stuff...
 var makeSplitter = function(separator, unique){
 	return function(...tags){
 		var SP = this[separator]
@@ -94,12 +94,17 @@ var makeJoiner = function(separator){
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-//
+
 var BaseTagsClassPrototype = {
+	// Tag syntax...
+	//
+	// NOTE: this is not used for anything but .replace(..), thus 'g' 
+	// 		flag is required here...
+	TAG_ILLEGAL_CHARS: /[\s-_]/g,
 
 	// NOTE: do not include 'g' flag here, it will make the RE objects
 	// 		stateful which will yield very unpredictable results from 
-	// 		general system.
+	// 		general system as these objects are used for testing.
 	PATH_SEPARATOR: '/',
 	PATH_SEPARATOR_PATTERN: /[\\\/]+/,
 
@@ -107,6 +112,7 @@ var BaseTagsClassPrototype = {
 	SET_SEPARATOR_PATTERN: /:+/,
 
 	COMBINED_SEPARATOR_PATTERN: /[:\\\/]+/,
+
 
 	// Utils...
 	//
@@ -123,6 +129,9 @@ var BaseTagsClassPrototype = {
 	joinSet: makeJoiner('SET_SEPARATOR'),
 	joinPath: makeJoiner('PATH_SEPARATOR'),
 
+
+	// Constructor API...
+	//
 	// Normalize tags...
 	//
 	// 	.normalize(tag)
@@ -150,18 +159,14 @@ var BaseTagsClassPrototype = {
 		var PS = this.PATH_SEPARATOR
 		var SP = this.SET_SEPARATOR_PATTERN
 		var PP = this.PATH_SEPARATOR_PATTERN
-		var tagRemovedChars = (this.config || {})['tagRemovedChars']
-		tagRemovedChars = tagRemovedChars instanceof RegExp ? 
-				tagRemovedChars
-			: typeof(tagRemovedChars) == typeof('str') ?
-				new RegExp(tagRemovedChars, 'g')
-			: /[\s-_]/g
+		var ILLEGAL_CHARS = this.TAG_ILLEGAL_CHARS 
+
 		var res = normalizeSplit(tags)
 			.map(function(tag){
 				return tag
 					.trim()
 					.toLowerCase()
-					.replace(tagRemovedChars, '')
+					.replace(ILLEGAL_CHARS, '')
 					// sort sets within paths...
 					.split(PP)
 						.map(function(e){
@@ -274,18 +279,11 @@ var BaseTagsClassPrototype = {
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-// XXX should we split out the non-basic stuff???
-// 		like:
-// 			.makePathsPersistent()
-// 			.optimizeTags()
-// 			...
+
 var BaseTagsPrototype = {
-	config: {
-		// XXX docs!
-		tagRemovedChars: '[\\s-_]',
-	},
 
 	// NOTE: for notes on structure see notes on the Utils section below...
+	TAG_ILLEGAL_CHARS: BaseTagsClassPrototype.TAG_ILLEGAL_CHARS,
 	PATH_SEPARATOR: BaseTagsClassPrototype.PATH_SEPARATOR,
 	PATH_SEPARATOR_PATTERN: BaseTagsClassPrototype.PATH_SEPARATOR_PATTERN,
 	SET_SEPARATOR: BaseTagsClassPrototype.SET_SEPARATOR,
@@ -1808,7 +1806,7 @@ var BaseTagsPrototype = {
 
 var BaseTags = 
 module.BaseTags = 
-object.makeConstructor('BaseTags', 
+	object.makeConstructor('BaseTags', 
 		BaseTagsClassPrototype, 
 		BaseTagsPrototype)
 
@@ -1858,7 +1856,7 @@ var TagsWithHandlersPrototype = {
 	//
 	//		// make all paths persistent...
 	//		'*/*': function(tag, action){
-	//			action == 'tag'
+	//			;(action == 'tag' || action == 'replace')
 	//				&& this.togglePersistent(tag) },
 	//
 	//		...
@@ -1978,6 +1976,35 @@ module.TagsWithHandlers =
 	object.makeConstructor('TagsWithHandlers', 
 		BaseTagsClassPrototype,
 		TagsWithHandlersPrototype)
+
+
+
+//---------------------------------------------------------------------
+// Store paths as persistent...
+//
+// This is TagsWithHandlers with a default path handler...
+//
+var TagsWithPersistentPathsPrototype = {
+	__proto__: TagsWithHandlersPrototype,
+
+	__special_tag_handlers__: Object.assign({},
+		TagsWithHandlersPrototype.__special_tag_handlers__ || {}, 
+		{
+			// make all paths persistent...
+			'*/*': function(tag, action){
+				;(action == 'tag' || action == 'replace')
+					&& this.togglePersistent(tag) },
+		}),
+}
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+var TagsWithPersistentPaths = 
+module.TagsWithPersistentPaths = 
+	object.makeConstructor('TagsWithPersistentPaths', 
+		BaseTagsClassPrototype,
+		TagsWithPersistentPathsPrototype)
 
 
 
@@ -2232,6 +2259,8 @@ module.Tags =
 		BaseTagsClassPrototype,
 		object.mixin(BaseTagsPrototype,
 			TagsWithHandlersPrototype,
+			// XXX not sure if this should be on by default...
+			//TagsWithPersistentPathsPrototype,
 			// NOTE: this needs unmodified input tags this should be 
 			// 		mixed in last, i.e. first to be called in chain 
 			// 		(TagsWithHandlers change the input tags)...

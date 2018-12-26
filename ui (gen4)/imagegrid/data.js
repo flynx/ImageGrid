@@ -2958,7 +2958,7 @@ var DataPrototype = {
 
 var BaseData = 
 module.BaseData = 
-object.makeConstructor('BaseData', 
+	object.makeConstructor('BaseData', 
 		DataClassPrototype, 
 		DataPrototype)
 
@@ -3261,7 +3261,7 @@ var DataWithTagsPrototype = {
 
 var DataWithTags = 
 module.DataWithTags = 
-object.makeConstructor('DataWithTags', 
+	object.makeConstructor('DataWithTags', 
 		DataClassPrototype, 
 		DataWithTagsPrototype)
 

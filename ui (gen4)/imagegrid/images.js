@@ -290,7 +290,7 @@ module.ImagePrototype = {
 
 var Image = 
 module.Image = 
-object.makeConstructor('Image', 
+	object.makeConstructor('Image', 
 		ImageClassPrototype, 
 		ImagePrototype)
 
@@ -757,7 +757,7 @@ module.ImagesPrototype = {
 // Main Images object...
 var Images = 
 module.Images = 
-object.makeConstructor('Images', 
+	object.makeConstructor('Images', 
 		ImagesClassPrototype, 
 		ImagesPrototype)
 
