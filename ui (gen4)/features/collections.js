@@ -1982,11 +1982,17 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 					// load local_tags...
 					local_tag_names
 						.forEach(function(tag){ 
+							/* XXX for some reason this does not work...
+							tag in local_tags
+								&& tags.tag(tag, [...(local_tags[tag] 
+									|| that.data.tags.values(tag))])
+							/*/
 							// XXX this is not correct as we can have mixed tags...
 							// 		...use actual tag API...
 							tags.__index[tag] = new Set(local_tags[tag] 
 								|| (that.data.tags.__index || {})[tag] 
 								|| [])
+							//*/
 						})
 
 					;(this.crop_stack || [])
@@ -2023,12 +2029,19 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 					local_tag_names
 						.forEach(function(tag){ 
 							local_tags[tag] = (!new_set || title == MAIN_COLLECTION_TITLE) ? 
+								// XXX this might yield a slightly wider set of values...
+								new Set(that.data.tags.values(tag))
+								: new Set()
+							/*
+							local_tags[tag] = (!new_set || title == MAIN_COLLECTION_TITLE) ? 
 								// XXX this is not correct as we can have mixed tags...
 								// 		...use actual tag API...
 								((that.data.tags.__index || {})[tag] || new Set()) 
 								: new Set()
+							//*/
 						})
 
+					// delete the .data.tags of the collections...
 					delete (this.collections[title].data || {}).__tags || {}
 				}
 			}],
@@ -2043,21 +2056,10 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 
 				// prevent global tag removal...
 				var tags = this.data.tags
-				// XXX do we need this??? (leftover from prev tak implementation)
-				//delete this.data.tags
 
 				return function(){
-					tags.untag(local_tag_names, gids)
 					// update local tags...
-					/*
-					local_tag_names.forEach(function(tag){
-						// XXX this is not correct as we can have mixed tags...
-						// 		...use actual tag API...
-						tags[tag] = tags[tag].subtract(gids) 
-					})
-					//*/
-
-					//this.data.tags.__index = tags
+					tags.untag(local_tag_names, gids)
 				}
 			}],
 		// save .local_tags to json...
