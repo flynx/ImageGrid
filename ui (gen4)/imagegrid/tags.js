@@ -1988,7 +1988,6 @@ module.TagsWithHandlers =
 // means of translating a tag back to that form.
 //
 // XXX hook tag and value removal...
-// XXX EXPERIMENTAL...
 var TagsWithDictPrototype = {
 	__proto__: BaseTagsPrototype,
 
@@ -2117,18 +2116,22 @@ var TagsWithDictPrototype = {
 		return res
 	},
 	rename: function(from, to, ...tags){
+
 		var res = object.parent(TagsWithDictPrototype.rename, this).call(this, ...arguments) 
+
 		arguments.length == 2
 			&& this.normalizeSave(to)
 		this.removeOrphansFromDict(from)
 		return res
 	},
 	replace: function(tag, to, ...tags){
+		// XXX can we avoid doing this here???
 		if(tag instanceof Function){
 			to = tag
 			tag = '*'
 		}
 		var can_remove = []
+
 		var res = object.parent(TagsWithDictPrototype.replace, this).call(this, 
 			tag,
 			arguments.length == 2 ?
@@ -2143,13 +2146,16 @@ var TagsWithDictPrototype = {
 					: this.normalizeSave(to))
 				: to,
 			...[...arguments].slice(2)) 
+
 		typeof(tag) == typeof('str')
 			&& this.removeOrphansFromDict(can_remove)
 		return res
 	},
 	togglePersistent: function(...tags){
 		this.normalizeSave(tags)
+
 		var res = object.parent(TagsWithDictPrototype.togglePersistent, this).call(this, ...arguments) 
+
 		this.removeOrphansFromDict(res
 			.map(function(r, i){ 
 				return r == 'off' ? tags[i] : [] })
@@ -2160,7 +2166,9 @@ var TagsWithDictPrototype = {
 		arguments.length > 1 
 			&& value != null
 			&& this.normalizeSave(tag, value)
+
 		var res = object.parent(TagsWithDictPrototype.define, this).call(this, ...arguments) 
+
 		value == null
 			&& this.removeOrphansFromDict(tag)
 		return res
