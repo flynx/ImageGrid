@@ -1971,7 +1971,7 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 			function(title){
 				var that = this
 				var local_tag_names = this.config['collection-local-tags'] || []
-				var tags = this.data.tags.__index
+				var tags = this.data.tags
 
 				// NOTE: this is done at the .pre stage as we need to grab 
 				// 		the tags BEFORE the data gets cleared (in the case 
@@ -1982,14 +1982,16 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 					// load local_tags...
 					local_tag_names
 						.forEach(function(tag){ 
-							tags[tag] = new Set(local_tags[tag] 
+							// XXX this is not correct as we can have mixed tags...
+							// 		...use actual tag API...
+							tags.__index[tag] = new Set(local_tags[tag] 
 								|| (that.data.tags.__index || {})[tag] 
 								|| [])
 						})
 
 					;(this.crop_stack || [])
-						.forEach(function(d){ d.tags.__index = tags })
-					this.data.tags.__index = tags
+						.forEach(function(d){ d.tags = tags })
+					this.data.tags = tags
 				}
 			}],
 		// remove tags from unloaded collections...
@@ -2021,6 +2023,8 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 					local_tag_names
 						.forEach(function(tag){ 
 							local_tags[tag] = (!new_set || title == MAIN_COLLECTION_TITLE) ? 
+								// XXX this is not correct as we can have mixed tags...
+								// 		...use actual tag API...
 								((that.data.tags.__index || {})[tag] || new Set()) 
 								: new Set()
 						})
@@ -2038,14 +2042,20 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 				gids = gids instanceof Array ? gids : [gids]
 
 				// prevent global tag removal...
-				var tags = this.data.tags.__index
+				var tags = this.data.tags
 				// XXX do we need this??? (leftover from prev tak implementation)
 				//delete this.data.tags
 
 				return function(){
+					tags.untag(local_tag_names, gids)
 					// update local tags...
+					/*
 					local_tag_names.forEach(function(tag){
-						tags[tag] = tags[tag].subtract(gids) })
+						// XXX this is not correct as we can have mixed tags...
+						// 		...use actual tag API...
+						tags[tag] = tags[tag].subtract(gids) 
+					})
+					//*/
 
 					//this.data.tags.__index = tags
 				}
@@ -2886,13 +2896,11 @@ var CollectionMarksActions = actions.Actions({
 	collectMarked: ['- Collections|Mark/',
 		function(collection){
 			return this.collect(this.marked, collection) }],
-			//return this.collectTagged('marked', collection) }],
 	uncollectMarked: ['Collections|Mark/Remove marked from collection',
 		{browseMode: function(){ 
 			return (!this.collection || this.marked.length == 0) && 'disabled' }},
 		function(collection){
 			return this.uncollect(this.marked, collection) }],
-			//return this.uncollectTagged('marked', collection) }],
 
 	// bookmarked...
 	collectBookmarked: ['- Collections|Bookmark/',
