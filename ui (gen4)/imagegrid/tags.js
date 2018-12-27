@@ -595,6 +595,8 @@ var BaseTagsPrototype = {
 	//
 	// XXX REVISE -- is this too complicated???
 	// XXX this will not build a tree if given a list in b... is this correct???
+	// 		...i.e. when given a list in b this will still use the system tags
+	// 		to assess the topology and not treat the list in isolation...
 	// XXX Q: should .match(a) return all tags that can reach a (current) or
 	// 		all tags reachable from a???
 	match: function(a, b, cmp){
