@@ -589,8 +589,10 @@ var BaseTagsPrototype = {
 	// NOTE: when matching a root/base tag this matches iff b is root/base
 	// 		this is equivalent to .directMatch(..)
 	//
-	// XXX REVISE...
+	// XXX REVISE -- is this too complicated???
 	// XXX this will not build a tree if given a list in b... is this correct???
+	// XXX Q: should .match(a) return all tags that can reach a (current) or
+	// 		all tags reachable from a???
 	match: function(a, b, cmp){
 		var that = this
 		var PP = this.PATH_SEPARATOR_PATTERN
