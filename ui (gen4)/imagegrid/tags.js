@@ -280,6 +280,10 @@ var BaseTagsClassPrototype = {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
+// XXX do we need iterators???
+// 		.tags(func)			-- might be problematic as functions can be values...
+// 		.values(func)
+// 		.entries(func)		-- what's the func signature???
 var BaseTagsPrototype = {
 
 	// NOTE: for notes on structure see notes on the Utils section below...
