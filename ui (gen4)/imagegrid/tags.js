@@ -552,8 +552,19 @@ var BaseTagsPrototype = {
 	// tags and path graph to check tag "reachability"...
 	//
 	// Matching rule:
-	// 	a and b match iff both a and b are reachable on a single path 
-	// 	where a is above b.
+	// 	a and b match iff both a and b match existing tags and at least
+	// 	one matching pair exists where both items are reachable on a single
+	// 	combined path in the order given.
+	//
+	//	i.e. for paths: a/b/c/x, c/d/e the following are reachable:
+	//		a and c			-- on single path
+	//		a and e			-- on combined path
+	//		a/b	and e		-- a/b matches a/b/c and on combined path with e
+	//		a/b	and c/e		-- 
+	//	while the following are not:
+	//		c and a			-- reverse order
+	//		a/d and e		-- a/d does not match anything
+	//		a/x and e		-- x and e are not reachable
 	//
 	//
 	// Example:
@@ -575,14 +586,17 @@ var BaseTagsPrototype = {
 	// 		ts.match('c', 'a')			// -> false
 	//
 	//
-	// NOTE: matching a root/base tag will yield true if at least one 
-	// 		occurrence of the tag in the system exists as root/base.
-	//		...there is an alternative way to think about this issue 
-	//		where .match(..) would return true iff the tag is exclusively
-	//		a root/base tag respectively but this seems a bit less useful.
+	// NOTE: when matching a root/base tag this matches iff b is root/base
+	// 		this is equivalent to .directMatch(..)
+	//
+	// XXX REVISE...
+	// XXX this will not build a tree if given a list in b... is this correct???
 	match: function(a, b, cmp){
 		var that = this
 		var PP = this.PATH_SEPARATOR_PATTERN
+
+		var root = /^\s*[\\\/]/.test(a)
+		var base = /[\\\/]\s*$/.test(a)
 
 		// get paths with tag...
 		var paths = function(tag){
@@ -595,7 +609,7 @@ var BaseTagsPrototype = {
 			seen = seen || new Set()
 			return paths(tag)
 				.reduce(function(res, path){
-					if(res == true){
+					if(res){
 						return res
 					}
 
@@ -614,15 +628,25 @@ var BaseTagsPrototype = {
 										false
 									: search(target, tag, seen.add(tag)) }, false) }, false) }
 
-		var res = this.directMatch(...arguments) 
-		return res !== false ?
+		var seen = new Set()
+		var res = (root || base 
+				|| b instanceof Array 
+				|| typeof(b) == typeof('str')) ?
+			// b is given and a is an edge -> try a direct match...
+			this.directMatch(...arguments) 
+			// get all the compatible tags...
+			: Object.keys(this.__index || {})
+				.concat([...(this.persistent || [])])
+				.unique()
+				.filter(function(tag){ 
+					return that.directMatch(a, tag) 
+						|| search(a, tag, seen) })
+
+		return (root || base || res !== false) ?
 				res
-			// if there is no edge (root/base) a then no point in further
-			// searching...
-			: ((/^\s*[\\\/]/.test(a) || /[\\\/]\s*$/.test(a))
-					&& this.match(a, cmp).length == 0) ?
-				false
-			: search(a, b)
+			// if a is a path then it must exist and search it's tail...
+			: this.directMatch(a).length > 0 
+				&& search(this.splitPath(a).pop(), b)
 	},
 	// Search tags...
 	//
@@ -837,14 +861,14 @@ var BaseTagsPrototype = {
 	// NOTE: this does not support any query syntax...
 	values: function(tag){
 		var that = this
-		tag = this.normalize(tag || '*')
-		return [...new Set(
-			Object.entries(this.__index || {})
+		tag = tag || '*'
+		return Object.entries(this.__index || {})
 				.filter(function(e){ 
 					return tag == '*' 
 						|| that.match(tag, e[0]) })
 				.map(function(s){ return [...s[1]] })
-				.flat())] },
+				.flat()
+   				.unique() },
 
 	// Definitions as paths...
 	//
