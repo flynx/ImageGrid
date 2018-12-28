@@ -94,6 +94,23 @@ var makeJoiner = function(separator){
 	return function(...items){
 		return normalizeSplit(items).join(this[separator]) } }
 
+var makeIter = function(name, lister){
+	return function(tag, func){
+		var args = [...arguments]
+		func = args.pop()
+		tag = args.pop() || '*'
+		var res = this[lister || 'directMatch'](tag)[name](func.bind(this)) 
+		return res == null ? 
+			this 
+			: res } }
+var makeReducer = function(lister){
+	return function(tag, func, initial){
+		var args = [...arguments]
+		initial = args.pop()
+		func = args.pop()
+		tag = args.pop() || '*'
+		return this[lister || 'directMatch'](tag).reduce(func.bind(this), initial) } }
+
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
@@ -287,10 +304,6 @@ var BaseTagsClassPrototype = {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
-// XXX do we need iterators???
-// 		.tags(func)			-- might be problematic as functions can be values...
-// 		.values(func)
-// 		.entries(func)		-- what's the func signature???
 var BaseTagsPrototype = {
 
 	// NOTE: for notes on structure see notes on the Utils section below...
@@ -471,6 +484,7 @@ var BaseTagsPrototype = {
 	directMatch: function(a, b, cmp, no_definitions){
 		var that = this
 		// parse args...
+		a = arguments.length == 0 ? '*' : a
 		if(b instanceof Function){
 			cmp = b
 			b = null
@@ -639,6 +653,8 @@ var BaseTagsPrototype = {
 	// 		all tags reachable from a???
 	match: function(a, b, cmp){
 		var that = this
+		a = arguments.length == 0 ? '*' : a
+
 		var PP = this.PATH_SEPARATOR_PATTERN
 
 		var quoted = this.isQuoted(a)
@@ -958,6 +974,15 @@ var BaseTagsPrototype = {
 			res[0]
 			:res },
 
+	// Shorthands to:
+	// 		ts.directMatch(tag).map(func.bind(ts)) // and friends...
+	//
+	// XXX not sure if we need these...
+	map: makeIter('map'), 
+	filter: makeIter('filter'), 
+	forEach: makeIter('forEach'), 
+	reduce: makeReducer(),
+
 
 	// Edit API...
 	// 
@@ -977,6 +1002,9 @@ var BaseTagsPrototype = {
 	},
 	// NOTE: this supports tag patterns (see: .match(..))
 	// NOTE: non-pattern tags are matched explicitly.
+	// XXX Q: should this support blanket untagging. i.e. .untag(tag) 
+	// 		to remove all the tags???
+	// 		...this would make this similar to .removeTag(..)
 	// XXX Q: should this remove tags directly (current) or via matching??
 	// 			.tag('a:b', 'x')
 	// 			.untag('a', 'x')		-- this will do nothing.
@@ -1051,8 +1079,6 @@ var BaseTagsPrototype = {
 	//
 	// NOTE: this supports tag patterns (see: ,match(..))
 	//
-	// XXX do we need this???
-	// 		...seems a bit overcomplicated...
 	// XXX should this return true/false or 'on'/'off'???
 	toggle: function(tag, values, action){
 		var that = this
@@ -1128,6 +1154,9 @@ var BaseTagsPrototype = {
 	//
 	// 		// (see .rename(..) and .removeTag(..) as more advanced examples)
 	//
+	//
+	// NOTE: this is not called .map(..) because this edits the object 
+	// 		in-place while map is expected to return a new instance.
 	replace: function(tag, to, ...tags){
 		var that = this
 		tags = normalizeSplit(tags)
@@ -1259,11 +1288,11 @@ var BaseTagsPrototype = {
 	// 	.replaceValue(from, to)
 	// 		-> this
 	//
-	replaceValue: function(from, to){
+	replaceValue: function(value, to){
 		Object.values(this.__index || {})
 			.forEach(function(values){
-				values.has(from)
-					&& values.delete(from)
+				values.has(value)
+					&& values.delete(value)
 					&& values.add(to) }) },
 	// Keep only the given values...
 	//
