@@ -1022,7 +1022,7 @@ var BaseTagsPrototype = {
 	//	Toggle tag for each values...
 	//	.toggle(tag, value)
 	//	.toggle(tag, values)
-	//		-> [bool|null, ..]
+	//		-> ['on'|'off'|null, ..]
 	//		NOTE: if tag is a tag pattern (contains '*') this will toggle
 	//			matching tags values off as expected but ignore toggling 
 	//			tags on in which case null will be  returned for the 
@@ -1046,7 +1046,7 @@ var BaseTagsPrototype = {
 	//	Check if tag is set on value(s)...
 	//	.toggle(tag, value, '?')
 	//	.toggle(tag, values, '?')
-	//		-> [bool, ..]
+	//		-> ['on'|'off', ..]
 	//
 	//
 	// NOTE: this supports tag patterns (see: ,match(..))
@@ -1061,7 +1061,7 @@ var BaseTagsPrototype = {
 		var ntag = this.normalize(tag)
 
 		// can't set pattern as tag...
-		if(pattern && action != 'on'){
+		if(pattern && action == 'on'){
 			throw new TypeError(`.toggle(..): will not toggle on "${tag}": pattern and not a tag.`)
 		}
 
@@ -1072,19 +1072,19 @@ var BaseTagsPrototype = {
 			: action == '?' ?
 				values
 					.map(function(v){ 
-						return pattern ? 
+						return (pattern ? 
 							// non-strict pattern search...
 							that.tags(v, tag) 
 							// strict test...
-							: that.tags(v).indexOf(ntag) >= 0 })
+							: that.tags(v).indexOf(ntag) >= 0) ? 'on' : 'off' })
 			// toggle each...
 			: values
 				.map(function(v){ 
 					return that.tags(v, tag) ? 
-						(that.untag(tag, v), false) 
+						(that.untag(tag, v), 'off') 
 						// NOTE: we set only if we are not a pattern...
 						: (!pattern ? 
-							(that.tag(tag, v), true) 
+							(that.tag(tag, v), 'on') 
 							: null) }) },
 
 	// Replace tags...

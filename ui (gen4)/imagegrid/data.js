@@ -3022,27 +3022,22 @@ var DataWithTagsPrototype = {
 		return this
 	},
 	toggleTag: function(tag, gids, action){
-		gids = gids == null || gids == 'current' ? 
-				this.current
-			: gids == 'ribbon' ?
-				this.getImages('current')
-			: gids == 'loaded' ?
-				this.getImages('loaded')
-			: gids == 'all' ?
-				this.getImages('all')
-			: gids
-
-		var res = this.tags.toggle(tag, gids, action)
-
-		return res === this.tags ? 
-				this 
-			: res === true ? 
-				'on'
-			: res === false ? 
-				'off'
-			: res
-				.map(function(r){ return r ? 'on' : 'off' })
-	},
+		var that = this
+		return this.tags.toggle(tag, 
+				gids == null || gids == 'current' ? 
+						this.current
+					: gids == 'ribbon' ?
+						this.getImages('current')
+					: gids == 'loaded' ?
+						this.getImages('loaded')
+					: gids == 'all' ?
+						this.getImages('all')
+					: gids, 
+				action)
+			.run(function(){
+				return this === that.tags ?
+					that
+					: this }) },
 
 
 	// XXX should these be .tags.query(..) ???
