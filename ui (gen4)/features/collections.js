@@ -1923,6 +1923,12 @@ var CollectionTagsActions = actions.Actions({
 			return this.uncollect(this.data.tagQuery(query), collection) }],
 })
 
+// XXX need to either extend this to use the tag API to support the 
+// 		compound tags or explicitly restrict this to specific tags...
+// 		...currently this in places uses the API and in other places
+// 		directly accesses .__index -- this may lead to odd cases where
+// 		not all tags get loaded/unloaded in spite of correctly conforming 
+// 		to the API specs...
 var CollectionTags = 
 module.CollectionTags = core.ImageGridFeatures.Feature({
 	title: 'Collection tag handling',

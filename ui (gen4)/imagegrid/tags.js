@@ -23,6 +23,8 @@
 * 			...values should have the least impact on performance.
 * 	- investigate support for sqlite3
 * 		- will it be faster?
+* 	- split this out to an npm module...
+* 		- this would require lib/util to also get split out...
 *
 *
 * XXX Q: should we do .optimizeTags(tag) on .tag(tag)???
@@ -100,7 +102,7 @@ var BaseTagsClassPrototype = {
 	//
 	// NOTE: this is not used for anything but .replace(..), thus 'g' 
 	// 		flag is required here...
-	TAG_ILLEGAL_CHARS: /[\s-_]/g,
+	TAG_ILLEGAL_CHARS: /[\s-_"']/g,
 
 	// NOTE: do not include 'g' flag here, it will make the RE objects
 	// 		stateful which will yield very unpredictable results from 
@@ -116,6 +118,8 @@ var BaseTagsClassPrototype = {
 
 	// Utils...
 	//
+	isQuoted: function(tag){
+		return /^\s*(['"]).*\1\s*$/.test(tag) },
 	//
 	// 	.splitSet(tag)
 	// 	.splitSet(tag, ..)
@@ -303,6 +307,15 @@ var BaseTagsPrototype = {
 	// 		...
 	// 	}
 	//
+	// XXX there are cases when it's simpler to access this directly, 
+	// 		thus, should this be renamed to something??
+	// 		like:
+	// 			.index
+	// 			.tag_value_index
+	// 			...
+	// 		...need to make it a bit less convenient to use directly but
+	// 		at the same time not feel like we are diving into something 
+	// 		very internal and restricted...
 	__index: null,
 
 	// Persistent tags...
@@ -349,11 +362,15 @@ var BaseTagsPrototype = {
 	// 		instance largely independent of its constructor and thus 
 	// 		making it possible to use it as a mix-in (copy methods)
 	// 		and other approaches...
+	isQuoted: BaseTagsClassPrototype.isQuoted, 
 	splitSet: BaseTagsClassPrototype.splitSet, 
 	splitPath: BaseTagsClassPrototype.splitPath, 
-	normalize: BaseTagsClassPrototype.normalize, 
 	splitTag: BaseTagsClassPrototype.splitTag, 
+	joinSet: BaseTagsClassPrototype.joinSet, 
+	joinPath: BaseTagsClassPrototype.joinPath, 
+	normalize: BaseTagsClassPrototype.normalize, 
 	parseQuery: BaseTagsClassPrototype.parseQuery, 
+	
 
 
 	// Tag matching and filtering...
@@ -470,8 +487,9 @@ var BaseTagsPrototype = {
 		} else {
 			var definitions = this.definitions
 
-			var root = /^\s*[\\\/]/.test(a)
-			var base = /[\\\/]\s*$/.test(a)
+			var quoted = this.isQuoted(a)
+			var root = /^\s*['"]?[\\\/]/.test(a)
+			var base = /[\\\/]['"]?\s*$/.test(a)
 
 			a = this.normalize(a)
 			// special case: *tag* pattern...
@@ -480,10 +498,24 @@ var BaseTagsPrototype = {
 				: a
 			b = this.normalize(b)
 
-			// the fast case...
+			// the fast cases...
+			// direct match...
 			if(a == b){
-				return true
-			}
+				return true }
+
+			// explicit matching...
+			if(quoted){
+				return b instanceof Array ? 
+					b.filter(function(t){ 
+						return a == t })
+					: b != null ?
+						(a == b 
+							|| (definitions
+							&& (definitions[a] == b
+								|| a == definitions[b]
+								|| definitions[a] == definitions[b])))
+					: (a in this.__index 
+						|| this.persistent.has(a)) }
 
 			// Expand definitions...
 			//
@@ -603,8 +635,9 @@ var BaseTagsPrototype = {
 		var that = this
 		var PP = this.PATH_SEPARATOR_PATTERN
 
-		var root = /^\s*[\\\/]/.test(a)
-		var base = /[\\\/]\s*$/.test(a)
+		var quoted = this.isQuoted(a)
+		var root = /^\s*['"]?[\\\/]/.test(a)
+		var base = /[\\\/]['"]?\s*$/.test(a)
 
 		// get paths with tag...
 		var paths = function(tag){
@@ -637,7 +670,7 @@ var BaseTagsPrototype = {
 									: search(target, tag, seen.add(tag)) }, false) }, false) }
 
 		var seen = new Set()
-		var res = (root || base 
+		var res = (quoted || root || base 
 				|| b instanceof Array 
 				|| typeof(b) == typeof('str')) ?
 			// b is given and a is an edge -> try a direct match...
@@ -650,7 +683,7 @@ var BaseTagsPrototype = {
 					return that.directMatch(a, tag) 
 						|| search(a, tag, seen) })
 
-		return (root || base || res !== false) ?
+		return (quoted || root || base || res !== false) ?
 				res
 			// if a is a path then it must exist and search it's tail...
 			: this.directMatch(a).length > 0 
@@ -935,6 +968,16 @@ var BaseTagsPrototype = {
 	},
 	// NOTE: this supports tag patterns (see: .match(..))
 	// NOTE: non-pattern tags are matched explicitly.
+	// XXX BUG?: should this remove tags directly (current) or via matching??
+	// 			.tag('a:b', 'x')
+	// 			.untag('a', 'x')		-- this will do nothing.
+	// 			.untag('*a*', 'x')		-- remove the tag.
+	// 		...currently I think that matching should be default while 
+	// 		explicit tag removal should be triggered via something like
+	// 		putting a tag in quotes:
+	// 			.untag('"a"', 'x')		-- should remove tagged explicitly 
+	// 										with "a"...
+	// 			.untag('a', 'x')		-- like the current '*a*'
 	untag: function(tags, value){
 		var that = this
 		var index = this.__index = this.__index || {}
@@ -1000,6 +1043,7 @@ var BaseTagsPrototype = {
 	//
 	// XXX do we need this???
 	// 		...seems a bit overcomplicated...
+	// XXX should this return true/false or 'on'/'off'???
 	toggle: function(tag, values, action){
 		var that = this
 		values = values instanceof Array ? values : [values]

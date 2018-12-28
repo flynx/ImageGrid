@@ -434,6 +434,10 @@ var TagUIActions = actions.Actions({
 	// Tag cloud/list...
 	//
 	// XXX move this to the base tags feature...
+	// XXX this is wrong, should point to either:
+	// 			.data.tags.tags()
+	// 		or:
+	//			.data.tags
 	get tags(){
 		return []
 			// XXX load this from a file...
