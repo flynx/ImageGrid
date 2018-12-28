@@ -1115,8 +1115,19 @@ var BaseTagsPrototype = {
 	// NOTE: this will only match tags directly not accounting for 
 	// 		reachability or definitions...
 	// NOTE: this will match tags in .__index, .persistent and .definitions
+	// NOTE: the func(..) output is automatically normalized...
 	//
-	// XXX revise...
+	//
+	// Examples:
+	// 		// print out all the tags (read only)...
+	// 		ts.replace(tag => console.log(tag))
+	//
+	// 		// replace tag 'a' with tag 'b'...
+	// 		ts.replace('a', 
+	// 			function(tag){ return tag.replace(/(^[:/])a(?=[:/]|$)/)/g, '$1b') })
+	//
+	// 		// (see .rename(..) and .removeTag(..) as more advanced examples)
+	//
 	replace: function(tag, to, ...tags){
 		var that = this
 		tags = normalizeSplit(tags)
@@ -1207,8 +1218,6 @@ var BaseTagsPrototype = {
 	// NOTE: if any renamed tag is renamed to '' it will be removed 
 	// 		untagging all relevant values...
 	//
-	// XXX need to sanitize tag -- it can not contain regex characters...
-	// 		...should we guard against this???
 	rename: function(tag, to, ...tags){
 		var that = this
 
