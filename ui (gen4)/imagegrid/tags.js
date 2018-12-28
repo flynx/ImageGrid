@@ -167,25 +167,28 @@ var BaseTagsClassPrototype = {
 
 		var res = normalizeSplit(tags)
 			.map(function(tag){
-				return tag
-					.trim()
-					.toLowerCase()
-					.replace(ILLEGAL_CHARS, '')
-					// sort sets within paths...
-					.split(PP)
-						.map(function(e){
-							return e
-								.split(SP)
-								// remove empty set members...
-								.filter(function(t){ 
-									return t != '' })
-								.unique()
-								.sort()
-								.join(SS) })
-						// NOTE: this also kills the leading '/'
-						.filter(function(t){ 
-							return t != '' })
-						.join(PS) })
+				return typeof(tag) == typeof('str') ?
+					tag
+						.trim()
+						.toLowerCase()
+						.replace(ILLEGAL_CHARS, '')
+						// sort sets within paths...
+						.split(PP)
+							.map(function(e){
+								return e
+									.split(SP)
+									// remove empty set members...
+									.filter(function(t){ 
+										return t != '' })
+									.unique()
+									.sort()
+									.join(SS) })
+							// NOTE: this also kills the leading '/'
+							.filter(function(t){ 
+								return t != '' })
+							.join(PS)
+					: [] })
+			.flat()
 			.unique()
 		return (tags.length == 1 && !(tags[0] instanceof Array)) ? 
 			// NOTE: if we got a single tag return it as a single tag...
@@ -402,6 +405,8 @@ var BaseTagsPrototype = {
 	// 	a		- single tag
 	// 				NOTE: a tag is also a unary path and a singular 
 	// 					set (see below).
+	// 	"a"		- explicit match, this checks if the tag exists as-is 
+	// 				without any additional heuristics...
 	// 	a/b		- path, 2 or more tags joined with '/' (or '\').
 	// 				defines a directional relation between a and b
 	// 	/a		- path special case, a path with a leading '/' (or '\')
@@ -410,6 +415,7 @@ var BaseTagsPrototype = {
 	// 				defines a non-directional relation between a and b.
 	// 	*		- tag placeholder, matches one and only one tag
 	//
+	// NOTE: "a" is equivalent to 'a'
 	// NOTE: paths have priority over sets: a/b:c -> a / b:c
 	// NOTE: there is a special case pattern '*a*' that matches the same 
 	// 		way as 'a', this is used in methods where 'a' is used as an 
@@ -509,7 +515,7 @@ var BaseTagsPrototype = {
 					b.filter(function(t){ 
 						return a == t })
 					: b != null ?
-						(a == b 
+						!!(a == b 
 							|| (definitions
 							&& (definitions[a] == b
 								|| a == definitions[b]
@@ -732,6 +738,9 @@ var BaseTagsPrototype = {
 	// 			(i.e. ['a:b:c', 'a:b', 'a:c', 'a']) and will only return
 	// 			the actual full match and an individual tag match...
 	// 			XXX should it???
+	// XXX should we support partial quoting?
+	// 		...e.g. a:"b" -- search for any set explicitly containing 
+	// 		'b' and any tag containing an 'a'...
 	search: function(query, tags){
 		var that = this
 	   	tags = tags == null ?
@@ -968,7 +977,7 @@ var BaseTagsPrototype = {
 	},
 	// NOTE: this supports tag patterns (see: .match(..))
 	// NOTE: non-pattern tags are matched explicitly.
-	// XXX BUG?: should this remove tags directly (current) or via matching??
+	// XXX Q: should this remove tags directly (current) or via matching??
 	// 			.tag('a:b', 'x')
 	// 			.untag('a', 'x')		-- this will do nothing.
 	// 			.untag('*a*', 'x')		-- remove the tag.
@@ -978,6 +987,7 @@ var BaseTagsPrototype = {
 	// 			.untag('"a"', 'x')		-- should remove tagged explicitly 
 	// 										with "a"...
 	// 			.untag('a', 'x')		-- like the current '*a*'
+	// 		what should the default be????
 	untag: function(tags, value){
 		var that = this
 		var index = this.__index = this.__index || {}
@@ -1077,95 +1087,6 @@ var BaseTagsPrototype = {
 							(that.tag(tag, v), true) 
 							: null) }) },
 
-	// Rename a tag...
-	//
-	// 	Rename tag...
-	// 	.rename(from, to)
-	// 		-> this
-	//
-	// 	Rename a tag in list of tags...
-	// 	.rename(from, to, tag, ...)
-	// 	.rename(from, to, [tag, ...])
-	// 		-> tags
-	//
-	// NOTE: if to is '' this will remove all occurrences of from.
-	// NOTE: if any renamed tag is renamed to '' it will be removed 
-	// 		untagging all relevant values...
-	//
-	// XXX need to sanitize tag -- it can not contain regex characters...
-	// 		...should we guard against this???
-	rename: function(tag, to, ...tags){
-		var that = this
-
-		// XXX should we bo more pedantic here???
-		tag = this.normalize(tag)
-		if(tag == ''){
-			throw new Error(`.rename(..): first argument can not be an empty string.`) }
-		if(/[:\\\/]/.test(tag)){
-			throw new Error(
-				`.rename(..): only support singular tag renaming, got: "${tag}"`) }
-		// XXX too strict???
-		if(!/^[a-z0-9]+$/.test(tag)){
-			throw new Error(
-				`.rename(..): first argument must be a valid single tag, got: "${tag}"`) }
-
-		to = this.normalize(to)
-		if(/[\\\/]/.test(to)){
-			throw new Error(
-				`.rename(..): only support tags and tag sets as renaming target, got: "${to}"`) }
-
-		tags = new Set(normalizeSplit(tags))
-
-		// prepare for the replacement...
-		var pattern = new RegExp(`(^|[:\\\\\\/])${tag}(?=$|[:\\\\\\/])`, 'g')
-		var target = `$1${to}` 
-
-		var patchSet = function(s){
-			that.match(tag, [...s || []])
-				.forEach(function(tag){
-					s.delete(tag)
-					var t = that.normalize(tag.replace(pattern, target))
-					t != ''
-						&& s.add(t)
-				}) 
-			return s 
-		}
-		var patchObj = function(o, patchValue){
-			that.match(tag, Object.keys(o || {}))
-				.forEach(function(m){
-					var value = o[m]
-					delete o[m]
-					var t = that.normalize(m.replace(pattern, target))
-					t != ''
-						&& (o[t] = value)
-				}) 
-			patchValue 
-				&& Object.keys(o || {})
-					.forEach(function(m){
-						var v = o[m]
-						if(that.match(tag, v)){
-							var t = that.normalize(v.replace(pattern, target))
-							t == '' ?
-								(delete o[m])
-								: (o[m] = t)
-						}
-					})
-			return o 
-		}
-
-		// rename tags in list...
-		if(arguments.length > 2){
-			return [...patchSet(tags)]
-
-		// rename actual data...
-		} else {
-			patchSet(this.persistent || [])
-			patchObj(this.__index || {})
-			patchObj(this.definitions || {}, true)
-		}
-			
-		return this
-	},
 	// Replace tags...
 	//
 	//	Replace tags...
@@ -1195,6 +1116,7 @@ var BaseTagsPrototype = {
 	// 		reachability or definitions...
 	// NOTE: this will match tags in .__index, .persistent and .definitions
 	//
+	// XXX revise...
 	replace: function(tag, to, ...tags){
 		var that = this
 		tags = normalizeSplit(tags)
@@ -1269,6 +1191,54 @@ var BaseTagsPrototype = {
 		return local ? 
 			res.flat() 
 			: this
+	},
+	// Rename a tag...
+	//
+	// 	Rename tag...
+	// 	.rename(from, to)
+	// 		-> this
+	//
+	// 	Rename a tag in list of tags...
+	// 	.rename(from, to, tag, ...)
+	// 	.rename(from, to, [tag, ...])
+	// 		-> tags
+	//
+	// NOTE: if to is '' this will remove all occurrences of from.
+	// NOTE: if any renamed tag is renamed to '' it will be removed 
+	// 		untagging all relevant values...
+	//
+	// XXX need to sanitize tag -- it can not contain regex characters...
+	// 		...should we guard against this???
+	rename: function(tag, to, ...tags){
+		var that = this
+
+		// XXX should we be more pedantic here???
+		tag = this.normalize(tag)
+		if(tag == ''){
+			throw new Error(`.rename(..): first argument can not be an empty string.`) }
+		if(/[:\\\/]/.test(tag)){
+			throw new Error(
+				`.rename(..): only support singular tag renaming, got: "${tag}"`) }
+		// XXX too strict???
+		if(!/^[a-z0-9]+$/.test(tag)){
+			throw new Error(
+				`.rename(..): first argument must be a valid single tag, got: "${tag}"`) }
+
+		to = this.normalize(to)
+		if(/[\\\/]/.test(to)){
+			throw new Error(
+				`.rename(..): only support tags and tag sets as renaming target, got: "${to}"`) }
+
+		// prepare for the replacement...
+		var pattern = new RegExp(
+			`(^|[${this.SET_SEPARATOR}\\${this.PATH_SEPARATOR}])`
+				+`${tag}`
+				+`(?=$|[${this.SET_SEPARATOR}\\${this.PATH_SEPARATOR}])`, 'g')
+		var target = `$1${to}` 
+
+		return this.replace(tag, 
+			function(from){
+				return from.replace(pattern, target) }, ...tags) 
 	},
 	// NOTE: this is a short hand to .rename(tag, '', ..) for extra 
 	// 		docs see that...
@@ -2010,17 +1980,6 @@ var TagsWithHandlersPrototype = {
 		return object.parent(TagsWithHandlersPrototype.untag, this).call(this,
 			that.handleSpecialTag(tags, 'untag', value),
 			...[...arguments].slice(1)) },
-	//  handler: action(tag, 'remove')
-	//  handler: action(to, 'rename', tag)
-	rename: function(tag, to, ...tags){
-		return object.parent(TagsWithHandlersPrototype.rename, this).call(this,
-			tag,
-			arguments.length == 2 ?
-				(to == '' ?
-					this.handleSpecialTag(tag, 'remove')
-					: this.handleSpecialTag(to, 'rename', tag))
-				: to,
-			...[...arguments].slice(2)) },
 	//  handler: action(tag, 'replace', from)
 	replace: function(tag, to, ...tags){
 		// XXX can we avoid doing this here???
@@ -2030,7 +1989,7 @@ var TagsWithHandlersPrototype = {
 		}
 		return object.parent(TagsWithHandlersPrototype.replace, this).call(this, 
 			tag,
-			arguments.length == 2 ?
+			arguments.length <= 2 ?
 				(to instanceof Function ?
 					// wrap the handler...
 					function(tag){
@@ -2112,11 +2071,17 @@ var TagsWithDictPrototype = {
 	//
 	normalizeSave: function(...tags){
 		var dict = this.dict = this.dict || {}
-		var res = this.normalize(this.splitTag(...tags))
+		var res = this.normalize(...tags)
 
+		// unaltered tags...
 		tags = this.splitTag(normalizeSplit(tags))
+		// NOTE: we first split then normalize (order significant) because 
+		// 		we need to conserve the order of the individual tags 
+		// 		consistent with tags above...
+		// XXX can we avoid normalizing twice???
+		var names = this.normalize(this.splitTag(...tags))
 
-		;(res instanceof Array ? res : [res])
+		;(names instanceof Array ? names : [names])
 			.forEach(function(tag, i){
 				tag = tag.trim()
 				var value = tags[i].trim()
@@ -2127,7 +2092,7 @@ var TagsWithDictPrototype = {
 						.concat([value])
 						.unique()) })
 
-		return res
+		return res 
 	},
 
 	// Translate normalized tag to the dict form...
@@ -2216,15 +2181,6 @@ var TagsWithDictPrototype = {
 	untag: function(tags, value){
 		var res = object.parent(TagsWithDictPrototype.untag, this).call(this, ...arguments) 
 		this.removeOrphansFromDict(tags)
-		return res
-	},
-	rename: function(from, to, ...tags){
-
-		var res = object.parent(TagsWithDictPrototype.rename, this).call(this, ...arguments) 
-
-		arguments.length == 2
-			&& this.normalizeSave(to)
-		this.removeOrphansFromDict(from)
 		return res
 	},
 	replace: function(tag, to, ...tags){
