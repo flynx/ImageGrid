@@ -2025,7 +2025,6 @@ module.BaseTags =
 // Add an ability to trigger handlers when working with specific (special)
 // tags.
 //
-// XXX idea: */* to make a tag persistent...
 // XXX EXPERIMENTAL...
 var TagsWithHandlersPrototype = {
 	__proto__: BaseTagsPrototype,
@@ -2451,7 +2450,7 @@ module.Tags =
 		object.mixin(BaseTagsPrototype,
 			TagsWithHandlersPrototype,
 			// XXX not sure if this should be on by default...
-			//TagsWithPersistentPathsPrototype,
+			TagsWithPersistentPathsPrototype,
 			// NOTE: this needs unmodified input tags this should be 
 			// 		mixed in last, i.e. first to be called in chain 
 			// 		(TagsWithHandlers change the input tags)...
