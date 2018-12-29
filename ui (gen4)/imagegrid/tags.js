@@ -1292,6 +1292,7 @@ var BaseTagsPrototype = {
 		return this.rename(tag, '', ...tags) },
 
 	//	
+	//	Remove tags...
 	//	.untag(tags)
 	//	.untag(tags, '*')
 	//		-> this
@@ -1307,9 +1308,17 @@ var BaseTagsPrototype = {
 	// 	"a"			- untag only explicit a
 	// 	*a*			- remove all tags containing a
 	//
+	// XXX EXPERIMENTAL...
+	// XXX this will incorrectly rename sets...
+	// 		.untag('a:c') // will not correctly rename tag 'a:b:c'...
 	untag2: function(tag, value, ...tags){
 		var that = this
-		value = value || '*'
+		value = !value ?
+				'*'
+			: value instanceof Array ?
+				value
+			: [value]
+		var index = this.__index || {}
 
 		;(tag instanceof Array ? tag : [tag])
 			.forEach(function(tag){
@@ -1319,26 +1328,51 @@ var BaseTagsPrototype = {
 				var base = /[\\\/]['"]?\s*$/.test(tag)
 				tag = that.normalize(starred ? tag.trim().slice(1, -1) : tag)
 
+				var pattern = !quoted && !starred 
+					&& new RegExp(
+						`(^|[${that.SET_SEPARATOR}\\${that.PATH_SEPARATOR}])`
+							+`${tag}`
+							+`(?=$|[${that.SET_SEPARATOR}\\${that.PATH_SEPARATOR}])`, 'g')
+				var target = `$1` 
+
 				return that
 					.replace(tag, function(t){
+						// skip tags without values (.persistent only)
+						if(index[t] == null){
+							return
+						}
+
 						// special case: literal match...
 						if(quoted){
-							// XXX need to account for values...
-							return tag == t ? '' : t
+							tag == t && console.log('REMOVE:', t)
+							tag == t
+								&& (value == '*' ?
+									(delete index[t])
+									: (index[t] = index[t].subtract(value)))
 
-						// special case: remove contained...
+						// special case: remove all matching tags...
 						} else if(starred){
-							// XXX need to account for values...
-							return that.directMatch(tag, t) ? '' : t
+							value == '*' ?
+								(delete index[t])
+								: (index[t] = index[t].subtract(value))
 
 						// replace occurrence...
 						} else {
+							var values = value == '*' ? 
+								index[t] 
+								: value
 
+							// remove from old tag...
+							value == '*' ?
+								(delete index[t])
+								: (index[t] = index[t].subtract(value))
+
+							var renamed = that.normalize(t.replace(pattern, target))
+							// add to modified tag...
+							renamed != ''
+								&& (index[renamed] = (index[renamed] || new Set()).unite(values))
 						}
-
-					}, ...tags)
-			})
-
+					}, ...tags) })
 		return this
 	},
 
@@ -1514,9 +1548,7 @@ var BaseTagsPrototype = {
 			: 'toggle'
 		tags = normalizeSplit(tags)
 
-		var persistent = 
-			this.persistent = 
-				this.persistent || new Set()
+		var persistent = this.persistent = this.persistent || new Set()
 
 		return this.normalize(tags)
 			.map(function(tag){
