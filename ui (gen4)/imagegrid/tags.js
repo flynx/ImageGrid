@@ -407,6 +407,7 @@ var BaseTagsPrototype = {
 	// 	Set([ <tag>, ... ])
 	//
 	// NOTE: this is expected to contain normalized values only...
+	// 		non-normalized values may and will get matched incorrectly.
 	persistent: null,
 
 	// Tag definitions...
@@ -872,21 +873,21 @@ var BaseTagsPrototype = {
 	// 	- remove all paths that match it after it (tail)
 	// 	- next path
 	//
-	uniquePaths: function(...list){
+	uniquePaths: function(...tags){
 		var that = this
 		var PS = this.PATH_SEPARATOR
-		return (list.length == 0 ? 
+		return (tags.length == 0 ? 
 				this.paths() 
-				: this.normalize(normalizeSplit(list)))
+				: this.normalize(normalizeSplit(tags)))
 			// sort by number of path elements (longest first)...
 			.map(function(tag){ return that.splitPath(tag) })
 				.sort(function(a, b){ return b.length - a.length })
 				.map(function(p){ return p.join(PS) })
 			// remove all paths in tail that match the current...
-			.map(function(p, i, list){
+			.map(function(p, i, tags){
 				// skip []...
 				!(p instanceof Array)
-					&& list
+					&& tags
 						// only handle the tail...
 						.slice(i+1)
 						.forEach(function(o, j){
@@ -894,7 +895,7 @@ var BaseTagsPrototype = {
 							!(o instanceof Array)
 								&& that.directMatch(o, p)
 								// match -> replace the matching elem with []
-								&& (list[i+j+1] = []) })
+								&& (tags[i+j+1] = []) })
 				return p })
 			.flat() },
 
@@ -967,12 +968,8 @@ var BaseTagsPrototype = {
 		// get all tags...
 		} else {
 			return Object.keys(this.__index || {})
-				//.concat([...(this.persistentAll || [])]
-				.concat([...(this.persistent || [])]
-					// XXX do we need to normalize here???
-					// 		...do we trust .persistent???
-					.map(function(t){ 
-						return that.normalize(t) }))
+				//.concat([...(this.persistentAll || [])])
+				.concat([...(this.persistent || [])])
 				.unique()
 		}
 	},
@@ -1048,9 +1045,6 @@ var BaseTagsPrototype = {
 
 	// Shorthands to:
 	// 		ts.directMatch(tag).map(func.bind(ts)) // and friends...
-	// XXX not sure if we need these...
-	// XXX do we need a .values(..) variant of each???
-	// 		mapValues: makeIter('map', 'values'),
 	map: makeIter('map'), 
 	filter: makeIter('filter'), 
 	forEach: makeIter('forEach'), 
@@ -1059,6 +1053,8 @@ var BaseTagsPrototype = {
 
 	// Edit API...
 	// 
+	// Tag values...
+	//
 	tag: function(tags, value){
 		var that = this
 		value = value instanceof Array ? value : [value]
@@ -1073,34 +1069,41 @@ var BaseTagsPrototype = {
 
 		return this
 	},
-	//	
+	// Remove tags...	
+	//
 	//	Remove tags...
-	//	.untag(tags)
-	//	.untag(tags, '*')
+	//	.untag(tag)
+	//	.untag(tag, '*')
 	//		-> this
 	//
 	//	Remove tags form values...
-	//	.untag(tags, values)
+	//	.untag(tag, values)
 	//		-> this
 	//
-	//	// Remove 
-	//	.untag(tags, values, tag, ..)
-	//		-> this
+	//	// Remove tags form given tags...
+	//	.untag(tag, values, tag, ..)
+	//		-> tags
+	//		NOTE: this has no effect on the state...
+	//		NOTE: values is ignored here...
 	//
-	// Pattern syntax:
-	// 	a			- untag only explicit a
-	// 	"a"			- the same as above
-	// 	*a*			- remove all matching a
+	//
+	// How this does matching is slightly different to .directMatch(..)
+	// or .match(..) in the following ways:
+	// 	1) if tag contains no '*' it is match 1:1, i.e. only tags matching
+	// 		exactly will get removed.
+	// 	2) if tag contains at leas one '*' then all matching tags will 
+	// 		get removed.
+	//
 	//
 	// NOTE: .untag(tags, '*', ..) is similar to .removeTag(tags, ..) 
 	// 		but not identical. The differences being:
 	// 			.untag(..)
 	// 				- removes whole tags only
-	// 			.removesTag(..)
+	// 			.removeTag(..)
 	// 				- can modify tags
-	//
 	// NOTE: this supports tag patterns (see: .match(..))
 	// NOTE: non-pattern tags are matched explicitly.
+	//
 	// XXX do we do .match(..) or .directMatch(..) here for patterns???
 	untag: function(tag, value, ...tags){
 		var that = this
@@ -1179,7 +1182,6 @@ var BaseTagsPrototype = {
 	//
 	// NOTE: this supports tag patterns (see: ,match(..))
 	//
-	// XXX should this return true/false or 'on'/'off'???
 	toggle: function(tag, values, action){
 		var that = this
 		values = values instanceof Array ? values : [values]
@@ -2089,7 +2091,6 @@ var TagsWithHandlersPrototype = {
 	handleSpecialTag: function(tags, ...args){
 		var that = this
 		var handlers = this.__special_tag_handlers__ || {}
-		tags = this.normalize(tags)
 		return tags instanceof Array ?
 			tags.map(function(tag){
 				return that.handleSpecialTag(tag, ...args) })
@@ -2101,8 +2102,7 @@ var TagsWithHandlersPrototype = {
 						// 		mnemonic...
 						return p == that.normalize(p)
 							// get the matching handler keys...
-							&& that.directMatch(p, tags)
-					})
+							&& that.directMatch(p, tags) })
 					// resolve handler aliases...
 					.map(function(match){
 						do {
@@ -2123,9 +2123,9 @@ var TagsWithHandlersPrototype = {
 						var cur = tag 
 							&& handler.call(that, tag, ...args)
 						// if a handler returned null continue with tag as-is...
-						return cur == null ? tag : cur }, tags) 
+						return cur == null ? tag : cur }, that.normalize(tags)) 
 				// no handlers -> return as-is...
-				|| tags) },
+				|| that.normalize(tags)) },
 
 	// handler: action(tag, 'tag')
 	tag: function(tags, value){
