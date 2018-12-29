@@ -137,6 +137,8 @@ var BaseTagsClassPrototype = {
 	//
 	isQuoted: function(tag){
 		return /^\s*(['"]).*\1\s*$/.test(tag) },
+	isStarred: function(tag){
+		return /^\s*(\*).*\1\s*$/.test(tag) },
 	//
 	// 	.splitSet(tag)
 	// 	.splitSet(tag, ..)
@@ -379,6 +381,7 @@ var BaseTagsPrototype = {
 	// 		making it possible to use it as a mix-in (copy methods)
 	// 		and other approaches...
 	isQuoted: BaseTagsClassPrototype.isQuoted, 
+	isStarred: BaseTagsClassPrototype.isStarred, 
 	splitSet: BaseTagsClassPrototype.splitSet, 
 	splitPath: BaseTagsClassPrototype.splitPath, 
 	splitTag: BaseTagsClassPrototype.splitTag, 
@@ -976,8 +979,9 @@ var BaseTagsPrototype = {
 
 	// Shorthands to:
 	// 		ts.directMatch(tag).map(func.bind(ts)) // and friends...
-	//
 	// XXX not sure if we need these...
+	// XXX do we need a .values(..) variant of each???
+	// 		mapValues: makeIter('map', 'values'),
 	map: makeIter('map'), 
 	filter: makeIter('filter'), 
 	forEach: makeIter('forEach'), 
@@ -1016,6 +1020,10 @@ var BaseTagsPrototype = {
 	// 										with "a"...
 	// 			.untag('a', 'x')		-- like the current '*a*'
 	// 		what should the default be????
+	// 		...logic would say that making this query compatible with 
+	// 		.match(..) is the right way to go from the uniformity point 
+	// 		of view, but, this would also make this potentially more 
+	// 		destructive by default...
 	untag: function(tags, value){
 		var that = this
 		var index = this.__index = this.__index || {}
@@ -1282,6 +1290,57 @@ var BaseTagsPrototype = {
 	// 		docs see that...
 	removeTag: function(tag, ...tags){
 		return this.rename(tag, '', ...tags) },
+
+	//	
+	//	.untag(tags)
+	//	.untag(tags, '*')
+	//		-> this
+	//
+	//	.untag(tags, values)
+	//		-> this
+	//
+	//	.untag(tags, values, tag, ..)
+	//		-> this
+	//
+	// Pattern syntax:
+	// 	a			- remove a from any matching tag
+	// 	"a"			- untag only explicit a
+	// 	*a*			- remove all tags containing a
+	//
+	untag2: function(tag, value, ...tags){
+		var that = this
+		value = value || '*'
+
+		;(tag instanceof Array ? tag : [tag])
+			.forEach(function(tag){
+				var quoted = that.isQuoted(tag)
+				var starred = that.isStarred(tag)
+				var root = /^\s*['"]?[\\\/]/.test(tag)
+				var base = /[\\\/]['"]?\s*$/.test(tag)
+				tag = that.normalize(starred ? tag.trim().slice(1, -1) : tag)
+
+				return that
+					.replace(tag, function(t){
+						// special case: literal match...
+						if(quoted){
+							// XXX need to account for values...
+							return tag == t ? '' : t
+
+						// special case: remove contained...
+						} else if(starred){
+							// XXX need to account for values...
+							return that.directMatch(tag, t) ? '' : t
+
+						// replace occurrence...
+						} else {
+
+						}
+
+					}, ...tags)
+			})
+
+		return this
+	},
 
 	// Replace values...
 	//
