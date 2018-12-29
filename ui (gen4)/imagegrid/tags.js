@@ -148,13 +148,96 @@ var BaseTagsClassPrototype = {
 	// NOTE: these will combine the parts of all the tags...
 	splitSet: makeSplitter('SET_SEPARATOR_PATTERN', true),
 	splitPath: makeSplitter('PATH_SEPARATOR_PATTERN'),
-	splitTag: makeSplitter('COMBINED_SEPARATOR_PATTERN'),
 	joinSet: makeJoiner('SET_SEPARATOR'),
 	joinPath: makeJoiner('PATH_SEPARATOR'),
+
+	// Split/join tag to/from AST...
+	//
+	//
+	// Grammar:
+	// 	<tag-ast> ::= [ <tag-path>, .. ]
+	// 	<tag-path> ::= [ <tag>|<tag-set>, ... ]
+	// 	<tag-set> ::= [ <tag>, .. ]
+	// 	<tag> ::= String
+	//
+	//
+	// AST format:
+	// 	[
+	// 		// tag/path...
+	// 		[
+	// 			// single tag...
+	// 			'tag',
+	// 			// set...
+	// 			[
+	// 				'tag',
+	// 				...
+	// 			],
+	// 			...
+	// 		],
+	// 		...
+	// 	]
+	//
+	//
+	// Example:
+	// 		.splitTag('a:b/c')	->	[ [['a', 'b'], 'c'] ]
+	//
+	splitTag: function(...tags){
+		var SP = this.SET_SEPARATOR_PATTERN
+		var PP = this.PATH_SEPARATOR_PATTERN
+		var args = arguments
+		return normalizeSplit(tags)
+			.map(function(path){
+				return path
+					.split(PP)
+					.filter(function(t){ 
+						return t != '' })
+					.map(function(set){
+						return set
+							.split(SP)
+							.filter(function(t){ 
+								return t != '' })
+							// if one component return as-is...
+				   			.run(function(){
+								return this.length == 1 ? 
+									this[0] 
+									: this }) }) }) },
+	joinTag: function(...tags){
+		var SS = this.SET_SEPARATOR
+		var PS = this.PATH_SEPARATOR
+		return normalizeSplit(tags)
+			.map(function(path){
+				return path
+					.map(function(set){
+						return set instanceof Array ?
+							set.join(SS)
+							: set })
+					.join(PS) }) },
+
+	subTags: function(...tags){
+		return this.splitTag(...tags).flat(Infinity) },
 
 
 	// Constructor API...
 	//
+	normalizeTagStr: function(...tags){
+		var ILLEGAL_CHARS = this.TAG_ILLEGAL_CHARS
+		return normalizeSplit(tags)
+			.map(function(tag){
+				return tag
+					.toLowerCase()
+					.replace(ILLEGAL_CHARS, '') }) },
+	// This essentially sorts the sets and cleans them...
+	normalizeTagAST: function(ast){
+		return ast
+			.map(function(path){
+				return path
+					.map(function(set){
+						return set instanceof Array ?
+							set
+								.unique()
+								.sort()
+							: set }) }) },
+
 	// Normalize tags...
 	//
 	// 	.normalize(tag)
@@ -184,36 +267,18 @@ var BaseTagsClassPrototype = {
 		var PP = this.PATH_SEPARATOR_PATTERN
 		var ILLEGAL_CHARS = this.TAG_ILLEGAL_CHARS 
 
-		var res = normalizeSplit(tags)
-			.map(function(tag){
-				return typeof(tag) == typeof('str') ?
-					tag
-						.trim()
-						.toLowerCase()
-						.replace(ILLEGAL_CHARS, '')
-						// sort sets within paths...
-						.split(PP)
-							.map(function(e){
-								return e
-									.split(SP)
-									// remove empty set members...
-									.filter(function(t){ 
-										return t != '' })
-									.unique()
-									.sort()
-									.join(SS) })
-							// NOTE: this also kills the leading '/'
-							.filter(function(t){ 
-								return t != '' })
-							.join(PS)
-					: [] })
-			.flat()
+		var res = this.joinTag(
+				this.normalizeTagAST(
+					this.splitTag(
+						this.normalizeTagStr(...tags))))
 			.unique()
+
 		return (tags.length == 1 && !(tags[0] instanceof Array)) ? 
 			// NOTE: if we got a single tag return it as a single tag...
 			res.pop() 
 			: res
 	},
+
 	// Query parser...
 	//
 	// NOTE: this is loosely based on Slang's parser...
@@ -384,11 +449,15 @@ var BaseTagsPrototype = {
 	isStarred: BaseTagsClassPrototype.isStarred, 
 	splitSet: BaseTagsClassPrototype.splitSet, 
 	splitPath: BaseTagsClassPrototype.splitPath, 
-	splitTag: BaseTagsClassPrototype.splitTag, 
 	joinSet: BaseTagsClassPrototype.joinSet, 
 	joinPath: BaseTagsClassPrototype.joinPath, 
+	normalizeTagStr: BaseTagsClassPrototype.normalizeTagStr, 
+	normalizeTagAST: BaseTagsClassPrototype.normalizeTagAST, 
 	normalize: BaseTagsClassPrototype.normalize, 
 	parseQuery: BaseTagsClassPrototype.parseQuery, 
+	splitTag: BaseTagsClassPrototype.splitTag, 
+	joinTag: BaseTagsClassPrototype.joinTag, 
+	subTags: BaseTagsClassPrototype.subTags, 
 	
 
 
@@ -779,7 +848,7 @@ var BaseTagsPrototype = {
 			// split tags + include original list...
 			.run(function(){
 				return this
-					.concat(that.splitTag(this)) 
+					.concat(that.subTags(this)) 
 					.unique() })
 			.filter(function(t){
 				// XXX should this search up the path???
@@ -909,7 +978,7 @@ var BaseTagsPrototype = {
 	},
 	// Same as .tags(..) but returns a list of single tags...
 	singleTags: function(value, ...tags){
-		return this.splitTag(this.tags(...arguments)).unique() },
+		return this.subTags(this.tags(...arguments)).unique() },
 	paths: function(value){
 		var PP = this.PATH_SEPARATOR_PATTERN
 		return this.tags(value)
@@ -1779,7 +1848,7 @@ var BaseTagsPrototype = {
 				...args
 					.map(function(t){ 
 						return this.search(t) }.bind(this))
-					.flat()
+					.flat(Infinity)
 					.unique() ] },
 	},
 	__query_ns: {
@@ -1803,9 +1872,9 @@ var BaseTagsPrototype = {
 			return [...new Set(args.flat(1))] },
 		not: function(...args){
 			return [...new Set(args.shift() || [])
-				.subtract(args.flat())] },
+				.subtract(args.flat(Infinity))] },
 
-		flat: function(...args){ return args.flat() },
+		flat: function(...args){ return args.flat(Infinity) },
 	},
 	__query_ns_special: {
 		values: function(...args){ return args },
@@ -1878,7 +1947,7 @@ var BaseTagsPrototype = {
 					this
 					// normalize results by default...
 					: (this
-						.flat()
+						.flat(Infinity)
 						.unique()) }) },
 
 
@@ -2203,12 +2272,12 @@ var TagsWithDictPrototype = {
 		var res = this.normalize(...tags)
 
 		// unaltered tags...
-		tags = this.splitTag(normalizeSplit(tags)).unique()
+		tags = this.subTags(normalizeSplit(tags)).unique()
 		// NOTE: we first split then normalize (order significant) because 
 		// 		we need to conserve the order of the individual tags 
 		// 		consistent with tags above...
 		// XXX can we avoid normalizing twice???
-		var names = this.normalize(this.splitTag(...tags))
+		var names = this.normalize(this.subTags(...tags))
 
 		;(names instanceof Array ? names : [names])
 			.forEach(function(tag, i){
@@ -2274,13 +2343,13 @@ var TagsWithDictPrototype = {
 
 		tags = tags.length == 0 ?
 			Object.keys(dict)
-			: this.normalize(this.splitTag(normalizeSplit(tags)))
+			: this.normalize(this.subTags(normalizeSplit(tags)))
 
 		// check all...
 		// XXX tune the threshold or make it dynamic...
 		// XXX do we need both branches???
 		if(tags.length > 3){
-			var index = new Set(this.splitTag(
+			var index = new Set(this.subTags(
 				...this.tags(), 
 				...this.definitionPaths()))
 			tags = tags
