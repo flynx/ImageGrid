@@ -1073,55 +1073,78 @@ var BaseTagsPrototype = {
 
 		return this
 	},
+	//	
+	//	Remove tags...
+	//	.untag(tags)
+	//	.untag(tags, '*')
+	//		-> this
+	//
+	//	Remove tags form values...
+	//	.untag(tags, values)
+	//		-> this
+	//
+	//	// Remove 
+	//	.untag(tags, values, tag, ..)
+	//		-> this
+	//
+	// Pattern syntax:
+	// 	a			- untag only explicit a
+	// 	"a"			- the same as above
+	// 	*a*			- remove all matching a
+	//
+	// NOTE: .untag(tags, '*', ..) is similar to .removeTag(tags, ..) 
+	// 		but not identical. The differences being:
+	// 			.untag(..)
+	// 				- removes whole tags only
+	// 			.removesTag(..)
+	// 				- can modify tags
+	//
 	// NOTE: this supports tag patterns (see: .match(..))
 	// NOTE: non-pattern tags are matched explicitly.
-	// XXX Q: should this support blanket untagging. i.e. .untag(tag) 
-	// 		to remove all the tags???
-	// 		...this would make this similar to .removeTag(..)
-	// XXX Q: should this remove tags directly (current) or via matching??
-	// 			.tag('a:b', 'x')
-	// 			.untag('a', 'x')		-- this will do nothing.
-	// 			.untag('*a*', 'x')		-- remove the tag.
-	// 		...currently I think that matching should be default while 
-	// 		explicit tag removal should be triggered via something like
-	// 		putting a tag in quotes:
-	// 			.untag('"a"', 'x')		-- should remove tagged explicitly 
-	// 										with "a"...
-	// 			.untag('a', 'x')		-- like the current '*a*'
-	// 		what should the default be????
-	// 		...logic would say that making this query compatible with 
-	// 		.match(..) is the right way to go from the uniformity point 
-	// 		of view, but, this would also make this potentially more 
-	// 		destructive by default...
-	untag: function(tags, value){
+	// XXX do we do .match(..) or .directMatch(..) here for patterns???
+	untag: function(tag, value, ...tags){
 		var that = this
 		var index = this.__index = this.__index || {}
-		value = value instanceof Array ? value : [value]
+		value = !value ?
+				'*'
+			: value instanceof Array ?
+				value
+			: [value]
+		var local = arguments.length > 2
 
-		this
-			.normalize(tags instanceof Array ? tags : [tags])
+		var remove = this.normalize(tag instanceof Array ? tag : [tag])
 			// resolve/match tags...
 			.map(function(tag){
+				// XXX should we use .isQuoted(..) here???
 				return /\*/.test(tag) ? 
 					// resolve tag patterns...
-					that.match(tag) 
+					// XXX is .match(..) to broad here???
+					that.match(tag, local ? tags : null) 
 					: tag })
-			.flat()
-			// do the untagging...
-			.forEach(function(tag){
-				var s = (index[tag] || new Set()).subtract(value)
+			.flat(Infinity)
 
-				// remove empty sets...
-				if(s.size == 0){
-					delete index[tag]
+		return local ?
+			[...new Set(normalizeSplit(tags)).subtract(remove)]
+			: (remove
+				// do the untagging...
+				.forEach(function(tag){
+					if(!(tag in index)){
+						return
+					}
 
-				// update...
-				} else {
-					index[tag] = s
-				}
-			})
+					var s = value == '*' ?
+						new Set()
+						: (index[tag] || new Set()).subtract(value)
 
-		return this
+					// remove empty sets...
+					if(s.size == 0){
+						delete index[tag]
+
+					// update...
+					} else {
+						index[tag] = s
+					}
+				}), this)
 	},
 	//
 	//	Toggle tag for each values...
@@ -1234,6 +1257,7 @@ var BaseTagsPrototype = {
 	//
 	// NOTE: this is not called .map(..) because this edits the object 
 	// 		in-place while map is expected to return a new instance.
+	// XXX do we do .match(..) or .directMatch(..) here for patterns???
 	replace: function(tag, to, ...tags){
 		var that = this
 		tags = normalizeSplit(tags)
@@ -1253,26 +1277,21 @@ var BaseTagsPrototype = {
 			to 
 			: this.normalize(to)
 
-		// XXX this uses definitions to collect tags, this is too broad...
-		var res = this.directMatch(tag, local ? tags : null, true)
-			// XXX is this needed / correct / worth it???
-			.concat(local ? [] : this.directMatch(tag, 
-				Object.entries(definitions)
-					.map(function(e){ 
-						e[1] = e[1].join(that.SET_SEPARATOR)
-						def_index.set(e[1], (def_index.get(e[1]) || []).concat(e[0]))
-						return e })
-					.flat(), true))
-			.unique()
-			.map(function(tag){
-				var target = to instanceof Function ? 
-					that.normalize(to.call(that, tag))
-					: to
+		// NOTE: this needs the results to get .flat()...
+		var handle = function(tag){
+			var target = to instanceof Function ? 
+				to.call(that, tag)
+				: to
+			target = target ? 
+				that.normalize(target) 
+				: target
 
-				if(tag == target || target == undefined){
-					return []
-				}
+			// no change to tag...
+			if(tag == target || target == undefined){
+				return [tag]
+			}
 
+			if(!local){
 				// persistent...
 				if(persistent.has(tag)){
 					persistent.delete(tag)
@@ -1299,14 +1318,40 @@ var BaseTagsPrototype = {
 						.forEach(function(key){
 							that.define(key, target == '' ? null : target) })
 				}
+			}
 
-				return target == '' ? 
-					[] 
-					: target
-			})
+			return target == '' ? 
+				[] 
+				: [target]
+		}
+
+		// do the processing...
+		var res = local ?
+			// local...
+			tags
+				.unique()
+				.map(function(t){
+					return !that.directMatch(tag, t, true) ?
+						[t]
+						: handle(t) })
+				.flat()
+				.unique()
+			// index...
+			// XXX this uses definitions to collect tags, this is too broad...
+			: this.directMatch(tag, true)
+					// XXX is this needed / correct / worth it???
+					.concat(this.directMatch(tag, 
+						Object.entries(definitions)
+							.map(function(e){ 
+								e[1] = e[1].join(that.SET_SEPARATOR)
+								def_index.set(e[1], (def_index.get(e[1]) || []).concat(e[0]))
+								return e })
+							.flat(), true))
+				.unique()
+				.map(handle)
 
 		return local ? 
-			res.flat() 
+			res 
 			: this
 	},
 	// Rename a tag...
@@ -1360,90 +1405,6 @@ var BaseTagsPrototype = {
 	removeTag: function(tag, ...tags){
 		return this.rename(tag, '', ...tags) },
 
-	//	
-	//	Remove tags...
-	//	.untag(tags)
-	//	.untag(tags, '*')
-	//		-> this
-	//
-	//	.untag(tags, values)
-	//		-> this
-	//
-	//	.untag(tags, values, tag, ..)
-	//		-> this
-	//
-	// Pattern syntax:
-	// 	a			- remove a from any matching tag
-	// 	"a"			- untag only explicit a
-	// 	*a*			- remove all tags containing a
-	//
-	// XXX EXPERIMENTAL...
-	// XXX this will incorrectly rename sets...
-	// 		.untag('a:c') // will not correctly rename tag 'a:b:c'...
-	untag2: function(tag, value, ...tags){
-		var that = this
-		value = !value ?
-				'*'
-			: value instanceof Array ?
-				value
-			: [value]
-		var index = this.__index || {}
-
-		;(tag instanceof Array ? tag : [tag])
-			.forEach(function(tag){
-				var quoted = that.isQuoted(tag)
-				var starred = that.isStarred(tag)
-				var root = /^\s*['"]?[\\\/]/.test(tag)
-				var base = /[\\\/]['"]?\s*$/.test(tag)
-				tag = that.normalize(starred ? tag.trim().slice(1, -1) : tag)
-
-				var pattern = !quoted && !starred 
-					&& new RegExp(
-						`(^|[${that.SET_SEPARATOR}\\${that.PATH_SEPARATOR}])`
-							+`${tag}`
-							+`(?=$|[${that.SET_SEPARATOR}\\${that.PATH_SEPARATOR}])`, 'g')
-				var target = `$1` 
-
-				return that
-					.replace(tag, function(t){
-						// skip tags without values (.persistent only)
-						if(index[t] == null){
-							return
-						}
-
-						// special case: literal match...
-						if(quoted){
-							tag == t && console.log('REMOVE:', t)
-							tag == t
-								&& (value == '*' ?
-									(delete index[t])
-									: (index[t] = index[t].subtract(value)))
-
-						// special case: remove all matching tags...
-						} else if(starred){
-							value == '*' ?
-								(delete index[t])
-								: (index[t] = index[t].subtract(value))
-
-						// replace occurrence...
-						} else {
-							var values = value == '*' ? 
-								index[t] 
-								: value
-
-							// remove from old tag...
-							value == '*' ?
-								(delete index[t])
-								: (index[t] = index[t].subtract(value))
-
-							var renamed = that.normalize(t.replace(pattern, target))
-							// add to modified tag...
-							renamed != ''
-								&& (index[renamed] = (index[renamed] || new Set()).unite(values))
-						}
-					}, ...tags) })
-		return this
-	},
 
 	// Replace values...
 	//
