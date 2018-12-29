@@ -2171,7 +2171,7 @@ var TagsWithDictPrototype = {
 		var res = this.normalize(...tags)
 
 		// unaltered tags...
-		tags = this.splitTag(normalizeSplit(tags))
+		tags = this.splitTag(normalizeSplit(tags)).unique()
 		// NOTE: we first split then normalize (order significant) because 
 		// 		we need to conserve the order of the individual tags 
 		// 		consistent with tags above...
