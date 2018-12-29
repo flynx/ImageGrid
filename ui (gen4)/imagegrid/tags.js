@@ -73,8 +73,8 @@ var util = require('lib/util')
 //
 var normalizeSplit = function(args){
 	return (args.length == 1 && args[0] instanceof Array) ? 
-		args.pop() 
-		: args }
+		args.pop().slice()
+		: args.slice() }
 
 
 
@@ -1185,8 +1185,10 @@ var BaseTagsPrototype = {
 	toggle: function(tag, values, action){
 		var that = this
 		values = values instanceof Array ? values : [values]
+		// NOTE: this is cheating -- if tag is a list it will get 
+		// 		stringified before the test...
 		var pattern = /\*/.test(tag)
-		var ntag = this.normalize(tag)
+		var ntag = this.normalize(tag instanceof Array ? tag : [tag])
 
 		// can't set pattern as tag...
 		if(pattern && action == 'on'){
@@ -1195,8 +1197,10 @@ var BaseTagsPrototype = {
 
 		return action == 'on' ?
 				this.tag(tag, values)
+
 			: action == 'off' ?
 				this.untag(tag, values)
+
 			: action == '?' ?
 				values
 					.map(function(v){ 
@@ -1204,16 +1208,33 @@ var BaseTagsPrototype = {
 							// non-strict pattern search...
 							that.tags(v, tag) 
 							// strict test...
-							: that.tags(v).indexOf(ntag) >= 0) ? 'on' : 'off' })
+							: new Set(that.tags(v)).intersect(ntag).size > 0) ? 'on' : 'off' })
+
 			// toggle each...
 			: values
-				.map(function(v){ 
-					return that.tags(v, tag) ? 
-						(that.untag(tag, v), 'off') 
-						// NOTE: we set only if we are not a pattern...
-						: (!pattern ? 
-							(that.tag(tag, v), 'on') 
-							: null) }) },
+				// build the on/off lists...
+				// XXX this will either set all the tags on (if at least
+				// 		one is off) or off (if all are on) for each item...
+				.reduce(function(res, v){
+					var state = that.tags(v, tag)
+
+					res.res.push(state ? 'off' : 'on')
+					state ?
+						res.untag.push(v)
+						: res.tag.push(v)
+
+					return res 
+				}, {tag: [], untag: [], res: []})
+				// do the tagging...
+				.run(function(){
+					this.tag.length > 0
+						&& that.tag(tag, this.tag)
+
+					this.untag.length > 0
+						&& that.untag(tag, this.untag)
+
+					return this.res
+				}) },
 
 	// Replace tags...
 	//
