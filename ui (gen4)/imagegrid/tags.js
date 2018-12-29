@@ -569,6 +569,7 @@ var BaseTagsPrototype = {
 			no_definitions = cmp
 			cmp = null
 		}
+		b = b instanceof Set ? [...b] : b
 
 		// no given tags or multiple tags -> filter...
 		if(b == null || b instanceof Array){
@@ -767,6 +768,7 @@ var BaseTagsPrototype = {
 		var seen = new Set()
 		var res = (quoted || root || base 
 				|| b instanceof Array 
+				|| b instanceof Set 
 				|| typeof(b) == typeof('str')) ?
 			// b is given and a is an edge -> try a direct match...
 			this.directMatch(...arguments) 
@@ -949,9 +951,10 @@ var BaseTagsPrototype = {
 		// check if value is tagged by tags..,
 		if(value && tags.length > 0){
 			tags = normalizeSplit(tags)
-			var u = this.tags(value)
+			var u = new Set(this.tags(value))
 			while(tags.length > 0){
-				if(this.match(tags.shift(), u).length == 0){
+				var t = tags.shift()
+				if(!u.has(t) && this.match(t, u).length == 0){
 					return false
 				}
 			}
@@ -1158,6 +1161,8 @@ var BaseTagsPrototype = {
 	//			matching tags values off as expected but ignore toggling 
 	//			tags on in which case null will be  returned for the 
 	//			corresponding position.
+	// 		NOTE: this will set all the tags on if at least one is off
+	// 			or off if all are on for each item...
 	//
 	//	Toggle tag on for all values...
 	//	.toggle(tag, value, 'on')
@@ -1213,8 +1218,6 @@ var BaseTagsPrototype = {
 			// toggle each...
 			: values
 				// build the on/off lists...
-				// XXX this will either set all the tags on (if at least
-				// 		one is off) or off (if all are on) for each item...
 				.reduce(function(res, v){
 					var state = that.tags(v, tag)
 
