@@ -153,6 +153,13 @@ var BaseTagsClassPrototype = {
 
 	// Split/join tag to/from AST...
 	//
+	//	.splitTag(tag, ..)
+	//	.splitTag([tag, ..])
+	//		-> ast
+	//
+	//	.splitTag(func, tag, ..)
+	//	.splitTag(func, [tag, ..])
+	//		-> ast
 	//
 	// Grammar:
 	// 	<tag-ast> ::= [ <tag-path>, .. ]
@@ -182,9 +189,13 @@ var BaseTagsClassPrototype = {
 	// 		.splitTag('a:b/c')	->	[ [['a', 'b'], 'c'] ]
 	//
 	splitTag: function(...tags){
+		var that = this
 		var SP = this.SET_SEPARATOR_PATTERN
 		var PP = this.PATH_SEPARATOR_PATTERN
 		var args = arguments
+		var processTag = tags[0] instanceof Function ? 
+			tags.shift() 
+			: undefined
 		return normalizeSplit(tags)
 			.map(function(path){
 				return path
@@ -196,6 +207,11 @@ var BaseTagsClassPrototype = {
 							.split(SP)
 							.filter(function(t){ 
 								return t != '' })
+							// process tags...
+							.run(function(){
+								return processTag ?
+									this.map(processTag.bind(that))
+									: this })
 							// if one component return as-is...
 				   			.run(function(){
 								return this.length == 1 ? 
@@ -2255,6 +2271,7 @@ var TagsWithDictPrototype = {
 		// XXX can we avoid normalizing twice???
 		var names = this.normalize(this.subTags(...tags))
 
+		// populate the dict...
 		;(names instanceof Array ? names : [names])
 			.forEach(function(tag, i){
 				tag = tag.trim()
@@ -2279,30 +2296,17 @@ var TagsWithDictPrototype = {
 	//		-> [str, ..]
 	//
 	translateTag: function(...tags){
-		var SS = this.SET_SEPARATOR
-		var PS = this.PATH_SEPARATOR
-		var SP = this.SET_SEPARATOR_PATTERN
-		var PP = this.PATH_SEPARATOR_PATTERN
 		var dict = this.dict
-		tags = normalizeSplit(tags)
+		return (dict != null ?
+				this.joinTag(
+					this.splitTag(function(tag){
+						return (dict[tag] || [tag])[0] }, ...tags))
+				: tags)
+			.run(function(){
+				return tags.length == 1 && typeof(tags[0]) == typeof('str') ?
+					this[0]
+					: this }) },
 
-		var res = dict != null ?
-			tags
-				.map(function(path){
-					return path
-						.split(PP) 
-						.map(function(set){
-							return set
-								.split(SP)
-								.map(function(tag){
-									return (dict[tag] || [tag])[0] })
-								.join(SS) })
-						.join(PS) })
-			: tags
-
-		return arguments.length == 1 && typeof(arguments[0]) == typeof('str') ?
-			res[0]
-			: res },
 
 	// Remove orphaned .dict values...
 	//
