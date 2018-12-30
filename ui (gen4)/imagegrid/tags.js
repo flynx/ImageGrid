@@ -216,9 +216,6 @@ var BaseTagsClassPrototype = {
 	subTags: function(...tags){
 		return this.splitTag(...tags).flat(Infinity) },
 
-
-	// Constructor API...
-	//
 	normalizeTagStr: function(...tags){
 		var ILLEGAL_CHARS = this.TAG_ILLEGAL_CHARS
 		return normalizeSplit(tags)
@@ -261,23 +258,18 @@ var BaseTagsClassPrototype = {
 	// 		as possible.
 	//
 	normalize: function(...tags){
-		var SS = this.SET_SEPARATOR
-		var PS = this.PATH_SEPARATOR
-		var SP = this.SET_SEPARATOR_PATTERN
-		var PP = this.PATH_SEPARATOR_PATTERN
-		var ILLEGAL_CHARS = this.TAG_ILLEGAL_CHARS 
-
-		var res = this.joinTag(
+		return this.joinTag(
 				this.normalizeTagAST(
 					this.splitTag(
+						// NOTE: we do not need to normalizeSplit(..) here
+						// 		as it is don down stream...
 						this.normalizeTagStr(...tags))))
 			.unique()
-
-		return (tags.length == 1 && !(tags[0] instanceof Array)) ? 
-			// NOTE: if we got a single tag return it as a single tag...
-			res.pop() 
-			: res
-	},
+			.run(function(){
+				return (tags.length == 1 && !(tags[0] instanceof Array)) ? 
+					// NOTE: if we got a single tag return it as a single tag...
+					this.pop() 
+					: this }) },
 
 	// Query parser...
 	//
