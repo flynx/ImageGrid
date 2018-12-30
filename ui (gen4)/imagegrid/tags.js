@@ -918,7 +918,7 @@ var BaseTagsPrototype = {
 	// 		not sure how much performance this actually gains though.
 	hasTag: function(tag){
 		for(var t of this.tags()){
-			if(this.match(tag, t)){
+			if(tag == t || this.match(tag, t)){
 				return true } }
 		return false },
 	has: function(value){
@@ -1632,7 +1632,9 @@ var BaseTagsPrototype = {
 	//
 	// NOTE: this will touch only longest unique paths (see: .uniquePaths(..))
 	makePathsPersistent: function(){
-		this.persistent = new Set(this.uniquePaths())
+		this.persistent = 
+			(this.persistent || new Set())
+				.unite(this.uniquePaths())
 		return this },
 
 	// Optimize tags...
