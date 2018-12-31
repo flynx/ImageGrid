@@ -76,12 +76,56 @@ var normalizeSplit = function(args){
 		args.pop().slice()
 		: args.slice() }
 
+// Normalize return value from Object.processor.run(..)...
+//
+// 	Create processor...
+// 	normalizeRes(args)
+// 		-> func
+//
+//
+//	Process the value...
+//	func()
+//	func(value)
+//		-> value
+//
+//
+// Complementary functions to .normalizeSplit(..) forming the return value
+// to the same format as was passed into the function...
+//
+// This is designed to be passed to Object.prototype.run(..)
+//
+// Example:
+// 	// 	someFunc(arg)
+// 	//		-> value
+// 	//
+// 	// 	someFunc(arg, ..)
+// 	// 	someFunc([arg, ..])
+// 	//		-> [value, ..]
+// 	//
+// 	var someFunc = function(...args){
+// 		normalizeSplit(args)
+// 			.map(function(arg){
+// 				// do stuff with args...
+// 				...
+// 				return arg
+// 			})
+// 			.run(normalizeRes(args))
+// 	}
+//
 var normalizeRes = function(args){
 	return function(value){
 		value = value || this
 		return (args.length == 1 && !(args[0] instanceof Array)) ? 
 			value[0]
 			: value } }
+
+// Normalize return value...
+//
+// 	normalizeResValue(value, args)
+// 		-> args
+//
+// This is the same as normalizeRes(..) but can be called outside of the
+// Object.prototype.run(..) method...
 var normalizeResValue = function(value, args){
 	return normalizeRes.call(args)(value) }
 
