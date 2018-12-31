@@ -77,12 +77,14 @@ var normalizeSplit = function(args){
 		: args.slice() }
 
 var normalizeRes = function(args){
-	//return (args.length == 1 && typeof(args[0]) == typeof('str')) ?
-	return (args.length == 1 && !(args[0] instanceof Array)) ? 
-		this[0]
-		: this }
+	return function(value){
+		value = value || this
+		return (args.length == 1 && !(args[0] instanceof Array)) ? 
+			value[0]
+			: value } }
 var normalizeResValue = function(value, args){
-	return normalizeRes.call(value, args) }
+	return normalizeRes.call(args)(value) }
+
 
 
 /*********************************************************************/
