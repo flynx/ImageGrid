@@ -43,6 +43,7 @@ var ExperimentActions = actions.Actions({
 		{dialogTitle: 'Unsaved changes'},
 		widgets.makeUIDialog(function(path){
 			var that = this
+			var comment
 			var handlers_setup = false
 			return browse.makeLister(null, function(_, make){
 				var keys = Object.keys(that.changes || {})
@@ -64,9 +65,39 @@ var ExperimentActions = actions.Actions({
 							make(key, opts)
 						})
 
+					// save comment...
+					if(that.getSaveComment){
+						make('---')
+						comment = comment 
+							|| that.getSaveComment()
+						// XXX this behaves in an odd manner...
+						make.Editable(['$Comment: ', comment], 
+							{
+								multiline: true,
+								abort_keys: [
+									'Esc',
+								],
+							})
+							.on('edit-commit', function(_, text){
+								that.setSaveComment(
+									$(this)
+										.find('.text')
+										.last()
+										.text())
+							})
+							.on('edit-abort', function(){
+								$(this)
+									.find('.text')
+									.last()
+									.text(comment)
+							})
+					}
+
 					make('---')
 					make('Save', {
 						open: function(){
+							that.setSaveComment 
+								&& that.setSaveComment(comment)
 							that.saveIndexHere 
 								&& that.saveIndexHere()
 						},
