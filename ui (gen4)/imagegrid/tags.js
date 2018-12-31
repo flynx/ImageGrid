@@ -76,6 +76,13 @@ var normalizeSplit = function(args){
 		args.pop().slice()
 		: args.slice() }
 
+var normalizeRes = function(args){
+	//return (args.length == 1 && typeof(args[0]) == typeof('str')) ?
+	return (args.length == 1 && !(args[0] instanceof Array)) ? 
+		this[0]
+		: this }
+var normalizeResValue = function(value, args){
+	return normalizeRes.call(value, args) }
 
 
 /*********************************************************************/
@@ -283,11 +290,7 @@ var BaseTagsClassPrototype = {
 						// 		as it is don down stream...
 						this.normalizeTagStr(...tags))))
 			.unique()
-			.run(function(){
-				return (tags.length == 1 && !(tags[0] instanceof Array)) ? 
-					// NOTE: if we got a single tag return it as a single tag...
-					this.pop() 
-					: this }) },
+			.run(normalizeRes(tags)) },
 
 	// Query parser...
 	//
@@ -1040,11 +1043,13 @@ var BaseTagsPrototype = {
 	// 	.define('tag', 'concept:tag')	// ->	'concept:tag/tag'
 	//
 	definitionPaths: function(...tags){
+		var args = tags
 		var SS = this.SET_SEPARATOR
 		var PS = this.PATH_SEPARATOR
 		var definitions = this.definitions || {}
 		tags = normalizeSplit(tags)
-		var res = (tags.length == 0 ? 
+
+		return (tags.length == 0 ? 
 				Object.entries(definitions) 
 				: tags
 					.map(function(tag){ 
@@ -1053,9 +1058,7 @@ var BaseTagsPrototype = {
 				return e[1] != null ? 
 					[e[1].join(SS), e[0]].join(PS) 
 					: e[1] }) 
-		return arguments.length == 1 && typeof(arguments[0]) == typeof('str') ?
-			res[0]
-			:res },
+			.run(normalizeRes(args)) },
 
 	// Shorthands to:
 	// 		ts.directMatch(tag).map(func.bind(ts)) // and friends...
@@ -1459,15 +1462,13 @@ var BaseTagsPrototype = {
 	// 	.keep([value, ..])
 	// 		-> this
 	//
+	// XXX should this clone or do things in-place???
 	keep: function(...values){
 		values = normalizeSplit(values)
-		var res = this.clone()
-
-		Object.entries(res.__index || {})
+		Object.entries(this.__index || {})
 			.forEach(function(e){
-				res.__index[e[0]] = e[1].intersect(values) })
-
-		return res
+				this.__index[e[0]] = e[1].intersect(values) })
+		return this
 	},
 	// Remove the given values...
 	//
@@ -1477,13 +1478,10 @@ var BaseTagsPrototype = {
 	//
 	remove: function(...values){
 		values = normalizeSplit(values)
-		var res = this.clone()
-
-		Object.entries(res.__index || {})
+		Object.entries(this.__index || {})
 			.forEach(function(e){
-				res.__index[e[0]] = e[1].subtract(values) })
-
-		return res
+				this.__index[e[0]] = e[1].subtract(values) })
+		return this
 	},
 
 	// Get/set/remove tag definitions...
@@ -1613,9 +1611,7 @@ var BaseTagsPrototype = {
 			tags.pop()
 			: 'toggle'
 		tags = normalizeSplit(tags)
-
 		var persistent = this.persistent = this.persistent || new Set()
-
 		return this.normalize(tags)
 			.map(function(tag){
 				return action == 'on' ?
@@ -1628,8 +1624,7 @@ var BaseTagsPrototype = {
 							: (persistent.add(tag), 'on'))
 					: (persistent.has(tag) ?
 						'on' 
-						: 'off') })
-	},
+						: 'off') }) },
 	// Make paths persistent...
 	//
 	// NOTE: this will touch only longest unique paths (see: .uniquePaths(..))
@@ -2306,10 +2301,7 @@ var TagsWithDictPrototype = {
 					this.splitTag(function(tag){
 						return (dict[tag] || [tag])[0] }, ...tags))
 				: tags)
-			.run(function(){
-				return tags.length == 1 && typeof(tags[0]) == typeof('str') ?
-					this[0]
-					: this }) },
+			.run(normalizeRes(tags)) },
 
 
 	// Remove orphaned .dict values...
