@@ -139,6 +139,8 @@ var BaseTagsClassPrototype = {
 		return /^\s*(['"]).*\1\s*$/.test(tag) },
 	isStarred: function(tag){
 		return /^\s*(\*).*\1\s*$/.test(tag) },
+	isPattern: function(tag){
+		return /\*/.test(tag) },
 	//
 	// 	.splitSet(tag)
 	// 	.splitSet(tag, ..)
@@ -456,6 +458,7 @@ var BaseTagsPrototype = {
 	// 		and other approaches...
 	isQuoted: BaseTagsClassPrototype.isQuoted, 
 	isStarred: BaseTagsClassPrototype.isStarred, 
+	isPattern: BaseTagsClassPrototype.isPattern, 
 	splitSet: BaseTagsClassPrototype.splitSet, 
 	splitPath: BaseTagsClassPrototype.splitPath, 
 	joinSet: BaseTagsClassPrototype.joinSet, 
@@ -1129,8 +1132,7 @@ var BaseTagsPrototype = {
 		var remove = this.normalize(tag instanceof Array ? tag : [tag])
 			// resolve/match tags...
 			.map(function(tag){
-				// XXX should we use .isQuoted(..) here???
-				return /\*/.test(tag) ? 
+				return that.isPattern(tag) ? 
 					// resolve tag patterns...
 					// XXX is .match(..) to broad here???
 					that.match(tag, local ? tags : null) 
@@ -1200,7 +1202,7 @@ var BaseTagsPrototype = {
 		values = values instanceof Array ? values : [values]
 		// NOTE: this is cheating -- if tag is a list it will get 
 		// 		stringified before the test...
-		var pattern = /\*/.test(tag)
+		var pattern = this.isPattern(tag)
 		var ntag = this.normalize(tag instanceof Array ? tag : [tag])
 
 		// can't set pattern as tag...
