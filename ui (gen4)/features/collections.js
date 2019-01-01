@@ -1985,6 +1985,8 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 				var local_tags = (this.collections[title] || {}).local_tags || {}
 
 				return function(){
+					tags.__index = tags.__index || {}
+
 					// load local_tags...
 					local_tag_names
 						.forEach(function(tag){ 

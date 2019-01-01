@@ -50,6 +50,8 @@ var util = require('lib/util')
 /*********************************************************************/
 // Helpers...
 
+// Method input/output normalization...
+//
 // Normalize a split that contains either multiple values or a list to 
 // a list enabling the following method signature:
 //
@@ -72,10 +74,10 @@ var util = require('lib/util')
 // 	func([1], [2], 3)	// -> [[1], [2], 3]
 //
 var normalizeSplit = function(args){
-	return (args.length == 1 && args[0] instanceof Array) ? 
-		args.pop().slice()
-		: args.slice() }
-
+	return ((args.length == 1 && args[0] instanceof Array) ? 
+			args.pop()
+			: args)
+		.slice() }
 // Normalize return value from Object.processor.run(..)...
 //
 // 	Create processor...
@@ -118,7 +120,6 @@ var normalizeRes = function(args){
 		return (args.length == 1 && !(args[0] instanceof Array)) ? 
 			value[0]
 			: value } }
-
 // Normalize return value...
 //
 // 	normalizeResValue(value, args)
@@ -134,6 +135,7 @@ var normalizeResValue = function(value, args){
 /*********************************************************************/
 
 // meta stuff...
+//
 var makeSplitter = function(separator, unique){
 	return function(...tags){
 		var SP = this[separator]
@@ -188,12 +190,15 @@ var BaseTagsClassPrototype = {
 
 	// Utils...
 	//
-	isQuoted: function(tag){
-		return /^\s*(['"]).*\1\s*$/.test(tag) },
-	isStarred: function(tag){
-		return /^\s*(\*).*\1\s*$/.test(tag) },
-	isPattern: function(tag){
-		return /\*/.test(tag) },
+	// check if str is in single or double quotes (ex: '"abc"' or "'abc'")...
+	isQuoted: function(str){
+		return /^\s*(['"]).*\1\s*$/.test(str) },
+	// check if string surrounded with '*' (ex: '*abc*')...
+	isStarred: function(str){
+		return /^\s*(\*).*\1\s*$/.test(str) },
+	// check if string contains at least one '*'...
+	isPattern: function(str){
+		return /\*/.test(str) },
 	//
 	// 	.splitSet(tag)
 	// 	.splitSet(tag, ..)
@@ -283,7 +288,7 @@ var BaseTagsClassPrototype = {
 							set.join(SS)
 							: set })
 					.join(PS) }) },
-
+	// get all the single tags that make up a compound tag...
 	subTags: function(...tags){
 		return this.splitTag(...tags).flat(Infinity) },
 
@@ -305,15 +310,22 @@ var BaseTagsClassPrototype = {
 								.unique()
 								.sort()
 							: set }) }) },
-
 	// Normalize tags...
 	//
 	// 	.normalize(tag)
-	// 		-> ntag
+	// 		-> tag
 	//
 	// 	.normalize(tag, ...)
 	// 	.normalize([tag, ...])
-	// 		-> [ntag, ...]
+	// 		-> [tag, ...]
+	//
+	//
+	// This will:
+	// 	- remove ILLEGAL_CHARS
+	// 	- convert string to lower case
+	// 	- convert '\' or '/'
+	// 	- collapse repeating ':' or '/' to a single char
+	// 	- sort tag sets in alphabetical order
 	//
 	//
 	// NOTE: path sections take priority over set sections, i.e. a set is
@@ -491,7 +503,7 @@ var BaseTagsPrototype = {
 	get length(){
 		return this.values().length },
 
-	// All persistent tags...
+	// All persistent tags (set)...
 	//
 	// This will combine .persistent and .definitionPaths()
 	get persistentAll(){
@@ -520,7 +532,6 @@ var BaseTagsPrototype = {
 	joinTag: BaseTagsClassPrototype.joinTag, 
 	subTags: BaseTagsClassPrototype.subTags, 
 	
-
 
 	// Tag matching and filtering...
 	//
@@ -1490,7 +1501,6 @@ var BaseTagsPrototype = {
 	removeTag: function(tag, ...tags){
 		return this.rename(tag, '', ...tags) },
 
-
 	// Replace values...
 	//
 	// 	.replaceValue(from, to)
@@ -1700,7 +1710,6 @@ var BaseTagsPrototype = {
 	//
 	// 			ts.optimizeTags()	// will remove 'a/c' form x as it is 
 	// 								// fully contained within 'a/b/c'...
-	//
 	//
 	optimizeTags: function(...values){
 		var that = this
@@ -2395,6 +2404,7 @@ var TagsWithDictPrototype = {
 
 
 	// Save/clean dict on prototype methods...
+	//
 	tag: function(tags, value){
 		this.normalizeSave(tags)
 		return object.parent(TagsWithDictPrototype.tag, this).call(this, ...arguments) },
@@ -2452,6 +2462,7 @@ var TagsWithDictPrototype = {
 			&& this.removeOrphansFromDict(tag)
 		return res
 	},
+
 	// Serialization...
 	//
 	// Format:
