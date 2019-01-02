@@ -153,6 +153,11 @@ actions.Actions({
 		var steps = this.direction_change_steps
 		var direction = this.__direction || new Array(steps)
 
+		// normalize length...
+		direction = direction.length > steps ? 
+			direction.slice(0, steps) 
+			: direction
+
 		// value ends with '!' -> force direction change...
 		direction = (value.endsWith('!') 
 				&& direction[0] != value.slice(0, -1)) ? 
