@@ -131,6 +131,9 @@ var base = require('features/base')
 var ViewerActions = 
 module.ViewerActions = actions.Actions({
 	config: {
+		// make the direction steps depend on screen size...
+		'steps-to-change-direction': 'screenwidth',
+
 		// The maximum screen width allowed when zooming...
 		'max-screen-images': 30,
 
@@ -318,6 +321,15 @@ module.ViewerActions = actions.Actions({
 			function(){ return this.dom }, 
 			'ribbon-image-separators',
 			function(state){ this.config['ribbon-image-separators'] = state }) ],
+
+	// XXX EXPERIMENTAL: direction...
+	get direction_change_steps(){
+		var steps = this.config['steps-to-change-direction'] 
+		return steps == 'screenwidth' ?
+				Math.ceil(this.screenwidth / 2)	
+			: typeof(steps) == typeof(123) ?
+				steps
+			: Math.ceil(this.screenwidth / 2) },
 
 
 	// Navigation...

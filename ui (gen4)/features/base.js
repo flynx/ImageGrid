@@ -150,7 +150,7 @@ actions.Actions({
 				|| 'right'
 			: value
 
-		var steps = this.config['steps-to-change-direction']
+		var steps = this.direction_change_steps
 		var direction = this.__direction || new Array(steps)
 
 		// value ends with '!' -> force direction change...
@@ -179,6 +179,12 @@ actions.Actions({
 				// step in the opposite direction...
 				: direction.slice(0, -1)
 	},
+	// NOTE: these are set-up as props to enable dynamic customization...
+	// XXX not sure this is a good way to go...
+	get direction_change_steps(){
+		return this.config['steps-to-change-direction'] },
+	set direction_change_steps(value){
+		this.config['steps-to-change-direction'] = value },
 
 
 	// Consistency checking...
