@@ -133,6 +133,8 @@ module.ViewerActions = actions.Actions({
 	config: {
 		// make the direction steps depend on screen size...
 		'steps-to-change-direction': 'screenwidth',
+		'steps-to-change-direction-min': 2,
+		'steps-to-change-direction-max': 6,
 
 		// The maximum screen width allowed when zooming...
 		'max-screen-images': 30,
@@ -324,12 +326,12 @@ module.ViewerActions = actions.Actions({
 
 	// XXX EXPERIMENTAL: direction...
 	get direction_change_steps(){
-		var steps = this.config['steps-to-change-direction'] 
-		return steps == 'screenwidth' ?
-				Math.ceil(this.screenwidth / 2)	
-			: typeof(steps) == typeof(123) ?
+		var steps = this.config['steps-to-change-direction']
+		var min = this.config['steps-to-change-direction-min'] || 3
+		var max = this.config['steps-to-change-direction-max'] || 6
+		return typeof(steps) == typeof(123) ?
 				steps
-			: Math.ceil(this.screenwidth / 2) },
+			: Math.min(Math.max(Math.ceil(this.screenwidth / 2), min), max) },
 
 
 	// Navigation...
