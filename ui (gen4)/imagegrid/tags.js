@@ -56,22 +56,24 @@ var util = require('lib/util')
 // a list enabling the following method signature:
 //
 // Example:
-//
-// 	//	func(arg, ..)
-// 	//	func([arg, ..])
-// 	//		-> args
+// 	// 	someFunc(arg)
+// 	//		-> value
 // 	//
-// 	var func = function(...args){
-// 		return normalizeSplit(args) }
-//
-// 	func(123)			// -> [123]
-// 	func(1, 2, 3)		// -> [1, 2, 3]
-//
-//
-// 	func([1, 2, 3])		// -> [1, 2, 3]
-//
-// 	// a more complex case...
-// 	func([1], [2], 3)	// -> [[1], [2], 3]
+// 	// 	someFunc(arg, ..)
+// 	// 	someFunc([arg, ..])
+// 	//		-> [value, ..]
+// 	//
+// 	var someFunc = function(...args){
+// 		// the output is allways an array...
+// 		normalizeSplit(args)
+// 			.map(function(arg){
+// 				// do stuff with args...
+// 				...
+// 				return arg
+// 			})
+// 			// make the result same format as the input args...
+// 			.run(normalizeRes(args))
+// 	}
 //
 var normalizeSplit = function(args){
 	return ((args.length == 1 && args[0] instanceof Array) ? 
@@ -95,24 +97,9 @@ var normalizeSplit = function(args){
 // to the same format as was passed into the function...
 //
 // This is designed to be passed to Object.prototype.run(..)
-//
-// Example:
-// 	// 	someFunc(arg)
-// 	//		-> value
-// 	//
-// 	// 	someFunc(arg, ..)
-// 	// 	someFunc([arg, ..])
-// 	//		-> [value, ..]
-// 	//
-// 	var someFunc = function(...args){
-// 		normalizeSplit(args)
-// 			.map(function(arg){
-// 				// do stuff with args...
-// 				...
-// 				return arg
-// 			})
-// 			.run(normalizeRes(args))
-// 	}
+// 
+// 
+// NOTE: for an example see normalizeSplit(..) docs above.
 //
 var normalizeRes = function(args){
 	return function(value){
