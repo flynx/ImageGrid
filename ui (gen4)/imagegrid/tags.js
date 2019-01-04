@@ -52,8 +52,30 @@ var util = require('lib/util')
 
 // Method input/output normalization...
 //
-// Normalize a split that contains either multiple values or a list to 
-// a list enabling the following method signature:
+//
+// Argument normalization:
+//
+// normalizeSplit(..)
+// 		Normalize a split that contains either one or more values or a 
+// 		list of values to a list.
+//
+//
+// Return value normalization:
+//
+// normalizeResValue(..)
+// 		Normalize the list of values to be returned to a format 
+// 		compatible with the input, i.e. when a single value was passed 
+// 		as argument, a single value is returned otherwise an array is 
+// 		produced.
+//
+// normalizeRes(..)
+// 		a special case of normalizeResValue(..) that is designed to 
+// 		construct a function for use in Object.prototype.run(..) method.
+//
+// 		NOTE: this is a special case in function but in implementation
+// 			it is the other way around.
+//
+//
 //
 // Example:
 // 	// 	someFunc(arg)
@@ -72,8 +94,14 @@ var util = require('lib/util')
 // 				return arg
 // 			})
 // 			// make the result same format as the input args...
-// 			.run(normalizeRes(args))
-// 	}
+// 			// NOTE: sometimes it might be 
+// 			.run(normalizeRes(args)) }
+//
+//
+// Normalize a split passed in arguments...
+//
+// 	normalizeSplit(args)
+// 		-> list
 //
 var normalizeSplit = function(args){
 	return ((args.length == 1 && args[0] instanceof Array) ? 
@@ -92,15 +120,9 @@ var normalizeSplit = function(args){
 //	func(value)
 //		-> value
 //
-//
-// Complementary functions to .normalizeSplit(..) forming the return value
-// to the same format as was passed into the function...
-//
 // This is designed to be passed to Object.prototype.run(..)
 // 
-// 
 // NOTE: for an example see normalizeSplit(..) docs above.
-//
 var normalizeRes = function(args){
 	return function(value){
 		value = value || this
