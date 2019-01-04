@@ -145,6 +145,7 @@ var normalizeResValue = function(value, args){
 
 // meta stuff...
 //
+// Make tag splitter and joiner using a specific attribute separator/pattern...
 var makeSplitter = function(separator, unique){
 	return function(...tags){
 		var SP = this[separator]
@@ -157,7 +158,8 @@ var makeSplitter = function(separator, unique){
 var makeJoiner = function(separator){
 	return function(...items){
 		return normalizeSplit(items).join(this[separator]) } }
-
+// Make iterator/reducer methods a-la Array.prototype.map(..) and friends
+// and Array.prototype.reduce(..)....
 var makeIter = function(name, lister){
 	return function(tag, func){
 		var args = [...arguments]
@@ -1362,6 +1364,7 @@ var BaseTagsPrototype = {
 	//
 	// NOTE: this is not called .map(..) because this edits the object 
 	// 		in-place while map is expected to return a new instance.
+	//
 	// XXX do we do .match(..) or .directMatch(..) here for patterns???
 	replace: function(tag, to, ...tags){
 		var that = this
