@@ -874,6 +874,9 @@ var FileSystemLoaderUIActions = actions.Actions({
 			showNonTraversable: true,
 			showDisabled: true,
 
+			disableDotFiles: 'on',
+			//disableHiddenFiles: false,
+
 			//actionButton: '&ctdot;', 		// "..."
 			//actionButton: '&#11168;', 	// down then left arrow (long)
 			//actionButton: '&#9657;',		// right-pointing white triangle
@@ -896,6 +899,8 @@ var FileSystemLoaderUIActions = actions.Actions({
 
 			var cfg = Object.create(this.config['file-browser-settings'])
 			cfg.cls = 'file-browser'
+			// normalize...
+			cfg.disableDotFiles = cfg.disableDotFiles == 'on'
 
 			base = base || this.location.path || '/'
 			base = util.normalizePath(base)
@@ -936,12 +941,15 @@ var FileSystemLoaderUIActions = actions.Actions({
 					})
 					// we closed the browser -- save settings to .config...
 					.on('close', function(){
-
-						var config = that.config['file-browser-settings']
+						var config = 
+							that.config['file-browser-settings'] = 
+							that.config['file-browser-settings'] || {}
 
 						config.disableFiles = o.options.disableFiles
 						config.showDisabled = o.options.showDisabled
 						config.showNonTraversable = o.options.showNonTraversable
+						// normalize...
+						config.disableDotFiles = o.options.disableDotFiles ? 'on' : 'off'
 					})
 					
 			return o
@@ -1005,6 +1013,11 @@ var FileSystemLoaderUIActions = actions.Actions({
 
 			return o
 		})],
+
+	toggleDotFileDrawing: ['Interface/File browser/Hide dot files',
+		core.makeConfigToggler(
+			'file-browser-settings.disableDotFiles',
+			['on', 'off'])],
 })
 
 

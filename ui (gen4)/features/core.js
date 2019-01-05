@@ -78,14 +78,21 @@ function(attr, states, a, b){
 				: states instanceof Function ? states.call(this)
 				: states
 
+			// get attr path...
+			var a = attr.split(/\./g)
+			var cfg = a.slice(0, -1) 
+				.reduce(function(res, cur){
+					return res[cur] }, this.config)
+
 			if(action == null){
-				var cfg = this.config[attr]
-				return cfg == null ? 
+				var val = cfg[a.pop()]
+				return val == null ? 
 					(lst[lst.indexOf('none')] || lst[0])
-					: cfg 
+					: val 
 
 			} else {
-				this.config[attr] = action
+				cfg[a[a.length-1]] = action
+				this.config[a[0]] = this.config[a[0]]
 			}
 		},
 		states, pre, post)

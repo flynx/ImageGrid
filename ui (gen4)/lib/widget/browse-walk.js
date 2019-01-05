@@ -196,16 +196,20 @@ function(path, make){
 								}
 
 								var dir = res.isDirectory()
-								var elem = res && make(fullpath 
-										? path +'/'+ file 
-										: file + (dir ? '/' : ''),
-									null,
-									that.options.disableFiles && !dir)
+								var elem = res 
+									&& !(that.options.disableDotFiles
+										&& file.startsWith('.'))
+									&& make(fullpath 
+											? path +'/'+ file 
+											: file + (dir ? '/' : ''),
+										null,
+										that.options.disableFiles 
+											&& !dir)
 
 								// count the number of files...
 								// NOTE: we do not care how long it will take
 								// 		so we'll not wait...
-								res && dir && _countDirFiles(path, file, elem)
+								res && dir && elem && _countDirFiles(path, file, elem)
 							})
 							// NOTE: we are not using promise.all(..) here because it
 							// 		triggers BEFORE the first make(..) is called...
@@ -285,41 +289,60 @@ var listDir = module.listDir = listDirfs
 // XXX for some reason pop does not focus the container dir correctly...
 // 		...this is potentially due to the list not being ready yet...
 // XXX this should be smarter and support other URL schemes...
-var WalkPrototype = Object.create(browse.Browser.prototype)
-WalkPrototype.options = {
-	// XXX this should be smarter and support other URL schemes...
-	pathPrefix: os.type() == 'Windows_NT' ? '' : '/',
+var WalkPrototype = {
+	__proto__: browse.Browser.prototype,
 
-	fullPathEdit: true,
-	traversable: true,
-	flat: false,
+	options: {
+		__proto__: browse.Browser.prototype.options,
 
-	sortTraversable: 'first',
+		// XXX this should be smarter and support other URL schemes...
+		pathPrefix: os.type() == 'Windows_NT' ? '' : '/',
 
-	//actionButton: '&ctdot;',		// "..."
-	//actionButton: '&odot;',		// circle with dot
-	actionButton: '&#11168;',	 	// down then left arrow (long)
-	//actionButton: '&#9657;',		// right-pointing white triangle
-	//actionButton: '&#9721;',		// ne white triangle
-	//actionButton: '&#8599;',		// ne arrow
-	//actionButton: '&#11171;', 	// up then right arrow
-	//actionButton: '&#187;',			// right-pointing double angle
-									// quotation mark
-	// XXX not sure about this...
-	//actionButton: '&#128194;',	// folder icon (color)
+		fullPathEdit: true,
+		traversable: true,
+		flat: false,
 
-	pushButton: false,
+		sortTraversable: 'first',
 
-	list: listDir,
+		//actionButton: '&ctdot;',		// "..."
+		//actionButton: '&odot;',		// circle with dot
+		actionButton: '&#11168;',	 	// down then left arrow (long)
+		//actionButton: '&#9657;',		// right-pointing white triangle
+		//actionButton: '&#9721;',		// ne white triangle
+		//actionButton: '&#8599;',		// ne arrow
+		//actionButton: '&#11171;', 	// up then right arrow
+		//actionButton: '&#187;',			// right-pointing double angle
+										// quotation mark
+		// XXX not sure about this...
+		//actionButton: '&#128194;',	// folder icon (color)
 
-	fileCountPattern: '*',
+		pushButton: false,
 
-	disableFiles: false,
+		list: listDir,
 
-	// enable '.' and '..' dirs...
-	dotDirs: true,
+		fileCountPattern: '*',
+
+		disableFiles: false,
+
+		disableDotFiles: true,
+		//disableHiddenFiles: false,
+
+
+		// enable '.' and '..' dirs...
+		dotDirs: true,
+	},
+
+	toggleDotFileDrawing: function(){
+		var cur = this.selected 
+		if(this.options.toggleDisabledDrawing == false){
+			return this
+		}
+		this.options.disableDotFiles = !this.options.disableDotFiles
+		this.update()
+		cur && this.select(cur)
+		return this
+	},
 }
-WalkPrototype.options.__proto__ = browse.Browser.prototype.options
 
 
 var Walk = 
