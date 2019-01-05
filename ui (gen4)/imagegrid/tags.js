@@ -29,6 +29,9 @@
 *
 * XXX Q: should we do .optimizeTags(tag) on .tag(tag)???
 * 		...this might lead to non-trivial behaviour...
+* 		I think no, having "unpredictable" though consistent changes after
+* 		a simple tag addition is not a good idea, though this still 
+* 		needs more thought...
 * XXX Q: should this serialize recursively down (i.e. serialize items)???
 * 		...it might be a good idea to decide on a serialization 
 * 		protocol and use it throughout...
