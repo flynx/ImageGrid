@@ -197,6 +197,8 @@ function(path, make){
 
 								var dir = res.isDirectory()
 								var elem = res 
+									// do not include dot files...
+									// XXX should these be hidden or disabled???
 									&& !(that.options.disableDotFiles
 										&& file.startsWith('.'))
 									&& make(fullpath 
@@ -332,6 +334,8 @@ var WalkPrototype = {
 		dotDirs: true,
 	},
 
+	// XXX should we have a key set to toggle this???
+	// 		...and what key?
 	toggleDotFileDrawing: function(){
 		var cur = this.selected 
 		if(this.options.toggleDisabledDrawing == false){
