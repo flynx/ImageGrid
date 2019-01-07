@@ -754,6 +754,50 @@ var FileSystemLoaderActions = actions.Actions({
 					return imgs
 				})
 		}],
+
+	// XXX update index for removed images...
+	// 		- remove non-existing previews from index
+	// 		- replace non-existing originals with the largest preview (in index)
+	// 		...do not touch the fs
+	// XXX this does not give the logger to render...
+	// XXX set changes...
+	checkIndex: ['File/',
+		core.doc`
+		`,
+		function(logger){
+			logger = logger || this.logger
+			logger = logger && logger.push('Checking index')
+
+			// XXX can we remove this restriction...
+			if(this.location.loaded.length != 1){
+				throw new Error('.fixIndex(): combined indexes not supported.')
+			}
+
+			return this.images
+				.run(function(){
+					logger 
+						&& this
+							.forEach(function(gid){ 
+								logger.emit('queued', gid)}) })
+				.map(function(gid, image){
+					var updated = false
+
+					var previews = image.preview || {}
+					Object.entries(previews)
+						.forEach(function(p){
+							!fse.existsSync(image.base_path +'/'+ p[1])
+								&& (updated = true)
+								&& (delete previews[p[0]]) })
+
+					!fse.existsSync(image.base_path +'/'+ image.path)
+						&& (updated = true)
+						&& (delete image.path)
+
+					logger && logger.emit('done', gid)
+
+					return updated ? gid : []
+				})
+				.flat() }],
 })
 
 

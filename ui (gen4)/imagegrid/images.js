@@ -354,9 +354,7 @@ module.ImagesPrototype = {
 	//version: '3.1',
 
 	get length(){
-		return Object.keys(this).length 
-			// XXX is this the correct way to deal with service props???
-			+ (this.hasOwnProperty('version') ? -1 : 0) },
+		return this.keys().length },
 
 	// Generic iterators...
 	//
@@ -371,12 +369,15 @@ module.ImagesPrototype = {
 	//
 	// XXX revise...
 	// XXX are these slower than doing it manualy via Object.keys(..)
+	// XXX use .keys()
 	forEach: function(func){
 		var i = 0
 		for(var key in this){
 			// reject non images...
 			// XXX make this cleaner...
-			if(key == 'length' || typeof(this[key]) == typeof(function(){})){
+			if(key == 'length' 
+					|| key == 'version' 
+					|| this[key] instanceof Function){
 				continue
 			}
 			func.call(this[key], key, this[key], i++, this)
@@ -389,7 +390,9 @@ module.ImagesPrototype = {
 		for(var key in this){
 			// reject non images...
 			// XXX make this cleaner...
-			if(key == 'length' || typeof(this[key]) == typeof(function(){})){
+			if(key == 'length' 
+					|| key == 'version' 
+					|| this[key] instanceof Function){
 				continue
 			}
 			if(func.call(this[key], key, this[key], i++, this)){
@@ -406,7 +409,9 @@ module.ImagesPrototype = {
 		for(var key in this){
 			// reject non images...
 			// XXX make this cleaner...
-			if(key == 'length' || typeof(this[key]) == typeof(function(){})){
+			if(key == 'length' 
+					|| key == 'version' 
+					|| this[key] instanceof Function){
 				continue
 			}
 			//res[key] = func.call(this[key], key, this[key], i++, this)
@@ -419,7 +424,9 @@ module.ImagesPrototype = {
 		for(var key in this){
 			// reject non images...
 			// XXX make this cleaner...
-			if(key == 'length' || typeof(this[key]) == typeof(function(){})){
+			if(key == 'length' 
+					|| key == 'version' 
+					|| this[key] instanceof Function){
 				continue
 			}
 			res = func.call(this[key], res, this[key], key, i++, this)
@@ -427,8 +434,14 @@ module.ImagesPrototype = {
 		return res
 	},
 
+	// XXX remove version...
 	keys: function(){
-		return Object.keys(this) },
+		var keys = Object.keys(this)
+		var i = keys.indexOf('version')
+		i >= 0
+			&& keys.splice(i, 1)
+		return keys
+	},
 
 	// Build an image index relative to an attribute...
 	//
@@ -491,19 +504,29 @@ module.ImagesPrototype = {
 			img_data = IMAGE_DATA
 		}
 
-		var s
-		var url = img_data.path
-		var preview_size = 'Original'
-		var p = Infinity
-		var previews = img_data.preview || {}
+		// get minimal element bigger than size or if size is null get 
+		// the greatest element...
+		var path = img_data.path
+		var preview = img_data.preview || {}
+		var p = [null, 0]
+		for(var s in preview){
+			var v = parseInt(s)
+			p = (size == null || (v < size && p[1] < size)) ?
+					(v < p[1] ? p : [s, v])
+				: (p[1] >= size && (v > p[1] || v < size)) ? 
+					p
+				: [s, v]
+		}
 
-		for(var k in previews){
-			s = parseInt(k)
-			if(s < p && s > size){
-				preview_size = k
-				p = s
-				url = previews[k]
-			}
+		// get the original if it exists and smaller than size...
+		if(path && (size == null || p[1] < size)){
+			var url = path
+			var preview_size = 'Original'
+
+		// get the largest preview...
+		} else {
+			var url = preview[p[0]]
+			var preview_size = p[0]
 		}
 
 		// XXX LEGACY...
@@ -514,7 +537,7 @@ module.ImagesPrototype = {
 				  	img_data.base_path + '/' 
 					: '') 
 				+ url,
-			size: preview_size
+			size: preview_size,
 		}
 	},
 
