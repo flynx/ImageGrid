@@ -910,6 +910,12 @@ module.FileSystemLoader = core.ImageGridFeatures.Feature({
 							.markChanged('data')
 							.markChanged('images', imgs.keys()) })
 			}],
+		['checkIndex',
+			function(res){
+				var that = this
+				res.then(function(gids){
+					gids.length > 0
+						&& that.markChanged('images', gids) }) }],
 	],
 })
 
