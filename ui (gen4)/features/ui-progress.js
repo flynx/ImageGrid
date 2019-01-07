@@ -137,6 +137,9 @@ var ProgressActions = actions.Actions({
 					}, this.config['progress-done-delay'] || 1000)))
 			}
 
+			// XXX force the browser to render...
+			//bar.hide(0).show(0)
+
 			// XXX what should we return??? (state, self, controller?)
 		}],
 })

@@ -119,25 +119,27 @@ $(function(){
 			var msg = this.message
 			var log = this.log = this.log || []
 
+			var i = v instanceof Array ? v.length : 1
+
 			// report progress...
 			// XXX HACK -- need meaningful status...
 			if(e == 'queued' 
 					|| e == 'found'){
-				ig.showProgress(msg || ['Progress', e], '+0', '+1')
+				ig.showProgress(msg || ['Progress', e], '+0', '+'+i)
 
 			} else if(e == 'loaded' || e == 'done' || e == 'written' 
 					|| e == 'index'){
-				ig.showProgress(msg || ['Progress', e], '+1')
+				ig.showProgress(msg || ['Progress', e], '+'+i)
 
 			} else if(e == 'skipping' || e == 'skipped'){
 				// XXX if everything is skipped the indicator does not 
 				// 		get hidden...
 				//ig.showProgress(msg || ['Progress', e], '+0', '-1')
-				ig.showProgress(msg || ['Progress', e], '+1')
+				ig.showProgress(msg || ['Progress', e], '+'+i)
 
 			// XXX STUB...
 			} else if(e == 'error' ){
-				ig.showProgress(['Error'].concat(msg), '+0', '+1')
+				ig.showProgress(['Error'].concat(msg), '+0', '+'+i)
 				console.log(msg ? 
 					'    '+ msg.join(': ') + ':' 
 					: '', ...arguments) 

@@ -759,12 +759,14 @@ var FileSystemLoaderActions = actions.Actions({
 	// 		- remove non-existing previews from index
 	// 		- replace non-existing originals with the largest preview (in index)
 	// 		...do not touch the fs
-	// XXX this does not give the logger to render...
+	// XXX this does not give the logger to render... can't seem to make this
+	// 		not block the browser render...
 	// XXX set changes...
-	checkIndex: ['File/',
+	checkIndex: ['File/Check index consistency',
 		core.doc`
 		`,
 		function(logger){
+			var that = this
 			logger = logger || this.logger
 			logger = logger && logger.push('Checking index')
 
@@ -773,12 +775,15 @@ var FileSystemLoaderActions = actions.Actions({
 				throw new Error('.fixIndex(): combined indexes not supported.')
 			}
 
+			logger 
+				&& this.images
+					.forEach(function(gid){ 
+						logger.emit('queued', gid)})
+
+
+			/* // XXX this version of the code blocks the ui until it's 
+			//		done...
 			return this.images
-				.run(function(){
-					logger 
-						&& this
-							.forEach(function(gid){ 
-								logger.emit('queued', gid)}) })
 				.map(function(gid, image){
 					var updated = false
 
@@ -797,7 +802,58 @@ var FileSystemLoaderActions = actions.Actions({
 
 					return updated ? gid : []
 				})
-				.flat() }],
+				.flat() 
+			/*/
+			var chunk_size = 50
+			return new Promise(function(resolve, reject){
+				var res = []
+				that.images
+					.reduce(function(res, e, gid){
+						var c = res.slice(-1)[0]
+						c.length < chunk_size ?
+							c.push([gid, e])
+							: res.push([[gid, e]])
+						return res
+					}, [[]])
+					.map(function(chunk, i, chunks){
+						setTimeout(function(){
+							res.push(chunk
+								// NOTE: all this complication with promises is
+								// 		needed to let the ui a chance to show 
+								// 		progress...
+								// NOTE: if a better way is found this is the 
+								// 		only part needed, just iterate over
+								// 			return this.images
+								// 				.map(function(gid, image){
+								// 					// place the func body here...
+								// 					...
+								// 				})
+								.map(function(v){
+									var gid = v[0]
+									var image = v[1]
+									var updated = false
+
+									var previews = image.preview || {}
+									Object.entries(previews)
+										.forEach(function(p){
+											!fse.existsSync(image.base_path +'/'+ p[1])
+												&& (updated = true)
+												&& (delete previews[p[0]]) })
+
+									!fse.existsSync(image.base_path +'/'+ image.path)
+										&& (updated = true)
+										&& (delete image.path)
+
+									logger && logger.emit('done', gid)
+
+									return updated ? gid : []
+								})) 
+
+							i >= chunks.length-1
+								&& resolve(res.flat(Infinity))
+						}, 0) }) }) 
+			//*/
+		}],
 })
 
 

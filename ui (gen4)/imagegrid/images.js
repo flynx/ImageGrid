@@ -421,6 +421,7 @@ module.ImagesPrototype = {
 	},
 	reduce: function(func, initial){
 		var res = initial
+		var i = 0
 		for(var key in this){
 			// reject non images...
 			// XXX make this cleaner...
