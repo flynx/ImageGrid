@@ -367,7 +367,6 @@ module.ImagesPrototype = {
 	//
 	// this will be set to the value...
 	//
-	// XXX revise...
 	// XXX are these slower than doing it manualy via Object.keys(..)
 	// XXX use .keys()
 	forEach: function(func){
