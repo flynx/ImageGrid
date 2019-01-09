@@ -763,7 +763,13 @@ var FileSystemLoaderActions = actions.Actions({
 	// 		not block the browser render...
 	// XXX set changes...
 	checkIndex: ['File/Check index consistency',
-		core.doc`
+		core.doc`Check index consistency...
+
+		This will:
+			- remove references to non-existing preview images (image.preview)
+			- remove references to non-existing .path (image.path)
+			- if .path removed, set to largest available preview
+
 		`,
 		function(logger){
 			var that = this
