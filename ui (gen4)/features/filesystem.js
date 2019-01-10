@@ -765,10 +765,17 @@ var FileSystemLoaderActions = actions.Actions({
 	checkIndex: ['File/Check index consistency',
 		core.doc`Check index consistency...
 
+		Check currently loaded index for missing references and fix them
+		if found.
+
 		This will:
 			- remove references to non-existing preview images (image.preview)
 			- remove references to non-existing .path (image.path)
 			- if .path removed, set to largest available preview
+
+
+		NOTE: currently this is disabled for merged indexes, need to load
+			and check individually...
 
 		`,
 		function(logger){
@@ -786,11 +793,15 @@ var FileSystemLoaderActions = actions.Actions({
 					.forEach(function(gid){ 
 						logger.emit('queued', gid)})
 
+			// XXX get this from config...
+			var chunk_size = 50
 
-			/* // XXX this version of the code blocks the ui until it's 
-			//		done...
 			return this.images
-				.map(function(gid, image){
+				.map(function(gid, image){ 
+					return [gid, image] })
+				.mapChunks(chunk_size, function(e){
+					var gid = e[0]
+					var image = e[1]
 					var updated = false
 
 					var previews = image.preview || {}
@@ -808,57 +819,8 @@ var FileSystemLoaderActions = actions.Actions({
 
 					return updated ? gid : []
 				})
-				.flat() 
-			/*/
-			var chunk_size = 50
-			return new Promise(function(resolve, reject){
-				var res = []
-				that.images
-					.reduce(function(res, e, gid){
-						var c = res.slice(-1)[0]
-						c.length < chunk_size ?
-							c.push([gid, e])
-							: res.push([[gid, e]])
-						return res
-					}, [[]])
-					.map(function(chunk, i, chunks){
-						setTimeout(function(){
-							res.push(chunk
-								// NOTE: all this complication with promises is
-								// 		needed to let the ui a chance to show 
-								// 		progress...
-								// NOTE: if a better way is found this is the 
-								// 		only part needed, just iterate over
-								// 			return this.images
-								// 				.map(function(gid, image){
-								// 					// place the func body here...
-								// 					...
-								// 				})
-								.map(function(v){
-									var gid = v[0]
-									var image = v[1]
-									var updated = false
-
-									var previews = image.preview || {}
-									Object.entries(previews)
-										.forEach(function(p){
-											!fse.existsSync(image.base_path +'/'+ p[1])
-												&& (updated = true)
-												&& (delete previews[p[0]]) })
-
-									!fse.existsSync(image.base_path +'/'+ image.path)
-										&& (updated = true)
-										&& (delete image.path)
-
-									logger && logger.emit('done', gid)
-
-									return updated ? gid : []
-								})) 
-
-							i >= chunks.length-1
-								&& resolve(res.flat(Infinity))
-						}, 0) }) }) 
-			//*/
+				.then(function(res){
+					return res.flat() })
 		}],
 })
 
