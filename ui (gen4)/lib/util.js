@@ -231,12 +231,12 @@ var makeChunkIter = function(iter, wrapper){
 		var that = this
 		var args = [...arguments]
 		size = args[0] instanceof Function ? 
-			(this.chunk_size || 50)
+			(this.CHUNK_SIZE || 50)
 			: args.shift()
 		size = typeof(size) == typeof('str') ?
 				// number of chunks...
-				(size.endsWith('c') || size.endsWith('C') ?
-				 	Math.round(this.length / parseInt(size))
+				(size.trim().endsWith('c') || size.trim().endsWith('C') ?
+				 	Math.round(this.length / (parseInt(size) || 1)) || 1
 				: parseInt(size))
 			: size
 		func = args.shift()
@@ -250,6 +250,11 @@ var makeChunkIter = function(iter, wrapper){
 			// 		...I do not like the idea of using recursion 
 			// 		here because of the stack size issue which would
 			// 		break the code on very large arrays...
+			// 		...this might not be the case as on setTimeout(..) 
+			// 		we should be dropping the frame, the only thing that 
+			// 		may keep in memory is the closure, but in theory the 
+			// 		calling function will return by the time the next is 
+			// 		called (test!)
 			// 		...is there a different way to do this?
 			var next = function(chunks){
 				setTimeout(function(){
@@ -294,7 +299,7 @@ var makeChunkIter = function(iter, wrapper){
 			//*/
 		}) } }
 
-Array.prototype.chunk_size = 50 
+Array.prototype.CHUNK_SIZE = 50 
 Array.prototype.mapChunks = makeChunkIter('map')
 Array.prototype.filterChunks = makeChunkIter('map', 
 	function(res, func, array, e){

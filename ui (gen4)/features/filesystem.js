@@ -794,7 +794,8 @@ var FileSystemLoaderActions = actions.Actions({
 						logger.emit('queued', gid)})
 
 			// XXX get this from config...
-			var chunk_size = 50
+			//var chunk_size = 50
+			var chunk_size = '100C'
 
 			return this.images
 				.map(function(gid, image){ 
