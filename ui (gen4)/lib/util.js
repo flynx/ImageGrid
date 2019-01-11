@@ -245,17 +245,6 @@ var makeChunkIter = function(iter, wrapper){
 		var _wrapper = wrapper.bind(this, res, func, this)
 
 		return new Promise(function(resolve, reject){
-
-			// XXX recursive version...
-			// 		...I do not like the idea of using recursion 
-			// 		here because of the stack size issue which would
-			// 		break the code on very large arrays...
-			// 		...this might not be the case as on setTimeout(..) 
-			// 		we should be dropping the frame, the only thing that 
-			// 		may keep in memory is the closure, but in theory the 
-			// 		calling function will return by the time the next is 
-			// 		called (test!)
-			// 		...is there a different way to do this?
 			var next = function(chunks){
 				setTimeout(function(){
 					res.push(
@@ -274,29 +263,6 @@ var makeChunkIter = function(iter, wrapper){
 						// rest...
 						: c.push([i, e])
 					return res }, [[]]))
-			/*/ // XXX iterative...
-			// 		...this on can flood the system with timeouts on 
-			// 		very large arrays...
-			that
-				// split the array into chunks...
-				.reduce(function(res, e, i){
-					var c = res.slice(-1)[0]
-					c.length >= size ?
-						// initial element in chunk...
-						res.push([[i, e]])
-						// rest...
-						: c.push([i, e])
-					return res
-				}, [[]])
-				// go through each chunk async...
-				.forEach(function(chunk, i, chunks){
-					setTimeout(function(){
-						res.push(chunk[iter](_wrapper, ...rest))
-
-						i >= chunks.length-1
-							&& resolve(res.flat(2))
-					}, 0) }) 
-			//*/
 		}) } }
 
 Array.prototype.CHUNK_SIZE = 50 
@@ -328,6 +294,7 @@ Set.prototype.subtract = function(other){
 	other = new Set(other)
 	return new Set([...this]
 		.filter(function(e){ return !other.has(e) })) }
+
 
 
 //---------------------------------------------------------------------
