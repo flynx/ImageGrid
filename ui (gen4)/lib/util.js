@@ -212,7 +212,16 @@ Array.prototype.sortAs = function(other){
 //	.reduceChunks(func, res)
 //	.reduceChunks(chunk_size, func, res)
 //		-> promise(res)
+//
+//
+// chunk_size can be:
+// 	20			- indicate chunk size
+// 	'20'		- indicate chunk size
+// 	'20C'		- indicate number of chunks
 //	
+//
+// The main goal of this is to not block the runtime while processing a 
+// very long array by interrupting the processing with a timeout...
 //
 var makeChunkIter = function(iter, wrapper){
 	wrapper = wrapper
@@ -224,12 +233,45 @@ var makeChunkIter = function(iter, wrapper){
 		size = args[0] instanceof Function ? 
 			(this.chunk_size || 50)
 			: args.shift()
+		size = typeof(size) == typeof('str') ?
+				// number of chunks...
+				(size.endsWith('c') || size.endsWith('C') ?
+				 	Math.round(this.length / parseInt(size))
+				: parseInt(size))
+			: size
 		func = args.shift()
 		rest = args
 		var res = []
 		var _wrapper = wrapper.bind(this, res, func, this)
 
 		return new Promise(function(resolve, reject){
+
+			// XXX recursive version...
+			// 		...I do not like the idea of using recursion 
+			// 		here because of the stack size issue which would
+			// 		break the code on very large arrays...
+			// 		...is there a different way to do this?
+			var next = function(chunks){
+				setTimeout(function(){
+					res.push(
+						chunks.shift()[iter](_wrapper, ...rest))
+					// stop condition...
+					chunks.length == 0 ?
+						resolve(res.flat(2))
+						: next(chunks) }, 0) }
+			next(that
+				// split the array into chunks...
+				.reduce(function(res, e, i){
+					var c = res.slice(-1)[0]
+					c.length >= size ?
+						// initial element in chunk...
+						res.push([[i, e]])
+						// rest...
+						: c.push([i, e])
+					return res }, [[]]))
+			/*/ // XXX iterative...
+			// 		...this on can flood the system with timeouts on 
+			// 		very large arrays...
 			that
 				// split the array into chunks...
 				.reduce(function(res, e, i){
@@ -244,22 +286,13 @@ var makeChunkIter = function(iter, wrapper){
 				// go through each chunk async...
 				.forEach(function(chunk, i, chunks){
 					setTimeout(function(){
-						res.push(
-							// NOTE: all this complication with promises is
-							// 		needed to let the ui a chance to show 
-							// 		progress...
-							// NOTE: if a better way is found this is the 
-							// 		only part needed, just iterate over
-							// 			return this.images
-							// 				.map(function(gid, image){
-							// 					// place the func body here...
-							// 					...
-							// 				})
-							chunk[iter](_wrapper, ...rest))
+						res.push(chunk[iter](_wrapper, ...rest))
 
 						i >= chunks.length-1
 							&& resolve(res.flat(2))
-					}, 0) }) }) } }
+					}, 0) }) 
+			//*/
+		}) } }
 
 Array.prototype.chunk_size = 50 
 Array.prototype.mapChunks = makeChunkIter('map')
