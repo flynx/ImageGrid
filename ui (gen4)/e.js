@@ -14,6 +14,7 @@ var BrowserWindow = electron.BrowserWindow
 
 var path = require('path')
 var url = require('url')
+//var fs = require('fs')
 
 
 //---------------------------------------------------------------------
@@ -29,6 +30,8 @@ var url = require('url')
 var win
 
 function createWindow(){
+	// NOTE: this is done here as this does not depend on code loading, 
+	// 		thus showing the splash significantly faster...
 	// XXX move this to splash.js and use both here and in app.js...
 	// XXX also show load progress here...
 	var splash = global.splash = new BrowserWindow({
@@ -40,7 +43,6 @@ function createWindow(){
 		center: true,
 		width: 800, 
 		height: 500,
-		//backgroundColor: '#333333',
 
 		alwaysOnTop: true,
 
@@ -60,8 +62,13 @@ function createWindow(){
 		slashes: true
 	}))
 	splash.once('ready-to-show', function(){
-		splash.show()
-	})
+		this.webContents
+			// see if the splash screen is disabled...
+			.executeJavaScript('localStorage.disableSplashScreen')
+			.then(function(disabled){
+				disabled ?
+					splash.destroy()
+					: splash.show() }) })
 	//*/
 
 	// Create the browser window.

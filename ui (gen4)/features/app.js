@@ -281,14 +281,13 @@ var ElectronHostActions = actions.Actions({
 					// XXX move this to splash.js and use both here and in e.js...
 					new electron.remote.BrowserWindow({
 						// let the window to get ready before we show it to the user...
-						//show: false,
+						show: false,
 
 						transparent: true,
 						frame: false,
 						center: true,
 						width: 800, 
 						height: 500,
-						//backgroundColor: '#333333',
 
 						alwaysOnTop: true,
 
@@ -310,6 +309,9 @@ var ElectronHostActions = actions.Actions({
 					protocol: 'file:',
 					slashes: true
 				}))
+				splash.once('ready-to-show', function(){
+					splash.show()
+				})
 
 			} else if(action != 'on' && splash){
 				splash.destroy()
@@ -523,7 +525,16 @@ var WindowedAppControlActions = actions.Actions({
 		}],
 
 	toggleSplashScreenShowing: ['Interface/Splash screen on start',
-		core.makeConfigToggler('show-splash-screen', ['on', 'off'])],
+		core.makeConfigToggler('show-splash-screen', 
+			['on', 'off'],
+			function(action){
+				if(action == 'on'){
+					delete localStorage.disableSplashScreen
+
+				} else if(action == 'off'){
+					localStorage.disableSplashScreen = true
+				}
+			})],
 })
 
 // XXX store/load window state...

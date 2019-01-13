@@ -176,25 +176,6 @@ $(function(){
 	// setup the viewer...
 	ig
 		.load({ viewer: $('.viewer') })
-		/* XXX load the intro index...
-		.on('ready', function(){
-			// load some testing data if nothing else loaded...
-			if(!this.url_history || Object.keys(this.url_history).length == 0){
-				// NOTE: we can (and do) load this in parts...
-				this
-					.loadDemoIndex()
-					// this is needed when loading legacy sources that do not have tags
-					// synced...
-					// do not do for actual data...
-					.syncTags('both')
-			}
-		})
-		//*/
-		/* XXX should this be here???
-		.run(function(){
-			this.toggleSplashScreen 
-				&& this.toggleSplashScreen('on') })
-		//*/
 		.start()
 })
 
