@@ -16,6 +16,8 @@ var path = require('path')
 var url = require('url')
 //var fs = require('fs')
 
+var VERSION = require('./version').version
+
 
 //---------------------------------------------------------------------
 
@@ -66,6 +68,8 @@ function createWindow(){
 			// see if the splash screen is disabled...
 			.executeJavaScript('localStorage.disableSplashScreen')
 			.then(function(disabled){
+				splash.webContents
+					.executeJavaScript(`document.getElementById("version").innerText = "${VERSION}"`)
 				disabled ?
 					splash.destroy()
 					: splash.show() }) })

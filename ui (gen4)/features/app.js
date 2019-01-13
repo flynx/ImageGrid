@@ -17,6 +17,7 @@ try{
 	electron = requirejs('electron')
 } catch(e){ }
 
+var VERSION = require('version').version
 
 var actions = require('lib/actions')
 var features = require('lib/features')
@@ -309,7 +310,11 @@ var ElectronHostActions = actions.Actions({
 					protocol: 'file:',
 					slashes: true
 				}))
+				
 				splash.once('ready-to-show', function(){
+					splash.webContents
+						.executeJavaScript(
+							`document.getElementById("version").innerText = "${VERSION}"`)
 					splash.show()
 				})
 
