@@ -190,6 +190,11 @@ $(function(){
 			}
 		})
 		//*/
+		/* XXX should this be here???
+		.run(function(){
+			this.toggleSplashScreen 
+				&& this.toggleSplashScreen('on') })
+		//*/
 		.start()
 })
 

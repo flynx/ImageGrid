@@ -9,6 +9,7 @@
 
 if(typeof(process) != 'undefined'){
 	var pathlib = requirejs('path')
+	var url = require('url')
 }
 
 var electron
@@ -178,7 +179,16 @@ var ElectronHostActions = actions.Actions({
 
 	show: ['- Window/',
 		function(){
-			electron.remote.getCurrentWindow().show() }],
+			if(electron.remote.getGlobal('readyToShow')){
+				electron.remote.getCurrentWindow().show()
+
+			} else {
+				var win = electron.remote.getCurrentWindow()
+				win.once('ready-to-show', function(){
+					win.show()
+				})
+			}
+		}],
 	minimize: ['Window/Minimize',
 		function(){
 			electron.remote.getCurrentWindow().minimize() }],
@@ -256,37 +266,54 @@ var ElectronHostActions = actions.Actions({
 
 	// XXX make this a real toggler...
 	toggleSplashScreen: ['Interface/',
-		function(){
-			var splash = this.splash = new electron.BrowserWindow({
-				// let the window to get ready before we show it to the user...
-				//show: false,
+		function(action){
+			var splash = this.splash = (!this.splash || this.splash.isDestroyed()) ?
+				electron.remote.getGlobal('splash')
+				: this.splash
 
-				frame: false,
-				center: true,
-				//backgroundColor: XXX,
-				width: 500, 
-				height: 500,
+			if(action == '?'){
+				return !splash || splash.isDestroyed() ? 'off' : 'on'
+			}
 
-				alwaysOnTop: true,
+			// XXX HACK: use real toggler protocol...
+			if(action != 'off' && (!splash || splash.isDestroyed())){
+				var splash = this.splash = 
+					// XXX move this to splash.js and use both here and in e.js...
+					new electron.remote.BrowserWindow({
+						// let the window to get ready before we show it to the user...
+						//show: false,
 
-				resizable: false,
-				movable: false,
-				minimizable: false,
-				maximizable: false,
-				fullscreenable: false,
+						transparent: true,
+						frame: false,
+						center: true,
+						width: 800, 
+						height: 500,
+						//backgroundColor: '#333333',
 
-				autoHideMenuBar: true,
-			})
+						alwaysOnTop: true,
 
-			splash.setMenu(null)
+						resizable: false,
+						movable: false,
+						minimizable: false,
+						maximizable: false,
+						fullscreenable: false,
 
-			// and load the index.html of the app.
-			splash.loadURL(url.format({
-				// XXX unify this with index.html
-				pathname: path.join(__dirname, 'splash.html'),
-				protocol: 'file:',
-				slashes: true
-			}))
+						autoHideMenuBar: true,
+					})
+
+				splash.setMenu(null)
+
+				// and load the index.html of the app.
+				splash.loadURL(url.format({
+					// XXX unify this with index.html
+					pathname: pathlib.join(__dirname, 'splash.html'),
+					protocol: 'file:',
+					slashes: true
+				}))
+
+			} else if(action != 'on' && splash){
+				splash.destroy()
+			}
 		}],
 })
 
@@ -393,7 +420,8 @@ module.PortableAppControl = core.ImageGridFeatures.Feature({
 
 var WindowedAppControlActions = actions.Actions({
 	config: {
-		'window-delay-initial-display': 200,
+		'window-delay-initial-display': 500,
+		'splash-screen-delay-hide': 200,
 
 		'show-splash-screen': 'on',
 	},
@@ -475,19 +503,22 @@ var WindowedAppControlActions = actions.Actions({
 				|| this.toggleInterfaceScale('??')[0])
 			*/
 
+			// XXX check if we are full screen...
+			if(cfg != null && cfg.fullscreen){
+				that.toggleFullScreen('on')
+			}
+
+			// declare we are ready...
+			$(function(){ that.declareReady() })
+
 			// NOTE: we delay this to enable the browser time to render
 			// 		things before we show them to the user...
 			setTimeout(function(){
 				that.show()
 
-				// XXX check if we are full screen...
-				if(cfg != null && cfg.fullscreen){
-					that.toggleFullScreen('on')
-				}
-
-				// declare we are ready...
-				$(function(){ that.declareReady() })
-
+				setTimeout(function(){
+					that.toggleSplashScreen('off')
+				}, that.config['splash-screen-delay-hide'] || 0)
 			}, this.config['window-delay-initial-display'] || 0)
 		}],
 

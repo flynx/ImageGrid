@@ -28,8 +28,42 @@ var url = require('url')
 
 var win
 
-
 function createWindow(){
+	// XXX move this to splash.js and use both here and in app.js...
+	// XXX also show load progress here...
+	var splash = global.splash = new BrowserWindow({
+		// let the window to get ready before we show it to the user...
+		show: false,
+
+		transparent: true,
+		frame: false,
+		center: true,
+		width: 800, 
+		height: 500,
+		//backgroundColor: '#333333',
+
+		alwaysOnTop: true,
+
+		resizable: false,
+		movable: false,
+		minimizable: false,
+		maximizable: false,
+		fullscreenable: false,
+
+		autoHideMenuBar: true,
+	})
+	splash.loadURL(url.format({
+		// XXX unify this with index.html
+		//pathname: path.join(__dirname, 'index.html'),
+		pathname: path.join(__dirname, 'splash.html'),
+		protocol: 'file:',
+		slashes: true
+	}))
+	splash.once('ready-to-show', function(){
+		splash.show()
+	})
+	//*/
+
 	// Create the browser window.
 	win = new BrowserWindow({
 		// let the window to get ready before we show it to the user...
@@ -47,7 +81,6 @@ function createWindow(){
 
 		//autoHideMenuBar: true,
 	})
-
 	// disable default menu...
 	win.setMenu(null)
 
@@ -59,6 +92,11 @@ function createWindow(){
 		protocol: 'file:',
 		slashes: true
 	}))
+
+	// XXX HACK: pass this in a formal way...
+	win.once('ready-to-show', function(){
+		global.readyToShow = true
+	})
 
 	// Open the DevTools.
 	//win.webContents.openDevTools()
