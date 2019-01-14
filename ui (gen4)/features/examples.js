@@ -729,7 +729,7 @@ var ExampleUIActions = actions.Actions({
 				})
 
 
-			var data = this.data.crop(this.data.getTaggedByAll(tag), true)
+			var data = this.data.crop(this.data.tagQuery(tag), true)
 
 			// setup the viewer...
 			this.nested = core.ImageGridFeatures

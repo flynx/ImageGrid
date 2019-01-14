@@ -99,7 +99,7 @@ var DrawerPrototype = {
 	__init__: function(parent, client, options){
 		var that = this
 
-		object.superMethod(Drawer, '__init__').call(this, parent, client, options)
+		object.parent(DrawerPrototype.__init__, this).call(this, parent, client, options)
 
 		var client_dom = client.dom || client
 		var dom = this.dom
