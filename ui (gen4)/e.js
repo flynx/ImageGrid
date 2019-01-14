@@ -81,6 +81,10 @@ function createWindow(){
 
 	// Create the browser window.
 	win = new BrowserWindow({
+		webPreferences: {
+			nodeIntegration: true,
+		},
+
 		// let the window to get ready before we show it to the user...
 		show: false,
 
