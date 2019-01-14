@@ -9,7 +9,7 @@
 
 if(typeof(process) != 'undefined'){
 	var pathlib = requirejs('path')
-	var url = require('url')
+	var url = requirejs('url')
 }
 
 var electron
@@ -122,8 +122,13 @@ var NWHostActions = actions.Actions({
 			})],
 
 	// XXX add ability to use devtools on background page (node context)...
+	// XXX get the devtools stage...
 	showDevTools: ['Interface|Development/Show Dev Tools',
-		function(){
+		function(action){
+			if(action == '?'){
+				// XXX get the devtools stage...
+				return false
+			}
 			nw.Window.get().showDevTools &&
 				nw.Window.get().showDevTools()
 		}],
@@ -172,11 +177,15 @@ var ElectronHostActions = actions.Actions({
 	get size(){
 		return electron.remote.getCurrentWindow().getSize() },
 	set size(value){
-		value && electron.remote.getCurrentWindow().setSize(value[0], value[1]) },
+		value 
+			&& electron.remote.getCurrentWindow()
+				.setSize(value[0], value[1]) },
 	get position(){
 		return electron.remote.getCurrentWindow().getPosition() },
 	set position(value){
-		value && electron.remote.getCurrentWindow().setPosition(value[0], value[1]) },
+		value 
+			&& electron.remote.getCurrentWindow()
+				.setPosition(value[0], value[1]) },
 
 	show: ['- Window/',
 		function(){
@@ -193,13 +202,6 @@ var ElectronHostActions = actions.Actions({
 	minimize: ['Window/Minimize',
 		function(){
 			electron.remote.getCurrentWindow().minimize() }],
-	// XXX need to detect initial fullscreen state...
-	// XXX this is almost generic, but it is not usable unless within 
-	// 		a user event handler...
-	// 		...can we use this on electron???
-	// 		if this fails use:
-	// 			electron.remote.getCurrentWindow().isFullScreen(..)
-	// 			electron.remote.getCurrentWindow().setFullScreen(..)
 	toggleFullScreen: ['Window/Full screen mode',
 		toggler.CSSClassToggler(
 			function(){ return document.body }, 
@@ -240,9 +242,14 @@ var ElectronHostActions = actions.Actions({
 				}, 500)
 			})],
 
+	// XXX should this be a toggler???
 	showDevTools: ['Interface|Development/Show Dev Tools',
-		function(){
+		function(action){
 			var w = electron.remote.getCurrentWindow()
+
+			if(action == '?'){
+				return w.isDevToolsOpened()
+			}
 				
 			w.openDevTools() 
 			// focus the devtools if its window is available...
@@ -425,17 +432,21 @@ module.PortableAppControl = core.ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 
+// XXX would be nice to store/restore dev-tools state...
 var WindowedAppControlActions = actions.Actions({
 	config: {
 		'window-delay-initial-display': 500,
-		'splash-screen-delay-hide': 200,
+		'splash-screen-delay-hide': 500,
 
 		'show-splash-screen': 'on',
 	},
 
 	// XXX revise these...
 	close: ['File|Window/Close viewer',
-		function(){ window.close() }],
+		function(){ 
+			this.stop()
+			window.close() 
+		}],
 	storeWindowGeometry: ['- Window/Store window state',
 		function(){
 			// store window parameters (size, state)...
@@ -446,87 +457,42 @@ var WindowedAppControlActions = actions.Actions({
 			// fullscreen...
 			// ...avoid overwriting size...
 			if(this.toggleFullScreen('?') == 'on'){
-				this.config.window = this.config.window || {}
-				this.config.window.fullscreen = true
-				//this.config.window.zoom = win.zoomLevel 
+				var cfg = this.config.window = this.config.window || {}
+				cfg.fullscreen = true
+				cfg.devtools = this.showDevTools('?')
 
 			} else {
 				this.config.window = {
-					size: {
-						width: size[0],
-						height: size[1],
-					},
-					// XXX position...
+					width: size[0],
+					height: size[1],
+
+					x: position[0],
+					y: position[1],
+
 					fullscreen: false,
-					//zoom: win.zoomLevel,
+					devtools: this.showDevTools('?'),
 				}
 			}
 		}],
 	restoreWindowGeometry: ['- Window/Restore window state',
 		function(){
 			var that = this
-			// or global.window.nwDispatcher.requireNwGui()
-			// (see: https://github.com/rogerwang/node-webkit/issues/707)
-			//var win = nw.Window.get()
+			var cfg = this.config.window || {}
 
-			// XXX move this into .restoreWindowGeometry(..)
-			// get window state from config and load it...
-			var cfg = this.config.window
-			if(cfg != null){
-				var W = screen.width
-				var H = screen.height
-				var w = 800
-				var h = 600
-				//var s = cfg.scale
+			var fullscreen = cfg.fullscreen || false
 
-				if(cfg.size){
-					//w = win.width = Math.min(cfg.size.width, screen.width)
-					//h = win.height = Math.min(cfg.size.height, screen.height)
-					w = Math.min(cfg.size.width, screen.width)
-					h = Math.min(cfg.size.height, screen.height)
-					this.size = [w, h]
-				}
-
-				// place on center of the screen...
-				//var x = win.x = Math.round((W - w)/2)
-				//var y = win.y = Math.round((H - h)/2)
-				var x = Math.round((W - w)/2)
-				var y = Math.round((H - h)/2)
-				this.position = [x, y]
-
-				//if(s){
-				//	win.zoomLevel = s
-				//}
-
-				//console.log('GEOMETRY:', w, h, x, y)
-
-				this.centerViewer()
-			}
-
-			/* XXX still buggy....
-			// restore interface scale...
-			this.toggleInterfaceScale(
-				this.config['ui-scale-mode'] 
-				|| this.toggleInterfaceScale('??')[0])
-			*/
-
-			// XXX check if we are full screen...
-			if(cfg != null && cfg.fullscreen){
+			if(fullscreen){
 				that.toggleFullScreen('on')
+
+			} else {
+				var w = cfg.width || 800
+				var h = cfg.height || 600 
+				var x = cfg.x || Math.round((screen.width - w)/2)
+				var y = cfg.y || Math.round((screen.height - h)/2)
+
+				this.position = [x, y]
+				this.size = [w, h]
 			}
-
-			// declare we are ready...
-			$(function(){ that.declareReady() })
-
-			// NOTE: we delay this to enable the browser time to render
-			// 		things before we show them to the user...
-			setTimeout(function(){
-				that.show()
-
-				setTimeout(function(){
-					that.toggleSplashScreen('off')
-				}, that.config['splash-screen-delay-hide'] || 0)
-			}, this.config['window-delay-initial-display'] || 0)
 		}],
 
 	toggleSplashScreenShowing: ['Interface/Splash screen on start',
@@ -577,9 +543,56 @@ module.WindowedAppControl = core.ImageGridFeatures.Feature({
 				this.requestReadyAnnounce() }],
 		['start',
 			function(){ 
-				this.restoreWindowGeometry() }],
+				var that = this
+				var cfg = this.config.window
+
+				// set the initial non-fullscreen window geometry...
+				// NOTE: this will avoid overwriting the initial geometry
+				// 		with the values set in e.js if .fullscreen is set...
+				// NOTE: this will also set the size to which the OS will 
+				// 		resize the window in state change...
+				if(cfg){
+					var W = screen.width
+					var H = screen.height
+					var w = cfg.width || Math.max(0.8 * W, 600)
+					var h = cfg.height || Math.max(0.8 * H, 400)
+					var x = cfg.x || Math.round((W - w)/2)
+					var y = cfg.y || Math.round((H - h)/2)
+
+					this.position = [x, y]
+					this.size = [w, h]
+
+					cfg.devtools
+						&& this.showDevTools()
+				}
+
+				// restore actual window state... 
+				this.restoreWindowGeometry() 
+
+				// declare we are ready when DOM is ready...
+				$(function(){ 
+					that.declareReady() })
+			}],
+
+		// show window + hide splash screen...
+		['ready',
+			function(){ 
+				var that = this
+				// NOTE: we delay this to enable the browser time to render
+				// 		things before we show them to the user...
+				setTimeout(function(){
+					// show window...
+					that.show()
+
+					// hide splash screen...
+					setTimeout(function(){
+						that.toggleSplashScreen('off')
+					}, (that.config['splash-screen-delay-hide'] || 0)) 
+				}, this.config['window-delay-initial-display'] || 0) }],
+
 		[[
-			'close.pre',
+			'stop.pre',
+			'toggleFullScreen.pre',
 			'toggleFullScreen',
 		],
 			function(){ this.storeWindowGeometry() }],

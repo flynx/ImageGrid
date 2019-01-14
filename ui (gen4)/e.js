@@ -31,10 +31,12 @@ var VERSION = require('./version').version
 
 var win
 
-function createWindow(){
+// XXX move this to splash.js (or an electron-specific variant of it) 
+// 		and use both here and in app.js...
+// 		...another way would be to make this module importable...
+function createSplash(){
 	// NOTE: this is done here as this does not depend on code loading, 
 	// 		thus showing the splash significantly faster...
-	// XXX move this to splash.js and use both here and in app.js...
 	// XXX also show load progress here...
 	var splash = global.splash = new BrowserWindow({
 		// let the window to get ready before we show it to the user...
@@ -77,8 +79,10 @@ function createWindow(){
 				disabled ?
 					splash.destroy()
 					: splash.show() }) })
-	//*/
+	return splash
+}
 
+function createWindow(){
 	// Create the browser window.
 	win = new BrowserWindow({
 		webPreferences: {
@@ -127,28 +131,34 @@ function createWindow(){
 		// when you should delete the corresponding element.
 		win = null
 	})
+
+	return win
 }
 
 
 
 //---------------------------------------------------------------------
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
+// This will be called when Electron has finished initialization and is 
+// ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', createWindow)
+app.on('ready', function(){
+	createSplash()
+	createWindow()
+})
 
 // Quit when all windows are closed.
-app.on('window-all-closed', () => {
-	// On macOS it is common for applications and their menu bar
-	// to stay active until the user quits explicitly with Cmd + Q
+// On macOS it is common for applications and their menu bar
+// to stay active until the user quits explicitly with Cmd + Q
+app.on('window-all-closed', function(){
 	process.platform !== 'darwin'
 		&& app.quit()
 })
 
-app.on('activate', () => {
-	// On macOS it's common to re-create a window in the app when the
-	// dock icon is clicked and there are no other windows open.
+// On macOS it's common to re-create a window in the app when the
+// dock icon is clicked and there are no other windows open.
+// XXX needs testing...
+app.on('activate', function(){
 	win === null
 		&& createWindow()
 })
