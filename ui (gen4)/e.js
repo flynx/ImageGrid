@@ -68,8 +68,12 @@ function createWindow(){
 			// see if the splash screen is disabled...
 			.executeJavaScript('localStorage.disableSplashScreen')
 			.then(function(disabled){
-				splash.webContents
-					.executeJavaScript(`document.getElementById("version").innerText = "${VERSION}"`)
+				// update version...
+				disabled
+					|| splash.webContents
+						.executeJavaScript(
+							`document.getElementById("version").innerText = "${VERSION}"`)
+				// show/destroy..
 				disabled ?
 					splash.destroy()
 					: splash.show() }) })
