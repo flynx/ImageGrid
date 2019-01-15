@@ -447,6 +447,7 @@ var WindowedAppControlActions = actions.Actions({
 			this.stop()
 			window.close() 
 		}],
+
 	storeWindowGeometry: ['- Window/Store window state',
 		function(){
 			// store window parameters (size, state)...
@@ -554,8 +555,8 @@ module.WindowedAppControl = core.ImageGridFeatures.Feature({
 				if(cfg){
 					var W = screen.width
 					var H = screen.height
-					var w = cfg.width || Math.max(0.8 * W, 600)
-					var h = cfg.height || Math.max(0.8 * H, 400)
+					var w = cfg.width || Math.round(Math.max(0.8 * W, 600))
+					var h = cfg.height || Math.round(Math.max(0.8 * H, 400))
 					var x = cfg.x || Math.round((W - w)/2)
 					var y = cfg.y || Math.round((H - h)/2)
 
