@@ -393,6 +393,7 @@ module.PortableAppControl = core.ImageGridFeatures.Feature({
 	config: {
 		//'window-title': 'ImageGrid.Viewer (${VERSION}): ${FILENAME}',
 		'window-title': '${FILENAME} - ImageGrid.Viewer (${VERSION})',
+
 	},
 
 	handlers: [
@@ -435,6 +436,18 @@ module.PortableAppControl = core.ImageGridFeatures.Feature({
 // XXX would be nice to store/restore dev-tools state...
 var WindowedAppControlActions = actions.Actions({
 	config: {
+		// Window state:
+		// 'window': {
+		// 		width: <number>,
+		// 		height: <number>,
+		// 		x: <number>,
+		// 		y: <number>,
+		//
+		// 		fullscreen: <bool>,
+		//
+		// 		devtools: <bool>,
+		// },
+
 		'window-delay-initial-display': 500,
 		'splash-screen-delay-hide': 500,
 
@@ -458,6 +471,9 @@ var WindowedAppControlActions = actions.Actions({
 			// fullscreen...
 			// ...avoid overwriting size...
 			if(this.toggleFullScreen('?') == 'on'){
+				// NOTE: this needs to be rewritten to correctly get stored
+				// 		in the config store, especially if a default state
+				// 		is defined...
 				var cfg = this.config.window = this.config.window || {}
 				cfg.fullscreen = true
 				cfg.devtools = this.showDevTools('?')
