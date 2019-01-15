@@ -572,6 +572,8 @@ $(BUILD_DIR)/app.asar: $(PACK_FULL)
 	# update package.json to start electron...
 	cd "$(BUILD_DIR)/$(APP_NAME)/" ; \
 		sed -i 's/"index.html"/"e.js"/g' package.json
+	# remove electron from the dist...
+	rm -rf "$(BUILD_DIR)/$(APP_NAME)/$(NODE_DIR)/electron"
 	cd "$(BUILD_DIR)" ; \
 		asar p "$(APP_NAME)" app.asar \
 			--exclude-hidden \

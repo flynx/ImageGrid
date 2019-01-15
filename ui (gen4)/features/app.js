@@ -179,13 +179,13 @@ var ElectronHostActions = actions.Actions({
 	set size(value){
 		value 
 			&& electron.remote.getCurrentWindow()
-				.setSize(value[0], value[1]) },
+				.setSize(Math.round(value[0]), Math.round(value[1])) },
 	get position(){
 		return electron.remote.getCurrentWindow().getPosition() },
 	set position(value){
 		value 
 			&& electron.remote.getCurrentWindow()
-				.setPosition(value[0], value[1]) },
+				.setPosition(Math.round(value[0]), Math.round(value[1])) },
 
 	show: ['- Window/',
 		function(){
@@ -488,8 +488,8 @@ var WindowedAppControlActions = actions.Actions({
 			} else {
 				var w = cfg.width || 800
 				var h = cfg.height || 600 
-				var x = cfg.x || Math.round((screen.width - w)/2)
-				var y = cfg.y || Math.round((screen.height - h)/2)
+				var x = cfg.x || (screen.width - w)/2
+				var y = cfg.y || (screen.height - h)/2
 
 				this.position = [x, y]
 				this.size = [w, h]
@@ -555,10 +555,10 @@ module.WindowedAppControl = core.ImageGridFeatures.Feature({
 				if(cfg){
 					var W = screen.width
 					var H = screen.height
-					var w = cfg.width || Math.round(Math.max(0.8 * W, 600))
-					var h = cfg.height || Math.round(Math.max(0.8 * H, 400))
-					var x = cfg.x || Math.round((W - w)/2)
-					var y = cfg.y || Math.round((H - h)/2)
+					var w = cfg.width || Math.max(0.8 * W, 600)
+					var h = cfg.height || Math.max(0.8 * H, 400)
+					var x = cfg.x || (W - w)/2
+					var y = cfg.y || (H - h)/2
 
 					this.position = [x, y]
 					this.size = [w, h]
