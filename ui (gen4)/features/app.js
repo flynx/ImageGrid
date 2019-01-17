@@ -433,7 +433,9 @@ module.PortableAppControl = core.ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 
-// XXX would be nice to store/restore dev-tools state...
+// XXX should we create and show the window here???
+// 		...if yes, then we'll need to start the ui features later as 
+// 		they need the dom ready...
 var WindowedAppControlActions = actions.Actions({
 	config: {
 		// Window state:
@@ -454,7 +456,6 @@ var WindowedAppControlActions = actions.Actions({
 		'show-splash-screen': 'on',
 	},
 
-	// XXX revise these...
 	close: ['File|Window/Close viewer',
 		function(){ 
 			this.stop()
@@ -525,9 +526,6 @@ var WindowedAppControlActions = actions.Actions({
 			})],
 })
 
-// XXX store/load window state...
-// 		- size
-// 		- state (fullscreen/normal)
 var WindowedAppControl = 
 module.WindowedAppControl = core.ImageGridFeatures.Feature({
 	title: '',
@@ -558,6 +556,7 @@ module.WindowedAppControl = core.ImageGridFeatures.Feature({
 			function(){ 
 				// we are going to declare ready ourselves...
 				this.requestReadyAnnounce() }],
+		// XXX should we create and show the window here???
 		['start',
 			function(){ 
 				var that = this

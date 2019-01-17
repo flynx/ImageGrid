@@ -23,6 +23,7 @@ if(typeof(process) != 'undefined'){
 }
 
 
+
 /*********************************************************************/
 
 // setup logger...
@@ -215,6 +216,8 @@ module.CLI = core.ImageGridFeatures.Feature({
 	actions: CLIActions,
 
 	handlers: [
+		// XXX sort out different run/stop/exit paths -- make this more 
+		// 		systematic...
 		['ready',
 			function(){
 				var that = this
@@ -363,7 +366,7 @@ module.CLI = core.ImageGridFeatures.Feature({
 					// 			npm install -g nwjs
 					// 			npm link nwjs
 					// 			nw install 0.14.5-sdk
-					.option('gui, --gui', 'start ImageGrid.Viewer', function(){
+					.option('nw, --nw', 'start ImageGrid.Viewer (nw)', function(){
 						throw new Error('ig: GUI startup not implemented.')
 
 						var path = requirejs('path')
@@ -371,6 +374,25 @@ module.CLI = core.ImageGridFeatures.Feature({
 						requirejs('child_process')
 							.spawn(requirejs('nwjs'), [
 								path.dirname(process.argv[1]).replace(/\\/g, '/') + '/'])
+
+						keep_running = true
+					})
+					.option('electron, --electron', 'start ImageGrid.Viewer (electron)', function(){
+						var path = requirejs('path')
+
+						requirejs('child_process')
+							.spawn(requirejs('electron'), [
+									path.join(
+										path.dirname(nodeRequire.main.filename), 
+										'e.js')])
+							// XXX need to stop the process iff nothing 
+							// 		else is running, like repl... 
+							// XXX feels hackish...
+							.on('exit', function(){
+								(!global.ig
+										|| global.ig.isStopped())
+									&& process.exit()
+							})
 
 						keep_running = true
 					})
