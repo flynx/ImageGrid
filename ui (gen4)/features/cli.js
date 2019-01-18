@@ -218,6 +218,8 @@ module.CLI = core.ImageGridFeatures.Feature({
 	handlers: [
 		// XXX sort out different run/stop/exit paths -- make this more 
 		// 		systematic...
+		// 		...i.e. how do we run stuff (electron/nw/repl), interact
+		// 		with it (peer???) and wait/stop when done...
 		['ready',
 			function(){
 				var that = this
