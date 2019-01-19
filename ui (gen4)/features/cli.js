@@ -220,6 +220,7 @@ module.CLI = core.ImageGridFeatures.Feature({
 		// 		systematic...
 		// 		...i.e. how do we run stuff (electron/nw/repl), interact
 		// 		with it (peer???) and wait/stop when done...
+		// XXX should some of the flag handlers be actions???
 		['ready',
 			function(){
 				var that = this
@@ -439,11 +440,6 @@ module.CLI = core.ImageGridFeatures.Feature({
 				!keep_running
 					&& this.afterAction(function(){ process.exit() })
 			}],
-		/*
-		['stop',
-			function(){
-				console.log('STOP') }],
-		//*/
 	],
 })
 
