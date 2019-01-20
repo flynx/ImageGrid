@@ -49,12 +49,12 @@ var Items.Item = function(value, make, options){
 	return make(value, make, options)
 }
 
-var Items.Action = function(value, make, options){
+Items.Action = function(value, make, options){
 	options = Object.create(options || {})
 	options.cls = (options.cls || '') + ' action'
 	return this.Item(value, make, options)
 }
-var Items.Heading = function(value, make, options){
+Items.Heading = function(value, make, options){
 	options = Object.create(options || {})
 	options.cls = (options.cls || '') + ' heading'
 	var attrs = options.doc ? {doc: options.doc} : {}
@@ -62,12 +62,12 @@ var Items.Heading = function(value, make, options){
 	options.attrs = attrs
 	return this.Item(value, make, options)
 }
-var Items.Empty = function(value){}
-var Items.Separator = function(value){}
-var Items.Spinner = function(value){}
-var Items.Selected = function(value){}
-var Items.Editable = function(value){}
-var Items.ConfirmAction = function(value){}
+Items.Empty = function(value){}
+Items.Separator = function(value){}
+Items.Spinner = function(value){}
+Items.Selected = function(value){}
+Items.Editable = function(value){}
+Items.ConfirmAction = function(value){}
 
 // groups...
 var Items.Group = function(items){}
@@ -80,10 +80,16 @@ var Items.Group = function(items){}
 // XXX how do we indicate the selected item???
 // 		- options.path / options.selected?
 // 		- path argument?
-var Items.List = function(values){}
-var Items.EditableList = function(values){}
-var Items.EditablePinnedList = function(values){}
+Items.List = function(values){}
+Items.EditableList = function(values){}
+Items.EditablePinnedList = function(values){}
 
+
+// Special list components...
+//
+// XXX these should be normal items...
+Items.ListPath = function(){}
+Items.ListTitle = function(){}
 
 
 
