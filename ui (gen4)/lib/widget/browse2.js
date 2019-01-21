@@ -93,5 +93,35 @@ Items.ListTitle = function(){}
 
 
 
+//---------------------------------------------------------------------
+
+var BrowsePrototype = {
+
+	update: function(){},
+
+	filter: function(){},
+
+	get: function(){},
+	focus: function(){},
+
+	// Navigation...
+	//
+	up: function(){},
+	down: function(){},
+	left: function(){},
+	right: function(){},
+
+	next: function(){},
+	prev: function(){},
+
+	// XXX scroll...
+
+
+	__init__: function(){},
+}
+
+
+
+
 /**********************************************************************
 * vim:set ts=4 sw=4 :                               */ return module })
