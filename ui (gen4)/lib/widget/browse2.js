@@ -36,6 +36,13 @@ var widget = require('./widget')
 // XXX
 var Items = module.items = function(){}
 
+// Focus last created item...
+// XXX also would be nice to set the last created items to .last or 
+// 		similar in the context...
+Items.focus = function(){
+},
+
+
 // singular items...
 // 
 // 	.Item(value[, make][, options])
@@ -117,7 +124,7 @@ var BrowsePrototype = {
 	// XXX scroll...
 
 
-	__init__: function(){},
+	__init__: function(func, options){},
 }
 
 
