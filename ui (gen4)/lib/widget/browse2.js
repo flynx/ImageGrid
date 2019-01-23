@@ -40,7 +40,12 @@ var Items = module.items = function(){}
 // XXX also would be nice to set the last created items to .last or 
 // 		similar in the context...
 Items.focus = function(){
-},
+}
+
+// Embed a list...
+//
+Items.embed = function(){
+}
 
 
 // singular items...
@@ -87,7 +92,10 @@ var Items.Group = function(items){}
 // XXX how do we indicate the selected item???
 // 		- options.path / options.selected?
 // 		- path argument?
-Items.List = function(values){}
+Items.List = function(values){
+	// XXX STUB...
+	return this.embed(List(values))
+}
 Items.EditableList = function(values){}
 Items.EditablePinnedList = function(values){}
 
