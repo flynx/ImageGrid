@@ -145,21 +145,25 @@ var BaseBrowserPrototype = {
 	list: function(make, options){
 		throw new Error('.list(..): Not implemented.') },
 
+
 	// Make .items...
 	//
 	// 	.make()
 	// 		-> this
 	//
+	// XXX should this reset .items or update them???
+	// 		...seems that assigning an ID to an item and recycling would 
+	// 		be nice, not sure yet how to organize this...
 	// XXX revise options handling for .list(..)
 	make: function(options){
 		var items = this.items = []
 
-		var make = function(item, opts){
+		var make = function(value, opts){
 			items.push(Object.assign(
 				{}, 
 				options || {},
 				opts || {}, 
-				{item: item}))
+				{value: value}))
 			return make
 		}.bind(this)
 		make.__proto__ = Items
@@ -182,11 +186,12 @@ var BaseBrowserPrototype = {
 	renderList: function(items, options){
 		return items },
 	// Render nested list...
-	renderSubList: function(items, options){
-		return items },
+	renderSubList: function(item, rendered, options){
+		return rendered },
 	// Render list item...
 	renderItem: function(item, options){
 		return item },
+
 	// Render state...
 	//
 	//	.render()
@@ -201,9 +206,9 @@ var BaseBrowserPrototype = {
 		var items = this.items
 				.map(function(item){
 					return item.render ?
-							that.renderSubList(item.render(context, options), options)
-						: item.item.render ?
-							that.renderSubList(item.item.render(context, options), options)
+							that.renderSubList(item, item.render(context, options), options)
+						: item.value.render ?
+							that.renderSubList(item, item.value.render(context, options), options)
 						: that.renderItem(item) }) 
 
 		// determine the render mode...
@@ -213,6 +218,7 @@ var BaseBrowserPrototype = {
 			// non-root context -> return items as-is...
 			: items
 	},
+
 
 	// Update state (make then render)...
 	//
@@ -266,17 +272,21 @@ var BrowserPrototype = {
 	// Render main list...
 	// XXX update dom...
 	renderList: function(items, options){
-		// XXX save link to dom...
-		this.dom = null
 		return items },
 	// Render nested list...
-	renderSubList: function(items, options){
-		// XXX save link to dom...
-		return items },
+	// XXX save link to dom (???)
+	renderSubList: function(item, rendered, options){
+		return rendered },
 	// Render list item...
+	// XXX save link to dom in item.dom (???)
 	renderItem: function(item, options){
-		// XXX save link to dom...
 		return item },
+
+	// save the rendered state to .dom
+	render: function(context, options){
+		this.dom = object.parent(BrowserPrototype.render, this).call(this, context, options)
+		return this.dom
+	},
 
 
 	filter: function(){},
