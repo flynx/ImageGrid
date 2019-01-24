@@ -47,13 +47,15 @@ Items.focus = function(){
 Items.embed = function(){
 }
 
+Items.dialog = null
+
 
 // singular items...
 // 
 // 	.Item(value[, make][, options])
 // 		-> ???
 // 	
-var Items.Item = function(value, make, options){
+Items.Item = function(value, make, options){
 	// XXX check if we are in a container -> create if needed and update context...
 	// XXX ???
 
@@ -82,7 +84,7 @@ Items.Editable = function(value){}
 Items.ConfirmAction = function(value){}
 
 // groups...
-var Items.Group = function(items){}
+Items.Group = function(items){}
 
 // lists...
 // 
@@ -110,9 +112,102 @@ Items.ListTitle = function(){}
 
 //---------------------------------------------------------------------
 
-var BrowsePrototype = {
+var BrowserClassPrototype = {
+}
 
-	update: function(){},
+// XXX  move the DOM to a subclass and rename this to BaseBrowser
+var BrowserPrototype = {
+	options: {
+		// XXX
+	},
+
+	dom: null,
+
+	// XXX format doc...
+	items: null,
+
+	//
+	// 	.list(make)
+	//
+	// XXX is this the right name???
+	// XXX do we care about the return value???
+	list: null,
+
+	// Make .items...
+	//
+	// 	.make()
+	// 		-> this
+	//
+	make: function(options){
+		var items = this.items = []
+
+		var make = function(item, opts){
+			items.push(Object.assign(
+				{}, 
+				options || {},
+				opts || {}, 
+				{item: item}))
+			return make
+		}.bind(this)
+		make.__proto__ = Items
+		make.dialog = this
+
+		this.list(make)
+
+		return this
+	},
+
+
+	// Render main list...
+	renderList: function(items, options){
+		return items },
+	// Render nested list...
+	renderSubList: function(items, options){
+		return items },
+	// Render list item...
+	renderItem: function(item, options){
+		return item },
+	// Render state...
+	//
+	//	.render()
+	//	.render(context)
+	//		-> state
+	//
+	render: function(context, options){
+		var that = this
+		context = context || this
+
+		// render the items...
+		var items = this.items
+				.map(function(item){
+					return item.render ?
+							that.renderSubList(item.render(context, options), options)
+						: item.item.render ?
+							that.renderSubList(item.item.render(context, options), options)
+						: that.renderItem(item) }) 
+
+		// determine the render mode...
+		return context === this ?
+			// root context -> render list and return this...
+			this.renderList(items, options)
+			// non-root context -> return items as-is...
+			: items
+	},
+
+	// Update state (make then render)...
+	//
+	// 	.update()
+	// 		-> state
+	//
+	//
+	// XXX options here are a relatively blunt means of overriding options
+	// 		in the tree...
+	// 		...do we need this???
+	update: function(options){
+		return this
+			.make(options)
+			.render(this, options) },
+
 
 	filter: function(){},
 
@@ -132,8 +227,23 @@ var BrowsePrototype = {
 	// XXX scroll...
 
 
-	__init__: function(func, options){},
+	__init__: function(func, options){
+		this.list = func
+		this.options = Object.assign(
+			{}, 
+			this.options, 
+			options || {})
+
+		this.update()
+	},
 }
+
+
+var Browser = 
+module.Browser = 
+object.makeConstructor('Browser', 
+		BrowserClassPrototype, 
+		BrowserPrototype)
 
 
 
