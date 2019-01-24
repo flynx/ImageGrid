@@ -112,17 +112,27 @@ Items.ListTitle = function(){}
 
 //---------------------------------------------------------------------
 
-var BrowserClassPrototype = {
+var BaseBrowserClassPrototype = {
 }
 
-// XXX  move the DOM to a subclass and rename this to BaseBrowser
-var BrowserPrototype = {
-	options: {
-		// XXX
-	},
+var BaseBrowserPrototype = {
+	// XXX should we mix item/list options or separate them into sub-objects???
+	options: null,
 
-	dom: null,
-
+	// Format:
+	// 	[
+	// 		<item> | <browser>,
+	// 		...
+	// 	]
+	//
+	// <item> format:
+	// 	{
+	// 		item: ...,
+	//
+	// 		// options...
+	// 		...
+	// 	}
+	//
 	// XXX format doc...
 	items: null,
 
@@ -131,13 +141,16 @@ var BrowserPrototype = {
 	//
 	// XXX is this the right name???
 	// XXX do we care about the return value???
-	list: null,
+	// XXX not sure how to handle options in here -- see .make(..) and its notes...
+	list: function(make, options){
+		throw new Error('.list(..): Not implemented.') },
 
 	// Make .items...
 	//
 	// 	.make()
 	// 		-> this
 	//
+	// XXX revise options handling for .list(..)
 	make: function(options){
 		var items = this.items = []
 
@@ -152,7 +165,14 @@ var BrowserPrototype = {
 		make.__proto__ = Items
 		make.dialog = this
 
-		this.list(make)
+		// XXX not sure about this...
+		//this.list(make)
+		this.list(make, 
+			options ? 
+				Object.assign(
+					Object.create(this.options || {}), 
+					options || {}) 
+				: null)
 
 		return this
 	},
@@ -209,6 +229,56 @@ var BrowserPrototype = {
 			.render(this, options) },
 
 
+	__init__: function(func, options){
+		this.list = func
+		this.options = Object.assign(
+			{}, 
+			this.options || {}, 
+			options || {})
+
+		this.update()
+	},
+}
+
+
+var BaseBrowser = 
+module.BaseBrowser = 
+object.makeConstructor('BaseBrowser', 
+		BaseBrowserClassPrototype, 
+		BaseBrowserPrototype)
+
+
+//---------------------------------------------------------------------
+
+var BrowserClassPrototype = {
+	__proto__: BaseBrowser,
+}
+
+var BrowserPrototype = {
+	__proto__: BaseBrowser.prototype,
+
+	options: {
+
+	},
+	
+	dom: null,
+
+	// Render main list...
+	// XXX update dom...
+	renderList: function(items, options){
+		// XXX save link to dom...
+		this.dom = null
+		return items },
+	// Render nested list...
+	renderSubList: function(items, options){
+		// XXX save link to dom...
+		return items },
+	// Render list item...
+	renderItem: function(item, options){
+		// XXX save link to dom...
+		return item },
+
+
 	filter: function(){},
 
 	get: function(){},
@@ -227,18 +297,10 @@ var BrowserPrototype = {
 	// XXX scroll...
 
 
-	__init__: function(func, options){
-		this.list = func
-		this.options = Object.assign(
-			{}, 
-			this.options, 
-			options || {})
-
-		this.update()
-	},
 }
 
 
+// XXX should this be a Widget too???
 var Browser = 
 module.Browser = 
 object.makeConstructor('Browser', 
