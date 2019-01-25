@@ -127,9 +127,8 @@ var BaseBrowserPrototype = {
 	//
 	// <item> format:
 	// 	{
-	// 		item: ...,
+	// 		value: ...,
 	//
-	// 		// options...
 	// 		...
 	// 	}
 	//
@@ -254,6 +253,7 @@ object.makeConstructor('BaseBrowser',
 		BaseBrowserPrototype)
 
 
+
 //---------------------------------------------------------------------
 
 var BrowserClassPrototype = {
@@ -284,7 +284,7 @@ var BrowserPrototype = {
 
 	// save the rendered state to .dom
 	render: function(context, options){
-		this.dom = object.parent(BrowserPrototype.render, this).call(this, context, options)
+		this.dom = object.parent(BrowserPrototype.render, this).call(this, ...arguments)
 		return this.dom
 	},
 
