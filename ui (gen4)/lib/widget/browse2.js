@@ -188,30 +188,59 @@ var BaseBrowserPrototype = {
 	renderSubList: function(item, rendered, options){
 		return rendered },
 	// Render list item...
-	renderItem: function(item, options){
+	renderItem: function(item, i, options){
 		return item },
 
 	// Render state...
 	//
 	//	.render()
+	//	.render(options)
 	//	.render(context)
 	//		-> state
 	//
-	render: function(context, options){
+	//
+	// NOTE: currently options and context are distinguished only via 
+	// 		the .options attribute... (XXX)
+	//
+	render: function(options){
 		var that = this
-		context = context || this
+		// XXX revise -- should options and context be distinguished only
+		// 		via the .options attr???
+		var context = (options == null || options.options == null) ?
+				{
+					root: this,
+					// NOTE: we are not combining this with .options as nested 
+					// 		lists can have their own unique sets of options 
+					// 		independently of the root list...
+					options: options || {},
+				}
+			: options
+		options = context.options
 
 		// render the items...
+		// XXX should we control render parameters (range, start, end, ...)
+		// 		from outside render and pass this info down to nested lists???
+		// 		...if yes how??
+		// 			- options
+		// 			- arg threading
+		// 			- render context
 		var items = this.items
-				.map(function(item){
-					return item.render ?
-							that.renderSubList(item, item.render(context, options), options)
-						: item.value.render ?
-							that.renderSubList(item, item.value.render(context, options), options)
-						: that.renderItem(item) }) 
+			.map(function(item, i){
+				return item.render ?
+						that.renderSubList(
+							item, 
+							item.render(context), 
+							options)
+					: item.value.render ?
+						that.renderSubList(
+							item, 
+							item.value.render(context), 
+							options)
+					: that.renderItem(item, i, options) }) 
+			.flat()
 
 		// determine the render mode...
-		return context === this ?
+		return context.root === this ?
 			// root context -> render list and return this...
 			this.renderList(items, options)
 			// non-root context -> return items as-is...
@@ -279,7 +308,7 @@ var BrowserPrototype = {
 		return rendered },
 	// Render list item...
 	// XXX save link to dom in item.dom (???)
-	renderItem: function(item, options){
+	renderItem: function(item, i, options){
 		return item },
 
 	// save the rendered state to .dom
