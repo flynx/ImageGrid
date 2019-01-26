@@ -64,13 +64,23 @@ Items.focus = function(){
 // XXX need to cleanup the args...
 // XXX do we need to pass options to groups???
 Items.group = function(...items){
-	// XXX filter out non-make values....
-	// 		...for some reason this clears the list...
-	//items = items
-	//	.filter(function(e){
-	//		return e === this })
+	var that = this
+	var made = items
+		.filter(function(e){
+			return e === that })
 	var l = this.items.length - items.length
-	this.items.splice(l, items.length, this.items.slice(l))
+	// constructed item list...
+	made = this.items.slice(l)
+	// get the actual item values...
+	items = items
+		.map(function(e){
+			return e === that ?
+				made.shift()
+				: e })
+
+	// replace the items with the group...
+	this.items.splice(l, items.length, items)
+
 	return this
 }
 
@@ -315,19 +325,19 @@ var BaseBrowserPrototype = {
 						that.renderGroup(
 							item.map(_render), options)
 					// renderable item...
-					: item.render ?
+					: item.render instanceof Function ?
 						that.renderSubList(
 							item.render(context), 
 							item, 
 							options)
 					// renderable value -- embedded list...
-					: item.value.render ?
+					: (item.value || {}).render instanceof Function ?
 						that.renderSubList(
 							item.value.render(context), 
 							item, 
 							options)
-					// renderable sub-list -- nested list...
-					: (item.sublist || {}).render ?
+					// .sublist -- nested list...
+					: item.sublist ?
 						(item.collapsed ?
 							// collapsed item...
 							that.renderItem(item, i, options)
@@ -335,7 +345,11 @@ var BaseBrowserPrototype = {
 							: that.renderGroup([ 
 								that.renderItem(item, i, options),
 								that.renderSubList(
-									item.sublist.render(context), 
+									item.sublist.render instanceof Function ?
+										// renderable...
+										item.sublist.render(context)
+										// list of items...
+										: item.sublist.map(_render),
 									item, 
 									options) ], options))
 					// basic item...
