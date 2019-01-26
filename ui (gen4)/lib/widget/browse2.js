@@ -181,13 +181,17 @@ var BaseBrowserPrototype = {
 	},
 
 
+	// Renderers...
+	//
 	// Render main list...
 	renderList: function(items, options){
 		return items },
 	// Render nested list...
+	// NOTE: to skip rendering an item/list return null...
 	renderSubList: function(item, rendered, options){
 		return rendered },
 	// Render list item...
+	// NOTE: to skip rendering an item/list return null...
 	renderItem: function(item, i, options){
 		return item },
 
@@ -237,7 +241,8 @@ var BaseBrowserPrototype = {
 							item.value.render(context), 
 							options)
 					: that.renderItem(item, i, options) }) 
-			.flat()
+			.filter(function(e){
+				return e != null })
 
 		// determine the render mode...
 		return context.root === this ?
@@ -289,6 +294,7 @@ var BrowserClassPrototype = {
 	__proto__: BaseBrowser,
 }
 
+// XXX maintain expand/collapse state of nested lists in a natural way...
 var BrowserPrototype = {
 	__proto__: BaseBrowser.prototype,
 
@@ -301,10 +307,12 @@ var BrowserPrototype = {
 	// Render main list...
 	// XXX update dom...
 	renderList: function(items, options){
+		// XXX maintain header...
 		return items },
 	// Render nested list...
 	// XXX save link to dom (???)
 	renderSubList: function(item, rendered, options){
+		// XXX expand/collapse state???
 		return rendered },
 	// Render list item...
 	// XXX save link to dom in item.dom (???)
