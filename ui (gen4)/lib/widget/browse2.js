@@ -133,16 +133,27 @@ var BaseBrowserPrototype = {
 	// 	}
 	//
 	// XXX format doc...
+	// XXX should this be a list or a Map/Object????
+	// 		...we do not need ultra fast traversal but we do need a way 
+	// 		to identify and select items in a unique way...
+	// XXX how do we handler nested lists???
+	// 		...feels like a sub-list should be part of an item, i.e. 
+	// 		create an item and place a list "into" it...
+	// 		the question is whether this item should be:
+	// 			- first item of sub-list
+	// 			- connected to the sub-list but part of the parent list
+	// 		...I'm leaning to the later...
 	items: null,
 
 	//
-	// 	.list(make)
+	// 	.__list__(make)
+	// 		-> undefined
+	// 		-> list
 	//
-	// XXX is this the right name???
 	// XXX do we care about the return value???
 	// XXX not sure how to handle options in here -- see .make(..) and its notes...
-	list: function(make, options){
-		throw new Error('.list(..): Not implemented.') },
+	__list__: function(make, options){
+		throw new Error('.__list__(..): Not implemented.') },
 
 
 	// Make .items...
@@ -150,14 +161,13 @@ var BaseBrowserPrototype = {
 	// 	.make()
 	// 		-> this
 	//
-	// XXX should this reset .items or update them???
-	// 		...seems that assigning an ID to an item and recycling would 
-	// 		be nice, not sure yet how to organize this...
-	// XXX revise options handling for .list(..)
+	// XXX revise options handling for .__list__(..)
 	make: function(options){
 		var items = this.items = []
 
+		var make_called = false
 		var make = function(value, opts){
+			make_called = true
 			items.push(Object.assign(
 				{}, 
 				options || {},
@@ -168,14 +178,19 @@ var BaseBrowserPrototype = {
 		make.__proto__ = Items
 		make.dialog = this
 
+		//var res = this.__list__(make)
 		// XXX not sure about this...
-		//this.list(make)
-		this.list(make, 
+		var res = this.__list__(make, 
 			options ? 
 				Object.assign(
 					Object.create(this.options || {}), 
 					options || {}) 
 				: null)
+
+		// if make was not called use the .__list__(..) return value...
+		this.items = make_called ? 
+			this.items 
+			: res
 
 		return this
 	},
@@ -269,7 +284,7 @@ var BaseBrowserPrototype = {
 
 
 	__init__: function(func, options){
-		this.list = func
+		this.__list__ = func
 		this.options = Object.assign(
 			{}, 
 			this.options || {}, 
@@ -310,6 +325,8 @@ var BrowserPrototype = {
 		// XXX maintain header...
 		return items },
 	// Render nested list...
+	// XXX list header
+	// 		...is it the responsibility of sub-list or the parent list???
 	// XXX save link to dom (???)
 	renderSubList: function(item, rendered, options){
 		// XXX expand/collapse state???
