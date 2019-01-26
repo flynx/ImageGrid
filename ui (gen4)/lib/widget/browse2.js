@@ -36,18 +36,52 @@ var widget = require('./widget')
 // XXX
 var Items = module.items = function(){}
 
+
+Items.dialog = null
+Items.items = null
+
+
+
 // Focus last created item...
 // XXX also would be nice to set the last created items to .last or 
 // 		similar in the context...
 Items.focus = function(){
 }
 
-// Embed a list...
+
 //
-Items.embed = function(){
+//	.group(make(..), ..)
+//	// XXX not implemented yet...
+//	.group(make(..), .., options)
+//		-> make
+//
+// Example:
+// 	make.group(
+// 		make(1),
+// 		make(2),
+// 		make(3))
+//
+// XXX need to cleanup the args...
+// XXX do we need to pass options to groups???
+Items.group = function(...items){
+	// XXX filter out non-make values....
+	// 		...for some reason this clears the list...
+	//items = items
+	//	.filter(function(e){
+	//		return e === this })
+	var l = this.items.length - items.length
+	this.items.splice(l, items.length, this.items.slice(l))
+	return this
 }
 
-Items.dialog = null
+Items.embed = function(list, options){
+	return this(list, options) }
+
+Items.nest = function(item, list, options){
+	options = options || {}
+	options.sublist = list
+	return this(item, options)
+}
 
 
 // singular items...
@@ -143,14 +177,39 @@ var BaseBrowserPrototype = {
 	// 			- first item of sub-list
 	// 			- connected to the sub-list but part of the parent list
 	// 		...I'm leaning to the later...
-	items: null,
+	__items: null,
+	get items(){
+		this.__items
+			|| this.make()
+		return this.__items
+	},
+	set items(value){
+		this.__items = value },
+
 
 	//
-	// 	.__list__(make)
+	// 	.__list__(make, options)
 	// 		-> undefined
 	// 		-> list
 	//
-	// XXX do we care about the return value???
+	//
+	// 	make(value, options)
+	// 		-> make
+	//
+	//
+	// There are two modes of operation:
+	// 	1) call make(..) to create items
+	// 	2) return a list of items
+	//
+	// The if make is called at least once the return value is ignored.
+	//
+	//
+	// Example:
+	// 	XXX
+	//
+	//
+	// NOTE: this is not designed to be called directly...
+	//
 	// XXX not sure how to handle options in here -- see .make(..) and its notes...
 	__list__: function(make, options){
 		throw new Error('.__list__(..): Not implemented.') },
@@ -177,9 +236,10 @@ var BaseBrowserPrototype = {
 		}.bind(this)
 		make.__proto__ = Items
 		make.dialog = this
+		make.items = items
 
 		//var res = this.__list__(make)
-		// XXX not sure about this...
+		// XXX not sure about this -- options handling...
 		var res = this.__list__(make, 
 			options ? 
 				Object.assign(
@@ -203,8 +263,11 @@ var BaseBrowserPrototype = {
 		return items },
 	// Render nested list...
 	// NOTE: to skip rendering an item/list return null...
-	renderSubList: function(item, rendered, options){
-		return rendered },
+	renderSubList: function(sublist, item, options){
+		return sublist },
+	// Render group...
+	renderGroup: function(items, options){
+		return items },
 	// Render list item...
 	// NOTE: to skip rendering an item/list return null...
 	renderItem: function(item, i, options){
@@ -237,6 +300,7 @@ var BaseBrowserPrototype = {
 		options = context.options
 
 		// render the items...
+		var _render
 		// XXX should we control render parameters (range, start, end, ...)
 		// 		from outside render and pass this info down to nested lists???
 		// 		...if yes how??
@@ -244,18 +308,38 @@ var BaseBrowserPrototype = {
 		// 			- arg threading
 		// 			- render context
 		var items = this.items
-			.map(function(item, i){
-				return item.render ?
+			.map(_render = function(item, i){
+				return (
+					// group...
+					item instanceof Array ?
+						that.renderGroup(
+							item.map(_render), options)
+					// renderable item...
+					: item.render ?
 						that.renderSubList(
-							item, 
 							item.render(context), 
+							item, 
 							options)
+					// renderable value -- embedded list...
 					: item.value.render ?
 						that.renderSubList(
-							item, 
 							item.value.render(context), 
+							item, 
 							options)
-					: that.renderItem(item, i, options) }) 
+					// renderable sub-list -- nested list...
+					: (item.sublist || {}).render ?
+						(item.collapsed ?
+							// collapsed item...
+							that.renderItem(item, i, options)
+							// expanded item (grouped)...
+							: that.renderGroup([ 
+								that.renderItem(item, i, options),
+								that.renderSubList(
+									item.sublist.render(context), 
+									item, 
+									options) ], options))
+					// basic item...
+					: that.renderItem(item, i, options)) }) 
 			.filter(function(e){
 				return e != null })
 
@@ -281,6 +365,20 @@ var BaseBrowserPrototype = {
 		return this
 			.make(options)
 			.render(this, options) },
+
+
+	// XXX item API...
+	get: function(){},
+	set: function(){},
+	remove: function(){},
+	sort: function(){},
+	splice: function(){},
+
+	// XXX should there return an array or a .constructor(..) instance??
+	forEach: function(){},
+	map: function(){},
+	filter: function(){},
+	reduce: function(){},
 
 
 	__init__: function(func, options){
@@ -328,9 +426,12 @@ var BrowserPrototype = {
 	// XXX list header
 	// 		...is it the responsibility of sub-list or the parent list???
 	// XXX save link to dom (???)
-	renderSubList: function(item, rendered, options){
+	renderSubList: function(sublist, item, options){
 		// XXX expand/collapse state???
-		return rendered },
+		return sublist },
+	// Render group...
+	renderGroup: function(items, options){
+		return items },
 	// Render list item...
 	// XXX save link to dom in item.dom (???)
 	renderItem: function(item, i, options){
