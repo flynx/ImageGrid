@@ -51,15 +51,15 @@ Items.focus = function(){
 
 //
 //	.group(make(..), ..)
-//	// XXX not implemented yet...
-//	.group(make(..), .., options)
 //		-> make
 //
 // Example:
 // 	make.group(
 // 		make(1),
 // 		make(2),
-// 		make(3))
+// 		make(3),
+// 		// literal item...
+// 		4)
 //
 // XXX need to cleanup the args...
 // XXX do we need to pass options to groups???
@@ -83,9 +83,6 @@ Items.group = function(...items){
 
 	return this
 }
-
-Items.embed = function(list, options){
-	return this(list, options) }
 
 Items.nest = function(item, list, options){
 	options = options || {}
