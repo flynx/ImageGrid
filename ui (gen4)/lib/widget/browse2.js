@@ -485,6 +485,54 @@ object.makeConstructor('Browser',
 
 
 
+//---------------------------------------------------------------------
+// Text tree renderer...
+//
+// This is mainly designed for testing.
+//
+// XXX how the header item and it's sublist should be linked???
+
+var TextBrowserClassPrototype = {
+	__proto__: BaseBrowser,
+}
+
+var TextBrowserPrototype = {
+	__proto__: BaseBrowser.prototype,
+
+	options: {
+		renderIndent: '\t',
+	},
+	
+	renderList: function(items, options){
+		var that = this
+		return this.renderSubList(items, null, options)
+			.join('\n') },
+	renderSubList: function(sublist, item, options){
+		var that = this
+		return sublist
+			.flat()
+			.map(function(e){
+				return e instanceof Array ?
+					e.map(function(e){ return (that.options.renderIndent || '  ') + e })
+					: e })
+			.flat() },
+	//renderGroup: function(items, options){
+	//	return items },
+	renderItem: function(item, i, options){
+		var value = item.value || item
+		return item.current ?
+			`[ ${value} ]`
+   			: value },
+}
+
+
+var TextBrowser = 
+module.TextBrowser = 
+object.makeConstructor('TextBrowser', 
+		TextBrowserClassPrototype, 
+		TextBrowserPrototype)
+
+
 
 /**********************************************************************
 * vim:set ts=4 sw=4 :                               */ return module })
