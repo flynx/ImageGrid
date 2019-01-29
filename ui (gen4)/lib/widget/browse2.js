@@ -503,6 +503,8 @@ var TextBrowserPrototype = {
 		renderIndent: '\t',
 	},
 	
+	// NOTE: we do not need .renderGroup(..) here as a group is not 
+	// 		visible in text...
 	renderList: function(items, options){
 		var that = this
 		return this.renderSubList(items, null, options)
@@ -516,8 +518,6 @@ var TextBrowserPrototype = {
 					e.map(function(e){ return (that.options.renderIndent || '  ') + e })
 					: e })
 			.flat() },
-	//renderGroup: function(items, options){
-	//	return items },
 	renderItem: function(item, i, options){
 		var value = item.value || item
 		return item.current ?
