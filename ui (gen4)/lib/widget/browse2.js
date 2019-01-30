@@ -490,7 +490,7 @@ object.makeConstructor('Browser',
 //
 // This is mainly designed for testing.
 //
-// XXX how the header item and it's sublist should be linked???
+// XXX Q: how should the header item and it's sub-list be linked???
 
 var TextBrowserClassPrototype = {
 	__proto__: BaseBrowser,
@@ -524,7 +524,6 @@ var TextBrowserPrototype = {
 			`[ ${value} ]`
    			: value },
 }
-
 
 var TextBrowser = 
 module.TextBrowser = 
