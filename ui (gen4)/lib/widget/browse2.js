@@ -279,6 +279,10 @@ var BaseBrowserPrototype = {
 	// NOTE: to skip rendering an item/list return null...
 	renderItem: function(item, i, options){
 		return item },
+	// Render nested list header...
+	// XXX should this be a renderer or an option to .renderItem(..)???
+	renderSubListHeader: function(item, i, options){
+		return this.renderItem(...arguments) },
 
 	// Render state...
 	//
@@ -337,10 +341,12 @@ var BaseBrowserPrototype = {
 					: item.sublist ?
 						(item.collapsed ?
 							// collapsed item...
-							that.renderItem(item, i, options)
+							//that.renderItem(item, i, options)
+							that.renderSubListHeader(item, i, options)
 							// expanded item (grouped)...
 							: that.renderGroup([ 
-								that.renderItem(item, i, options),
+								//that.renderItem(item, i, options),
+								that.renderSubListHeader(item, i, options),
 								that.renderSubList(
 									item.sublist.render instanceof Function ?
 										// renderable...
@@ -523,6 +529,8 @@ var TextBrowserPrototype = {
 		return item.current ?
 			`[ ${value} ]`
    			: value },
+	renderSubListHeader: function(item, i, options){
+		return this.renderItem(...arguments) + (item.collapsed ? ' >' : ' v') },
 }
 
 var TextBrowser = 
