@@ -270,8 +270,16 @@ var BaseBrowserPrototype = {
 		return items },
 	// Render nested list...
 	// NOTE: to skip rendering an item/list return null...
-	renderNested: function(sublist, item, options){
-		return sublist },
+	// XXX should this take an empty sublist???
+	// 		...this would make it simpler to expand/collapse without 
+	// 		re-rendering the whole list...
+	renderNested: function(header, sublist, item, options){
+		return header ? 
+			this.renderGroup([
+				header, 
+				sublist,
+			])
+   			: sublist },
 	// Render nested list header...
 	// XXX should this be a renderer or an option to .renderItem(..)???
 	renderNestedHeader: function(item, i, options){
@@ -326,35 +334,38 @@ var BaseBrowserPrototype = {
 						that.renderGroup(
 							item.map(_render), options)
 					// renderable item...
+					// XXX should this be nested???
 					: item.render instanceof Function ?
 						that.renderNested(
+							null,
 							item.render(context), 
 							item, 
 							options)
 					// renderable value -- embedded list...
+					// XXX should this be nested???
 					: (item.value || {}).render instanceof Function ?
 						that.renderNested(
+							null,
 							item.value.render(context), 
 							item, 
 							options)
 					// .sublist -- nested list...
+					// XXX should we always render the nested list here, 
+					// 		only rendering it empty if collapsed???
 					: item.sublist ?
 						(item.collapsed ?
 							// collapsed item...
-							//that.renderItem(item, i, options)
 							that.renderNestedHeader(item, i, options)
 							// expanded item (grouped)...
-							: that.renderGroup([ 
-								//that.renderItem(item, i, options),
+							: that.renderNested(
 								that.renderNestedHeader(item, i, options),
-								that.renderNested(
-									item.sublist.render instanceof Function ?
-										// renderable...
-										item.sublist.render(context)
-										// list of items...
-										: item.sublist.map(_render),
-									item, 
-									options) ], options))
+								item.sublist.render instanceof Function ?
+									// renderable...
+									item.sublist.render(context)
+									// list of items...
+									: item.sublist.map(_render),
+								item, 
+								options))
 					// basic item...
 					: that.renderItem(item, i, options)) }) 
 			.filter(function(e){
@@ -443,9 +454,11 @@ var BrowserPrototype = {
 	// XXX list header
 	// 		...is it the responsibility of sub-list or the parent list???
 	// XXX save link to dom (???)
-	renderNested: function(sublist, item, options){
+	renderNested: function(header, sublist, item, options){
 		// XXX expand/collapse state???
-		return sublist },
+		return header ? 
+			[header, sublist] 
+			: sublist },
 	// Render group...
 	renderGroup: function(items, options){
 		return items },
@@ -513,22 +526,25 @@ var TextBrowserPrototype = {
 	// 		visible in text...
 	renderList: function(items, options){
 		var that = this
-		return this.renderNested(items, null, options)
+		return this.renderNested(null, items, null, options)
 			.join('\n') },
 	renderItem: function(item, i, options){
 		var value = item.value || item
 		return item.current ?
 			`[ ${value} ]`
    			: value },
-	renderNested: function(sublist, item, options){
+	renderNested: function(header, sublist, item, options){
 		var that = this
-		return sublist
+		var nested = sublist
 			.flat()
 			.map(function(e){
 				return e instanceof Array ?
 					e.map(function(e){ return (that.options.renderIndent || '  ') + e })
 					: e })
-			.flat() },
+			.flat() 
+		return header ?
+			[header, nested]
+			: nested },
 	renderNestedHeader: function(item, i, options){
 		return this.renderItem(...arguments) + (item.collapsed ? ' >' : ' v') },
 }
