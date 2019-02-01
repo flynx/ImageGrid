@@ -84,6 +84,7 @@ Items.group = function(...items){
 	return this
 }
 
+// XXX add support for lists of items (a-la .group(..))
 Items.nest = function(item, list, options){
 	options = options || {}
 	options.sublist = list
@@ -280,10 +281,6 @@ var BaseBrowserPrototype = {
 				sublist,
 			])
    			: sublist },
-	// Render nested list header...
-	// XXX should this be a renderer or an option to .renderItem(..)???
-	renderNestedHeader: function(item, i, options){
-		return this.renderItem(...arguments) },
 	// Render list item...
 	// NOTE: to skip rendering an item/list return null...
 	renderItem: function(item, i, options){
@@ -353,19 +350,18 @@ var BaseBrowserPrototype = {
 					// XXX should we always render the nested list here, 
 					// 		only rendering it empty if collapsed???
 					: item.sublist ?
-						(item.collapsed ?
-							// collapsed item...
-							that.renderNestedHeader(item, i, options)
-							// expanded item (grouped)...
-							: that.renderNested(
-								that.renderNestedHeader(item, i, options),
-								item.sublist.render instanceof Function ?
-									// renderable...
-									item.sublist.render(context)
-									// list of items...
-									: item.sublist.map(_render),
-								item, 
-								options))
+						that.renderNested(
+							that.renderItem(item, i, options),
+							// collapsed...
+							(item.collapsed ?
+									null
+							// renderable...
+							:item.sublist.render instanceof Function ?
+								item.sublist.render(context)
+							// list of items...
+							: item.sublist.map(_render)),
+							item, 
+							options)
 					// basic item...
 					: that.renderItem(item, i, options)) }) 
 			.filter(function(e){
@@ -535,18 +531,27 @@ var TextBrowserPrototype = {
    			: value },
 	renderNested: function(header, sublist, item, options){
 		var that = this
-		var nested = sublist
-			.flat()
-			.map(function(e){
-				return e instanceof Array ?
-					e.map(function(e){ return (that.options.renderIndent || '  ') + e })
-					: e })
-			.flat() 
-		return header ?
-			[header, nested]
-			: nested },
-	renderNestedHeader: function(item, i, options){
-		return this.renderItem(...arguments) + (item.collapsed ? ' >' : ' v') },
+		var nested = sublist 
+			&& sublist
+				.flat()
+				.map(function(e){
+					return e instanceof Array ?
+						e.map(function(e){ 
+							return (that.options.renderIndent || '  ') + e })
+						: e })
+				.flat() 
+		return (
+			// expanded...
+			header && nested ?
+				[
+					header + ' v',
+					nested,
+				]
+			// collapsed...
+			: header ?
+				[ header + ' >' ]
+			// headerless...
+			: nested )},
 }
 
 var TextBrowser = 
