@@ -55,13 +55,9 @@ Items.focus = function(){
 //
 // Example:
 // 	make.group(
-// 		make(1),
-// 		make(2),
-// 		make(3),
-// 		// literal item...
-// 		4)
+// 		make('made item'),
+// 		'literal item')
 //
-// XXX revise...
 // XXX do we need to pass options to groups???
 Items.group = function(...items){
 	var that = this
