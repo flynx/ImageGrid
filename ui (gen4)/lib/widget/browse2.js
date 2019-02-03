@@ -59,6 +59,13 @@ Items.focus = function(){
 // 		'literal item')
 //
 // XXX do we need to pass options to groups???
+// XXX would be nice to have a better check/test...
+// 		...this could be done by chaining instances of make instead of 
+// 		returning an actual function, i.e. each make call would return 
+// 		a "new" function that would reference the actual item (.item())
+// 		and the previous item created (.prevItem()), ... etc.
+// 		...this would enable us to uniquely identify the actual items 
+// 		and prevent allot of specific errors...
 Items.group = function(...items){
 	var that = this
 	var made = items
