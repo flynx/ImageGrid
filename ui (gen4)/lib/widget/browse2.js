@@ -41,12 +41,36 @@ Items.dialog = null
 Items.items = null
 
 
+// Last item created...
+// XXX not sure about this...
+// XXX should this be a prop???
+Items.last = function(){
+	return (this.items || [])[this.items.length - 1] }
+
 
 // Focus last created item...
 // XXX also would be nice to set the last created items to .last or 
 // 		similar in the context...
 Items.focus = function(){
+	this.last.current = true
 }
+
+
+
+// helper...
+var normalizeItems = function(context, items){
+	var made = items
+		.filter(function(e){
+			return e === context })
+	var l = context.items.length - items.length
+	// constructed item list...
+	made = context.items.slice(l)
+	// get the actual item values...
+	return items
+		.map(function(e){
+			return e === context ?
+				made.shift()
+				: e }) }
 
 
 //
@@ -68,18 +92,12 @@ Items.focus = function(){
 // 		and prevent allot of specific errors...
 Items.group = function(...items){
 	var that = this
-	var made = items
-		.filter(function(e){
-			return e === that })
+	// XXX ???
+	items = items.length == 1 && items[0] instanceof Array ?
+		items[0]
+		: items
 	var l = this.items.length - items.length
-	// constructed item list...
-	made = this.items.slice(l)
-	// get the actual item values...
-	items = items
-		.map(function(e){
-			return e === that ?
-				made.shift()
-				: e })
+	items = normalizeItems(this, items) 
 
 	// replace the items with the group...
 	this.items.splice(l, items.length, items)
@@ -90,7 +108,9 @@ Items.group = function(...items){
 // XXX add support for lists of items (a-la .group(..))
 Items.nest = function(item, list, options){
 	options = options || {}
-	options.sublist = list
+	options.sublist = list instanceof Array ?
+		normalizeItems(this, list)
+		: list
 	return this(item, options)
 }
 
@@ -235,6 +255,13 @@ var BaseBrowserPrototype = {
 	make: function(options){
 		var items = this.items = []
 
+		// XXX change this to:
+		// 		- return a new instance/function for each call
+		// 		- each new instance/function references:
+		// 			- the item created
+		// 			- next instance/function
+		// XXX might also be a good idea to move this out of the method
+		// 		and into the module scope for clarity...
 		var make_called = false
 		var make = function(value, opts){
 			make_called = true
