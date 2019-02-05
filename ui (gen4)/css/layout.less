@@ -629,6 +629,27 @@ stretching in width... */
 	display: none;
 }
 
+/* XXX would be good to make this sticky -- always visible... */
+.ribbon[title]:before {
+	display: block;
+	position: absolute;
+	content: attr(title);
+
+	font-size: 52pt;
+	font-style: italic;
+	font-weight: bold;
+	
+	color: white;
+	text-shadow: black 2px 2px 15px;
+	
+	top: -2pt;
+	right: 100%;
+	margin-right: 20pt;
+}
+.single-image-mode .ribbon[title]:before {
+	display: none;
+}
+
 .base-ribbon-marker {
 	position: absolute;
 	height: 100%;
