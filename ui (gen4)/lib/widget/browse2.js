@@ -15,6 +15,28 @@ var widget = require('./widget')
 
 
 /*********************************************************************/
+// Helpers...
+
+// 
+// NOTE: this will remove the made via make(..) items from .items thus the
+// 		caller is responsible for adding them back...
+var normalizeItems = function(context, items){
+	var made = items
+		.filter(function(e){
+			return e === context })
+	var l = context.items.length - made.length
+	// constructed item list...
+	made = context.items.splice(l, made.length)
+	// get the actual item values...
+	return items
+		.map(function(e){
+			return e === context ?
+				made.shift()
+				: e }) }
+
+
+
+//---------------------------------------------------------------------
 // XXX general design:
 // 		- each of these can take either a value or a function (constructor)
 //		- the function has access to Items.* and context
@@ -57,21 +79,6 @@ Items.focus = function(){
 
 
 
-// helper...
-var normalizeItems = function(context, items){
-	var made = items
-		.filter(function(e){
-			return e === context })
-	var l = context.items.length - items.length
-	// constructed item list...
-	made = context.items.slice(l)
-	// get the actual item values...
-	return items
-		.map(function(e){
-			return e === context ?
-				made.shift()
-				: e }) }
-
 
 //
 //	.group(make(..), ..)
@@ -80,7 +87,8 @@ var normalizeItems = function(context, items){
 // Example:
 // 	make.group(
 // 		make('made item'),
-// 		'literal item')
+// 		'literal item',
+// 		...)
 //
 // XXX do we need to pass options to groups???
 // XXX would be nice to have a better check/test...
@@ -92,19 +100,16 @@ var normalizeItems = function(context, items){
 // 		and prevent allot of specific errors...
 Items.group = function(...items){
 	var that = this
-	// XXX ???
 	items = items.length == 1 && items[0] instanceof Array ?
 		items[0]
 		: items
-	var l = this.items.length - items.length
 
 	// replace the items with the group...
-	this.items.splice(l, items.length, normalizeItems(this, items))
+	this.items.splice(this.items.length, 0, ...normalizeItems(this, items))
 
 	return this
 }
 
-// XXX add support for lists of items (a-la .group(..))
 Items.nest = function(item, list, options){
 	options = options || {}
 	options.sublist = list instanceof Array ?
