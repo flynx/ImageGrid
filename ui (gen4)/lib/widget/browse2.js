@@ -17,16 +17,48 @@ var widget = require('./widget')
 /*********************************************************************/
 // Helpers...
 
-// 
+// Collect a list of literal values and "make(..) calls" into an array...
+//
+//	collectItems(context, items)
+//		-> values
+//
+//
+// items format:
+// 	[
+// 		// explicit value...
+// 		value,
+//
+// 		// literal make call...
+// 		make(..),
+//
+// 		...
+// 	]
+//
 // NOTE: this will remove the made via make(..) items from .items thus the
 // 		caller is responsible for adding them back...
-var normalizeItems = function(context, items){
+// NOTE: this uses the make(..) return value to implicitly infer the items
+// 		to collect, thus the items must already be constructed and in 
+// 		the same order as they are present in .items
+// 		...also, considering that this implicitly identifies the items 
+// 		passing the make function without calling it can trick the system
+// 		and lead to unexpected results.
+//
+// XXX would be nice to have a better check/test...
+// 		...this could be done by chaining instances of make instead of 
+// 		returning an actual function, i.e. each make call would return 
+// 		a "new" function that would reference the actual item (.item())
+// 		and the previous item created (.prevItem()), ... etc.
+// 		...this would enable us to uniquely identify the actual items 
+// 		and prevent allot of specific errors...
+var collectItems = function(context, items){
 	var made = items
 		.filter(function(e){
 			return e === context })
-	var l = context.items.length - made.length
 	// constructed item list...
-	made = context.items.splice(l, made.length)
+	// ...remove each instance from .items
+	made = context.items.splice(
+		context.items.length - made.length, 
+		made.length)
 	// get the actual item values...
 	return items
 		.map(function(e){
@@ -59,6 +91,7 @@ var normalizeItems = function(context, items){
 var Items = module.items = function(){}
 
 
+// placeholders...
 Items.dialog = null
 Items.items = null
 
@@ -71,18 +104,18 @@ Items.last = function(){
 
 
 // Focus last created item...
-// XXX also would be nice to set the last created items to .last or 
-// 		similar in the context...
 Items.focus = function(){
-	this.last.current = true
-}
+	this.last.current = true }
 
 
 
 
+// Group a set of items...
 //
 //	.group(make(..), ..)
+//	.group([make(..), ..])
 //		-> make
+//
 //
 // Example:
 // 	make.group(
@@ -90,34 +123,35 @@ Items.focus = function(){
 // 		'literal item',
 // 		...)
 //
+//
+// NOTE: see notes to collectItems(..) for more info...
+//
 // XXX do we need to pass options to groups???
-// XXX would be nice to have a better check/test...
-// 		...this could be done by chaining instances of make instead of 
-// 		returning an actual function, i.e. each make call would return 
-// 		a "new" function that would reference the actual item (.item())
-// 		and the previous item created (.prevItem()), ... etc.
-// 		...this would enable us to uniquely identify the actual items 
-// 		and prevent allot of specific errors...
 Items.group = function(...items){
 	var that = this
 	items = items.length == 1 && items[0] instanceof Array ?
 		items[0]
 		: items
-
 	// replace the items with the group...
-	this.items.splice(this.items.length, 0, ...normalizeItems(this, items))
-
+	this.items.splice(this.items.length, 0, ...collectItems(this, items))
 	return this
 }
 
+
+// Place list in a sub-list of item...
+//
 Items.nest = function(item, list, options){
 	options = options || {}
 	options.sublist = list instanceof Array ?
-		normalizeItems(this, list)
+		collectItems(this, list)
 		: list
 	return this(item, options)
 }
 
+
+
+//---------------------------------------------------------------------
+// wrappers...
 
 Items.Item = function(value, options){}
 Items.Action = function(value, options){}
@@ -165,23 +199,14 @@ var BaseBrowserPrototype = {
 	// 		...
 	// 	}
 	//
-	// XXX format doc...
 	// XXX should this be a list or a Map/Object????
 	// 		...we do not need ultra fast traversal but we do need a way 
 	// 		to identify and select items in a unique way...
-	// XXX how do we handler nested lists???
-	// 		...feels like a sub-list should be part of an item, i.e. 
-	// 		create an item and place a list "into" it...
-	// 		the question is whether this item should be:
-	// 			- first item of sub-list
-	// 			- connected to the sub-list but part of the parent list
-	// 		...I'm leaning to the later...
 	__items: null,
 	get items(){
 		this.__items
 			|| this.make()
-		return this.__items
-	},
+		return this.__items },
 	set items(value){
 		this.__items = value },
 
@@ -223,13 +248,11 @@ var BaseBrowserPrototype = {
 	make: function(options){
 		var items = this.items = []
 
-		// XXX change this to:
-		// 		- return a new instance/function for each call
-		// 		- each new instance/function references:
-		// 			- the item created
-		// 			- next instance/function
-		// XXX might also be a good idea to move this out of the method
-		// 		and into the module scope for clarity...
+		// item constructor...
+		//
+		// 	make(..)
+		// 		-> make
+		//
 		var make_called = false
 		var make = function(value, opts){
 			make_called = true
@@ -264,10 +287,14 @@ var BaseBrowserPrototype = {
 
 	// Renderers...
 	//
-	// Render main list...
+	// 	.renderList(items, options)
+	// 	.renderNested(header, sublist, item, options)
+	// 	.renderItem(item, i, options)
+	// 	.renderGroup(items, options)
+	//
+	//
 	renderList: function(items, options){
 		return items },
-	// Render nested list...
 	// NOTE: to skip rendering an item/list return null...
 	// XXX should this take an empty sublist???
 	// 		...this would make it simpler to expand/collapse without 
@@ -279,11 +306,9 @@ var BaseBrowserPrototype = {
 				sublist,
 			])
    			: sublist },
-	// Render list item...
 	// NOTE: to skip rendering an item/list return null...
 	renderItem: function(item, i, options){
 		return item },
-	// Render group...
 	renderGroup: function(items, options){
 		return items },
 
@@ -295,9 +320,15 @@ var BaseBrowserPrototype = {
 	//		-> state
 	//
 	//
+	// context format:
+	// 	{
+	// 		root: <root-browser>,
+	// 		options: <options>,
+	// 	}
+	//
+	//
 	// NOTE: currently options and context are distinguished only via 
 	// 		the .options attribute... (XXX)
-	//
 	render: function(options){
 		var that = this
 		// XXX revise -- should options and context be distinguished only
@@ -329,24 +360,12 @@ var BaseBrowserPrototype = {
 						that.renderGroup(
 							item.map(_render), options)
 					// renderable item...
-					// XXX should this be nested???
 					: item.render instanceof Function ?
-						that.renderNested(
-							null,
-							item.render(context), 
-							item, 
-							options)
+						item.render(context) 
 					// renderable value -- embedded list...
-					// XXX should this be nested???
 					: (item.value || {}).render instanceof Function ?
-						that.renderNested(
-							null,
-							item.value.render(context), 
-							item, 
-							options)
+						item.value.render(context) 
 					// .sublist -- nested list...
-					// XXX should we always render the nested list here, 
-					// 		only rendering it empty if collapsed???
 					: item.sublist ?
 						that.renderNested(
 							that.renderItem(item, i, options),
@@ -434,32 +453,96 @@ var BrowserPrototype = {
 	__proto__: BaseBrowser.prototype,
 
 	options: {
+		renderHidden: false,
 
 	},
 	
 	dom: null,
 
-	// Render main list...
-	// XXX update dom...
 	renderList: function(items, options){
-		// XXX maintain header...
-		return items },
-	// Render nested list...
-	// XXX list header
-	// 		...is it the responsibility of sub-list or the parent list???
-	// XXX save link to dom (???)
+		var that = this
+		var e = document.createElement('div')
+
+		e.classList.add('list')
+
+		items
+			.forEach(function(item){
+				e.appendChild(item instanceof Array ? 
+					that.renderGroup(item) 
+					: item) })
+
+		return e },
 	renderNested: function(header, sublist, item, options){
-		// XXX expand/collapse state???
-		return header ? 
-			[header, sublist] 
-			: sublist },
-	// Render group...
+		var e = document.createElement('div')
+		e.classList.add('list')
+
+		// header...
+		if(header){
+			header.classList.add('sub-list-header')
+			item.collapsed
+				&& header.classList.add('collapsed')
+			e.appendChild(header)
+		}
+
+		// items...
+		sublist
+			&& sublist
+				.forEach(function(item){
+					e.appendChild(item) })
+
+		item.dom = e
+
+		return e
+	},
+	// XXX this does not seem to get called by .render(..)...
 	renderGroup: function(items, options){
-		return items },
-	// Render list item...
-	// XXX save link to dom in item.dom (???)
+		var e = document.createElement('div')
+		e.classList.add('group')
+		items
+			// XXX is this wrong???
+			.flat(Infinity)
+			.forEach(function(item){
+				e.appendChild(item) })
+		return e },
 	renderItem: function(item, i, options){
-		return item },
+		if(options.hidden && !options.renderHidden){
+			return null
+		}
+
+		var e = document.createElement('div')
+
+		// classes...
+		e.classList.add('item')
+		;(options.cls || [])
+			.forEach(function(cls){
+				e.classList.add(cls) })
+
+		// attrs...
+		Object.entries(options.attrs || {})
+			.forEach(function({key, value}){
+				e.setAttribute(key, value) })
+
+		// values...
+		;(item.value instanceof Array ? item.value : [item.value])
+			.map(function(v){
+				var value = document.createElement('span')
+				value.classList.add('text')
+				value.innerHTML = v || item || ''
+				e.appendChild(value)
+			})
+
+		// XXX buttons...
+		// XXX
+		
+		// special stuff...
+		options.focused && e.classList.add('focused')
+		options.selected && e.classList.add('selected')
+		options.disabled && e.classList.add('disabled')
+		options.hidden && e.classList.add('hidden')
+
+		item.dom = e
+
+		return e },
 
 	// save the rendered state to .dom
 	render: function(context, options){
