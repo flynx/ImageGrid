@@ -97,10 +97,9 @@ Items.group = function(...items){
 		items[0]
 		: items
 	var l = this.items.length - items.length
-	items = normalizeItems(this, items) 
 
 	// replace the items with the group...
-	this.items.splice(l, items.length, items)
+	this.items.splice(l, items.length, normalizeItems(this, items))
 
 	return this
 }
@@ -115,32 +114,9 @@ Items.nest = function(item, list, options){
 }
 
 
-// singular items...
-// 
-// 	.Item(value[, make][, options])
-// 		-> ???
-// 	
-Items.Item = function(value, make, options){
-	// XXX check if we are in a container -> create if needed and update context...
-	// XXX ???
-
-	// create item...
-	return make(value, make, options)
-}
-
-Items.Action = function(value, make, options){
-	options = Object.create(options || {})
-	options.cls = (options.cls || '') + ' action'
-	return this.Item(value, make, options)
-}
-Items.Heading = function(value, make, options){
-	options = Object.create(options || {})
-	options.cls = (options.cls || '') + ' heading'
-	var attrs = options.doc ? {doc: options.doc} : {}
-	attrs.__proto__ = options.attrs || {}
-	options.attrs = attrs
-	return this.Item(value, make, options)
-}
+Items.Item = function(value, options){}
+Items.Action = function(value, options){}
+Items.Heading = function(value, options){}
 Items.Empty = function(value){}
 Items.Separator = function(value){}
 Items.Spinner = function(value){}
@@ -152,24 +128,11 @@ Items.ConfirmAction = function(value){}
 Items.Group = function(items){}
 
 // lists...
-// 
-// 	.List(values[, make][, options])
-// 		-> ???
-// 		
-// XXX how do we indicate the selected item???
-// 		- options.path / options.selected?
-// 		- path argument?
-Items.List = function(values){
-	// XXX STUB...
-	return this.embed(List(values))
-}
+Items.List = function(values){}
 Items.EditableList = function(values){}
 Items.EditablePinnedList = function(values){}
 
-
 // Special list components...
-//
-// XXX these should be normal items...
 Items.ListPath = function(){}
 Items.ListTitle = function(){}
 
