@@ -824,6 +824,10 @@ module.Viewer = core.ImageGridFeatures.Feature({
 					'addClass' 
 					: 'removeClass']('crop-mode')
 			}],
+
+		// update the alignment as soon as we switch modes...
+		['toggleRibbonAlignMode',
+			function(){ this.focusImage() }],
 	],
 })
 
