@@ -453,25 +453,50 @@ var BrowserPrototype = {
 	__proto__: BaseBrowser.prototype,
 
 	options: {
+		hideListHeader: false,
+
 		renderHidden: false,
 
 	},
 	
 	dom: null,
 
+	// XXX instrument interactions...
 	renderList: function(items, options){
 		var that = this
-		var e = document.createElement('div')
+		options = options || this.options
 
-		e.classList.add('list')
+		// dialog...
+		var dialog = document.createElement('div')
+		dialog.classList.add('browse-widget')
 
+		// header...
+		options.hideListHeader
+			|| dialog.appendChild(this.renderListHeader(options))
+
+		// list...
+		var list = document.createElement('div')
+		list.classList.add('list', 'v-block')
 		items
 			.forEach(function(item){
-				e.appendChild(item instanceof Array ? 
+				list.appendChild(item instanceof Array ? 
 					that.renderGroup(item) 
 					: item) })
+		dialog.appendChild(list)
 
-		return e },
+		return dialog 
+	},
+	// XXX populate this...
+	renderListHeader: function(options){
+		var header = document.createElement('div')
+		header.classList.add('path', 'v-block')
+
+		// XXX path...
+
+		// XXX search...
+
+		return header
+	},
 	renderNested: function(header, sublist, item, options){
 		var e = document.createElement('div')
 		e.classList.add('list')
