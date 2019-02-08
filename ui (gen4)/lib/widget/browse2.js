@@ -405,7 +405,7 @@ var BaseBrowserPrototype = {
 	update: function(options){
 		return this
 			.make(options)
-			.render(this, options) },
+			.render(options) },
 
 
 	// XXX item API...
@@ -459,13 +459,26 @@ var BrowserPrototype = {
 		renderHidden: false,
 
 	},
-	
+
+
+	get parent(){
+		return this.__parent },
+	set parent(value){
+		var dom = this.dom
+		this.__parent = value
+		// transfer the dom to the new parent...
+		dom && (this.dom = dom)
+	},
+
 	get dom(){
-		return this.__root },
+		return this.parent ? 
+			this.parent.querySelector('.browse-widget') 
+			: this.__dom },
 	set dom(value){
-		this.__root ?
-			this.__root.replaceWith(value) 
-			: (this.__root = value)},
+		this.parent ? 
+			$(this.parent).empty().append($(value))
+   			: (this.__dom = value) },
+
 
 	// XXX instrument interactions...
 	renderList: function(items, options){
