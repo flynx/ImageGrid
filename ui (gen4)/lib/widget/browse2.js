@@ -470,6 +470,7 @@ var BrowserPrototype = {
 		// dialog...
 		var dialog = document.createElement('div')
 		dialog.classList.add('browse-widget')
+		dialog.setAttribute('tab-index', '0')
 
 		// header...
 		options.hideListHeader
@@ -493,6 +494,9 @@ var BrowserPrototype = {
 		header.classList.add('path', 'v-block')
 
 		// XXX path...
+		var dir = document.createElement('div')
+		dir.classList.add('dir', 'cur')
+		header.appendChild(dir)
 
 		// XXX search...
 
