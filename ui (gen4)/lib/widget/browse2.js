@@ -449,6 +449,7 @@ var BrowserClassPrototype = {
 }
 
 // XXX maintain expand/collapse state of nested lists in a natural way...
+// XXX should this use vanilla DOM or jQuery???
 var BrowserPrototype = {
 	__proto__: BaseBrowser.prototype,
 

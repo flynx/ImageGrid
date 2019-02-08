@@ -445,6 +445,14 @@
 }
 
 
+/* Nested lists... */
+.browse-widget .list .list {
+	padding-left: 20pt;
+}
+.browse-widget .list .list .item:first-child {
+	margin-left: -20pt;
+}
+
 
 
 /****************************************************** Cloud List ***/
