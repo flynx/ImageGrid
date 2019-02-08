@@ -467,7 +467,7 @@ var BrowserPrototype = {
 		var that = this
 		options = options || this.options
 
-		// dialog...
+		// dialog (container)...
 		var dialog = document.createElement('div')
 		dialog.classList.add('browse-widget')
 		dialog.setAttribute('tab-index', '0')
@@ -493,12 +493,10 @@ var BrowserPrototype = {
 		var header = document.createElement('div')
 		header.classList.add('path', 'v-block')
 
-		// XXX path...
+		// XXX path/search...
 		var dir = document.createElement('div')
 		dir.classList.add('dir', 'cur')
 		header.appendChild(dir)
-
-		// XXX search...
 
 		return header
 	},
@@ -539,18 +537,25 @@ var BrowserPrototype = {
 			return null
 		}
 
-		var e = document.createElement('div')
+		var elem = document.createElement('div')
 
 		// classes...
-		e.classList.add('item')
-		;(options.cls || [])
-			.forEach(function(cls){
-				e.classList.add(cls) })
+		elem.classList.add(...['item']
+			// user classes...
+			.concat(options.cls || [])
+			// special classes...
+			.concat([
+				//'focused',
+				'selected',
+				'disabled',
+				'hidden',
+			].filter(function(cls){ 
+				return !!options[cls] })))
 
 		// attrs...
 		Object.entries(options.attrs || {})
 			.forEach(function({key, value}){
-				e.setAttribute(key, value) })
+				elem.setAttribute(key, value) })
 
 		// values...
 		;(item.value instanceof Array ? item.value : [item.value])
@@ -558,21 +563,30 @@ var BrowserPrototype = {
 				var value = document.createElement('span')
 				value.classList.add('text')
 				value.innerHTML = v || item || ''
-				e.appendChild(value)
+				elem.appendChild(value)
 			})
+
+		// events...
+		// XXX will the events survive attaching???
+		var _elem = $(elem)
+		Object.entries(options.events || {})
+			// special events...
+			.concat([
+				'click',
+			].map(function(evt){ return [evt, options[evt]] }))
+			// setup the handlers...
+			.forEach(function({event, handler}){
+				handler
+					&& _elem.on(event, handler) })
+
 
 		// XXX buttons...
 		// XXX
 		
-		// special stuff...
-		options.focused && e.classList.add('focused')
-		options.selected && e.classList.add('selected')
-		options.disabled && e.classList.add('disabled')
-		options.hidden && e.classList.add('hidden')
+		item.dom = elem
 
-		item.dom = e
-
-		return e },
+		return elem 
+	},
 
 	// save the rendered state to .dom
 	render: function(context, options){
