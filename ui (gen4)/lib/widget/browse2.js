@@ -429,7 +429,7 @@ var BaseBrowserPrototype = {
 			this.options || {}, 
 			options || {})
 
-		this.update()
+		//this.update()
 	},
 }
 
@@ -460,7 +460,12 @@ var BrowserPrototype = {
 
 	},
 	
-	dom: null,
+	get dom(){
+		return this.__root },
+	set dom(value){
+		this.__root ?
+			this.__root.replaceWith(value) 
+			: (this.__root = value)},
 
 	// XXX instrument interactions...
 	renderList: function(items, options){
@@ -470,7 +475,7 @@ var BrowserPrototype = {
 		// dialog (container)...
 		var dialog = document.createElement('div')
 		dialog.classList.add('browse-widget')
-		dialog.setAttribute('tab-index', '0')
+		dialog.setAttribute('tabindex', '0')
 
 		// header...
 		options.hideListHeader
@@ -492,10 +497,12 @@ var BrowserPrototype = {
 	renderListHeader: function(options){
 		var header = document.createElement('div')
 		header.classList.add('path', 'v-block')
+		header.setAttribute('tabindex', '0')
 
 		// XXX path/search...
 		var dir = document.createElement('div')
 		dir.classList.add('dir', 'cur')
+		dir.setAttribute('tabindex', '0')
 		header.appendChild(dir)
 
 		return header
@@ -536,13 +543,59 @@ var BrowserPrototype = {
 		if(options.hidden && !options.renderHidden){
 			return null
 		}
-
+		//* XXX jQuery version -- not sure if we need this...
+		var elem = item.dom = $('<div/>')
+			// class...
+			.addClass(['item']
+				// user classes...
+				.concat(item.cls || [])
+				// special classes...
+				.concat([
+						//'focused',
+						'selected',
+						'disabled',
+						'hidden',
+					].filter(function(cls){ 
+						return !!item[cls] }))
+				.join(' '))
+			// attrs...
+			.attr(Object.assign({},
+				item.attrs || {},
+				{
+					tabindex: '0',
+					value: JSON.stringify(item.value),
+				}))
+			// value...
+			// XXX handle $key shorthands...
+			.append(...(item.value instanceof Array ? item.value : [item.value])
+				.map(function(v){
+					return $('<span class="text"/>')
+						.html(v || item || '') }))
+			// XXX buttons...
+			// XXX placeholder button...
+			.append($('<span class="button"/>').html('&square;'))
+			// events...
+			.run(function(){
+				var e = this
+				Object.entries(item.events || {})
+					// shorthand events...
+					.concat([
+							'click',
+						].map(function(evt){ 
+							return [evt, item[evt]] }))
+					// setup the handlers...
+					.forEach(function([evt, handler]){
+						handler
+							&& e.on(evt, handler) }) })
+		// XXX stub...
+		return elem[0]
+		/*/
 		var elem = document.createElement('div')
 
 		// classes...
 		elem.classList.add(...['item']
 			// user classes...
-			.concat(options.cls || [])
+			.concat(item.cls || [])
 			// special classes...
 			.concat([
 				//'focused',
@@ -550,35 +603,37 @@ var BrowserPrototype = {
 				'disabled',
 				'hidden',
 			].filter(function(cls){ 
-				return !!options[cls] })))
+				return !!item[cls] })))
 
 		// attrs...
-		Object.entries(options.attrs || {})
-			.forEach(function({key, value}){
+		Object.entries(item.attrs || {})
+			.forEach(function([key, value]){
 				elem.setAttribute(key, value) })
+		elem.setAttribute('tabindex', '0')
 
 		// values...
 		;(item.value instanceof Array ? item.value : [item.value])
+			// XXX handle $keys and other stuff...
 			.map(function(v){
 				var value = document.createElement('span')
 				value.classList.add('text')
 				value.innerHTML = v || item || ''
 				elem.appendChild(value)
 			})
+		// XXX not sure about this yet...
+		elem.setAttribute('value', JSON.stringify(item.value))
 
 		// events...
-		// XXX will the events survive attaching???
-		var _elem = $(elem)
-		Object.entries(options.events || {})
-			// special events...
+		Object.entries(item.events || {})
+			// shorthand events...
 			.concat([
-				'click',
-			].map(function(evt){ return [evt, options[evt]] }))
+					'click',
+				].map(function(evt){ 
+					return [evt, item[evt]] }))
 			// setup the handlers...
-			.forEach(function({event, handler}){
+			.forEach(function([evt, handler]){
 				handler
-					&& _elem.on(event, handler) })
-
+					&& elem.addEventListener(evt, handler) })
 
 		// XXX buttons...
 		// XXX
@@ -586,6 +641,7 @@ var BrowserPrototype = {
 		item.dom = elem
 
 		return elem 
+		//*/
 	},
 
 	// save the rendered state to .dom

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<link rel="stylesheet" href="../../css/widget/browse.css">
+<link rel="stylesheet" href="../../css/fonts.css">
+<style>
+
+body {
+	font-family: OpenSans, sans-serif; 
+}
+
+.container {
+	position: absolute;
+}
+
+
+</style>
+
+<script src="../../ext-lib/jquery.js"></script>
+<script src="../../ext-lib/jquery-ui.js"></script>
+
+<script src="../jli.js"></script>
+
+<script src="../../ext-lib/require.js"></script>
+
+
+<!--script src="browse-dialog.js"></script-->
+
+<script>
+
+var TREE = {
+	dir_a: {},
+	'dir b': {
+		file1: 'this is a file',
+		file2: 'this is a file',
+		file3: 'this is a file',
+	},
+	dir_c: {
+		file1: 'this is a file',
+		dir_b: {
+			file1: 'this is a file',
+		},
+		dir_c: {},
+		dir_d: {},
+		dir_e: {},
+		dir_f: {},
+		dir_g: {},
+		dir_h: {},
+		dir_i: {},
+		dir_j: {},
+		dir_k: {},
+		dir_l: {},
+		dir_m: {},
+		dir_o: {},
+		dir_p: {},
+		dir_q: {},
+		dir_r: {},
+		dir_s: {},
+		dir_t: {},
+		dir_u: {},
+	},
+	file: 'this is a file',
+}
+// add some recursion for testing...
+TREE.dir_d = TREE.dir_c.dir_b
+TREE.dir_a.tree = TREE
+TREE.dir_c.tree = TREE
+TREE.dir_c.dir_b.tree = TREE
+
+
+
+//---
+
+var use_disabled = true
+var show_files = false
+
+requirejs.config({
+	paths: {
+		'lib/object': '../../node_modules/ig-object/object',
+		'lib/actions': '../../node_modules/ig-actions/actions',
+		'lib/features': '../../node_modules/ig-features/features',
+		//'lib/keyboard': '../../node_modules/ig-keyboard/keyboard',
+	},	
+	map: {
+		'*': {
+			'../object': 'lib/object',
+		},
+	},
+})
+
+requirejs([
+			'../util',
+			'../keyboard', 
+			'lib/object', 
+			'../toggler', 
+			'./browse2',
+		], function(u, k, o, t, br){
+	util = u
+	keyboard = k
+	object = o
+	toggler = t
+	browser = br
+
+
+	dialog_1 = browser.Browser(function(make){
+		make(123)
+		make(321)
+		make.group(
+			make('a'),
+			'b')
+		make('e')
+		// embeded browser...
+		make(browser.Browser(function(make){
+			make(1)
+			make(2)
+		}))
+		// basic nested list...
+		make.nest('A', [
+			1,
+			make('moo'),
+			2,
+		])
+		// nested browser...
+		make.nest('B', 
+			browser.Browser(function(make){
+				make('xx')
+				make('yx')
+				make.nest('C', browser.Browser(function(make){
+					make('aaa')
+					make.nest('D', browser.Browser(function(make){
+						make('a--a')
+						make('b--b')
+					}))
+					make('bbb')
+				}))
+			}), {
+				//collapsed: true,
+				// XXX this does not appear to survive attaching an item 
+				//		to the document...
+				click: function(){ console.log('!!!!!!!!!!!!') },
+				//cls: ['heading'],
+			})
+	})
+
+	dialog_1.__root = $('.container').first()[0]
+
+	dialog_1.render()
+
+	//$('.container').first().append(dialog_1.render())
+})
+
+$(function(){
+
+	$('.container').draggable({ 
+		cancel: ".path .dir, .list div" 
+	})
+})
+
+
+
+</script>
+
+<body>
+
+<div class="container tree">
+</div>
+
+<div class="container flat">
+</div>
+
+<div class="container flat2">
+</div>
+
+<div class="container pathlist">
+</div>
+
+</body>
+</html>
+<!-- vim:set ts=4 sw=4 : -->
