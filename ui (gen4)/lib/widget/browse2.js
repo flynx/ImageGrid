@@ -460,7 +460,7 @@ var BrowserPrototype = {
 
 	},
 
-
+	// parent element (optional)...
 	get parent(){
 		return this.__parent },
 	set parent(value){
@@ -470,6 +470,7 @@ var BrowserPrototype = {
 		dom && (this.dom = dom)
 	},
 
+	// browser dom...
 	get dom(){
 		return this.parent ? 
 			this.parent.querySelector('.browse-widget') 
@@ -507,6 +508,7 @@ var BrowserPrototype = {
 		return dialog 
 	},
 	// XXX populate this...
+	// XXX make this an item???
 	renderListHeader: function(options){
 		var header = document.createElement('div')
 		header.classList.add('path', 'v-block')
@@ -658,7 +660,7 @@ var BrowserPrototype = {
 	},
 
 	// save the rendered state to .dom
-	render: function(context, options){
+	render: function(options){
 		this.dom = object.parent(BrowserPrototype.render, this).call(this, ...arguments)
 		return this.dom
 	},
