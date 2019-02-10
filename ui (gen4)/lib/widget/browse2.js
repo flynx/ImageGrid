@@ -88,6 +88,7 @@ var collectItems = function(context, items){
 //
 
 // XXX
+// XXX can't use Object.assign(..) here as it will not copy props...
 var Items = module.items = function(){}
 
 
@@ -105,7 +106,7 @@ Items.last = function(){
 
 // Focus last created item...
 Items.focus = function(){
-	this.last.current = true }
+	this.last().current = true }
 
 
 
@@ -162,9 +163,6 @@ Items.Spinner = function(value){}
 Items.Selected = function(value){}
 Items.Editable = function(value){}
 Items.ConfirmAction = function(value){}
-
-// groups...
-Items.Group = function(items){}
 
 // lists...
 Items.List = function(values){}
@@ -289,7 +287,9 @@ var BaseBrowserPrototype = {
 	// Renderers...
 	//
 	// 	.renderList(items, options)
-	// 	.renderNested(header, sublist, item, options)
+	// 	// XXX unify signature with other renderers -- replace options
+	// 	//		with context as it already contains .options...
+	// 	.renderNested(header, sublist, contex, item, options)
 	// 	.renderItem(item, i, options)
 	// 	.renderGroup(items, options)
 	//
@@ -551,9 +551,10 @@ var BrowserPrototype = {
 		e.classList.add('list')
 
 		// localize events...
+		var stopPropagation = function(evt){ evt.stopPropagation() }
 		;(options.localEvents || this.options.localEvents || [])
 			.forEach(function(evt){
-				e.addEventListener(evt, function(evt){ evt.stopPropagation() }) })
+				e.addEventListener(evt, stopPropagation) })
 
 		// header...
 		if(header){
@@ -562,9 +563,9 @@ var BrowserPrototype = {
 				&& header.classList.add('collapsed')
 			e.appendChild(header)
 
-			// XXX STUB...
-			// XXX BUG: nested list .render() when triggered without a 
-			// 		context will render the header...
+			// collapse action handler...
+			// XXX STUB: make this overloadable...
+			// XXX handle the 'open' event...
 			e.addEventListener('click', function(evt){
 				item.collapsed = !item.collapsed
 				// XXX need to pass the root context here...
