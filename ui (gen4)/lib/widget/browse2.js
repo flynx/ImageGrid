@@ -549,9 +549,10 @@ var BrowserPrototype = {
 		e.classList.add('list')
 
 		// localize events...
+		var stopPropagation = function(evt){ evt.stopPropagation() }
 		;(options.localEvents || this.options.localEvents || [])
 			.forEach(function(evt){
-				e.addEventListener(evt, function(evt){ evt.stopPropagation() }) })
+				e.addEventListener(evt, stopPropagation) })
 
 		// header...
 		if(header){
