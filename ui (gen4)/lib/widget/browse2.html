@@ -101,9 +101,10 @@ requirejs([
 	browser = br
 
 
+	// XXX split this into several dialogues, show each and then combine...
 	dialog_1 = browser.Browser(function(make){
 		make(123)
-		make(321)
+		make([321, 321, 123])
 		make.group(
 			make('a'),
 			'b')

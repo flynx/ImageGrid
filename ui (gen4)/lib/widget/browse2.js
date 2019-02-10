@@ -182,6 +182,7 @@ Items.ListTitle = function(){}
 var BaseBrowserClassPrototype = {
 }
 
+// XXX need a way to identify items...
 var BaseBrowserPrototype = {
 	// XXX should we mix item/list options or separate them into sub-objects???
 	options: null,
@@ -299,7 +300,8 @@ var BaseBrowserPrototype = {
 	// XXX should this take an empty sublist???
 	// 		...this would make it simpler to expand/collapse without 
 	// 		re-rendering the whole list...
-	renderNested: function(header, sublist, item, options){
+	// XXX revise how the context is passed...
+	renderNested: function(header, sublist, context, item, options){
 		return header ? 
 			this.renderGroup([
 				header, 
@@ -367,6 +369,7 @@ var BaseBrowserPrototype = {
 						item.value.render(context) 
 					// .sublist -- nested list...
 					: item.sublist ?
+						// XXX revise how the context is passed...
 						that.renderNested(
 							that.renderItem(item, i, options),
 							// collapsed...
@@ -377,6 +380,7 @@ var BaseBrowserPrototype = {
 								item.sublist.render(context)
 							// list of items...
 							: item.sublist.map(_render)),
+							context,
 							item, 
 							options)
 					// basic item...
@@ -389,6 +393,8 @@ var BaseBrowserPrototype = {
 			// root context -> render list and return this...
 			this.renderList(items, options)
 			// non-root context -> return items as-is...
+			// XXX should this be a list of the return value of a 
+			// 		renderer like .renderNested(..) ???
 			: items
 	},
 
@@ -422,6 +428,7 @@ var BaseBrowserPrototype = {
 	reduce: function(){},
 
 
+	// XXX should we update on on init....
 	__init__: function(func, options){
 		this.__list__ = func
 		this.options = Object.assign(
@@ -429,6 +436,7 @@ var BaseBrowserPrototype = {
 			this.options || {}, 
 			options || {})
 
+		// XXX should this be here or should this be optional???
 		//this.update()
 	},
 }
@@ -448,6 +456,10 @@ var BrowserClassPrototype = {
 	__proto__: BaseBrowser,
 }
 
+// XXX TODO:
+// 		- event handler signature -- pass the item + optionally render...
+// 		- keyboard handling...
+// XXX render of nested lists does not affect the parent list(s)...
 // XXX maintain expand/collapse state of nested lists in a natural way...
 // XXX should this use vanilla DOM or jQuery???
 var BrowserPrototype = {
@@ -458,11 +470,17 @@ var BrowserPrototype = {
 
 		renderHidden: false,
 
+		localEvents: [
+			'click',
+		],
 	},
 
 	// parent element (optional)...
 	get parent(){
-		return this.__parent },
+		return this.__parent 
+			|| (this.__dom ? 
+				this.__dom.parentElement 
+				: undefined) },
 	set parent(value){
 		var dom = this.dom
 		this.__parent = value
@@ -472,13 +490,13 @@ var BrowserPrototype = {
 
 	// browser dom...
 	get dom(){
-		return this.parent ? 
-			this.parent.querySelector('.browse-widget') 
-			: this.__dom },
+		return this.__dom },
 	set dom(value){
-		this.parent ? 
-			$(this.parent).empty().append($(value))
-   			: (this.__dom = value) },
+		this.parent 
+			&& (this.__dom ?
+				this.parent.replaceChild(value, this.__dom) 
+				: this.parent.appendChild(value))
+		this.__dom = value },
 
 
 	// XXX instrument interactions...
@@ -522,9 +540,18 @@ var BrowserPrototype = {
 
 		return header
 	},
-	renderNested: function(header, sublist, item, options){
+	// XXX revise how the context is passed...
+	renderNested: function(header, sublist, context, item, options){
+		var that = this
+
+		// container...
 		var e = document.createElement('div')
 		e.classList.add('list')
+
+		// localize events...
+		;(options.localEvents || this.options.localEvents || [])
+			.forEach(function(evt){
+				e.addEventListener(evt, function(evt){ evt.stopPropagation() }) })
 
 		// header...
 		if(header){
@@ -532,13 +559,25 @@ var BrowserPrototype = {
 			item.collapsed
 				&& header.classList.add('collapsed')
 			e.appendChild(header)
+
+			// XXX STUB...
+			// XXX BUG: nested list .render() when triggered without a 
+			// 		context will render the header...
+			e.addEventListener('click', function(evt){
+				item.collapsed = !item.collapsed
+				// XXX need to pass the root context here...
+				that.render(context)
+			})
 		}
 
 		// items...
-		sublist
-			&& sublist
+		sublist instanceof Node ?
+			e.appendChild(sublist)
+		: sublist instanceof Array ?
+			sublist
 				.forEach(function(item){
 					e.appendChild(item) })
+		: null
 
 		item.dom = e
 
@@ -554,6 +593,10 @@ var BrowserPrototype = {
 			.forEach(function(item){
 				e.appendChild(item) })
 		return e },
+	// XXX add custom events:
+	// 		- open
+	// 		- select
+	// XXX add buttons...
 	renderItem: function(item, i, options){
 		if(options.hidden && !options.renderHidden){
 			return null
@@ -578,7 +621,7 @@ var BrowserPrototype = {
 				item.attrs || {},
 				{
 					tabindex: '0',
-					value: JSON.stringify(item.value),
+					value: JSON.stringify(item.value || item),
 				}))
 			// value...
 			// XXX handle $key shorthands...
@@ -587,8 +630,15 @@ var BrowserPrototype = {
 					return $('<span class="text"/>')
 						.html(v || item || '') }))
 			// XXX buttons...
-			// XXX placeholder button...
-			.append($('<span class="button"/>').html('&square;'))
+			// XXX placeholder buttons...
+			// XXX things to work out:
+			// 		- order -- should be ltr and not rtl (???)
+			.append($('<span class="button"/>')
+				.attr('tabindex', '0')
+				.html('&square;'))
+			.append($('<span class="button"/>')
+				.attr('tabindex', '0')
+				.html('&#9675;'))
 			// events...
 			.run(function(){
 				var e = this
@@ -661,13 +711,26 @@ var BrowserPrototype = {
 
 	// save the rendered state to .dom
 	render: function(options){
-		this.dom = object.parent(BrowserPrototype.render, this).call(this, ...arguments)
+		//this.dom = object.parent(BrowserPrototype.render, this).call(this, ...arguments)
+		//return this.dom
+		
+		var d = object.parent(BrowserPrototype.render, this).call(this, ...arguments)
+
+		// wrap the list (nested list) of nodes in a div...
+		if(d instanceof Array){
+			var c = document.createElement('div')
+			d.forEach(function(e){
+				c.appendChild(e) })
+			d = c
+		}
+		this.dom = d
 		return this.dom
 	},
 
 
 	filter: function(){},
 
+	select: function(){},
 	get: function(){},
 	focus: function(){},
 
@@ -718,14 +781,14 @@ var TextBrowserPrototype = {
 	// 		visible in text...
 	renderList: function(items, options){
 		var that = this
-		return this.renderNested(null, items, null, options)
+		return this.renderNested(null, items, null, null, options)
 			.join('\n') },
 	renderItem: function(item, i, options){
 		var value = item.value || item
 		return item.current ?
 			`[ ${value} ]`
    			: value },
-	renderNested: function(header, sublist, item, options){
+	renderNested: function(header, sublist, context, item, options){
 		var that = this
 		var nested = sublist 
 			&& sublist

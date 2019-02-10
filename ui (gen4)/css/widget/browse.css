@@ -215,6 +215,7 @@
 
 	/*border: solid 1px rgba(255,255,255, 0.3);*/
 }
+.browse-widget .list .button:focus,
 .browse-widget .list .button:hover {
 	opacity: 0.9;
 	background-color: rgba(0, 0, 0, 0.2);
@@ -451,7 +452,7 @@
 .browse-widget .list .list {
 	padding-left: 20pt;
 }
-.browse-widget .list .list .item:first-child {
+.browse-widget .list .list>.item:first-child {
 	margin-left: -20pt;
 }
 
