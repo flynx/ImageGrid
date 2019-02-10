@@ -88,6 +88,7 @@ var collectItems = function(context, items){
 //
 
 // XXX
+// XXX can't use Object.assign(..) here as it will not copy props...
 var Items = module.items = function(){}
 
 
@@ -105,7 +106,7 @@ Items.last = function(){
 
 // Focus last created item...
 Items.focus = function(){
-	this.last.current = true }
+	this.last().current = true }
 
 
 
@@ -162,9 +163,6 @@ Items.Spinner = function(value){}
 Items.Selected = function(value){}
 Items.Editable = function(value){}
 Items.ConfirmAction = function(value){}
-
-// groups...
-Items.Group = function(items){}
 
 // lists...
 Items.List = function(values){}
@@ -289,7 +287,9 @@ var BaseBrowserPrototype = {
 	// Renderers...
 	//
 	// 	.renderList(items, options)
-	// 	.renderNested(header, sublist, item, options)
+	// 	// XXX unify signature with other renderers -- replace options
+	// 	//		with context as it already contains .options...
+	// 	.renderNested(header, sublist, contex, item, options)
 	// 	.renderItem(item, i, options)
 	// 	.renderGroup(items, options)
 	//
