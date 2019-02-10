@@ -473,7 +473,14 @@ var BrowserPrototype = {
 		renderHidden: false,
 
 		localEvents: [
+			// XXX STUB???
 			'click',
+
+			// XXX keyboard stuff...
+			// XXX
+
+			// XXX custom events...
+			// XXX
 		],
 	},
 
@@ -561,16 +568,17 @@ var BrowserPrototype = {
 			header.classList.add('sub-list-header')
 			item.collapsed
 				&& header.classList.add('collapsed')
-			e.appendChild(header)
 
 			// collapse action handler...
 			// XXX STUB: make this overloadable...
 			// XXX handle the 'open' event...
-			e.addEventListener('click', function(evt){
+			header.addEventListener('click', function(evt){
 				item.collapsed = !item.collapsed
 				// XXX need to pass the root context here...
 				that.render(context)
 			})
+
+			e.appendChild(header)
 		}
 
 		// items...
