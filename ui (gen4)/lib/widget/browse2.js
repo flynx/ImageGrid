@@ -631,7 +631,6 @@ var BrowserPrototype = {
 			.attr(Object.assign({},
 				item.attrs || {},
 				{
-					tabindex: '0',
 					value: JSON.stringify(item.value || item),
 				}))
 			// value...
@@ -645,10 +644,8 @@ var BrowserPrototype = {
 			// XXX things to work out:
 			// 		- order -- should be ltr and not rtl (???)
 			.append($('<span class="button"/>')
-				.attr('tabindex', '0')
 				.html('&square;'))
 			.append($('<span class="button"/>')
-				.attr('tabindex', '0')
 				.html('&#9675;'))
 			// events...
 			.run(function(){
@@ -663,6 +660,11 @@ var BrowserPrototype = {
 					.forEach(function([evt, handler]){
 						handler
 							&& e.on(evt, handler) }) })
+			// setup tabindex on non-disabled items...
+			.run(function(){
+				item.disabled
+					|| $([this[0], ...this.find('.button')]).attr('tabindex', '0') })
+
 		// XXX stub...
 		return elem[0]
 		/*/
