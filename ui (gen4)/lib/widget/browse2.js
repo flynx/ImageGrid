@@ -294,14 +294,14 @@ var BaseBrowserPrototype = {
 	// 	.renderGroup(items, options)
 	//
 	//
-	renderList: function(items, options){
+	renderList: function(items, context){
 		return items },
 	// NOTE: to skip rendering an item/list return null...
 	// XXX should this take an empty sublist???
 	// 		...this would make it simpler to expand/collapse without 
 	// 		re-rendering the whole list...
 	// XXX revise how the context is passed...
-	renderNested: function(header, sublist, context, item, options){
+	renderNested: function(header, sublist, item, context){
 		return header ? 
 			this.renderGroup([
 				header, 
@@ -309,9 +309,9 @@ var BaseBrowserPrototype = {
 			])
    			: sublist },
 	// NOTE: to skip rendering an item/list return null...
-	renderItem: function(item, i, options){
+	renderItem: function(item, i, context){
 		return item },
-	renderGroup: function(items, options){
+	renderGroup: function(items, context){
 		return items },
 
 	// Render state...
@@ -341,7 +341,7 @@ var BaseBrowserPrototype = {
 					// NOTE: we are not combining this with .options as nested 
 					// 		lists can have their own unique sets of options 
 					// 		independently of the root list...
-					options: options || {},
+					options: options || this.options || {},
 				}
 			: options
 		options = context.options
@@ -360,7 +360,7 @@ var BaseBrowserPrototype = {
 					// group...
 					item instanceof Array ?
 						that.renderGroup(
-							item.map(_render), options)
+							item.map(_render), context)
 					// renderable item...
 					: item.render instanceof Function ?
 						item.render(context) 
@@ -371,7 +371,7 @@ var BaseBrowserPrototype = {
 					: item.sublist ?
 						// XXX revise how the context is passed...
 						that.renderNested(
-							that.renderItem(item, i, options),
+							that.renderItem(item, i, context),
 							// collapsed...
 							(item.collapsed ?
 									null
@@ -380,18 +380,17 @@ var BaseBrowserPrototype = {
 								item.sublist.render(context)
 							// list of items...
 							: item.sublist.map(_render)),
-							context,
 							item, 
-							options)
+							context)
 					// basic item...
-					: that.renderItem(item, i, options)) }) 
+					: that.renderItem(item, i, context)) }) 
 			.filter(function(e){
 				return e != null })
 
 		// determine the render mode...
 		return context.root === this ?
 			// root context -> render list and return this...
-			this.renderList(items, options)
+			this.renderList(items, context)
 			// non-root context -> return items as-is...
 			// XXX should this be a list of the return value of a 
 			// 		renderer like .renderNested(..) ???
@@ -482,6 +481,16 @@ var BrowserPrototype = {
 			// XXX custom events...
 			// XXX
 		],
+		//buttonLocalEvents: [
+		//],
+
+		// Format:
+		// 	[
+		// 		['html', <handler>],
+		// 		...
+		// 	]
+		itemButtons: [
+		],
 	},
 
 	// parent element (optional)...
@@ -509,9 +518,9 @@ var BrowserPrototype = {
 
 
 	// XXX instrument interactions...
-	renderList: function(items, options){
+	renderList: function(items, context){
 		var that = this
-		options = options || this.options
+		var options = context.options || this.options
 
 		// dialog (container)...
 		var dialog = document.createElement('div')
@@ -520,7 +529,7 @@ var BrowserPrototype = {
 
 		// header...
 		options.hideListHeader
-			|| dialog.appendChild(this.renderListHeader(options))
+			|| dialog.appendChild(this.renderListHeader(context))
 
 		// list...
 		var list = document.createElement('div')
@@ -536,7 +545,7 @@ var BrowserPrototype = {
 	},
 	// XXX populate this...
 	// XXX make this an item???
-	renderListHeader: function(options){
+	renderListHeader: function(context){
 		var header = document.createElement('div')
 		header.classList.add('path', 'v-block')
 		header.setAttribute('tabindex', '0')
@@ -549,9 +558,10 @@ var BrowserPrototype = {
 
 		return header
 	},
-	// XXX revise how the context is passed...
-	renderNested: function(header, sublist, context, item, options){
+	// XXX can we influence how the options are passed to the header???
+	renderNested: function(header, sublist, item, context){
 		var that = this
+		var options = context.options || this.options
 
 		// container...
 		var e = document.createElement('div')
@@ -559,7 +569,7 @@ var BrowserPrototype = {
 
 		// localize events...
 		var stopPropagation = function(evt){ evt.stopPropagation() }
-		;(options.localEvents || this.options.localEvents || [])
+		;(options.localEvents || [])
 			.forEach(function(evt){
 				e.addEventListener(evt, stopPropagation) })
 
@@ -595,7 +605,7 @@ var BrowserPrototype = {
 		return e
 	},
 	// XXX this does not seem to get called by .render(..)...
-	renderGroup: function(items, options){
+	renderGroup: function(items, context){
 		var e = document.createElement('div')
 		e.classList.add('group')
 		items
@@ -607,67 +617,12 @@ var BrowserPrototype = {
 	// XXX add custom events:
 	// 		- open
 	// 		- select
-	// XXX add buttons...
-	renderItem: function(item, i, options){
+	// 		- update
+	renderItem: function(item, i, context){
+		var options = context.options || this.options
 		if(options.hidden && !options.renderHidden){
 			return null
 		}
-		//* XXX jQuery version -- not sure if we need this...
-		var elem = item.dom = $('<div/>')
-			// class...
-			.addClass(['item']
-				// user classes...
-				.concat(item.cls || [])
-				// special classes...
-				.concat([
-						//'focused',
-						'selected',
-						'disabled',
-						'hidden',
-					].filter(function(cls){ 
-						return !!item[cls] }))
-				.join(' '))
-			// attrs...
-			.attr(Object.assign({},
-				item.attrs || {},
-				{
-					value: JSON.stringify(item.value || item),
-				}))
-			// value...
-			// XXX handle $key shorthands...
-			.append(...(item.value instanceof Array ? item.value : [item.value])
-				.map(function(v){
-					return $('<span class="text"/>')
-						.html(v || item || '') }))
-			// XXX buttons...
-			// XXX placeholder buttons...
-			// XXX things to work out:
-			// 		- order -- should be ltr and not rtl (???)
-			.append($('<span class="button"/>')
-				.html('&square;'))
-			.append($('<span class="button"/>')
-				.html('&#9675;'))
-			// events...
-			.run(function(){
-				var e = this
-				Object.entries(item.events || {})
-					// shorthand events...
-					.concat([
-							'click',
-						].map(function(evt){ 
-							return [evt, item[evt]] }))
-					// setup the handlers...
-					.forEach(function([evt, handler]){
-						handler
-							&& e.on(evt, handler) }) })
-			// setup tabindex on non-disabled items...
-			.run(function(){
-				item.disabled
-					|| $([this[0], ...this.find('.button')]).attr('tabindex', '0') })
-
-		// XXX stub...
-		return elem[0]
-		/*/
 		var elem = document.createElement('div')
 
 		// classes...
@@ -676,7 +631,6 @@ var BrowserPrototype = {
 			.concat(item.cls || [])
 			// special classes...
 			.concat([
-				//'focused',
 				'selected',
 				'disabled',
 				'hidden',
@@ -687,7 +641,9 @@ var BrowserPrototype = {
 		Object.entries(item.attrs || {})
 			.forEach(function([key, value]){
 				elem.setAttribute(key, value) })
-		elem.setAttribute('tabindex', '0')
+		item.disabled
+			|| elem.setAttribute('tabindex', '0')
+		elem.setAttribute('value', JSON.stringify(item.value))
 
 		// values...
 		;(item.value instanceof Array ? item.value : [item.value])
@@ -698,8 +654,6 @@ var BrowserPrototype = {
 				value.innerHTML = v || item || ''
 				elem.appendChild(value)
 			})
-		// XXX not sure about this yet...
-		elem.setAttribute('value', JSON.stringify(item.value))
 
 		// events...
 		Object.entries(item.events || {})
@@ -713,20 +667,36 @@ var BrowserPrototype = {
 				handler
 					&& elem.addEventListener(evt, handler) })
 
-		// XXX buttons...
-		// XXX
+		// buttons...
+		// XXX migrate the default buttons functionality and button inheritance...
+		var buttons = (item.buttons || options.itemButtons || [])
+			.slice()
+			// NOTE: keep the order unsurprising...
+			.reverse()
+		var stopPropagation = function(evt){ evt.stopPropagation() }
+		buttons
+			.forEach(function([html, handler]){
+				var button = document.createElement('div')
+				button.classList.add('button')
+				button.innerHTML = html
+				if(!item.disabled){
+					button.setAttribute('tabindex', '0')
+					;(options.buttonLocalEvents || options.localEvents || [])
+						.forEach(function(evt){
+							button.addEventListener(evt, stopPropagation) })
+					handler
+						&& button.addEventListener('click', handler)
+				}
+				elem.appendChild(button)
+			})
 		
 		item.dom = elem
 
 		return elem 
-		//*/
 	},
 
 	// save the rendered state to .dom
 	render: function(options){
-		//this.dom = object.parent(BrowserPrototype.render, this).call(this, ...arguments)
-		//return this.dom
-		
 		var d = object.parent(BrowserPrototype.render, this).call(this, ...arguments)
 
 		// wrap the list (nested list) of nodes in a div...
