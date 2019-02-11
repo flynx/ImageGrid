@@ -491,6 +491,9 @@ var BrowserPrototype = {
 		// 	]
 		itemButtons: [
 		],
+		// XXX need to mix these into the header only...
+		headerItemButtons: [
+		],
 	},
 
 	// parent element (optional)...
@@ -517,6 +520,19 @@ var BrowserPrototype = {
 		this.__dom = value },
 
 
+	//
+	// Foramt:
+	// 	<div class="browse-widget" tabindex="0">
+	// 		<!-- header -->
+	// 		...
+	//
+	// 		<!-- list -->
+	// 		<div class="list v-block">
+	// 			<!-- items -->
+	// 			...
+	// 		</div>
+	// 	</div>
+	//
 	// XXX instrument interactions...
 	renderList: function(items, context){
 		var that = this
@@ -543,12 +559,19 @@ var BrowserPrototype = {
 
 		return dialog 
 	},
+	//
+	// Foramt:
+	//	<div class="path v-block">
+	//		<div class="dir" tabindex="0">dir</div>
+	//		...
+	//		<div class="dir cur" tabindex="0">dir</div>
+	//	</div>
+	// 	
 	// XXX populate this...
 	// XXX make this an item???
 	renderListHeader: function(context){
 		var header = document.createElement('div')
 		header.classList.add('path', 'v-block')
-		header.setAttribute('tabindex', '0')
 
 		// XXX path/search...
 		var dir = document.createElement('div')
@@ -558,6 +581,16 @@ var BrowserPrototype = {
 
 		return header
 	},
+	//
+	// Format:
+	// 	<div class="list">
+	// 		<!-- header (optional) -->
+	// 		...
+	//
+	// 		<!-- sublist (optional) -->
+	// 		...
+	// 	</div>
+	//
 	// XXX can we influence how the options are passed to the header???
 	renderNested: function(header, sublist, item, context){
 		var that = this
@@ -594,6 +627,7 @@ var BrowserPrototype = {
 		// items...
 		sublist instanceof Node ?
 			e.appendChild(sublist)
+		// XXX should this add the items to a container???
 		: sublist instanceof Array ?
 			sublist
 				.forEach(function(item){
@@ -604,6 +638,12 @@ var BrowserPrototype = {
 
 		return e
 	},
+	//
+	// Format:
+	// 	<div class="group">
+	// 		..
+	// 	</div>
+	//
 	// XXX this does not seem to get called by .render(..)...
 	renderGroup: function(items, context){
 		var e = document.createElement('div')
@@ -614,6 +654,20 @@ var BrowserPrototype = {
 			.forEach(function(item){
 				e.appendChild(item) })
 		return e },
+	//
+	// Format:
+	// 	<div value="value_json" class="item .." tabindex="0" ..>
+	// 		<!-- value -->
+	// 		<div class="text">value_a</div>
+	// 		<div class="text">value_b</div>
+	// 		...
+	//
+	// 		<!-- buttons (optional) -->
+	// 		<div class="button">button_a_html</div>
+	// 		<div class="button">button_b_html</div>
+	// 		...
+	// 	</div>
+	//
 	// XXX add custom events:
 	// 		- open
 	// 		- select
@@ -638,11 +692,11 @@ var BrowserPrototype = {
 				return !!item[cls] })))
 
 		// attrs...
+		item.disabled
+			|| elem.setAttribute('tabindex', '0')
 		Object.entries(item.attrs || {})
 			.forEach(function([key, value]){
 				elem.setAttribute(key, value) })
-		item.disabled
-			|| elem.setAttribute('tabindex', '0')
 		elem.setAttribute('value', JSON.stringify(item.value))
 
 		// values...
@@ -695,7 +749,7 @@ var BrowserPrototype = {
 		return elem 
 	},
 
-	// save the rendered state to .dom
+	// save the rendered state to .dom and wrap a list of nodes in a div...
 	render: function(options){
 		var d = object.parent(BrowserPrototype.render, this).call(this, ...arguments)
 
