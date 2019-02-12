@@ -520,6 +520,7 @@ var BrowserPrototype = {
 		this.__dom = value },
 
 
+	// Element renderers...
 	//
 	// Foramt:
 	// 	<div class="browse-widget" tabindex="0">
@@ -534,6 +535,7 @@ var BrowserPrototype = {
 	// 	</div>
 	//
 	// XXX instrument interactions...
+	// XXX register event handlers...
 	renderList: function(items, context){
 		var that = this
 		var options = context.options || this.options
@@ -556,6 +558,9 @@ var BrowserPrototype = {
 					that.renderGroup(item) 
 					: item) })
 		dialog.appendChild(list)
+
+		// XXX event handlers...
+		// XXX
 
 		return dialog 
 	},
@@ -592,6 +597,7 @@ var BrowserPrototype = {
 	// 	</div>
 	//
 	// XXX can we influence how the options are passed to the header???
+	// XXX register event handlers...
 	renderNested: function(header, sublist, item, context){
 		var that = this
 		var options = context.options || this.options
@@ -613,11 +619,9 @@ var BrowserPrototype = {
 				&& header.classList.add('collapsed')
 
 			// collapse action handler...
-			// XXX STUB: make this overloadable...
-			// XXX handle the 'open' event...
-			header.addEventListener('click', function(evt){
+			// XXX make this overloadable...
+			$(header).on('open', function(evt){
 				item.collapsed = !item.collapsed
-				// XXX need to pass the root context here...
 				that.render(context)
 			})
 
@@ -633,6 +637,9 @@ var BrowserPrototype = {
 				.forEach(function(item){
 					e.appendChild(item) })
 		: null
+
+		// XXX event handlers... (???)
+		// XXX
 
 		item.dom = e
 
@@ -677,6 +684,7 @@ var BrowserPrototype = {
 		if(options.hidden && !options.renderHidden){
 			return null
 		}
+		var text = JSON.stringify(item.value)
 		var elem = document.createElement('div')
 
 		// classes...
@@ -697,7 +705,7 @@ var BrowserPrototype = {
 		Object.entries(item.attrs || {})
 			.forEach(function([key, value]){
 				elem.setAttribute(key, value) })
-		elem.setAttribute('value', JSON.stringify(item.value))
+		elem.setAttribute('value', text)
 
 		// values...
 		;(item.value instanceof Array ? item.value : [item.value])
@@ -710,6 +718,10 @@ var BrowserPrototype = {
 			})
 
 		// events...
+		// XXX revise signature...
+		elem.addEventListener('click', 
+			function(){ $(elem).trigger('open', [text, item, elem]) })
+		//elem.addEventListener('tap', function(){ $(elem).trigger('open', [text, item, elem]) })
 		Object.entries(item.events || {})
 			// shorthand events...
 			.concat([
@@ -749,7 +761,9 @@ var BrowserPrototype = {
 		return elem 
 	},
 
-	// save the rendered state to .dom and wrap a list of nodes in a div...
+	// This does tow additional things:
+	// 	- save the rendered state to .dom 
+	// 	- wrap a list of nodes (nested list) in a div
 	render: function(options){
 		var d = object.parent(BrowserPrototype.render, this).call(this, ...arguments)
 
@@ -760,9 +774,18 @@ var BrowserPrototype = {
 				c.appendChild(e) })
 			d = c
 		}
+
 		this.dom = d
 		return this.dom
 	},
+
+	// Custom events...
+	// XXX do we use jQuery event handling or vanilla?
+	// 		...feels like jQuery here wins as it provides a far simpler
+	// 		API + it's a not time critical area...
+	open: function(func){
+	},
+
 
 
 	filter: function(){},
