@@ -232,8 +232,6 @@ var BaseBrowserPrototype = {
 	//
 	//
 	// NOTE: this is not designed to be called directly...
-	//
-	// XXX not sure how to handle options in here -- see .make(..) and its notes...
 	__list__: function(make, options){
 		throw new Error('.__list__(..): Not implemented.') },
 
@@ -293,12 +291,11 @@ var BaseBrowserPrototype = {
 
 	// Renderers...
 	//
-	// 	.renderList(items, options)
-	// 	// XXX unify signature with other renderers -- replace options
-	// 	//		with context as it already contains .options...
-	// 	.renderNested(header, sublist, contex, item, options)
-	// 	.renderItem(item, i, options)
-	// 	.renderGroup(items, options)
+	// 	.renderList(items, context)
+	// 	.renderNested(header, sublist, item, context)
+	// 	.renderNestedHeader(item, i, context)
+	// 	.renderItem(item, i, context)
+	// 	.renderGroup(items, context)
 	//
 	//
 	renderList: function(items, context){
