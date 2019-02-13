@@ -244,6 +244,11 @@ var BaseBrowserPrototype = {
 	// 		-> this
 	//
 	// XXX revise options handling for .__list__(..)
+	// XXX add persistent items...
+	// 		...take values from corresponding .items[key]
+	// 		to do this we need a simple way to access an item...
+	// 		.....might be a good idea to simply load the .items[key] and 
+	// 		assign/update it with the new values...
 	make: function(options){
 		var items = this.items = []
 
@@ -257,6 +262,8 @@ var BaseBrowserPrototype = {
 			make_called = true
 			items.push(Object.assign(
 				{}, 
+				// XXX get default values from corresponding .item[..]...
+				// XXX
 				options || {},
 				opts || {}, 
 				{value: value}))
@@ -300,7 +307,6 @@ var BaseBrowserPrototype = {
 	// XXX should this take an empty sublist???
 	// 		...this would make it simpler to expand/collapse without 
 	// 		re-rendering the whole list...
-	// XXX revise how the context is passed...
 	renderNested: function(header, sublist, item, context){
 		return header ? 
 			this.renderGroup([
@@ -308,6 +314,8 @@ var BaseBrowserPrototype = {
 				sublist,
 			])
    			: sublist },
+	renderNestedHeader: function(item, i, context){
+		return this.renderItem(item, i, context) },
 	// NOTE: to skip rendering an item/list return null...
 	renderItem: function(item, i, context){
 		return item },
@@ -330,7 +338,7 @@ var BaseBrowserPrototype = {
 	//
 	//
 	// NOTE: currently options and context are distinguished only via 
-	// 		the .options attribute... (XXX)
+	// 		the .options attribute...
 	render: function(options){
 		var that = this
 		// XXX revise -- should options and context be distinguished only
@@ -371,7 +379,7 @@ var BaseBrowserPrototype = {
 					: item.sublist ?
 						// XXX revise how the context is passed...
 						that.renderNested(
-							that.renderItem(item, i, context),
+							that.renderNestedHeader(item, i, context),
 							// collapsed...
 							(item.collapsed ?
 									null
@@ -596,7 +604,6 @@ var BrowserPrototype = {
 	// 		...
 	// 	</div>
 	//
-	// XXX can we influence how the options are passed to the header???
 	// XXX register event handlers...
 	renderNested: function(header, sublist, item, context){
 		var that = this
@@ -613,20 +620,8 @@ var BrowserPrototype = {
 				e.addEventListener(evt, stopPropagation) })
 
 		// header...
-		if(header){
-			header.classList.add('sub-list-header')
-			item.collapsed
-				&& header.classList.add('collapsed')
-
-			// collapse action handler...
-			// XXX make this overloadable...
-			$(header).on('open', function(evt){
-				item.collapsed = !item.collapsed
-				that.render(context)
-			})
-
-			e.appendChild(header)
-		}
+		header
+			&& e.appendChild(header)
 
 		// items...
 		sublist instanceof Node ?
@@ -645,6 +640,26 @@ var BrowserPrototype = {
 
 		return e
 	},
+	// NOTE: this is the similar to .renderItem(..)
+	// XXX make collapse action overloadable....
+	renderNestedHeader: function(item, i, context){
+		var that = this
+		return this.renderItem(item, i, context)
+			// update dom...
+			.run(function(){
+				// class...
+				// XXX should be done here or in the config???
+				this.classList.add('sub-list-header')
+				item.collapsed
+					&& this.classList.add('collapsed')
+
+				// collapse action handler...
+				// XXX make this overloadable...
+				$(this).on('open', function(evt){
+					item.collapsed = !item.collapsed
+					that.render(context)
+				})
+			}) },
 	//
 	// Format:
 	// 	<div class="group">
@@ -786,8 +801,6 @@ var BrowserPrototype = {
 	open: function(func){
 	},
 
-
-
 	filter: function(){},
 
 	select: function(){},
@@ -804,6 +817,7 @@ var BrowserPrototype = {
 	next: function(){},
 	prev: function(){},
 
+	collapse: function(){},
 	// XXX scroll...
 
 
