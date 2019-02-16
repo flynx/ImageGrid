@@ -96,6 +96,14 @@
 # 	load the depending features...
 #
 #
+# Examples:
+# 	# full build...
+# 	make clean dist
+#
+# 	# build for darwin... (XXX needs testing)
+# 	export TARGET_OS=darwin && make clean dist
+#
+#
 #
 #----------------------------------------------------------------------
 #
