@@ -185,6 +185,7 @@ var BaseBrowserPrototype = {
 	// XXX should we mix item/list options or separate them into sub-objects???
 	options: null,
 
+	//
 	// Format:
 	// 	[
 	// 		<item> | <browser>,
@@ -198,9 +199,9 @@ var BaseBrowserPrototype = {
 	// 		...
 	// 	}
 	//
-	// XXX should this be a list or a Map/Object????
-	// 		...we do not need ultra fast traversal but we do need a way 
-	// 		to identify and select items in a unique way...
+	// NOTE: this can't be a map/dict as we need both order manipulation 
+	// 		and nested structures which would overcomplicate things, as 
+	// 		a compromise we use .item_index blow for item identification.
 	__items: null,
 	get items(){
 		this.__items
@@ -209,26 +210,64 @@ var BaseBrowserPrototype = {
 	set items(value){
 		this.__items = value },
 
+	//
+	// Format:
+	// 	{
+	// 		<key>: <item>,
+	// 		...
+	// 	}
+	//
+	// XXX need to maintain this over item add/remove/change...
+	// XXX Q: should we be able to add/remove/change items outside of .__list__(..)???
+	// 		...only some item updates (how .collapsed is handled) make 
+	// 		since at this time -- need to think about this more 
+	// 		carefully + strictly document the result...
+	item_index: null,
 
+
+	// Item list constructor...
 	//
 	// 	.__list__(make, options)
 	// 		-> undefined
 	// 		-> list
 	//
 	//
-	// 	make(value, options)
-	// 		-> make
+	// 	Item constructor:
+	// 		make(value)
+	// 		make(value, options)
+	// 			-> make
 	//
 	//
 	// There are two modes of operation:
 	// 	1) call make(..) to create items
 	// 	2) return a list of items
 	//
-	// The if make is called at least once the return value is ignored.
 	//
+	// The if make(..) is called at least once the return value is 
+	// ignored (mode #1), otherwise, the returned list is used as the 
+	// .items structure.
+	//
+	//
+	// When calling make(..) (mode #1) the item is built by combining 
+	// the following in order:
+	// 	- original item (.items[key]) if present,
+	// 	- options passed to .make(<options>) method calling .__list__(..),
+	// 	- options passed to make(.., <options>) constructing the item,
+	// 	- {value: <value>} where <value> passed to make(<value>, ..)
+	//
+	// Each of the above will override values of the previous sections.
+	//
+	// The resulting item is stored in:
+	// 	.items
+	// 	.item_index (keyed via .id or JSONified .value)
+	//
+	// Each of the above structures is reset on each call to .make(..)
 	//
 	// Example:
 	// 	XXX
+	//
+	//
+	// In mode #2 XXX
 	//
 	//
 	// NOTE: this is not designed to be called directly...
@@ -239,37 +278,49 @@ var BaseBrowserPrototype = {
 	// Make .items...
 	//
 	// 	.make()
+	// 	.make(options)
 	// 		-> this
 	//
+	// The items are constructed by passing a make function to .__list__(..)
+	// which in turn will call this make(..) per item created.
+	//
+	// For more doc on item construction see: .__init__(..)
+	//
+	//
+	// NOTE: each call to this will reset both .items and .item_index
+	//
 	// XXX revise options handling for .__list__(..)
-	// XXX add persistent items...
-	// 		...take values from corresponding .items[key]
-	// 		to do this we need a simple way to access an item...
-	// 		.....might be a good idea to simply load the .items[key] and 
-	// 		assign/update it with the new values...
-	// XXX make .items a "dict"... (???)
-	// 			- Item.group(..) would need to be reworked...
-	// 			- nesting/ordering would need to be rethought...
-	// 		...is it worth it???
-	// 		can item access via index be done via a separate index???
 	make: function(options){
 		var items = this.items = []
+		var old_index = this.item_index || {}
+		var new_index = this.item_index = {} 
 
 		// item constructor...
 		//
-		// 	make(..)
+		// 	make(value)
+		// 	make(value, options)
 		// 		-> make
 		//
 		var make_called = false
 		var make = function(value, opts){
 			make_called = true
-			items.push(Object.assign(
-				{}, 
-				// XXX get default values from corresponding .item[..]...
-				// XXX
+			opts = opts || {}
+
+			// XXX revise id generation...
+			var key = opts.id || JSON.stringify(value)
+
+			// build the item...
+			var item = Object.assign({}, 
+				// get the old item values...
+				old_index[key] || {},
 				options || {},
-				opts || {}, 
-				{value: value}))
+				opts, 
+				{value: value})
+
+			// store the item...
+			items.push(item)
+			new_index[key] = item
+
 			return make
 		}.bind(this)
 		make.__proto__ = Items
