@@ -394,8 +394,8 @@ var BaseBrowserPrototype = {
 	// 		the .options attribute...
 	render: function(options){
 		var that = this
-		// XXX revise -- should options and context be distinguished only
-		// 		via the .options attr???
+		// XXX Q: should options and context be distinguished only via 
+		// 		the .options attr as is the case now???
 		var context = (options == null || options.options == null) ?
 				{
 					root: this,
