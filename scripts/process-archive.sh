@@ -236,8 +236,23 @@ if [ -z $SKIP_PREVIEWS ] ; then
 fi
 
 
-
 # collect previews to one location...
+jpg2dir(){
+	FROM=$1
+	TO=$2
+
+	FULL_TO=$2/`basename "$FROM"`
+	I=0
+
+	while [ -e $FULL_TO ] ; do
+		I=$((I + 1))
+		FULL_TO=$2/`basename -s .jpg "$FROM"`_${I}.jpg
+	done
+
+	cp -rl "$FROM" "$FULL_TO" 
+}
+export -f jpg2dir
+
 # XXX test!!!
 if ! [ -z "$COMMON_PREVIEWS" ] ; then
 	if ! [ -e "./$COMMON_PREVIEWS" ] ; then
@@ -246,10 +261,12 @@ if ! [ -z "$COMMON_PREVIEWS" ] ; then
 	#if [ -z $TOTAL ] ; then
 	#	export TOTAL=`find . -path '*hi-res (RAW)/*.jpg' | wc -l`
 	#fi
+	# XXX BUG: this does not rename if target exists...
 	find . -type d \
 		-name 'preview (RAW)' \
 		-print \
-		-exec cp -rl "{}" "./$COMMON_PREVIEWS" \; 
+		-exec bash -c 'jpg2dir "{}" "./$COMMON_PREVIEWS"' \; 
+		#-exec cp -rl "{}" "./$COMMON_PREVIEWS" \; 
 		#-exec rm -rf "./$d" 
 fi
 
