@@ -244,7 +244,7 @@ jpg2dir(){
 	FULL_TO=$2/`basename "$FROM"`
 	I=0
 
-	while [ -e $FULL_TO ] ; do
+	while [ -e "$FULL_TO" ] ; do
 		I=$((I + 1))
 		FULL_TO=$2/`basename -s .jpg "$FROM"`_${I}.jpg
 	done
