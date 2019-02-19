@@ -235,8 +235,6 @@ if [ -z $SKIP_PREVIEWS ] ; then
 	find . -path '*hi-res (RAW)/*.jpg' -exec bash -c 'makepreview "$SIZE" "{}"' \;
 fi
 
-
-
 # collect previews to one location...
 # XXX test!!!
 if ! [ -z "$COMMON_PREVIEWS" ] ; then
@@ -246,11 +244,43 @@ if ! [ -z "$COMMON_PREVIEWS" ] ; then
 	#if [ -z $TOTAL ] ; then
 	#	export TOTAL=`find . -path '*hi-res (RAW)/*.jpg' | wc -l`
 	#fi
+	# XXX BUG: this does not rename if target exists...
 	find . -type d \
 		-name 'preview (RAW)' \
 		-print \
-		-exec cp -rl "{}" "./$COMMON_PREVIEWS" \; 
+		-exec cp --backup=t -rl "{}" "./$COMMON_PREVIEWS" \; 
 		#-exec rm -rf "./$d" 
+
+	# cleanup filenames... (HACK)
+	#	image.jpg	->	image_3.jpg
+	#	image.jpg.~3~	->	image_2.jpg
+	#	image.jpg.~2~	->	image_1.jpg
+	#	image.jpg.~1~	->	image.jpg
+	#
+	i=0
+	while true ; do
+		i=$((i + 1))
+		images=("$COMMON_PREVIEWS/preview (RAW)/"*.~$i~)
+
+		# break if no matches...
+		if ! [ -e "${images[0]}" ] ; then
+			break
+		fi
+
+		for img in "${images[@]}" ; do
+			# decrement...
+			#	image.jpg.~(N)~	->	image_(N-1).jpg
+			mv "$img" "${img/.jpg.~${i}~/_$((i-1)).jpg}" 
+
+			# next image does not exist...
+			#	image.jpg	->	image_(N).jpg
+			#	image_0.jpg	->	image.jpg
+			if ! [ -e "${img/.jpg.~${i}~/.jpg.~$((i+1))~}" ] ; then
+				mv "${img/.jpg.~${i}~/.jpg}" "${img/.jpg.~${i}~/_$((i)).jpg}" 
+				mv "${img/.jpg.~${i}~/_0.jpg}" "${img/.jpg.~${i}~/.jpg}" 
+			fi
+		done
+	done
 fi
 
 
