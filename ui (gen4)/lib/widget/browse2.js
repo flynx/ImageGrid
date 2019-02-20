@@ -299,17 +299,34 @@ var BaseBrowserPrototype = {
 		//
 		// 	make(value)
 		// 	make(value, options)
+		// 	make(value, func[, options])
 		// 		-> make
 		//
 		var make_called = false
 		var make = function(value, opts){
 			make_called = true
+			var args = [...arguments]
+
 			opts = opts || {}
+			// handle: make(.., func, ..)
+			opts = opts instanceof Function ?
+				{open: opts}
+				: opts
+			// handle trailing options...
+			opts = args.length > 2 ?
+				Object.assign({},
+					args.pop(),
+					opts)
+				: opts
 
 			// XXX revise id generation...
-			// XXX check if id already exists and complain if it
-			// 		does -- only for options.id???
+			// XXX these should  include the path...
 			var key = opts.id || JSON.stringify(value)
+
+			// no duplicate keys...
+			if(key in new_index){
+				throw new Error(`make(..): duplicate key "${key}": `
+					+`can't create multiple items with the same key.`) }
 
 			// build the item...
 			var item = Object.assign({}, 
