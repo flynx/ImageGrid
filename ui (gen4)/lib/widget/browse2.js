@@ -220,7 +220,7 @@ var BaseBrowserPrototype = {
 	// XXX need to maintain this over item add/remove/change...
 	// XXX Q: should we be able to add/remove/change items outside of .__list__(..)???
 	// 		...only some item updates (how .collapsed is handled) make 
-	// 		since at this time -- need to think about this more 
+	// 		sense at this time -- need to think about this more 
 	// 		carefully + strictly document the result...
 	item_index: null,
 
@@ -307,6 +307,8 @@ var BaseBrowserPrototype = {
 			opts = opts || {}
 
 			// XXX revise id generation...
+			// XXX check if id already exists and complain if it
+			// 		does -- only for options.id???
 			var key = opts.id || JSON.stringify(value)
 
 			// build the item...
@@ -414,7 +416,6 @@ var BaseBrowserPrototype = {
 		// 		...if yes how??
 		// 			- options
 		// 			- arg threading
-		// 			- render context
 		var items = this.items
 			.map(_render = function(item, i){
 				return (
@@ -430,7 +431,6 @@ var BaseBrowserPrototype = {
 						item.value.render(context) 
 					// .sublist -- nested list...
 					: item.sublist ?
-						// XXX revise how the context is passed...
 						that.renderNested(
 							that.renderNestedHeader(item, i, context),
 							// collapsed...
@@ -522,7 +522,7 @@ var BrowserClassPrototype = {
 // 		- event handler signature -- pass the item + optionally render...
 // 		- keyboard handling...
 // XXX render of nested lists does not affect the parent list(s)...
-// XXX maintain expand/collapse state of nested lists in a natural way...
+// 		...need to render lists and items both as a whole or independently...
 // XXX should this use vanilla DOM or jQuery???
 var BrowserPrototype = {
 	__proto__: BaseBrowser.prototype,
