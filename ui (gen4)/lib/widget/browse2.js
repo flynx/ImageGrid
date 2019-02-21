@@ -319,6 +319,7 @@ var BaseBrowserPrototype = {
 					opts)
 				: opts
 
+			// item id...
 			// XXX revise id generation...
 			// XXX these should include the path... (???)
 			var key = opts.id || JSON.stringify(value)
