@@ -964,12 +964,12 @@ var TextBrowserPrototype = {
 			// expanded...
 			header && nested ?
 				[
-					header + ' v',
+					'- ' + header,
 					nested,
 				]
 			// collapsed...
 			: header ?
-				[ header + ' >' ]
+				[ '+ ' + header ]
 			// headerless...
 			: nested )},
 }
