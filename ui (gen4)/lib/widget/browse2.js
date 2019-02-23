@@ -297,8 +297,7 @@ var BaseBrowserPrototype = {
 
 		// item constructor...
 		//
-		// 	make(value)
-		// 	make(value, options)
+		// 	make(value[, options])
 		// 	make(value, func[, options])
 		// 		-> make
 		//
@@ -320,12 +319,11 @@ var BaseBrowserPrototype = {
 				: opts
 
 			// item id...
-			// XXX revise id generation...
-			// XXX these should include the path... (???)
+			// XXX do a better id...
+			// XXX should these include the path???
 			var key = opts.id 
 				// value is a browser -> generate an unique id...
-				// XXX identify via API...
-				// XXX do a better id
+				// XXX identify via structure...
 				|| (value instanceof Browser 
 					&& Date.now())
 				|| JSON.stringify(value)
