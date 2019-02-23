@@ -496,6 +496,18 @@ var BaseBrowserPrototype = {
 			.render(options) },
 
 
+	// events / actions...
+	focus: function(item){},
+	select: function(item){},
+	open: function(item){},
+	enter: function(item){},
+	// XXX can we unify these???
+	collapse: function(item){},
+	expand: function(item){},
+	// XXX target can be item or path...
+	load: function(target){},
+	close: function(reason){},
+	
 	// XXX item API...
 	get: function(){},
 	set: function(){},
