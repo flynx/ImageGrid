@@ -496,9 +496,20 @@ var BaseBrowserPrototype = {
 			.render(options) },
 
 
+	// XXX item API...
+	get: function(){},
+	set: function(){},
+	remove: function(){},
+	sort: function(){},
+	splice: function(){},
+
 	// events / actions...
-	focus: function(item){},
-	select: function(item){},
+	focus: function(item){
+		// XXX exclusively set item.focus...
+	},
+	select: function(item){
+		// XXX set item.selected...
+	},
 	open: function(item){},
 	enter: function(item){},
 	// XXX can we unify these???
@@ -508,13 +519,6 @@ var BaseBrowserPrototype = {
 	load: function(target){},
 	close: function(reason){},
 	
-	// XXX item API...
-	get: function(){},
-	set: function(){},
-	remove: function(){},
-	sort: function(){},
-	splice: function(){},
-
 	// XXX should there return an array or a .constructor(..) instance??
 	forEach: function(){},
 	map: function(){},
