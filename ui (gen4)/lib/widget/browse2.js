@@ -177,6 +177,19 @@ Items.ListTitle = function(){}
 
 //---------------------------------------------------------------------
 
+var makeEventMethod = function(event, handler){
+	return function(item){
+		if(item instanceof Function){
+			return this.on(event, item) 
+		}
+
+		// XXX handle more of the API???
+		handler.call(this, ...arguments)
+
+		return this
+	}
+}
+
 var BaseBrowserClassPrototype = {
 }
 
@@ -503,21 +516,35 @@ var BaseBrowserPrototype = {
 	sort: function(){},
 	splice: function(){},
 
-	// events / actions...
-	focus: function(item){
-		// XXX exclusively set item.focus...
+	// XXX should these be defined on this level or should we use DOM???
+	on: function(evt, handler){
+		return this
 	},
-	select: function(item){
+	one: function(evt, handler){
+		return this
+	},
+	off: function(evt, handler){
+		return this
+	},
+	trigger: function(evt, ...args){
+		return this
+	},
+
+	// events / actions...
+	focus: makeEventMethod('focus', function(item){
+		// XXX exclusively set item.focus...
+	}),
+	select: makeEventMethod('select', function(item){
 		// XXX set item.selected...
 	},
-	open: function(item){},
-	enter: function(item){},
+	open: makeEventMethod('open', function(item){}),
+	enter: makeEventMethod('enter', function(item){}),
 	// XXX can we unify these???
-	collapse: function(item){},
-	expand: function(item){},
+	collapse: makeEventMethod('collapse', function(item){}),
+	expand: makeEventMethod('expand', function(item){}),
 	// XXX target can be item or path...
-	load: function(target){},
-	close: function(reason){},
+	load: makeEventMethod('load', function(item){}),
+	close: makeEventMethod('close', function(reason){}),
 	
 	// XXX should there return an array or a .constructor(..) instance??
 	forEach: function(){},
