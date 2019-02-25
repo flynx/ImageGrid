@@ -177,6 +177,19 @@ Items.ListTitle = function(){}
 
 //---------------------------------------------------------------------
 
+// Generate an event method...
+//
+//	Trigger an event
+//	.event()
+//	.event(arg, ..)
+//		-> this
+//
+//	Bind an event handler...
+//	.event(func)
+//		-> this
+//
+//
+// XXX should this be simply a shorthand to .trigger(..) ???
 var makeEventMethod = function(event, handler){
 	return function(item){
 		if(item instanceof Function){
@@ -189,6 +202,9 @@ var makeEventMethod = function(event, handler){
 		return this
 	}
 }
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
 var BaseBrowserClassPrototype = {
 }
