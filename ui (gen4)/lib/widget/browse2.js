@@ -197,7 +197,8 @@ var makeEventMethod = function(event, handler){
 		}
 
 		// XXX handle more of the API???
-		handler.call(this, ...arguments)
+		handler
+			&& handler.call(this, ...arguments)
 
 		return this
 	}
@@ -552,7 +553,7 @@ var BaseBrowserPrototype = {
 	}),
 	select: makeEventMethod('select', function(item){
 		// XXX set item.selected...
-	},
+	}),
 	open: makeEventMethod('open', function(item){}),
 	enter: makeEventMethod('enter', function(item){}),
 	// XXX can we unify these???
