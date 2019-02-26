@@ -196,12 +196,19 @@ var makeEventMethod = function(event, handler){
 			return this.on(event, item) 
 		}
 
+		// XXX STUG: event object...
+		// XXX can we generate this in one spot???
+		// 		...currently it is generated here and in .trigger(..)
+		var evt = {
+			name: event,
+		}
+
 		// XXX handle more of the API???
 		handler
-			&& handler.call(this, ...arguments)
+			&& handler.call(this, evt, ...arguments)
 
 		// XXX we should get the actual item and pass it on...
-		this.trigger(event, ...arguments)
+		this.trigger(evt, ...arguments)
 
 		return this
 	}
@@ -574,9 +581,14 @@ var BaseBrowserPrototype = {
 	},
 	trigger: function(evt, ...args){
 		var that = this
-		;((this.__event_handlers || {})[evt] || [])
+		var evt = typeof(evt) == typeof('str') ?
+			{
+				name: evt
+			}
+			: evt
+		;((this.__event_handlers || {})[evt.name] || [])
 			.forEach(function(handler){
-				handler.call(that, ...args) })
+				handler.call(that, evt, ...args) })
 		return this
 	},
 
