@@ -544,11 +544,25 @@ var BaseBrowserPrototype = {
 	splice: function(){},
 
 
+	//
+	// Format:
+	// 	{
+	// 		// XXX add tagged event support...
+	// 		<event-name>: [
+	// 			<handler>,
+	// 			...
+	// 		],
+	// 		...
+	// 	}
+	//
 	// XXX
 	__event_handlers: null,
 
+	// generic event infrastructure...
 	// XXX add support for tagged events...
 	// XXX should these be defined on this level or should we use DOM???
+	// XXX add support for item events...
+	// 		e.g. item.focus(..) -> root.focus(..)
 	on: function(evt, handler){
 		var handlers = this.__event_handlers = this.__event_handlers || {}
 		handlers = handlers[evt] = handlers[evt] || []
@@ -582,31 +596,37 @@ var BaseBrowserPrototype = {
 	trigger: function(evt, ...args){
 		var that = this
 		var evt = typeof(evt) == typeof('str') ?
+			// XXX construct this in one place...
+			// 		...currently it is constructed here and in makeEventMethod(..)
 			{
-				name: evt
+				name: evt,
 			}
 			: evt
 		;((this.__event_handlers || {})[evt.name] || [])
+			// prevent .off(..) from affecting the call loop...
+			.slice()
 			.forEach(function(handler){
 				handler.call(that, evt, ...args) })
 		return this
 	},
 
-	// events / actions...
-	focus: makeEventMethod('focus', function(item){
-		// XXX exclusively set item.focus...
+	// domain events/actions...
+	// XXX call item-specific events where applicable...
+	focus: makeEventMethod('focus', function(evt, item){
+		// XXX exclusively set item.focused...
+		// XXX call item.focus handlers...
 	}),
-	select: makeEventMethod('select', function(item){
+	select: makeEventMethod('select', function(evt, item){
 		// XXX set item.selected...
 	}),
-	open: makeEventMethod('open', function(item){}),
-	enter: makeEventMethod('enter', function(item){}),
-	// XXX can we unify these???
-	collapse: makeEventMethod('collapse', function(item){}),
-	expand: makeEventMethod('expand', function(item){}),
+	open: makeEventMethod('open', function(evt, item){}),
+	enter: makeEventMethod('enter', function(evt, item){}),
+	// XXX can/should we unify these???
+	collapse: makeEventMethod('collapse', function(evt, item){}),
+	expand: makeEventMethod('expand', function(evt, item){}),
 	// XXX target can be item or path...
-	load: makeEventMethod('load', function(item){}),
-	close: makeEventMethod('close', function(reason){}),
+	load: makeEventMethod('load', function(evt, item){}),
+	close: makeEventMethod('close', function(evt, reason){}),
 	
 	// XXX should there return an array or a .constructor(..) instance??
 	forEach: function(){},
@@ -985,7 +1005,7 @@ var BrowserPrototype = {
 
 	select: function(){},
 	get: function(){},
-	focus: function(){},
+	//focus: function(){},
 
 	// Navigation...
 	//
