@@ -200,6 +200,9 @@ var makeEventMethod = function(event, handler){
 		handler
 			&& handler.call(this, ...arguments)
 
+		// XXX we should get the actual item and pass it on...
+		this.trigger(event, ...arguments)
+
 		return this
 	}
 }
@@ -533,17 +536,47 @@ var BaseBrowserPrototype = {
 	sort: function(){},
 	splice: function(){},
 
+
+	// XXX
+	__event_handlers: null,
+
+	// XXX add support for tagged events...
 	// XXX should these be defined on this level or should we use DOM???
 	on: function(evt, handler){
+		var handlers = this.__event_handlers = this.__event_handlers || {}
+		handlers = handlers[evt] = handlers[evt] || []
+		handlers.push(handler)
 		return this
 	},
 	one: function(evt, handler){
+		var func = function(...args){
+			handler.call(this, ...args)
+			this.off(evt, func)
+		}
+		this.on(evt, func)
 		return this
 	},
 	off: function(evt, handler){
+		// remove all handlers
+		if(handler == '*' || handler == 'all'){
+			delete (this.__event_handlers || {})[evt]
+
+		// remove only the specific handler...
+		} else {
+			var handlers = (this.__event_handlers || {})[evt] || []
+			do{
+				var i = handlers.indexOf(handler)
+				i > -1
+					&& handlers.splice(i, 1)
+			} while(i > -1)
+		}
 		return this
 	},
 	trigger: function(evt, ...args){
+		var that = this
+		;((this.__event_handlers || {})[evt] || [])
+			.forEach(function(handler){
+				handler.call(that, ...args) })
 		return this
 	},
 
