@@ -544,6 +544,7 @@ var BaseBrowserPrototype = {
 	splice: function(){},
 
 
+	// Events...
 	//
 	// Format:
 	// 	{
@@ -563,6 +564,8 @@ var BaseBrowserPrototype = {
 	// XXX should these be defined on this level or should we use DOM???
 	// XXX add support for item events...
 	// 		e.g. item.focus(..) -> root.focus(..)
+	// XXX also need to design a means for this system to interact both 
+	// 		ways with DOM events...
 	on: function(evt, handler){
 		var handlers = this.__event_handlers = this.__event_handlers || {}
 		handlers = handlers[evt] = handlers[evt] || []
@@ -702,6 +705,33 @@ var BrowserPrototype = {
 		// XXX need to mix these into the header only...
 		headerItemButtons: [
 		],
+
+		// Shorthand elements...
+		//
+		// Format:
+		// 	{
+		// 		<key>: {
+		// 			class: <element-class-str>,
+		// 			html: <element-html-str>,
+		// 		},
+		// 		...
+		// 	}
+		//
+		// If make(..) gets passed <key> it will construct and element
+		// via <element-html-str> with an optional <element-class-str>
+		//
+		// NOTE: .class is optional...
+		// NOTE: set this to null to disable shorthands...
+		elementShorthand: {
+			'---': {
+				'class': 'separator',
+				'html': '<hr>'
+			},
+			'...': {
+				'class': 'separator',
+				'html': '<center><div class="loader"/></center>',
+			},
+		},
 	},
 
 	// parent element (optional)...
@@ -899,6 +929,10 @@ var BrowserPrototype = {
 		if(options.hidden && !options.renderHidden){
 			return null
 		}
+
+		// XXX handle special items...
+		// XXX
+
 		var text = JSON.stringify(item.value)
 		var elem = document.createElement('div')
 
