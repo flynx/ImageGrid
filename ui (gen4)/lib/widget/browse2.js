@@ -930,21 +930,24 @@ var BrowserPrototype = {
 			return null
 		}
 
-		// item shorthands...
+		// special-case: item shorthands...
 		if(item.value in options.elementShorthand){
-			var text = null
 			item = options.elementShorthand[item.value]
 
+			// NOTE: this is a bit of a cheat, but it saves us from either 
+			// 		parsing or restricting the format...
 			var elem = $(item.html)[0]
-			elem.classList.add(...item['class'].split(/\s+/))
+			elem.classList.add(
+				...(item['class'] instanceof Array ?
+					item['class']
+					: item['class'].split(/\s+/g)))
 
 			return elem 
 		}
 
-		// normal items...
+		// Base DOM...
 		var elem = document.createElement('div')
 		var text = JSON.stringify(item.value || item)
-
 
 		// classes...
 		elem.classList.add(...['item']
