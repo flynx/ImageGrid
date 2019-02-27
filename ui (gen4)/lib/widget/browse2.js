@@ -930,16 +930,26 @@ var BrowserPrototype = {
 			return null
 		}
 
-		// XXX handle special items...
-		// XXX
+		// item shorthands...
+		if(item.value in options.elementShorthand){
+			var text = null
+			item = options.elementShorthand[item.value]
 
-		var text = JSON.stringify(item.value)
+			var elem = $(item.html)[0]
+			elem.classList.add(...item['class'].split(/\s+/))
+
+			return elem 
+		}
+
+		// normal items...
 		var elem = document.createElement('div')
+		var text = JSON.stringify(item.value || item)
+
 
 		// classes...
 		elem.classList.add(...['item']
 			// user classes...
-			.concat(item.cls || [])
+			.concat(item['class'] || item.cls || [])
 			// special classes...
 			.concat([
 				'selected',
@@ -957,14 +967,15 @@ var BrowserPrototype = {
 		elem.setAttribute('value', text)
 
 		// values...
-		;(item.value instanceof Array ? item.value : [item.value])
-			// XXX handle $keys and other stuff...
-			.map(function(v){
-				var value = document.createElement('span')
-				value.classList.add('text')
-				value.innerHTML = v || item || ''
-				elem.appendChild(value)
-			})
+		text
+			&& (item.value instanceof Array ? item.value : [item.value])
+				// XXX handle $keys and other stuff...
+				.map(function(v){
+					var value = document.createElement('span')
+					value.classList.add('text')
+					value.innerHTML = v || item || ''
+					elem.appendChild(value)
+				})
 
 		// events...
 		// XXX revise signature...
