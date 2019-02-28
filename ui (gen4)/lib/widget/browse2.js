@@ -352,6 +352,9 @@ var BaseBrowserPrototype = {
 	//
 	//
 	// NOTE: each call to this will reset both .items and .item_index
+	// NOTE: for items with repeating values there is no way to correctly 
+	// 		identify an item thus no state is maintained between .make(..)
+	// 		calls for such items...
 	//
 	// XXX revise options handling for .__list__(..)
 	make: function(options){
@@ -361,6 +364,16 @@ var BaseBrowserPrototype = {
 		var items = this.items = []
 		var old_index = this.item_index || {}
 		var new_index = this.item_index = {} 
+
+		// XXX do a better id...
+		// XXX should this be a method???
+		var makeID = function(id){
+			// id prefix...
+			return (id || '') 
+				// separator...
+				+ (id && ' ') 
+				// date...
+				+ Date.now() }
 
 		// item constructor...
 		//
@@ -385,15 +398,6 @@ var BaseBrowserPrototype = {
 					opts)
 				: opts
 
-			// XXX do a better id...
-			var makeID = function(id){
-				// id prefix...
-				return (id || '') 
-					// separator...
-					+ (id && ' ') 
-					// date...
-					+ Date.now() }
-
 			// item id...
 			// XXX should these include the path???
 			var key = opts.id 
@@ -402,18 +406,35 @@ var BaseBrowserPrototype = {
 				|| (value instanceof Browser 
 					&& makeID())
 				|| JSON.stringify(value)
+			var id_changed = (old_index[key] || {}).id_changed
 
 			// handle duplicate ids -> err if found...
 			if(opts.id && opts.id in new_index){
 				throw new Error(`make(..): duplicate id "${key}": `
 					+`can't create multiple items with the same key.`) }
 			// handle duplicate keys...
+			// NOTE: we can't reuse an old copy when re-making the list
+			// 		because there is now way to correctly identify an 
+			// 		object when it's id is tweaked (and we can not rely
+			// 		on item order)...
+			// 		...for this reason all "persistent" state for such 
+			// 		an element will be lost when calling .make(..) again
+			// 		and re-making the list...
+			// 		a solution to this would be to manually assign an .id 
+			// 		to such elements in .__list__(..)...
+			// 		XXX can we go around this without requiring the user 
+			// 			to manage ids???
 			var k = key
 			while(k in new_index){
 				// duplicate keys disabled...
 				if(options.noDuplicateValues){
 					throw new Error(`make(..): duplicate key "${key}": `
 						+`can't create multiple items with the same key.`) }
+
+				// mark both the current and the first items as id-mutated...
+				opts.id_changed = true
+				new_index[key].id_changed = true
+
 				// create a new key...
 				k = makeID(key)
 			}
@@ -421,8 +442,11 @@ var BaseBrowserPrototype = {
 
 			// build the item...
 			var item = Object.assign({}, 
-				// get the old item values...
-				old_index[key] || {},
+				// get the old item values (only for non duplicate items)...
+				id_changed ?
+					{}
+					: old_index[key] || {},
+				// XXX ???
 				options || {},
 				opts, 
 				{value: value})
