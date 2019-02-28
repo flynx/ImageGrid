@@ -395,15 +395,21 @@ var BaseBrowserPrototype = {
 					&& Date.now())
 				|| JSON.stringify(value)
 
+			// handle duplicate ids -> err if found...
+			if(opts.id && opts.id in new_index){
+				throw new Error(`make(..): duplicate id "${key}": `
+					+`can't create multiple items with the same key.`) }
+
+			// handle duplicate keys...
 			var k = key
 			while(k in new_index){
-				// no duplicate keys...
+				// duplicate keys disabled...
 				if(options.noDuplicateValues){
 					throw new Error(`make(..): duplicate key "${key}": `
 						+`can't create multiple items with the same key.`) }
 
 				// create a new key...
-				k = k +' '+ Date.now()
+				k = key +' '+ Date.now()
 			}
 			key = opts.id = k
 
