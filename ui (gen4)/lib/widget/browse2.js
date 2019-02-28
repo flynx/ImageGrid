@@ -385,21 +385,28 @@ var BaseBrowserPrototype = {
 					opts)
 				: opts
 
-			// item id...
 			// XXX do a better id...
+			var makeID = function(id){
+				// id prefix...
+				return (id || '') 
+					// separator...
+					+ (id && ' ') 
+					// date...
+					+ Date.now() }
+
+			// item id...
 			// XXX should these include the path???
 			var key = opts.id 
 				// value is a browser -> generate an unique id...
 				// XXX identify via structure...
 				|| (value instanceof Browser 
-					&& Date.now())
+					&& makeID())
 				|| JSON.stringify(value)
 
 			// handle duplicate ids -> err if found...
 			if(opts.id && opts.id in new_index){
 				throw new Error(`make(..): duplicate id "${key}": `
 					+`can't create multiple items with the same key.`) }
-
 			// handle duplicate keys...
 			var k = key
 			while(k in new_index){
@@ -407,9 +414,8 @@ var BaseBrowserPrototype = {
 				if(options.noDuplicateValues){
 					throw new Error(`make(..): duplicate key "${key}": `
 						+`can't create multiple items with the same key.`) }
-
 				// create a new key...
-				k = key +' '+ Date.now()
+				k = makeID(key)
 			}
 			key = opts.id = k
 
