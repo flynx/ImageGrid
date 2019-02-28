@@ -223,7 +223,9 @@ var BaseBrowserClassPrototype = {
 // XXX need a way to identify items...
 var BaseBrowserPrototype = {
 	// XXX should we mix item/list options or separate them into sub-objects???
-	options: null,
+	options: {
+		noDuplicateValues: false,
+	},
 
 	//
 	// Format:
@@ -353,6 +355,9 @@ var BaseBrowserPrototype = {
 	//
 	// XXX revise options handling for .__list__(..)
 	make: function(options){
+		// XXX
+		options = options || this.options || {}
+
 		var items = this.items = []
 		var old_index = this.item_index || {}
 		var new_index = this.item_index = {} 
@@ -390,10 +395,17 @@ var BaseBrowserPrototype = {
 					&& Date.now())
 				|| JSON.stringify(value)
 
-			// no duplicate keys...
-			if(key in new_index){
-				throw new Error(`make(..): duplicate key "${key}": `
-					+`can't create multiple items with the same key.`) }
+			var k = key
+			while(k in new_index){
+				// no duplicate keys...
+				if(options.noDuplicateValues){
+					throw new Error(`make(..): duplicate key "${key}": `
+						+`can't create multiple items with the same key.`) }
+
+				// create a new key...
+				k = k +' '+ Date.now()
+			}
+			key = opts.id = k
 
 			// build the item...
 			var item = Object.assign({}, 
