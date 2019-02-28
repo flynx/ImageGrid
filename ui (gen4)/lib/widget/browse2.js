@@ -264,6 +264,28 @@ var BaseBrowserPrototype = {
 	// 		carefully + strictly document the result...
 	item_index: null,
 
+	// XXX what should these return??? (item, id, ...)
+	__focused: undefined,
+	get focused(){
+		return this.__focused 
+			|| (this.__focused = this
+				// XXX should we simple bailout when we find an item???
+				.filter(function(e){
+					return e.focused })[0]) },
+	set focused(value){
+		// XXX
+	},
+
+	__selected: null,
+	get selected(){
+		return this.__selected 
+			|| (this.__selected = this
+				.filter(function(e){
+					return e.selected })) },
+	set selected(value){
+		// XXX
+	},
+
 
 	// Item list constructor...
 	//
