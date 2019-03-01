@@ -338,6 +338,36 @@ var BaseBrowserPrototype = {
 	__list__: function(make, options){
 		throw new Error('.__list__(..): Not implemented.') },
 
+	// Key getter/generator...
+	//
+	// XXX should these include the path???
+	// XXX is JSON the best key format???
+	__key__: function(item){
+		return item.id 
+			// value is a browser -> generate an unique id...
+			// XXX identify via structure...
+			|| (item.value instanceof Browser 
+				&& this.__id__())
+			|| JSON.stringify(item.value) },
+
+	// ID generator...
+	//
+	// Format:
+	// 	"<date>"
+	// 	"<prefix> <date>"
+	//
+	// XXX do a better id...
+	// XXX not sure about the logic of this, should this take an item as 
+	// 		input and return an id???
+	// 		...should this check for uniqueness???
+	__id__: function(prefix){
+		// id prefix...
+		return (prefix || '') 
+			// separator...
+			+ (prefix ? ' ' : '') 
+			// date...
+			+ Date.now() },
+
 
 	// Make .items...
 	//
@@ -365,16 +395,6 @@ var BaseBrowserPrototype = {
 		var old_index = this.item_index || {}
 		var new_index = this.item_index = {} 
 
-		// XXX do a better id...
-		// XXX should this be a method???
-		var makeID = function(id){
-			// id prefix...
-			return (id || '') 
-				// separator...
-				+ (id && ' ') 
-				// date...
-				+ Date.now() }
-
 		// item constructor...
 		//
 		// 	make(value[, options])
@@ -397,15 +417,13 @@ var BaseBrowserPrototype = {
 					args.pop(),
 					opts)
 				: opts
+			opts = Object.assign(
+				{},
+				opts, 
+				{value: value})
 
 			// item id...
-			// XXX should these include the path???
-			var key = opts.id 
-				// value is a browser -> generate an unique id...
-				// XXX identify via structure...
-				|| (value instanceof Browser 
-					&& makeID())
-				|| JSON.stringify(value)
+			var key = this.__key__(opts)
 			var id_changed = (old_index[key] || {}).id_changed
 
 			// handle duplicate ids -> err if found...
@@ -436,7 +454,7 @@ var BaseBrowserPrototype = {
 				new_index[key].id_changed = true
 
 				// create a new key...
-				k = makeID(key)
+				k = this.__id__(key)
 			}
 			key = opts.id = k
 
@@ -448,8 +466,7 @@ var BaseBrowserPrototype = {
 					: old_index[key] || {},
 				// XXX ???
 				options || {},
-				opts, 
-				{value: value})
+				opts)
 
 			// store the item...
 			items.push(item)
