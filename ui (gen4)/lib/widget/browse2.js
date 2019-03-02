@@ -192,6 +192,7 @@ Items.ListTitle = function(){}
 // XXX should this be simply a shorthand to .trigger(..) ???
 var makeEventMethod = function(event, handler){
 	return function(item){
+		// register handler...
 		if(item instanceof Function){
 			return this.on(event, item) 
 		}
@@ -213,6 +214,31 @@ var makeEventMethod = function(event, handler){
 		return this
 	}
 }
+
+var callItemEventHandlers = function(item, event, ...args){
+	;(item[event] ?
+			[item[event]]
+			: [])
+		.concat((item.events || {})[event] || [])
+		.forEach(function(handler){
+			// XXX revise call signature...
+			handler.call(item, evt, item, ...args) }) }
+
+var makeItemEventMethod = function(event, handler){
+	return makeEventMethod(event, function(evt, item, ...args){
+		item = item ? 
+			// XXX
+			this.get(item) 
+			: []
+		item = item instanceof Array ? item : [item]
+
+		handler
+			&& handler.call(this, evt, item, ...args)
+
+		item.forEach(function(item){
+			callItemEventHandlers(item, event) })
+	}) }
+
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -464,9 +490,11 @@ var BaseBrowserPrototype = {
 				id_changed ?
 					{}
 					: old_index[key] || {},
-				// XXX ???
 				options || {},
-				opts)
+				opts,
+				{
+					parent: this,
+				})
 
 			// store the item...
 			items.push(item)
@@ -653,6 +681,7 @@ var BaseBrowserPrototype = {
 	// 		e.g. item.focus(..) -> root.focus(..)
 	// XXX also need to design a means for this system to interact both 
 	// 		ways with DOM events...
+	// XXX need to bubble the event up through the nested browsers...
 	on: function(evt, handler){
 		var handlers = this.__event_handlers = this.__event_handlers || {}
 		handlers = handlers[evt] = handlers[evt] || []
@@ -701,21 +730,49 @@ var BaseBrowserPrototype = {
 	},
 
 	// domain events/actions...
-	// XXX call item-specific events where applicable...
-	focus: makeEventMethod('focus', function(evt, item){
-		// XXX exclusively set item.focused...
-		// XXX call item.focus handlers...
+	// XXX need a way to extend these to:
+	// 		- be able to trigger an external (DOM) event...
+	// 		- be able to be triggered from an external (DOM) event...
+	focus: makeItemEventMethod('focus', function(evt, items){
+		// NOTE: if we got multiple matches we care only about the last one...
+		var item = items.pop()
+
+		if(!item){
+			return
+		}
+
+		// blur .focused...
+		this.focused
+			&& this.blur(this.focused)
+
+		item.focused = true
 	}),
-	select: makeEventMethod('select', function(evt, item){
-		// XXX set item.selected...
-	}),
-	open: makeEventMethod('open', function(evt, item){}),
-	enter: makeEventMethod('enter', function(evt, item){}),
+	blur: makeItemEventMethod('blur', function(evt, items){
+		items.forEach(function(item){
+			delete item.focused }) }),
+	// XXX update this.selected in a more granular way...
+	select: makeItemEventMethod('select', function(evt, items){
+		items.forEach(function(item){
+			item.selected = true
+			// XXX update this.selected in a more granular way...
+			delete this.__selected
+		}) }),
+	deselect: makeItemEventMethod('deselect', function(evt, item){
+		items.forEach(function(item){
+			delete item.selected
+			// XXX update this.selected in a more granular way...
+			delete this.__selected
+		}) }),
+
+	open: makeItemEventMethod('open', function(evt, item){}),
+	enter: makeItemEventMethod('enter', function(evt, item){}),
 	// XXX can/should we unify these???
-	collapse: makeEventMethod('collapse', function(evt, item){}),
-	expand: makeEventMethod('expand', function(evt, item){}),
+	collapse: makeItemEventMethod('collapse', function(evt, item){}),
+	expand: makeItemEventMethod('expand', function(evt, item){}),
+
 	// XXX target can be item or path...
 	load: makeEventMethod('load', function(evt, item){}),
+
 	close: makeEventMethod('close', function(evt, reason){}),
 	
 	// XXX should there return an array or a .constructor(..) instance??
