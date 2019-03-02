@@ -364,6 +364,15 @@ var BaseBrowserPrototype = {
 	__list__: function(make, options){
 		throw new Error('.__list__(..): Not implemented.') },
 
+
+
+	// XXX need a better key/path API...
+	//
+	// XXX is this the correct way to handle a key???
+	__value2key__: function(key){
+		return JSON.stringify(key)
+	},
+
 	// Key getter/generator...
 	//
 	// XXX should these include the path???
@@ -374,7 +383,7 @@ var BaseBrowserPrototype = {
 			// XXX identify via structure...
 			|| (item.value instanceof Browser 
 				&& this.__id__())
-			|| JSON.stringify(item.value) },
+			|| this.__value2key__(item.value) },
 
 	// ID generator...
 	//
@@ -393,6 +402,7 @@ var BaseBrowserPrototype = {
 			+ (prefix ? ' ' : '') 
 			// date...
 			+ Date.now() },
+
 
 
 	// Make .items...
@@ -652,11 +662,62 @@ var BaseBrowserPrototype = {
 
 
 	// XXX item API...
-	get: function(){},
-	set: function(){},
-	remove: function(){},
-	sort: function(){},
-	splice: function(){},
+	//
+	// 	.get()
+	// 	.get(id)
+	// 	.get(index)
+	// 	.get(path)
+	// 		-> item
+	// 		-> undefined
+	//
+	get: function(key){
+		key = key == null ? 0 : key
+
+		// index...
+		if(typeof(key) == typeof(123)){
+			// XXX need to account for nesting browsers and groups...
+			throw new Error('Not implemented.')
+
+		// key...
+		// XXX account for paths...
+		} else {
+			// XXX
+			var k = this.__value2key__(key)
+
+			// direct match...
+			if(k in this.item_index){
+				return this.item_index[k]
+			}
+
+			// query nested...
+			var nested = Object.values(this.item_index)
+				.filter(function(e){ 
+					return e.sublist instanceof Browser })
+			while(nested.length > 0){
+				var n = nested.shift().sublist
+				var res = n.get(key)
+				if(res !== undefined){
+					return res
+				}
+			}
+		}
+		return undefined
+	},
+
+	//
+	//	.find(id)
+	//	.find(index)
+	//	.find(path)
+	//	.find(query)
+	//		-> list
+	//
+	find: function(){
+	},
+
+	// XXX do we need edit ability here? 
+	// 		i.e. .set(..), .remove(..), .sort(..), ...
+	// 		...if we are going to implement editing then we'll need to 
+	// 		callback the user code or update the user state...
 
 
 	// Events...
@@ -1091,7 +1152,7 @@ var BrowserPrototype = {
 
 		// Base DOM...
 		var elem = document.createElement('div')
-		var text = JSON.stringify(item.value || item)
+		var text = this.__value2key__(item.value || item)
 
 		// classes...
 		elem.classList.add(...['item']
@@ -1190,13 +1251,12 @@ var BrowserPrototype = {
 	// XXX do we use jQuery event handling or vanilla?
 	// 		...feels like jQuery here wins as it provides a far simpler
 	// 		API + it's a not time critical area...
-	open: function(func){
-	},
+	//open: function(func){},
 
-	filter: function(){},
+	//filter: function(){},
 
-	select: function(){},
-	get: function(){},
+	//select: function(){},
+	//get: function(){},
 	//focus: function(){},
 
 	// Navigation...
