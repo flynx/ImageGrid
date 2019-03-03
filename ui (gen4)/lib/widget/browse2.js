@@ -370,7 +370,10 @@ var BaseBrowserPrototype = {
 	//
 	// XXX is this the correct way to handle a key???
 	__value2key__: function(key){
-		return JSON.stringify(key)
+		//return JSON.stringify(key)
+		return key instanceof Array ?
+			key.join(' ')
+			: key
 	},
 
 	// Key getter/generator...
