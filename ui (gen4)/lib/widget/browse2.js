@@ -368,7 +368,6 @@ var BaseBrowserPrototype = {
 
 	// XXX need a better key/path API...
 	//
-	// XXX is this the correct way to handle a key???
 	__value2key__: function(key){
 		//return JSON.stringify(key)
 		return key instanceof Array ?
