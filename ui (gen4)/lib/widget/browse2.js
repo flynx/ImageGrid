@@ -253,6 +253,8 @@ var BaseBrowserPrototype = {
 		noDuplicateValues: false,
 	},
 
+	parent: null,
+
 	//
 	// Format:
 	// 	[
@@ -789,6 +791,8 @@ var BaseBrowserPrototype = {
 			.slice()
 			.forEach(function(handler){
 				handler.call(that, evt, ...args) })
+		// XXX should we trigger the parent event????
+		//this.parent.trigger(evt, ...args)
 		return this
 	},
 
@@ -942,14 +946,16 @@ var BrowserPrototype = {
 	},
 
 	// parent element (optional)...
-	get parent(){
-		return this.__parent 
+	// XXX rename???
+	// 		... should this be .containerDom or .parentDom???
+	get container(){
+		return this.__container 
 			|| (this.__dom ? 
 				this.__dom.parentElement 
 				: undefined) },
-	set parent(value){
+	set container(value){
 		var dom = this.dom
-		this.__parent = value
+		this.__container = value
 		// transfer the dom to the new parent...
 		dom && (this.dom = dom)
 	},
@@ -958,10 +964,10 @@ var BrowserPrototype = {
 	get dom(){
 		return this.__dom },
 	set dom(value){
-		this.parent 
+		this.container 
 			&& (this.__dom ?
-				this.parent.replaceChild(value, this.__dom) 
-				: this.parent.appendChild(value))
+				this.container.replaceChild(value, this.__dom) 
+				: this.container.appendChild(value))
 		this.__dom = value },
 
 
