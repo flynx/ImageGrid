@@ -255,6 +255,7 @@ var BaseBrowserPrototype = {
 
 	// parent widget object...
 	//
+	// NOTE: this may or may not be a Browser object.
 	parent: null,
 
 	//
