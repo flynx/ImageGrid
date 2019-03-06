@@ -256,7 +256,9 @@ var BaseBrowserPrototype = {
 		noDuplicateValues: false,
 	},
 
-	// XXX needed to bubble the events up...
+	// parent widget object...
+	//
+	// NOTE: this may or may not be a Browser object.
 	parent: null,
 
 	//
@@ -275,7 +277,7 @@ var BaseBrowserPrototype = {
 	//
 	// NOTE: this can't be a map/dict as we need both order manipulation 
 	// 		and nested structures which would overcomplicate things, as 
-	// 		a compromise we use .item_index blow for item identification.
+	// 		a compromise we use .item_index below for item identification.
 	__items: null,
 	get items(){
 		this.__items
@@ -291,12 +293,27 @@ var BaseBrowserPrototype = {
 	// 		...
 	// 	}
 	//
+	// NOTE: this will get overwritten each tume .make(..) is called.
+	//
 	// XXX need to maintain this over item add/remove/change...
 	// XXX Q: should we be able to add/remove/change items outside of .__list__(..)???
 	// 		...only some item updates (how .collapsed is handled) make 
 	// 		sense at this time -- need to think about this more 
 	// 		carefully + strictly document the result...
-	item_index: null,
+	// XXX can we make the format here simpler with less level 
+	// 		of indirection??
+	// 		...currently to go down a path we need to:
+	//			this.item_index.A.sublist.item_index.B.sublist...
+	//		would be nice to be closer to:
+	//			this.A.B...
+	__item_index: null,
+	get item_index(){
+		this.__item_index
+			|| this.make()
+		return this.__item_index },
+	set item_index(value){
+		this.__item_index = value },
+
 
 	// XXX what should these return??? (item, id, ...)
 	__focused: undefined,
@@ -378,8 +395,7 @@ var BaseBrowserPrototype = {
 		//return JSON.stringify(key)
 		return key instanceof Array ?
 			key.join(' ')
-			: key
-	},
+			: key },
 
 	// Key getter/generator...
 	//
@@ -413,7 +429,7 @@ var BaseBrowserPrototype = {
 
 
 
-	// Make .items...
+	// Make .items and .item_index...
 	//
 	// 	.make()
 	// 	.make(options)
@@ -436,8 +452,8 @@ var BaseBrowserPrototype = {
 		options = options || this.options || {}
 
 		var items = this.items = []
-		var old_index = this.item_index || {}
-		var new_index = this.item_index = {} 
+		var old_index = this.__item_index || {}
+		var new_index = this.__item_index = {} 
 
 		// item constructor...
 		//
@@ -682,6 +698,7 @@ var BaseBrowserPrototype = {
 	// 		-> item
 	// 		-> undefined
 	//
+	// XXX add path support...
 	get: function(key){
 		key = key == null ? 0 : key
 
