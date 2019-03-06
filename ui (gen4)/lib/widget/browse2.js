@@ -201,7 +201,10 @@ var makeEventMethod = function(event, handler){
 		// XXX can we generate this in one spot???
 		// 		...currently it is generated here and in .trigger(..)
 		var evt = {
-			name: event,
+		 	name: event,
+			// XXX
+			//stopPropagation: function(){
+			//},
 		}
 
 		// XXX handle more of the API???
@@ -253,6 +256,7 @@ var BaseBrowserPrototype = {
 		noDuplicateValues: false,
 	},
 
+	// XXX needed to bubble the events up...
 	parent: null,
 
 	//
@@ -509,6 +513,10 @@ var BaseBrowserPrototype = {
 				{
 					parent: this,
 				})
+
+			// XXX do we need both this and the above ref???
+			item.sublist instanceof Browser
+				&& (item.sublist.parent = this)
 
 			// store the item...
 			items.push(item)
@@ -779,20 +787,29 @@ var BaseBrowserPrototype = {
 	},
 	trigger: function(evt, ...args){
 		var that = this
+		var stopPropagation = false
 		var evt = typeof(evt) == typeof('str') ?
 			// XXX construct this in one place...
 			// 		...currently it is constructed here and in makeEventMethod(..)
 			{
 				name: evt,
+				stopPropagation: function(){
+					stopPropagation = true },
 			}
 			: evt
+
+		// call the main set of handlers...
 		;((this.__event_handlers || {})[evt.name] || [])
 			// prevent .off(..) from affecting the call loop...
 			.slice()
 			.forEach(function(handler){
 				handler.call(that, evt, ...args) })
-		// XXX should we trigger the parent event????
-		//this.parent.trigger(evt, ...args)
+
+		// trigger the parent's event...
+		!stopPropagation
+			&& this.parent
+			&& this.parent.trigger(evt, ...args)
+
 		return this
 	},
 
