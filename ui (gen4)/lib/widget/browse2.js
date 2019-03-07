@@ -419,6 +419,7 @@ var BaseBrowserPrototype = {
 	// XXX not sure about the logic of this, should this take an item as 
 	// 		input and return an id???
 	// 		...should this check for uniqueness???
+	// 		think merging this with any of the actual ID generators would be best...
 	__id__: function(prefix){
 		// id prefix...
 		return (prefix || '') 
