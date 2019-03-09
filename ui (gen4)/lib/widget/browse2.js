@@ -416,7 +416,10 @@ var BaseBrowserPrototype = {
 	// 	"<prefix> <date>"
 	//
 	// XXX do a better id...
-	// 		repetition count would be logical as a suffix...
+	// 		Ex:
+	//			"abc"
+	// 			"abc (1)"
+	// 			"abc (2)"
 	// XXX not sure about the logic of this, should this take an item as 
 	// 		input and return an id???
 	// 		...should this check for uniqueness???
