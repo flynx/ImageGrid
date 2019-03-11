@@ -50,21 +50,23 @@ var widget = require('./widget')
 // 		and the previous item created (.prevItem()), ... etc.
 // 		...this would enable us to uniquely identify the actual items 
 // 		and prevent allot of specific errors...
-var collectItems = function(context, items){
+var collectItems = function(make, items){
 	var made = items
 		.filter(function(e){
-			return e === context })
+			return e === make })
 	// constructed item list...
 	// ...remove each instance from .items
-	made = context.items.splice(
-		context.items.length - made.length, 
+	made = make.items.splice(
+		make.items.length - made.length, 
 		made.length)
 	// get the actual item values...
 	return items
 		.map(function(e){
-			return e === context ?
+			return e === make ?
 				made.shift()
-				: e }) }
+				// raw item -> make(..)
+				: (make(e) 
+					&& make.items.pop()) }) }
 
 
 
@@ -704,13 +706,33 @@ var BaseBrowserPrototype = {
 	// 		-> undefined
 	//
 	// XXX add path support...
+	// XXX add literal item support (???)
 	get: function(key){
 		key = key == null ? 0 : key
 
 		// index...
 		if(typeof(key) == typeof(123)){
-			// XXX need to account for nesting browsers and groups...
-			throw new Error('Not implemented.')
+			var i = 0
+			var items = this.items
+			// XXX also need to:
+			// 		- get header by index...
+			// 		- get N'th item of a nested browser...
+			while(i < items.length){
+				var item = 
+					items[i].value instanceof Browser ?
+						items[i].value.get(key-i)
+					: items[i].sublist instanceof Browser ?
+						items[i].sublist.get(key-i)
+					: items[i].sublist instanceof Array ?
+						items[i].sublist[key-i]
+					: items[i]
+
+				if(i >= key){
+					return item
+				}
+
+				i++
+			}
 
 		// key...
 		// XXX account for paths...
@@ -731,6 +753,7 @@ var BaseBrowserPrototype = {
 				var n = nested.shift().sublist
 				var res = n.get(key)
 				if(res !== undefined){
+					// return first match...
 					return res
 				}
 			}
@@ -747,6 +770,16 @@ var BaseBrowserPrototype = {
 	//
 	find: function(){
 	},
+
+	next: function(){},
+	prev: function(){},
+
+	// XXX should there return an array or a .constructor(..) instance??
+	forEach: function(){},
+	map: function(){},
+	filter: function(){},
+	reduce: function(){},
+
 
 	// XXX do we need edit ability here? 
 	// 		i.e. .set(..), .remove(..), .sort(..), ...
@@ -881,13 +914,6 @@ var BaseBrowserPrototype = {
 
 	close: makeEventMethod('close', function(evt, reason){}),
 	
-	// XXX should there return an array or a .constructor(..) instance??
-	forEach: function(){},
-	map: function(){},
-	filter: function(){},
-	reduce: function(){},
-
-
 	// XXX should we update on on init....
 	__init__: function(func, options){
 		this.__list__ = func
@@ -1184,15 +1210,15 @@ var BrowserPrototype = {
 
 		// special-case: item shorthands...
 		if(item.value in options.elementShorthand){
-			item = options.elementShorthand[item.value]
+			var template = options.elementShorthand[item.value]
 
 			// NOTE: this is a bit of a cheat, but it saves us from either 
 			// 		parsing or restricting the format...
-			var elem = $(item.html)[0]
+			var elem = item.dom = $(template.html)[0]
 			elem.classList.add(
-				...(item['class'] instanceof Array ?
-					item['class']
-					: item['class'].split(/\s+/g)))
+				...(template['class'] instanceof Array ?
+					template['class']
+					: template['class'].split(/\s+/g)))
 
 			return elem 
 		}
