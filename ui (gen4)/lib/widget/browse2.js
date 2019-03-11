@@ -744,27 +744,34 @@ var BaseBrowserPrototype = {
 	},
 
 
-	iter: function(func){
+	// XXX pass path to handlers...
+	iter: function(func, path){
 		var that = this
+		path = path || []
 		var doElem = function(elem){
 			return [func ? 
-				func.call(that, elem) 
+				func.call(that, elem, path.concat(elem.id)) 
 				: elem] }
 		return this.items
 			.map(function(elem){
 				return (
 					// value is Browser (inline)...
 					elem.value instanceof Browser ?
-						elem.value.iter(func)	
+						// XXX do we include the path of the parent elem 
+						// 		in inlined browsers???
+						//elem.value.iter(func, path.concat(elem.id))	
+						elem.value.iter(func, path.slice())	
 					// .sublist is Browser (nested)...
 					: elem.sublist instanceof Browser ?
 						doElem(elem)
-							.concat(elem.sublist.iter(func))
+							.concat(elem.sublist.iter(func, path.concat(elem.id)))
 					// .sublist is Array (nested)...
 					: elem.sublist instanceof Array ?
 						doElem(elem)
 							.concat(func ? 
-								elem.sublist.map(func.bind(that))
+								// XXX reuse doElem(..)
+								elem.sublist.map(function(e){ 
+									return func.call(that, e, path.concat(elem.id, e.id)) })
 								: elem.sublist.slice())
 					// normal item...
 					: doElem(elem) ) })
