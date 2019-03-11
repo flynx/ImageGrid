@@ -712,27 +712,9 @@ var BaseBrowserPrototype = {
 
 		// index...
 		if(typeof(key) == typeof(123)){
-			var i = 0
-			var items = this.items
-			// XXX also need to:
-			// 		- get header by index...
-			// 		- get N'th item of a nested browser...
-			while(i < items.length){
-				var item = 
-					items[i].value instanceof Browser ?
-						items[i].value.get(key-i)
-					: items[i].sublist instanceof Browser ?
-						items[i].sublist.get(key-i)
-					: items[i].sublist instanceof Array ?
-						items[i].sublist[key-i]
-					: items[i]
-
-				if(i >= key){
-					return item
-				}
-
-				i++
-			}
+			// XXX this needs to return as soon as we find an item and 
+			// 		not construct the whole list...
+			return this.iter()[key]
 
 		// key...
 		// XXX account for paths...
@@ -760,6 +742,33 @@ var BaseBrowserPrototype = {
 		}
 		return undefined
 	},
+
+
+	iter: function(func){
+		var that = this
+		var doElem = function(elem){
+			return [func ? 
+				func.call(that, elem) 
+				: elem] }
+		return this.items
+			.map(function(elem){
+				return (
+					// value is Browser (inline)...
+					elem.value instanceof Browser ?
+						elem.value.iter(func)	
+					// .sublist is Browser (nested)...
+					: elem.sublist instanceof Browser ?
+						doElem(elem)
+							.concat(elem.sublist.iter(func))
+					// .sublist is Array (nested)...
+					: elem.sublist instanceof Array ?
+						doElem(elem)
+							.concat(func ? 
+								elem.sublist.map(func.bind(that))
+								: elem.sublist.slice())
+					// normal item...
+					: doElem(elem) ) })
+			.flat() },
 
 	//
 	//	.find(id)
