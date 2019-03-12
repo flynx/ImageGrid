@@ -378,6 +378,25 @@ var BaseBrowserPrototype = {
 	//
 	// Each of the above structures is reset on each call to .make(..)
 	//
+	// options format:
+	// 	{
+	// 		id: <string>,
+	// 		value: <string> | <array>,
+	//
+	// 		sublist: <browser> | <array>,
+	//
+	// 		focused: <bool>,
+	// 		selected: <bool>,
+	// 		disabled: <bool>,
+	// 		noniterable: <bool>,
+	//
+	// 		// Set automatically...
+	// 		parent: <browser>,
+	// 		// XXX move this to the appropriate object...
+	// 		dom: <dom>,
+	// 	}
+	//
+	//
 	// Example:
 	// 	XXX
 	//
@@ -526,12 +545,13 @@ var BaseBrowserPrototype = {
 			key = opts.id = k
 
 			// build the item...
-			var item = Object.assign({}, 
+			var item = Object.assign(
+				Object.create(options || {}), 
 				// get the old item values (only for non duplicate items)...
 				id_changed ?
 					{}
 					: old_index[key] || {},
-				options || {},
+				// XXX inherit from this...
 				opts,
 				{
 					parent: this,
@@ -744,36 +764,91 @@ var BaseBrowserPrototype = {
 	},
 
 
-	// XXX pass path to handlers...
-	iter: function(func, path){
+	//
+	//	.iter([options])
+	//	.iter(func[, options])
+	//	.iter(func, path[, options])
+	//		-> items
+	//
+	// options format:
+	// 	{
+	// 		// NOTE: this if true overrides all other iteration coverage 
+	// 		//		options... 
+	// 		iterateAll: <bool>,
+	//
+	// 		iterateNonIterable: <bool>,
+	// 		iterateCollapsed: <bool>,
+	// 		skipNested: <bool>,
+	//
+	// 		inlinedPaths: <bool>,
+	// 	}
+	//
+	//
+	// By default this will not iterate items that are:
+	// 	- non-iterable (item.noniterable is true)
+	// 	- collapsed sub-items (item.collapsed is true)
+	// 	
+	//
+	// XXX make item access by index lazy... 
+	// 		- index nested stuff and lengths... (.sublist_length)
+	// 		- stop when target reached... (control callback???)
+	// XXX rename this to .items... (???)
+	iter: function(func, path, options){
 		var that = this
-		path = path || []
+
+		// parse args...
+		var args = [...arguments]
+		func = args[0] instanceof Function ? 
+			args.shift() 
+			: undefined
+		path = (args[0] instanceof Array 
+				|| typeof(args[0]) == typeof('str')) ?
+			args.shift()
+			: []
+		path = path instanceof Array ? path : [path]
+		options = args.pop() || {}
+
+		var iterateNonIterable = options.iterateAll || options.iterateNonIterable
+		var iterateCollapsed = options.iterateAll || options.iterateCollapsed
+		var skipNested = !options.iterateAll && options.skipNested
+		
 		var doElem = function(elem){
 			return [func ? 
 				func.call(that, elem, path.concat(elem.id)) 
 				: elem] }
+
 		return this.items
 			.map(function(elem){
 				return (
-					// value is Browser (inline)...
-					elem.value instanceof Browser ?
-						// XXX do we include the path of the parent elem 
-						// 		in inlined browsers???
-						//elem.value.iter(func, path.concat(elem.id))	
-						elem.value.iter(func, path.slice())	
-					// .sublist is Browser (nested)...
-					: elem.sublist instanceof Browser ?
+					// item not iterable -- skip...
+					(!iterateNonIterable && elem.noniterable) ?
+						[]
+					// value is Browser (inline) -- list browser items...
+					: elem.value instanceof Browser ?
+						elem.value.iter(func, 
+							options.inlinedPaths ?
+								path.concat(elem.id)
+								: path.slice(), 
+							options)	
+					// .sublist is Browser (nested) -- list header then browser items...
+					: (!skipNested 
+							&& elem.sublist instanceof Browser) ?
 						doElem(elem)
-							.concat(elem.sublist.iter(func, path.concat(elem.id)))
-					// .sublist is Array (nested)...
-					: elem.sublist instanceof Array ?
+							.concat((!iterateCollapsed && elem.collapsed) ?
+								[]
+								: elem.sublist.iter(func, path.concat(elem.id), options))
+					// .sublist is Array (nested) -- list header then array content...
+					: (!skipNested 
+							&& elem.sublist instanceof Array) ?
 						doElem(elem)
-							.concat(func ? 
-								// XXX reuse doElem(..)
-								elem.sublist.map(function(e){ 
-									return func.call(that, e, path.concat(elem.id, e.id)) })
-								: elem.sublist.slice())
-					// normal item...
+							.concat((!iterateCollapsed && elem.collapsed) ?
+								[]
+								: (func ? 
+									elem.sublist
+										.map(function(e){ 
+											return func.call(that, e, path.concat(elem.id, e.id)) })
+									: elem.sublist.slice()))
+					// normal item -- list...
 					: doElem(elem) ) })
 			.flat() },
 
@@ -1014,14 +1089,18 @@ var BrowserPrototype = {
 		//
 		// NOTE: .class is optional...
 		// NOTE: set this to null to disable shorthands...
+		// NOTE: currently the options in the template will override 
+		// 		anything explicitly given by item options... (XXX revise)
 		elementShorthand: {
 			'---': {
 				'class': 'separator',
-				'html': '<hr>'
+				'html': '<hr>',
+				noniterable: true,
 			},
 			'...': {
 				'class': 'separator',
 				'html': '<center><div class="loader"/></center>',
+				noniterable: true,
 			},
 		},
 	},
@@ -1226,15 +1305,16 @@ var BrowserPrototype = {
 
 		// special-case: item shorthands...
 		if(item.value in options.elementShorthand){
-			var template = options.elementShorthand[item.value]
+			// XXX need to merge and not overwrite -- revise...
+			Object.assign(item, options.elementShorthand[item.value])
 
 			// NOTE: this is a bit of a cheat, but it saves us from either 
 			// 		parsing or restricting the format...
-			var elem = item.dom = $(template.html)[0]
+			var elem = item.dom = $(item.html)[0]
 			elem.classList.add(
-				...(template['class'] instanceof Array ?
-					template['class']
-					: template['class'].split(/\s+/g)))
+				...(item['class'] instanceof Array ?
+					item['class']
+					: item['class'].split(/\s+/g)))
 
 			return elem 
 		}
