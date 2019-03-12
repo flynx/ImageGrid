@@ -734,7 +734,7 @@ var BaseBrowserPrototype = {
 		if(typeof(key) == typeof(123)){
 			// XXX this needs to return as soon as we find an item and 
 			// 		not construct the whole list...
-			return this.iter()[key]
+			return this.map()[key]
 
 		// key...
 		// XXX account for paths...
@@ -764,10 +764,12 @@ var BaseBrowserPrototype = {
 	},
 
 
+	// Extended map...
 	//
-	//	.iter([options])
-	//	.iter(func[, options])
-	//	.iter(func, path[, options])
+	//	Generic map...
+	//	.map([options])
+	//	.map(func[, options])
+	//	.map(func, path[, options])
 	//		-> items
 	//
 	// options format:
@@ -789,11 +791,16 @@ var BaseBrowserPrototype = {
 	// 	- collapsed sub-items (item.collapsed is true)
 	// 	
 	//
+	// This extends the Array .map(..) by adding:
+	// 	- ability to run without arguments
+	// 	- support for options
+	//
+	//
 	// XXX make item access by index lazy... 
 	// 		- index nested stuff and lengths... (.sublist_length)
 	// 		- stop when target reached... (control callback???)
-	// XXX rename this to .items... (???)
-	iter: function(func, path, options){
+	// XXX rename this to .items(..), or is this a .map(..) (???)
+	map: function(func, path, options){
 		var that = this
 
 		// parse args...
@@ -814,7 +821,7 @@ var BaseBrowserPrototype = {
 		
 		var doElem = function(elem){
 			return [func ? 
-				func.call(that, elem, path.concat(elem.id)) 
+				func.call(that, elem, path.concat(elem.id), that) 
 				: elem] }
 
 		return this.items
@@ -825,7 +832,7 @@ var BaseBrowserPrototype = {
 						[]
 					// value is Browser (inline) -- list browser items...
 					: elem.value instanceof Browser ?
-						elem.value.iter(func, 
+						elem.value.map(func, 
 							options.inlinedPaths ?
 								path.concat(elem.id)
 								: path.slice(), 
@@ -836,7 +843,7 @@ var BaseBrowserPrototype = {
 						doElem(elem)
 							.concat((!iterateCollapsed && elem.collapsed) ?
 								[]
-								: elem.sublist.iter(func, path.concat(elem.id), options))
+								: elem.sublist.map(func, path.concat(elem.id), options))
 					// .sublist is Array (nested) -- list header then array content...
 					: (!skipNested 
 							&& elem.sublist instanceof Array) ?
@@ -846,7 +853,7 @@ var BaseBrowserPrototype = {
 								: (func ? 
 									elem.sublist
 										.map(function(e){ 
-											return func.call(that, e, path.concat(elem.id, e.id)) })
+											return func.call(that, e, path.concat(elem.id, e.id), that) })
 									: elem.sublist.slice()))
 					// normal item -- list...
 					: doElem(elem) ) })
@@ -867,7 +874,6 @@ var BaseBrowserPrototype = {
 
 	// XXX should there return an array or a .constructor(..) instance??
 	forEach: function(){},
-	map: function(){},
 	filter: function(){},
 	reduce: function(){},
 
