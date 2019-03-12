@@ -1,7 +1,7 @@
 #**********************************************************************
 #
-# ImageGrid.Viewer Makefile...
-#
+## ImageGrid.Viewer Makefile...
+##
 #
 # Make dependencies that need to be installed (make check):
 # 	- General
@@ -27,48 +27,50 @@
 # 	- web
 #
 #
-#
-# Build targets:
-#    To list full user make targets use:
-# 	make help
-#
-#
-# Variables to control the build:
-# 	APP_NAME	- Application name
-# 	APP_BIN		- App binary name (ignored for MacOS)
-#
-# 	ARCH		- target achitecture (ia32, x86)
-# 	TARGET_OS	- target OS (win32, linux, darwin)
-#
-# 	ELECTRON_DOWNOAD_URL
-# 			- URL to download electron binary
-# 	ELECTRON_DIST	- electron distribution file name pattern
-# 	BUILD_MODE	- can be "repack" or "in-place" (default)
-#
-# NOTE: when setting variables avoid using spaces and other characters 
-# 	make can get fussy about...
-# NOTE: to do a repack build call:
-# 		(export BUILD_MODE=repack && make)
-# NOTE: in most cases we do not add a "/" to target dirs to destinguish 
-# 	them from target files except for one case:
-#		$(BUILD_DIR)/$(APP_NAME)-%/
-#	this will help make destinguish it from things like:
-#		$(DIST_DIR)/$(APP_NAME)-%.zip
-# NOTE: cross compilation is at this time not supported, if you try it 
-# 	and it works then 1) you got very lucky and 2) tell me about it =)
-# 	...at least the node native packages (sharp) will likely either 
-# 	fail or	win get compiled to the wrong arch and not be used and
-# 	for the most part ImageGrid is cleaver about and will simply not
-# 	load the depending features...
-#
-#
-# Examples:
-# 	# full build...
-# 	make clean dist
-#
-# 	# build for darwin... (XXX needs testing)
-# 	export TARGET_OS=darwin && make clean dist
-#
+## Building:
+##    To print full list of user make targets use:
+## 	make help
+##
+##
+## Variables to control the build:
+## 	APP_NAME	- Application name
+## 	APP_BIN		- App binary name (ignored for MacOS)
+##
+## 	ARCH		- target achitecture (ia32, x86)
+## 	TARGET_OS	- target OS (win32, linux, darwin)
+##
+## 	ELECTRON_DOWNOAD_URL
+## 			- URL to download electron binary
+## 	ELECTRON_DIST	- electron distribution file name pattern
+## 	BUILD_MODE	- can be "repack" or "in-place" (default)
+##
+## NOTE: when setting variables avoid using spaces and other characters 
+## 	make can get fussy about...
+## NOTE: to do a repack build call:
+## 		(export BUILD_MODE=repack && make)
+## NOTE: in most cases we do not add a "/" to target dirs to destinguish 
+## 	them from target files except for one case:
+##		$(BUILD_DIR)/$(APP_NAME)-%/
+##	this will help make destinguish it from things like:
+##		$(DIST_DIR)/$(APP_NAME)-%.zip
+## NOTE: cross compilation is at this time not supported, if you try it 
+## 	and it works then 1) you got very lucky and 2) tell me about it =)
+## 	...at least the node native packages (sharp) will likely either 
+## 	fail or	win get compiled to the wrong arch and not be used and
+## 	for the most part ImageGrid is cleaver about and will simply not
+## 	load the depending features...
+##
+##
+## Examples:
+##	# check if all dependencies are available...
+##	make check
+##
+## 	# full build...
+## 	make clean dist
+##
+## 	# build for darwin... (XXX needs testing)
+## 	export TARGET_OS=darwin && make clean dist
+##
 #
 #
 #----------------------------------------------------------------------
@@ -265,23 +267,25 @@ DEPENDENCIES = node npm wget sed zip unzip zipnote git \
 
 
 #**********************************************************************
-## Help...
+### Generic targets...
 
 .PHONY: help
-help: ## List make targets
+help:
 	@IFS=$$'\n' ; \
 	help_lines=(`fgrep -h "##" $(MAKEFILE_LIST) \
 		| fgrep -v fgrep \
 		| sed -e 's/\\$$//'`); \
 	for help_line in $${help_lines[@]}; do \
-		if [ -z "$${help_line/'#'*/}" ] ; then \
-			IFS=$$'#' ; \
-			echo ; \
+		IFS=$$'#' ; \
+		if [ -z "$${help_line/'#'#[#-]*/}" ] ; then \
+			echo ;\
 			echo "$${help_line}" \
 				| sed 's/#\+[- ]*//' \
 				| sed 's/\s*\(...\|---\)\s*$$/:/'; \
+		elif [ -z "$${help_line/'#'*/}" ] ; then \
+			echo "$${help_line}" \
+				| sed 's/#\+[- ]*//' ; \
 		else \
-			IFS=$$'#' ; \
 			help_split=($$help_line) ; \
 			help_command=`echo $${help_split[0]} \
 				| sed -e 's/^ *//' -e 's/ *$$//'` ; \
@@ -291,10 +295,6 @@ help: ## List make targets
 		fi ; \
 	done
 
-
-
-#**********************************************************************
-## Generic...
 
 .PHONY: all
 all: ## Run the full build chain
@@ -339,8 +339,8 @@ run: electron-run
 
 
 
-## Cleanup...
-#
+### Cleanup...
+
 .PHONY: clean
 clean: ## Clean the BUILD_DIR directory
 	$(RM) $(BUILD_DIR)
@@ -451,7 +451,7 @@ nw-run: dev
 
 
 #**********************************************************************
-## Dependency checking...
+### Dependency checking...
 
 require(%):
 	@echo Checking for: $*
