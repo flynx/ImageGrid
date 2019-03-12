@@ -104,10 +104,11 @@
 #
 #
 #**********************************************************************
-.SECONDEXPANSION:
 # basic configuration...
 
-#SHELL := $(shell which bash)
+.SECONDEXPANSION:
+
+SHELL := $(shell which bash)
 
 
 
@@ -270,22 +271,23 @@ DEPENDENCIES = node npm wget sed printf fgrep zip unzip zipnote git \
 # help generator...
 #
 # Help syntax:
-# 	## Normal help text...
+# 	"## Normal help text..."
 #
-# 	### Section title...
+# 	"### Section title..."
 #
-# 	##----- Section title ---
+# 	"##----- Section title ---"
 #
 .PHONY: help
 help:
 	@IFS=$$'\n' ; \
 	help_lines=(`fgrep -h "##" $(MAKEFILE_LIST) \
 		| fgrep -v fgrep \
+		| fgrep -v '"##' \
 		| sed -e 's/\\$$//'`); \
 	for help_line in $${help_lines[@]}; do \
 		IFS=$$'#' ; \
 		if [ -z "$${help_line/'#'#[#-]*/}" ] ; then \
-			echo ;\
+			echo ; \
 			echo "$${help_line}" \
 				| sed 's/#\+[- ]*//' \
 				| sed 's/\s*\(...\|---\)\s*$$/:/'; \
