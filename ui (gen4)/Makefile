@@ -268,7 +268,14 @@ DEPENDENCIES = node npm wget sed printf fgrep zip unzip zipnote git \
 
 #**********************************************************************
 # help generator...
-
+#
+# Help syntax:
+# 	## Normal help text...
+#
+# 	### Section title...
+#
+# 	##----- Section title ---
+#
 .PHONY: help
 help:
 	@IFS=$$'\n' ; \
@@ -458,8 +465,9 @@ nw-run: dev
 ### Dependency checking...
 
 require(%):
-	@echo Checking for: $* \
-		`which $* > /dev/null && echo '(OK)' || echo '(FAIL)'`
+	@printf "%-15s %s\n" \
+		"$*" \
+		"`which $* &> /dev/null && echo '- OK' || echo '- FAIL'`"
 
 
 .PHONY: check
