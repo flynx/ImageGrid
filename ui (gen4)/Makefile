@@ -29,42 +29,8 @@
 #
 #
 # Build targets:
-#    Generic targets:
-# 	all		- run the full build chain...
-# 	check		- check dependencies
-# 	dev		- build the development environment
-# 	dist		- build the distribution
-# 	deploy		- run ./scripts/deploy.sh on contents of ./dist/,
-# 			  this will do nothing if neither exists.
-# 	run		- run the app
-# 	clean		- cleanup the ./build
-# 	clean-all	- clean up fully.
-# 			  removes: ./targets/, ./build/, ./dist/
-#
-#    Generic app targets:
-# 	app-dir-full	- build full app dir
-# 	app-dir-minimal - build minimal app dir (used for web)
-# 			  NOTE: these are runtime neutral
-#
-#    Web/Browser distribution:
-# 	web		- build a version runnable in browser
-#
-#    Electron:
-# 	electron-dist	- electron distribution (default)
-# 	electron-test-dist
-# 			- electron distribution with timestamp added to 
-# 			  version number (used for test build that do not
-# 			  change version)
-# 	electron-unpacked
-# 			- build an unpacked electron app dir
-# 			  NOTE: this builds to a different directory than
-# 			  	app-dir-*
-# 	electron-inst	- build electron app installer (XXX not implemented)
-# 	electron-run	- run the electron distribution in-place
-#
-#    NW.js 
-#	(XXX not implemented yet)
-#
+#    To list full user make targets use:
+# 	make help
 #
 #
 # Variables to control the build:
@@ -291,7 +257,7 @@ INCLUDE_NW_NODE_MODULES = app-module-path
 # XXX might be a good idea to split these to sections and check only what
 # 	is needed...
 # 	...like: base, electron, wix, ...
-DEPENDENCIES = node npm wget zip unzip zipnote git \
+DEPENDENCIES = node npm wget sed zip unzip zipnote git \
 	lessc electron electron-rebuild asar
 # WiX dependencies, windows only...
 #DEPENDENCIES += heat candle light
@@ -299,32 +265,55 @@ DEPENDENCIES = node npm wget zip unzip zipnote git \
 
 
 #**********************************************************************
-# User targets...
+## Help...
+
+.PHONY: help
+help: ## List make targets
+	@IFS=$$'\n' ; \
+	help_lines=(`fgrep -h "##" $(MAKEFILE_LIST) \
+		| fgrep -v fgrep \
+		| sed -e 's/\\$$//'`); \
+	for help_line in $${help_lines[@]}; do \
+		if [ -z "$${help_line/'#'*/}" ] ; then \
+			IFS=$$'#' ; \
+			echo ; \
+			echo "$${help_line}" \
+				| sed 's/#\+[- ]*//' \
+				| sed 's/\s*\(...\|---\)\s*$$/:/'; \
+		else \
+			IFS=$$'#' ; \
+			help_split=($$help_line) ; \
+			help_command=`echo $${help_split[0]} \
+				| sed -e 's/^ *//' -e 's/ *$$//'` ; \
+			help_info=`echo $${help_split[2]} \
+				| sed -e 's/^ *//' -e 's/ *$$//'` ; \
+			printf "   %-30s %s\n" $$help_command $$help_info ; \
+		fi ; \
+	done
+
+
+
+#**********************************************************************
+## Generic...
 
 .PHONY: all
+all: ## Run the full build chain
 all: check dev dist deploy
 
 
-.PHONY: css
-css: $(CSS_FILES)
-
-
 .PHONY: dev
+dev: ## Build the development environment
 dev: $(NODE_DIR) css
 
 
-# General targets...
-#
-.PHONY: run
-run: electron-run
-
-
 .PHONY: dist
+dist: ## Build distributable package
 dist: electron-test-dist
 #dist: electron-dist
 
 
 .PHONY: test-dist
+test-dist: ## Build testing distributable package
 test-dist: electron-test-dist
 
 
@@ -333,6 +322,7 @@ test-dist: electron-test-dist
 # XXX should we build what we need to deploy???
 # XXX can this be done purely in make???
 .PHONY: deploy
+deploy: ## Run ./scripts/deploy.sh on contents of DIST_DIR, does nothing if neither exists.
 deploy: $(wildcard $(DIST_DIR)/$(APP_NAME)-*.zip) $(wildcard scripts/deploy.sh)
 	@[ -e ./scripts/deploy.sh ] \
 		&& for f in $(DIST_DIR)/$(APP_NAME)-*.zip ; do \
@@ -343,34 +333,62 @@ deploy: $(wildcard $(DIST_DIR)/$(APP_NAME)-*.zip) $(wildcard scripts/deploy.sh)
 		|| echo Deploy script not found: scripts/deploy.sh
 
 
+.PHONY: run
+run: ## Run app in-place
+run: electron-run 
+
+
+
+## Cleanup...
+#
 .PHONY: clean
-clean:
+clean: ## Clean the BUILD_DIR directory
 	$(RM) $(BUILD_DIR)
 
 
 .PHONY: clean-dist
-clean-dist:
+clean-dist: ## Clean DIST_DIR directory
 	$(RM) $(DIST_DIR)
 
 
 .PHONY: clean-all
+clean-all: ## Clean all
 clean-all: clean clean-dist
 	$(RM) $(TARGET_DIR) $(NODE_DIR)
 
 
 
-#---------------------------------------------- Web/browser targets ---
+##---------------------------------------------- Generic components ---
+
+.PHONY: css
+css: ## Build CSS
+css: $(CSS_FILES)
+
+# NOTE: do not use these phony targets as dependencies...
+# NOTE: these intersect, so one should remove the previos before making 
+# 	a new app dir...
+.PHONY: app-dir-full app-dir-minimal
+app-dir-full: ## Build full app directory
+app-dir-full: $(PACK_FULL)
+
+app-dir-minimal: ## Build minimal app directory
+app-dir-minimal: $(PACK_MINIMAL)
+
+
+
+##----------------------------------------------------- Web/Browser ---
 
 .PHONY: web
+web: ## Build a browser-runnable package
 web: $(DIST_DIR)/$(APP_NAME)-$(VERSION)-web.zip
 
 
-
-#------------------------------------------------- Electron targets ---
+##-------------------------------------------------------- Electron ---
 
 # XXX this can potentially do a build for an existing/matching *.zip in
 # 	the $(DIST_DIR)...
 .PHONY: electron-dist
+electron-dist: ## Make electron distributable
 electron-dist: VERSION := $(VERSION)-el
 electron-dist: DIST := $(DIST_DIR)/$(APP_NAME)-$(VERSION)-$(TARGET_OS)-$(ARCH).zip
 electron-dist: $$(DIST)
@@ -378,6 +396,7 @@ electron-dist: $$(DIST)
 
 # add a time stamp to version...
 .PHONY: electron-test-dist
+electron-test-dist: ## Make electron test distributable
 electron-test-dist: VERSION := $(VERSION)-$(DATE)-el
 electron-test-dist: DIST := $(DIST_DIR)/$(APP_NAME)-$(VERSION)-$(TARGET_OS)-$(ARCH).zip
 electron-test-dist: $$(DIST)
@@ -386,6 +405,7 @@ electron-test-dist: $$(DIST)
 
 # NOTE: the "/" at the end here is significant...
 .PHONY: electron-unpacked
+electron-unpacked: ## Make unpacked electron app
 electron-unpacked: VERSION := $(VERSION)-el
 electron-unpacked: $(BUILD_DIR)/$(APP_NAME)-$$(VERSION)-$(TARGET_OS)-$(ARCH)/
 
@@ -396,12 +416,13 @@ electron-unpacked: $(BUILD_DIR)/$(APP_NAME)-$$(VERSION)-$(TARGET_OS)-$(ARCH)/
 
 # XXX should we have an unpacked run (-clean-run)???
 .PHONY: electron-run
+electron-run: ## Run app in electron
 electron-run: dev
 	electron .
 
 
 
-#------------------------------------------------------- NW targets ---
+##-------------------------------------------------------------- NW ---
 
 # XXX this clashes with the electron build as the recepies do not take the
 # 	host framework into account...
@@ -416,12 +437,13 @@ electron-run: dev
 
 # XXX needs a different package.json or a way to share it with electron...
 .PHONY: nw-run
+nw-run: ## Run app in nw (outdated)
 nw-run: dev
 	nw .
 
 
 
-#------------------------------------------------------ deb targets ---
+##------------------------------------------------------------- deb ---
 
 # XXX
 
@@ -429,7 +451,7 @@ nw-run: dev
 
 
 #**********************************************************************
-# Dependency checking...
+## Dependency checking...
 
 require(%):
 	@echo Checking for: $*
@@ -437,6 +459,7 @@ require(%):
 
 
 .PHONY: check
+check: ## Run dependency checks
 check: $(foreach dep,$(DEPENDENCIES),require($(dep)))
 
 
@@ -532,16 +555,6 @@ $(BUILD_DIR)/$(APP_NAME)/$(NODE_DIR)/%: $(NODE_DIR)
 	$(MD) "$(@D)"
 	cp -r "$(NODE_DIR)/$*" "$(@D)"
 	@touch "$@"
-
-
-# targets for testing...
-# NOTE: do not use these phony targets as dependencies...
-# NOTE: these intersect, so one should remove the previos before making 
-# 	a new app dir...
-.PHONY: app-dir-full app-dir-minimal
-app-dir-full: $(PACK_FULL)
-app-dir-minimal: $(PACK_MINIMAL)
-
 
 
 #----------------------------------------------------------------------
