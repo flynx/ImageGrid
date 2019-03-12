@@ -274,7 +274,6 @@ DEPENDENCIES = node npm wget sed printf fgrep zip unzip zipnote git \
 # 	"## Normal help text..."
 #
 # 	"### Section title..."
-#
 # 	"##----- Section title ---"
 #
 .PHONY: help
@@ -335,7 +334,7 @@ test-dist: electron-test-dist
 # XXX should we build what we need to deploy???
 # XXX can this be done purely in make???
 .PHONY: deploy
-deploy: ## Run ./scripts/deploy.sh on contents of DIST_DIR, does nothing if neither exists.
+deploy: ## Run ./scripts/deploy.sh on contents of DIST_DIR
 deploy: $(wildcard $(DIST_DIR)/$(APP_NAME)-*.zip) $(wildcard scripts/deploy.sh)
 	@[ -e ./scripts/deploy.sh ] \
 		&& for f in $(DIST_DIR)/$(APP_NAME)-*.zip ; do \
@@ -343,7 +342,7 @@ deploy: $(wildcard $(DIST_DIR)/$(APP_NAME)-*.zip) $(wildcard scripts/deploy.sh)
 				&& bash ./scripts/deploy.sh "$${f}" \
 				|| echo "Nothing to deploy." ; \
 		done \
-		|| echo Deploy script not found: scripts/deploy.sh
+		|| echo Deploy script not found: ./scripts/deploy.sh
 
 
 .PHONY: run
