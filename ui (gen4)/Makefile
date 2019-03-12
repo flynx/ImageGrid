@@ -1,5 +1,5 @@
 #**********************************************************************
-#
+##
 ## ImageGrid.Viewer Makefile...
 ##
 #
@@ -259,7 +259,7 @@ INCLUDE_NW_NODE_MODULES = app-module-path
 # XXX might be a good idea to split these to sections and check only what
 # 	is needed...
 # 	...like: base, electron, wix, ...
-DEPENDENCIES = node npm wget sed zip unzip zipnote git \
+DEPENDENCIES = node npm wget sed printf fgrep zip unzip zipnote git \
 	lessc electron electron-rebuild asar
 # WiX dependencies, windows only...
 #DEPENDENCIES += heat candle light
@@ -267,7 +267,7 @@ DEPENDENCIES = node npm wget sed zip unzip zipnote git \
 
 
 #**********************************************************************
-### Generic targets...
+# help generator...
 
 .PHONY: help
 help:
@@ -295,6 +295,10 @@ help:
 		fi ; \
 	done
 
+
+
+#**********************************************************************
+### Generic targets...
 
 .PHONY: all
 all: ## Run the full build chain
@@ -454,8 +458,8 @@ nw-run: dev
 ### Dependency checking...
 
 require(%):
-	@echo Checking for: $*
-	@which $* > /dev/null
+	@echo Checking for: $* \
+		`which $* > /dev/null && echo '(OK)' || echo '(FAIL)'`
 
 
 .PHONY: check
