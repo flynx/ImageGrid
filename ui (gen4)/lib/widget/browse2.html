@@ -110,9 +110,9 @@ requirejs([
 			'b')
 		// XXX Q: should we show only one if multiple lines are in sequence???
 		make('---')
-		make('---')
+		//make('---')
 		// XXX not yet visible...
-		make('...')
+		//make('...')
 		make('e')
 		// embeded browser...
 		make(browser.Browser(function(make){
@@ -125,6 +125,7 @@ requirejs([
 			make('moo', {disabled: true}),
 			2,
 		])
+		make('in between...')
 		// nested browser...
 		make.nest('B', 
 			browser.Browser(function(make){

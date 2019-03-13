@@ -287,6 +287,8 @@ fi
 
 # build cache...
 if [ -z $SKIP_CACHE ] ; then
+	# a little tweak to make build cache work...
+	export PYTHONIOENCODING=UTF-8	
 	#if [ -z $TOTAL ] ; then
 	#	export TOTAL=`find . -path '*hi-res (RAW)/*.jpg' | wc -l`
 	#fi

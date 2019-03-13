@@ -340,6 +340,13 @@ var BaseBrowserPrototype = {
 	},
 
 
+	get length(){
+		return this.map({skipNested: true}).length
+			+ this.nested()
+				.reduce(function(res, e){ 
+					return res + e.sublist.length }, 0) },
+
+
 	// Item list constructor...
 	//
 	// 	.__list__(make, options)
@@ -727,7 +734,7 @@ var BaseBrowserPrototype = {
 	//
 	// XXX add path support...
 	// XXX add literal item support (???)
-	get: function(key){
+	get: function(key, _){
 		key = key == null ? 0 : key
 
 		// index...
@@ -738,30 +745,41 @@ var BaseBrowserPrototype = {
 				.map(function(e, i){ 
 					return [e, i] })
 				.compact()
+			var i = 0
+			var offset = 0
 
 			do {
 				// direct match...
-				if(sublists.length == 0 || key < sublists[0][1]){
-					return items[key]
+				if(sublists.length == 0 || key - offset < sublists[0][1]){
+					return items[key - i]
 				}
 
 				// query the sublist...
-				var list = sublists.shift()
-				console.log('>>>>', key - list[1])
-				var res = list[0].value instanceof Browser ?
-						list[0].value.get(key - list[1])
-					// XXX also get header....
-					: list[0].sublist instanceof Browser ?
-						list[0].sublist.get(key - list[1])
-					: list[0].sublist[key - list[1]]
+				var [sublist, i] = sublists.shift()
+
+				// inlined...
+				if(sublist.value instanceof Browser){
+					var res = sublist.value.get(key - i, true)
+
+				// nested...
+				} else { 
+					var res = key - i == 1 ?
+							sublist
+						: sublist.sublist instanceof Browser ?
+							sublist.sublist.get(key - i - offset, true) 
+						: sublist.sublist[key - i - offset]
+					// account for the header...
+					offset += 1
+				}
 
 				if(res !== undefined){
 					return res
 				}
 
-				items = items.slice(list[1] + 1)
-				key = key - list[key] - 1
-			} while(items.length > 0)
+				offset = offset + (sublist.sublist || sublist.value).length
+
+			// XXX not sure about this...
+			} while(items.length > key - (i + offset))
 
 			return undefined
 
