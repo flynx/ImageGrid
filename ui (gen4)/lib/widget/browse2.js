@@ -732,9 +732,43 @@ var BaseBrowserPrototype = {
 
 		// index...
 		if(typeof(key) == typeof(123)){
+			var items = this.items
+			// XXX make this an index...
+			var sublists = this.sublists()
+				.map(function(e, i){ 
+					return [e, i] })
+				.compact()
+
+			do {
+				// direct match...
+				if(sublists.length == 0 || key < sublists[0][1]){
+					return items[key]
+				}
+
+				// query the sublist...
+				var list = sublists.shift()
+				console.log('>>>>', key - list[1])
+				var res = list[0].value instanceof Browser ?
+						list[0].value.get(key - list[1])
+					// XXX also get header....
+					: list[0].sublist instanceof Browser ?
+						list[0].sublist.get(key - list[1])
+					: list[0].sublist[key - list[1]]
+
+				if(res !== undefined){
+					return res
+				}
+
+				items = items.slice(list[1] + 1)
+				key = key - list[key] - 1
+			} while(items.length > 0)
+
+			return undefined
+
+
 			// XXX this needs to return as soon as we find an item and 
 			// 		not construct the whole list...
-			return this.map()[key]
+			//return this.map()[key]
 
 		// key...
 		// XXX account for paths...
@@ -769,19 +803,25 @@ var BaseBrowserPrototype = {
 	//	Generic map...
 	//	.map([options])
 	//	.map(func[, options])
-	//	.map(func, path[, options])
 	//		-> items
 	//
 	// options format:
 	// 	{
+	// 		// Iterate ALL items...
+	// 		//
 	// 		// NOTE: this if true overrides all other iteration coverage 
 	// 		//		options... 
 	// 		iterateAll: <bool>,
 	//
+	// 		// If true do not skip items with .noniterable set to true...
 	// 		iterateNonIterable: <bool>,
+	// 		// If true do not skip item.sublist of items with .collapsed 
+	// 		// set to true...
 	// 		iterateCollapsed: <bool>,
+	// 		// If true skip iterating nested items...
 	// 		skipNested: <bool>,
 	//
+	// 		// If true include inlined parent id in path...
 	// 		inlinedPaths: <bool>,
 	// 	}
 	//
@@ -796,11 +836,15 @@ var BaseBrowserPrototype = {
 	// 	- support for options
 	//
 	//
+	//
+	// NOTE: a semi-documented signature is also used internally to 
+	// 		generate paths:
+	//			.map(func, path, options)
+	//
 	// XXX make item access by index lazy... 
 	// 		- index nested stuff and lengths... (.sublist_length)
 	// 		- stop when target reached... (control callback???)
-	// XXX rename this to .items(..), or is this a .map(..) (???)
-	map: function(func, path, options){
+	map: function(func, options){
 		var that = this
 
 		// parse args...
@@ -808,12 +852,12 @@ var BaseBrowserPrototype = {
 		func = args[0] instanceof Function ? 
 			args.shift() 
 			: undefined
-		path = (args[0] instanceof Array 
+		var path = (args[0] instanceof Array 
 				|| typeof(args[0]) == typeof('str')) ?
 			args.shift()
 			: []
 		path = path instanceof Array ? path : [path]
-		options = args.pop() || {}
+		var options = args.pop() || {}
 
 		var iterateNonIterable = options.iterateAll || options.iterateNonIterable
 		var iterateCollapsed = options.iterateAll || options.iterateCollapsed
@@ -858,6 +902,32 @@ var BaseBrowserPrototype = {
 					// normal item -- list...
 					: doElem(elem) ) })
 			.flat() },
+
+	// Sublist map functions...
+	// NOTE: there are different from .map(..) in that instead of paths 
+	// 		func(..) will get indexes in the current browser...
+	// NOTE: these will return a sparse array...
+	sublists: function(func, options){
+		var that = this
+		options = options || {}
+		var skipNested = options.skipNested
+		var skipInlined = options.skipInlined
+
+		var res = []
+		this.items
+			.forEach(function(elem, i){
+				if((!skipInlined && elem.value instanceof Browser)
+							|| (!skipNested && elem.sublist)){
+					res[i] = func ?
+						func.call(that, elem, i, that)
+						: elem 
+				} })
+		return res 
+	},
+	nested: function(func){
+		return this.sublists(func, {skipInlined: true}) },
+	inlined: function(func){
+		return this.sublists(func, {skipNested: true}) },
 
 	//
 	//	.find(id)
