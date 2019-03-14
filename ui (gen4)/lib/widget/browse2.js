@@ -734,6 +734,7 @@ var BaseBrowserPrototype = {
 	//
 	// XXX add path support...
 	// XXX add literal item support (???)
+	// XXX do not get .subtree elements of a .collapsed item...
 	get: function(key, _){
 		key = key == null ? 0 : key
 
@@ -750,8 +751,9 @@ var BaseBrowserPrototype = {
 
 			do {
 				// direct match...
+				// XXX this is messed up on the second+ iteration...
 				if(sublists.length == 0 || key - offset < sublists[0][1]){
-					return items[key - i]
+					return items[key - offset]
 				}
 
 				// query the sublist...
@@ -776,7 +778,7 @@ var BaseBrowserPrototype = {
 					return res
 				}
 
-				offset = offset + (sublist.sublist || sublist.value).length
+				offset += (sublist.sublist || sublist.value).length
 
 			// XXX not sure about this...
 			} while(items.length > key - (i + offset))
