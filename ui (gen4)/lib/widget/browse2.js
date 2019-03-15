@@ -742,37 +742,41 @@ var BaseBrowserPrototype = {
 		// index...
 		if(typeof(key) == typeof(123)){
 			var items = this.items
-			// XXX make this an index...
+			// XXX cache this (prop?)...
 			var sublists = this.sublists()
 				.map(function(e, i){ 
 					return [e, i] })
 				.compact()
 
 			var i = 0
-			var v = 0
+			var nested = 0
 			var offset = 0
 
+			// XXX BUG: getting last element returns undefined...
+			// 		to reproduce:
+			// 			dialog_1.get(22) // -> undefined, should return the last element...
 			do {
+				var x = key - offset + nested
 				// direct match...
-				// XXX this is messed up on the second+ iteration...
-				if(sublists.length == 0 || key - offset - i < sublists[0][1]){
-					return items[key - offset]
+				if(sublists.length == 0 || x < sublists[0][1]){
+					return items[x]
 				}
 
 				// query the sublist...
 				var [sublist, i] = sublists.shift()
+				nested += 1
 
 				// inlined...
 				if(sublist.value instanceof Browser){
-					var res = sublist.value.get(key - i, true)
+					var res = sublist.value.get(x - i, true)
 
 				// nested...
 				} else { 
-					var res = key - offset == 1 ?
+					var res = x - i == 0 ?
 							sublist
 						: sublist.sublist instanceof Browser ?
-							sublist.sublist.get(key - i - offset, true) 
-						: sublist.sublist[key - i - offset]
+							sublist.sublist.get(x - i - 1, true) 
+						: sublist.sublist[x - i - 1]
 					// account for the header...
 					offset += 1
 				}
@@ -783,8 +787,7 @@ var BaseBrowserPrototype = {
 
 				offset += (sublist.sublist || sublist.value).length
 
-			// XXX this is wrong... 
-			} while(true)
+			} while(x >= items.length)
 
 			return undefined
 
