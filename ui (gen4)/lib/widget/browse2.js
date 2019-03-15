@@ -735,6 +735,7 @@ var BaseBrowserPrototype = {
 	// XXX add path support...
 	// XXX add literal item support (???)
 	// XXX do not get .subtree elements of a .collapsed item...
+	// XXX skip .noniterable items...
 	get: function(key, _){
 		key = key == null ? 0 : key
 
@@ -746,13 +747,15 @@ var BaseBrowserPrototype = {
 				.map(function(e, i){ 
 					return [e, i] })
 				.compact()
+
 			var i = 0
+			var v = 0
 			var offset = 0
 
 			do {
 				// direct match...
 				// XXX this is messed up on the second+ iteration...
-				if(sublists.length == 0 || key - offset < sublists[0][1]){
+				if(sublists.length == 0 || key - offset - i < sublists[0][1]){
 					return items[key - offset]
 				}
 
@@ -765,7 +768,7 @@ var BaseBrowserPrototype = {
 
 				// nested...
 				} else { 
-					var res = key - i == 1 ?
+					var res = key - offset == 1 ?
 							sublist
 						: sublist.sublist instanceof Browser ?
 							sublist.sublist.get(key - i - offset, true) 
@@ -780,8 +783,8 @@ var BaseBrowserPrototype = {
 
 				offset += (sublist.sublist || sublist.value).length
 
-			// XXX not sure about this...
-			} while(items.length > key - (i + offset))
+			// XXX this is wrong... 
+			} while(true)
 
 			return undefined
 
