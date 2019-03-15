@@ -736,7 +736,7 @@ var BaseBrowserPrototype = {
 	// XXX add literal item support (???)
 	// XXX do not get .subtree elements of a .collapsed item...
 	// XXX skip .noniterable items...
-	get: function(key, _){
+	get: function(key, options){
 		key = key == null ? 0 : key
 
 		// index...
@@ -758,6 +758,7 @@ var BaseBrowserPrototype = {
 			do {
 				var x = key - offset + nested
 				// direct match...
+				// XXX skip .noniterable...
 				if(sublists.length == 0 || x < sublists[0][1]){
 					return items[x]
 				}
@@ -768,14 +769,15 @@ var BaseBrowserPrototype = {
 
 				// inlined...
 				if(sublist.value instanceof Browser){
-					var res = sublist.value.get(x - i, true)
+					var res = sublist.value.get(x - i, options)
 
 				// nested...
+				// XXX support .collapsed...
 				} else { 
 					var res = x - i == 0 ?
 							sublist
 						: sublist.sublist instanceof Browser ?
-							sublist.sublist.get(x - i - 1, true) 
+							sublist.sublist.get(x - i - 1, options) 
 						: sublist.sublist[x - i - 1]
 					// account for the header...
 					offset += 1
@@ -787,9 +789,10 @@ var BaseBrowserPrototype = {
 
 				offset += (sublist.sublist || sublist.value).length
 
-			} while(x >= items.length)
-
-			return undefined
+			// NOTE: we do not need an explicit exit here as the first 
+			// 		test will bail us out as soon as sublists are 
+			// 		depleted...
+			} while(true)
 
 
 			// XXX this needs to return as soon as we find an item and 
