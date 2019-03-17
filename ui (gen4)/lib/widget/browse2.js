@@ -279,7 +279,7 @@ var BaseBrowserPrototype = {
 	//
 	// NOTE: this can't be a map/dict as we need both order manipulation 
 	// 		and nested structures which would overcomplicate things, as 
-	// 		a compromise we use .item_index below for item identification.
+	// 		a compromise we use .item_key_index below for item identification.
 	__items: null,
 	get items(){
 		this.__items
@@ -305,15 +305,15 @@ var BaseBrowserPrototype = {
 	// XXX can we make the format here simpler with less level 
 	// 		of indirection??
 	// 		...currently to go down a path we need to:
-	//			this.item_index.A.sublist.item_index.B.sublist...
+	//			this.item_key_index.A.sublist.item_key_index.B.sublist...
 	//		would be nice to be closer to:
 	//			this.A.B...
 	__item_index: null,
-	get item_index(){
+	get item_key_index(){
 		this.__item_index
 			|| this.make()
 		return this.__item_index },
-	set item_index(value){
+	set item_key_index(value){
 		this.__item_index = value },
 
 
@@ -398,7 +398,7 @@ var BaseBrowserPrototype = {
 	//
 	// The resulting item is stored in:
 	// 	.items
-	// 	.item_index (keyed via .id or JSONified .value)
+	// 	.item_key_index (keyed via .id or JSONified .value)
 	//
 	// Each of the above structures is reset on each call to .make(..)
 	//
@@ -479,7 +479,7 @@ var BaseBrowserPrototype = {
 
 
 
-	// Make .items and .item_index...
+	// Make .items and .item_key_index...
 	//
 	// 	.make()
 	// 	.make(options)
@@ -491,7 +491,7 @@ var BaseBrowserPrototype = {
 	// For more doc on item construction see: .__init__(..)
 	//
 	//
-	// NOTE: each call to this will reset both .items and .item_index
+	// NOTE: each call to this will reset both .items and .item_key_index
 	// NOTE: for items with repeating values there is no way to correctly 
 	// 		identify an item thus no state is maintained between .make(..)
 	// 		calls for such items...
@@ -742,13 +742,6 @@ var BaseBrowserPrototype = {
 
 	// XXX item API...
 	//
-	// 	.get()
-	// 	.get(id)
-	// 	.get(index)
-	// 	.get(path)
-	// 		-> item
-	// 		-> undefined
-	//
 	// XXX add path support...
 	// XXX add literal item support (???)
 	// XXX do not get .subtree elements of a .collapsed item...
@@ -822,12 +815,12 @@ var BaseBrowserPrototype = {
 			var k = this.__value2key__(key)
 
 			// direct match...
-			if(k in this.item_index){
-				return this.item_index[k]
+			if(k in this.item_key_index){
+				return this.item_key_index[k]
 			}
 
 			// query nested...
-			var nested = Object.values(this.item_index)
+			var nested = Object.values(this.item_key_index)
 				.filter(function(e){ 
 					return e.sublist instanceof Browser })
 			while(nested.length > 0){
@@ -842,6 +835,17 @@ var BaseBrowserPrototype = {
 		return undefined
 	},
 
+	// Get item...
+	//
+	// 	.get()
+	// 	.get(id)
+	// 	.get(index)
+	// 	.get(path)
+	// 		-> item
+	// 		-> undefined
+	//
+	// options format: the same as for .map(..).
+	//
 	// XXX this is not too fast for indexing very long lists...
 	get: function(key, options){
 		key = key == null ? 0 : key
@@ -853,29 +857,34 @@ var BaseBrowserPrototype = {
 			[key]
 			: key
 		options = options || {}
+		var iterateCollapsed = options.iterateAll || options.iterateCollapsed
+
 
 		// get path...
 		if(key instanceof Array){
-			var res = this.item_index[key.shift()]
+			var res = this.item_key_index[key.shift()]
 			return key.length == 0 ?
 				res
 				// nested...
-				: options.iterateCollapsed || !res.collapsed ?
+				: iterateCollapsed || !res.collapsed ?
 					res.sublist.get(key, options) 
 				: undefined }
 
-		// search...
+		// get index...
+		// XXX getting an element by index is o(n) and not o(1)...
+		// 		...unless we cache .sublists() not sure if this can be 
+		// 		made better in the general case...
 		var i = 0
 		var res
-		var Stop = new Error()
+		var Stop = new Error('.get(..): Result found exception.')
 		try {
 			this.map(function(e){
 				res = key == i ?
 					e
 					: res
 				if(res){
-					throw Stop
-				}
+					throw Stop }
+				i++
 			}, options)
 		} catch(e){
 			if(e === Stop){
@@ -883,6 +892,27 @@ var BaseBrowserPrototype = {
 			}
 			throw e
 		}
+
+		return res
+	},
+	// Like .get(.., {iterateCollapsed: true}) but will expand all the 
+	// path items to reveal the target...
+	reveal: function(key, options){
+		// get the item...
+		var res = this.get(key, Object.assign({iterateCollapsed: true}, options))
+
+		// expand the path up...
+		var cur = res.parent
+		while(cur && cur.parent instanceof Browser){
+			delete (cur.parent.item_key_index[cur.id]
+				|| cur.parent.items
+					.filter(function(e){ 
+						return e.sublist === cur })
+				.shift()).collapsed
+			cur = cur.parent }
+
+		// re-render...
+		this.render()
 
 		return res
 	},
