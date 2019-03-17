@@ -229,6 +229,7 @@ var callItemEventHandlers = function(item, event, ...args){
 			// XXX revise call signature...
 			handler.call(item, evt, item, ...args) }) }
 
+// XXX use .find(..) instead of .get(..) here....
 var makeItemEventMethod = function(event, handler){
 	return makeEventMethod(event, function(evt, item, ...args){
 		item = item ? 
@@ -320,11 +321,12 @@ var BaseBrowserPrototype = {
 	// XXX what should these return??? (item, id, ...)
 	__focused: undefined,
 	get focused(){
-		return this.__focused 
-			|| (this.__focused = this
+		return this.__focused && this.__focused.focused ?
+			this.__focused
+			: (this.__focused = this
 				// XXX should we simple bailout when we find an item???
 				.filter(function(e){
-					return e.focused })[0]) },
+					return e.focused }).shift()) },
 	set focused(value){
 		// XXX
 	},
@@ -742,11 +744,15 @@ var BaseBrowserPrototype = {
 
 	// XXX item API...
 	//
+	/* XXX this is a more complicated version of .get(..) that should be
+	// 		a bit faster on very large lists -- o(1) on direct non-nested
+	// 		indexing vs o(n) for the same case in the new .get(..) 
+	// 		implementation...
 	// XXX add path support...
 	// XXX add literal item support (???)
 	// XXX do not get .subtree elements of a .collapsed item...
 	// XXX skip .noniterable items...
-	get2: function(key, options){
+	get: function(key, options){
 		key = key == null ? 0 : key
 
 		// index...
@@ -834,6 +840,7 @@ var BaseBrowserPrototype = {
 		}
 		return undefined
 	},
+	//*/
 
 	// Get item...
 	//
@@ -844,7 +851,7 @@ var BaseBrowserPrototype = {
 	// 		-> item
 	// 		-> undefined
 	//
-	// options format: the same as for .map(..).
+	// options format: the same as for .map(..) see that for details.
 	//
 	// XXX this is not too fast for indexing very long lists...
 	get: function(key, options){
@@ -1063,8 +1070,13 @@ var BaseBrowserPrototype = {
 	prev: function(){},
 
 	// XXX should there return an array or a .constructor(..) instance??
-	forEach: function(){},
-	filter: function(){},
+	forEach: function(func, options){
+		this.map(...arguments)
+		return this },
+	filter: function(func, options){
+		return this.map(function(e, p, b){
+			return func.call(this, e, p, b) ? [e] : [] })
+		.flat() },
 	reduce: function(){},
 
 
