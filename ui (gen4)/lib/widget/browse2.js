@@ -340,11 +340,28 @@ var BaseBrowserPrototype = {
 	},
 
 
+	// Length...
+	//
+	// visible only...
 	get length(){
 		return this.map({skipNested: true}).length
 			+ this.nested()
 				.reduce(function(res, e){ 
+					return e.collapsed ?
+						res + 1
+						: res + e.sublist.length }, 0) },
+	// tree -- ignores .collapsed...
+	get lengthTree(){
+		return this.map({skipNested: true}).length
+			+ this.nested()
+				.reduce(function(res, e){ 
 					return res + e.sublist.length }, 0) },
+	// full -- ignores .collapsed and .noniterable...
+	get lengthAll(){
+		return this.map({skipNested: true, iterateNonIterable: true}).length
+			+ this.nested()
+				.reduce(function(res, e){ 
+					return res + (e.sublist.lengthAll || e.sublist.length) }, 0) },
 
 
 	// Item list constructor...
@@ -736,11 +753,12 @@ var BaseBrowserPrototype = {
 	// XXX add literal item support (???)
 	// XXX do not get .subtree elements of a .collapsed item...
 	// XXX skip .noniterable items...
-	get: function(key, options){
+	get2: function(key, options){
 		key = key == null ? 0 : key
 
 		// index...
 		if(typeof(key) == typeof(123)){
+
 			var items = this.items
 			// XXX cache this (prop?)...
 			var sublists = this.sublists()
@@ -752,9 +770,6 @@ var BaseBrowserPrototype = {
 			var nested = 0
 			var offset = 0
 
-			// XXX BUG: getting last element returns undefined...
-			// 		to reproduce:
-			// 			dialog_1.get(22) // -> undefined, should return the last element...
 			do {
 				var x = key - offset + nested
 				// direct match...
@@ -777,6 +792,8 @@ var BaseBrowserPrototype = {
 					var res = x - i == 0 ?
 							sublist
 						: sublist.sublist instanceof Browser ?
+							// NOTE: we are decrementing here to compensate 
+							// 		for the header...
 							sublist.sublist.get(x - i - 1, options) 
 						: sublist.sublist[x - i - 1]
 					// account for the header...
@@ -787,17 +804,16 @@ var BaseBrowserPrototype = {
 					return res
 				}
 
-				offset += (sublist.sublist || sublist.value).length
+				// NOTE: we need to get the full length here rather than
+				// 		the number of iterable elements -> prefer .lengthAll...
+				offset += (sublist.sublist || sublist.value).lengthAll
+					|| (sublist.sublist || sublist.value).length
 
 			// NOTE: we do not need an explicit exit here as the first 
 			// 		test will bail us out as soon as sublists are 
 			// 		depleted...
 			} while(true)
 
-
-			// XXX this needs to return as soon as we find an item and 
-			// 		not construct the whole list...
-			//return this.map()[key]
 
 		// key...
 		// XXX account for paths...
@@ -824,6 +840,51 @@ var BaseBrowserPrototype = {
 			}
 		}
 		return undefined
+	},
+
+	// XXX this is not too fast for indexing very long lists...
+	get: function(key, options){
+		key = key == null ? 0 : key
+		key = typeof(key) == typeof('str') ?
+			key.split(/[\\\/]/g)
+				.filter(function(e){ return e.length > 0 })
+			: key
+		key = typeof(key) == typeof('str') ?
+			[key]
+			: key
+		options = options || {}
+
+		// get path...
+		if(key instanceof Array){
+			var res = this.item_index[key.shift()]
+			return key.length == 0 ?
+				res
+				// nested...
+				: options.iterateCollapsed || !res.collapsed ?
+					res.sublist.get(key, options) 
+				: undefined }
+
+		// search...
+		var i = 0
+		var res
+		var Stop = new Error()
+		try {
+			this.map(function(e){
+				res = key == i ?
+					e
+					: res
+				if(res){
+					throw Stop
+				}
+			}, options)
+		} catch(e){
+			if(e === Stop){
+				return res
+			}
+			throw e
+		}
+
+		return res
 	},
 
 
