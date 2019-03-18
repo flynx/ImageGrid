@@ -946,26 +946,30 @@ var BaseBrowserPrototype = {
 		var i = -1
 		return this.filter(function(e, p){
 			i++
-			return (
-				// index...
-				typeof(query) == typeof(123) ?
-					query == i
-				// regular expression...
-				: query instanceof RegExp ?
-					query.test(p.join('/'))
-				// direct path comparison...
-				: query instanceof Array ?
-					query.cmp(p)
-					|| (query.length == p.length
-						&& query
-							.filter(function(q, i){
-								return q == '*' 
-									|| (q instanceof RegExp 
-										&& q.test(p[i]))
-									|| q == p[i] })
-							.length == p.length)
-				// XXX add attribute queries...
-				: query == p) }, options) 
+			return (query === e
+				|| (
+					// index...
+					typeof(query) == typeof(123) ?
+						query == i
+					// predicate...
+					: query instanceof Function ?
+						query.call(this, e, p)
+					// regular expression...
+					: query instanceof RegExp ?
+						query.test(p.join('/'))
+					// direct path comparison...
+					: query instanceof Array ?
+						query.cmp(p)
+						|| (query.length == p.length
+							&& query
+								.filter(function(q, i){
+									return q == '*' 
+										|| (q instanceof RegExp 
+											&& q.test(p[i]))
+										|| q == p[i] })
+								.length == p.length)
+					// XXX add attribute queries...
+					: false)) }, options) 
 	},
 
 
