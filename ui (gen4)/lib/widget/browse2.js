@@ -924,6 +924,50 @@ var BaseBrowserPrototype = {
 		return res
 	},
 
+	//
+	//	.find(id)
+	//	.find(index)
+	//	.find(path)
+	//	.find(query)
+	//		-> list
+	//
+	// XXX support browser.js query syntax...
+	// XXX add '**' patterns...
+	// XXX add support for path item patterns -- 'a*/*b'
+	find: function(query, options){
+		query = typeof(query) == typeof('str') ?
+			query.split(/[\\\/]/g)
+				.filter(function(e){ return e.length > 0 })
+			: query
+		query = typeof(query) == typeof('str') ?
+			[query]
+			: query
+
+		var i = -1
+		return this.filter(function(e, p){
+			i++
+			return (
+				// index...
+				typeof(query) == typeof(123) ?
+					query == i
+				// regular expression...
+				: query instanceof RegExp ?
+					query.test(p.join('/'))
+				// direct path comparison...
+				: query instanceof Array ?
+					query.cmp(p)
+					|| (query.length == p.length
+						&& query
+							.filter(function(q, i){
+								return q == '*' 
+									|| (q instanceof RegExp 
+										&& q.test(p[i]))
+									|| q == p[i] })
+							.length == p.length)
+				// XXX add attribute queries...
+				: query == p) }, options) 
+	},
+
 
 	// Extended map...
 	//
@@ -1055,16 +1099,6 @@ var BaseBrowserPrototype = {
 		return this.sublists(func, {skipInlined: true}) },
 	inlined: function(func){
 		return this.sublists(func, {skipNested: true}) },
-
-	//
-	//	.find(id)
-	//	.find(index)
-	//	.find(path)
-	//	.find(query)
-	//		-> list
-	//
-	find: function(){
-	},
 
 	next: function(){},
 	prev: function(){},
