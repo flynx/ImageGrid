@@ -854,6 +854,7 @@ var BaseBrowserPrototype = {
 	// options format: the same as for .map(..) see that for details.
 	//
 	// XXX this is not too fast for indexing very long lists...
+	// XXX use cache for these -- currently these use .map(..)...
 	get: function(key, options){
 		key = key == null ? 0 : key
 		key = typeof(key) == typeof('str') ?
@@ -881,9 +882,9 @@ var BaseBrowserPrototype = {
 		// XXX getting an element by index is o(n) and not o(1)...
 		// 		...unless we cache .sublists() not sure if this can be 
 		// 		made better in the general case...
+		var Stop = new Error('.get(..): Result found exception.')
 		var i = 0
 		var res
-		var Stop = new Error('.get(..): Result found exception.')
 		try {
 			this.map(function(e){
 				res = key == i ?
@@ -902,8 +903,54 @@ var BaseBrowserPrototype = {
 
 		return res
 	},
+	// XXX move these to a more logical spot...
+	// XXX these are almost identical -- reuse???
+	indexOf: function(item, options){
+		item = typeof(item) == typeof('str') ?
+			item.split(/[\\\/]/g)
+			: item
+
+		var Stop = new Error('.indexOf(..): Result found exception.')
+
+		var i = 0
+		try{
+			this.map(function(e, p){
+				if(item instanceof Array ? item.cmp(p) : (item === e)){
+					throw Stop }
+				i++
+			}, options)
+
+		} catch(e){
+			if(e === Stop){
+				return i
+			}
+		}
+		return -1
+	},
+	pathOf: function(item, options){
+		var Stop = new Error('.pathOf(..): Result found exception.')
+
+		var path
+		var i = 0
+		try{
+			this.map(function(e, p){
+				path = p
+				if(typeof(item) == typeof(123) ? item == i : (item === e)){
+					throw Stop }
+				i++
+			}, options)
+
+		} catch(e){
+			if(e === Stop){
+				return path
+			}
+		}
+		return undefined
+	},
+
 	// Like .get(.., {iterateCollapsed: true}) but will expand all the 
 	// path items to reveal the target...
+	// XXX should this return the item or this???
 	reveal: function(key, options){
 		// get the item...
 		var res = this.get(key, Object.assign({iterateCollapsed: true}, options))
@@ -923,6 +970,7 @@ var BaseBrowserPrototype = {
 
 		return res
 	},
+
 
 	//
 	//	.find(id[, options])
@@ -981,52 +1029,6 @@ var BaseBrowserPrototype = {
 											|| q == p[i] })
 									.length == p.length)
 						: false)) }, options) },
-
-	// XXX use cache for these...
-	// XXX move these to a more logical spot...
-	// XXX these are almost identical -- reuse???
-	indexOf: function(item, options){
-		item = typeof(item) == typeof('str') ?
-			item.split(/[\\\/]/g)
-			: item
-
-		var Stop = new Error('.indexOf(..): Result found exception.')
-
-		var i = 0
-		try{
-			this.map(function(e, p){
-				if(item instanceof Array ? item.cmp(p) : (item === e)){
-					throw Stop }
-				i++
-			}, options)
-
-		} catch(e){
-			if(e === Stop){
-				return i
-			}
-		}
-		return -1
-	},
-	pathOf: function(item, options){
-		var Stop = new Error('.pathOf(..): Result found exception.')
-
-		var path
-		var i = 0
-		try{
-			this.map(function(e, p){
-				path = p
-				if(typeof(item) == typeof(123) ? item == i : (item === e)){
-					throw Stop }
-				i++
-			}, options)
-
-		} catch(e){
-			if(e === Stop){
-				return path
-			}
-		}
-		return undefined
-	},
 
 	// XXX support: up/down/left/right/first/last/next/prev
 	// XXX extend support for screen oriented nav in a subclass...
