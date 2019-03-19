@@ -942,6 +942,17 @@ var BaseBrowserPrototype = {
 		query = typeof(query) == typeof('str') ?
 			[query]
 			: query
+		// XXX not sure about this...
+		//query = query instanceof Array ?
+		//	query
+		//		.map(function(d){
+		//			return d == '*' ?
+		//					d
+		//				: d.indexOf('*') > 0 ?
+		//					new RegExp(d
+		//						.replace(/\*/g, '.*'))
+		//				: d})
+		//	: query
 
 		var i = -1
 		return this.filter(function(e, p){
@@ -969,7 +980,23 @@ var BaseBrowserPrototype = {
 										|| q == p[i] })
 								.length == p.length)
 					// XXX add attribute queries...
-					: false)) }, options) 
+					: false)) }, options) },
+
+	// XXX move this to a more logical spot...
+	// XXX should also take path...
+	indexOf: function(item){
+		// XXX
+	},
+	// XXX move this to a more logical spot...
+	// XXX should also take index...
+	pathOf: function(item){
+		// XXX
+	},
+
+	// XXX support: up/down/left/right/first/last/next/prev
+	// XXX extend support for screen oriented nav in a subclass...
+	navigate: function(direction){
+		// XXX get then return element...
 	},
 
 
