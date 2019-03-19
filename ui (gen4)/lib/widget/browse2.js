@@ -925,15 +925,15 @@ var BaseBrowserPrototype = {
 	},
 
 	//
-	//	.find(id)
-	//	.find(index)
-	//	.find(path)
-	//	.find(query)
+	//	.find(id[, options])
+	//	.find(index[, options])
+	//	.find(path[, options])
+	//	.find(func[, options])
 	//		-> list
 	//
-	// XXX support browser.js query syntax...
 	// XXX add '**' patterns...
-	// XXX add support for path item patterns -- 'a*/*b'
+	// XXX should this return item paths???
+	// 		...one way to do this is to return an object instead of a list...
 	find: function(query, options){
 		query = typeof(query) == typeof('str') ?
 			query.split(/[\\\/]/g)
@@ -942,55 +942,90 @@ var BaseBrowserPrototype = {
 		query = typeof(query) == typeof('str') ?
 			[query]
 			: query
-		// XXX not sure about this...
-		//query = query instanceof Array ?
-		//	query
-		//		.map(function(d){
-		//			return d == '*' ?
-		//					d
-		//				: d.indexOf('*') > 0 ?
-		//					new RegExp(d
-		//						.replace(/\*/g, '.*'))
-		//				: d})
-		//	: query
+		query = query instanceof Array ?
+			query
+				.map(function(d){
+					return d == '*' ?
+							d
+						: d.indexOf('*') >= 0 ?
+							new RegExp(d
+								.replace(/\*/g, '.*'))
+						: d})
+			: query
 
 		var i = -1
-		return this.filter(function(e, p){
-			i++
-			return (query === e
-				|| (
-					// index...
-					typeof(query) == typeof(123) ?
-						query == i
-					// predicate...
-					: query instanceof Function ?
-						query.call(this, e, p)
-					// regular expression...
-					: query instanceof RegExp ?
-						query.test(p.join('/'))
-					// direct path comparison...
-					: query instanceof Array ?
-						query.cmp(p)
-						|| (query.length == p.length
-							&& query
-								.filter(function(q, i){
-									return q == '*' 
-										|| (q instanceof RegExp 
-											&& q.test(p[i]))
-										|| q == p[i] })
-								.length == p.length)
-					// XXX add attribute queries...
-					: false)) }, options) },
+		return this
+			.filter(function(e, p){
+				i++
+				return (query === e
+					|| (
+						// index...
+						typeof(query) == typeof(123) ?
+							query == i
+						// predicate...
+						: query instanceof Function ?
+							// XXX revise signature...
+							query.call(this, e, p, i, this)
+						// regular expression...
+						: query instanceof RegExp ?
+							query.test(p.join('/'))
+						// direct path comparison...
+						: query instanceof Array ?
+							query.cmp(p)
+							|| (query.length == p.length
+								&& query
+									.filter(function(q, i){
+										return q == '*' 
+											|| (q instanceof RegExp 
+												&& q.test(p[i]))
+											|| q == p[i] })
+									.length == p.length)
+						: false)) }, options) },
 
-	// XXX move this to a more logical spot...
-	// XXX should also take path...
-	indexOf: function(item){
-		// XXX
+	// XXX use cache for these...
+	// XXX move these to a more logical spot...
+	// XXX these are almost identical -- reuse???
+	indexOf: function(item, options){
+		item = typeof(item) == typeof('str') ?
+			item.split(/[\\\/]/g)
+			: item
+
+		var Stop = new Error('.indexOf(..): Result found exception.')
+
+		var i = 0
+		try{
+			this.map(function(e, p){
+				if(item instanceof Array ? item.cmp(p) : (item === e)){
+					throw Stop }
+				i++
+			}, options)
+
+		} catch(e){
+			if(e === Stop){
+				return i
+			}
+		}
+		return -1
 	},
-	// XXX move this to a more logical spot...
-	// XXX should also take index...
-	pathOf: function(item){
-		// XXX
+	pathOf: function(item, options){
+		var Stop = new Error('.pathOf(..): Result found exception.')
+
+		var path
+		var i = 0
+		try{
+			this.map(function(e, p){
+				path = p
+				if(typeof(item) == typeof(123) ? item == i : (item === e)){
+					throw Stop }
+				i++
+			}, options)
+
+		} catch(e){
+			if(e === Stop){
+				return path
+			}
+		}
+		return undefined
 	},
 
 	// XXX support: up/down/left/right/first/last/next/prev
