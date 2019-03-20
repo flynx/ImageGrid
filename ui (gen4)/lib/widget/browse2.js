@@ -143,8 +143,10 @@ Items.group = function(...items){
 
 // Place list in a sub-list of item...
 //
+// XXX options???
 Items.nest = function(item, list, options){
 	options = options || {}
+	//options = Object.assign(Object.create(this.options || {}), options || {})
 	options.sublist = list instanceof Array ?
 		collectItems(this, list)
 		: list
@@ -500,8 +502,7 @@ var BaseBrowserPrototype = {
 	//
 	// XXX revise options handling for .__list__(..)
 	make: function(options){
-		// XXX
-		options = options || this.options || {}
+		options = Object.assign(Object.create(this.options || {}), options || {})
 
 		var items = this.items = []
 		var old_index = this.__item_index || {}
@@ -672,7 +673,8 @@ var BaseBrowserPrototype = {
 					// NOTE: we are not combining this with .options as nested 
 					// 		lists can have their own unique sets of options 
 					// 		independently of the root list...
-					options: options || this.options || {},
+					//options: options || this.options || {},
+					options: Object.assign(Object.create(this.options || {}), options || {}),
 				}
 			: options
 		options = context.options
@@ -754,6 +756,7 @@ var BaseBrowserPrototype = {
 	// XXX skip .noniterable items...
 	get: function(key, options){
 		key = key == null ? 0 : key
+		options = Object.assign(Object.create(this.options || {}), options || {})
 
 		// index...
 		if(typeof(key) == typeof(123)){
@@ -851,10 +854,19 @@ var BaseBrowserPrototype = {
 	// 		-> item
 	// 		-> undefined
 	//
-	// options format: the same as for .map(..) see that for details.
+	//
+	// options format:
+	// 	{
+	// 		ignoreKeywords: <bool>,
+	//
+	// 		// rest of the options are the same as for .map(..)
+	// 		...
+	// 	}
+	//
 	//
 	// XXX this is not too fast for indexing very long lists...
 	// XXX use cache for these -- currently these use .map(..)...
+	// XXX do we need to support negative indexes???
 	get: function(key, options){
 		key = key == null ? 0 : key
 		key = typeof(key) == typeof('str') ?
@@ -864,9 +876,43 @@ var BaseBrowserPrototype = {
 		key = typeof(key) == typeof('str') ?
 			[key]
 			: key
-		options = options || {}
-		var iterateCollapsed = options.iterateAll || options.iterateCollapsed
 
+		options = Object.assign(Object.create(this.options || {}), options || {})
+		var iterateCollapsed = options.iterateAll || options.iterateCollapsed
+		var ignoreKeywords = options.ignoreKeywords
+
+		// keywords...
+		// XXX keyword support: first/last/next/prev/...
+		if(!ignoreKeywords){
+			// XXX don't like how this feels...
+			if(key == 'next' || key == 'prev'){
+				var reference = this.focused
+				key = key == 'next' ?
+					(reference ? 
+						this.indexOf(reference) + 1 
+						: 0)
+					: (reference ? 
+						this.indexOf(reference) - 1 
+						: -1)
+			}
+
+			if(key == 'first'){
+				var res = this.items[0]
+				return res.value instanceof Browser ?
+					res.value.get(key, options)
+					: res
+
+			} else if(key == 'last'){
+				var res = this.items[this.items.length - 1]
+				return res.value instanceof Browser ?
+						res.value.get(key, options)
+					: res.sublist && (!this.collapsed || iterateCollapsed) ?
+						(res.sublist instanceof Browser ?
+							res.sublist.get(key, options)
+							: res.sublist[res.sublist.length - 1])
+					: res
+			}
+		}
 
 		// get path...
 		if(key instanceof Array){
@@ -882,6 +928,7 @@ var BaseBrowserPrototype = {
 		// XXX getting an element by index is o(n) and not o(1)...
 		// 		...unless we cache .sublists() not sure if this can be 
 		// 		made better in the general case...
+		// XXX do we need to support negative indexes???
 		var Stop = new Error('.get(..): Result found exception.')
 		var i = 0
 		var res
@@ -1098,9 +1145,13 @@ var BaseBrowserPrototype = {
 		path = path instanceof Array ? path : [path]
 		var options = args.pop() || {}
 
+		options = Object.assign(Object.create(this.options || {}), options || {})
 		var iterateNonIterable = options.iterateAll || options.iterateNonIterable
 		var iterateCollapsed = options.iterateAll || options.iterateCollapsed
 		var skipNested = !options.iterateAll && options.skipNested
+
+		// XXX this does not handle nesting in a correct manner
+		var reverse = !!options.reverseIteration
 		
 		var doElem = function(elem){
 			return [func ? 
@@ -1108,6 +1159,14 @@ var BaseBrowserPrototype = {
 				: elem] }
 
 		return this.items
+			// check if we need to go from the end...
+			// NOTE: we need to reverse two things:
+			// 		- level order (done here)
+			// 		- linearization order (done below)
+			.run(function(){
+				return reverse ?
+					this.slice().reverse() 
+					: this })
 			.map(function(elem){
 				return (
 					// item not iterable -- skip...
@@ -1123,11 +1182,17 @@ var BaseBrowserPrototype = {
 					// .sublist is Browser (nested) -- list header then browser items...
 					: (!skipNested 
 							&& elem.sublist instanceof Browser) ?
-						doElem(elem)
-							.concat((!iterateCollapsed && elem.collapsed) ?
+						[doElem(elem),
+							(!iterateCollapsed && elem.collapsed) ?
 								[]
-								: elem.sublist.map(func, path.concat(elem.id), options))
+								: elem.sublist.map(func, path.concat(elem.id), options)]
+							// handle reverse...
+							.run(function(){
+								reverse 
+									&& this.reverse() })
+							.flat()
 					// .sublist is Array (nested) -- list header then array content...
+					// XXX this skips nested browser .sublists...
 					: (!skipNested 
 							&& elem.sublist instanceof Array) ?
 						doElem(elem)
@@ -1138,6 +1203,12 @@ var BaseBrowserPrototype = {
 										.map(function(e){ 
 											return func.call(that, e, path.concat(elem.id, e.id), that) })
 									: elem.sublist.slice()))
+							// handle reverse...
+							// XXX if we support nested browsers in lists 
+							// 		this will mess things up...
+							.run(function(){
+								reverse 
+									&& this.reverse() })
 					// normal item -- list...
 					: doElem(elem) ) })
 			.flat() },
@@ -1148,7 +1219,8 @@ var BaseBrowserPrototype = {
 	// NOTE: these will return a sparse array...
 	sublists: function(func, options){
 		var that = this
-		options = options || {}
+		//options = options || {}
+		options = Object.assign(Object.create(this.options || {}), options || {})
 		var skipNested = options.skipNested
 		var skipInlined = options.skipInlined
 

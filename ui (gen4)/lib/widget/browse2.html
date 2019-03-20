@@ -103,7 +103,6 @@ requirejs([
 
 	// XXX split this into several dialogues, show each and then combine...
 	dialog_1 = browser.Browser(function(make){
-		make(123)
 		make([321, 321, 123])
 		make.group(
 			make('a'),
@@ -121,9 +120,12 @@ requirejs([
 		}))
 		// basic nested list...
 		make.nest('A', [
-			1,
 			make('moo', {disabled: true}),
 			2,
+			// XXX this is not supported by .map(..)...
+			make.nest('AB', browser.Browser(function(make){
+				make('ab')
+			})),
 		])
 		make('in between...')
 		// nested browser...
