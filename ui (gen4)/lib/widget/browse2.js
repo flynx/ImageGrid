@@ -1127,6 +1127,8 @@ var BaseBrowserPrototype = {
 	// 		generate paths:
 	//			.map(func, path, options)
 	//
+	// XXX this essentially repeats what .render(..) does but in a more 
+	// 		complex way -- can we reuse one or the other and simplify things???
 	// XXX make item access by index lazy... 
 	// 		- index nested stuff and lengths... (.sublist_length)
 	// 		- stop when target reached... (control callback???)
@@ -1158,6 +1160,7 @@ var BaseBrowserPrototype = {
 				func.call(that, elem, path.concat(elem.id), that) 
 				: elem] }
 
+		var _render
 		return this.items
 			// check if we need to go from the end...
 			// NOTE: we need to reverse two things:
@@ -1167,7 +1170,7 @@ var BaseBrowserPrototype = {
 				return reverse ?
 					this.slice().reverse() 
 					: this })
-			.map(function(elem){
+			.map(_render = function(elem){
 				return (
 					// item not iterable -- skip...
 					(!iterateNonIterable && elem.noniterable) ?
@@ -1198,11 +1201,15 @@ var BaseBrowserPrototype = {
 						doElem(elem)
 							.concat((!iterateCollapsed && elem.collapsed) ?
 								[]
+								/*/ XXX need to path.concat(..) in the context for this...
+								: elem.sublist.map(_render)).flat()
+								/*/
 								: (func ? 
 									elem.sublist
 										.map(function(e){ 
 											return func.call(that, e, path.concat(elem.id, e.id), that) })
 									: elem.sublist.slice()))
+								//*/
 							// handle reverse...
 							// XXX if we support nested browsers in lists 
 							// 		this will mess things up...
