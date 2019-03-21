@@ -1170,6 +1170,7 @@ var BaseBrowserPrototype = {
 				return reverse ?
 					this.slice().reverse() 
 					: this })
+			// XXX need path threaded into this...
 			.map(_render = function(elem){
 				return (
 					// item not iterable -- skip...
