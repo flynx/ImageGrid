@@ -2,7 +2,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20140814025456'''
+__sub_version__ = '''20190322031416'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -205,7 +205,7 @@ def hash_gid(img, force=False):
 	'''
 	if type(img) in (str, unicode):
 		img = Image.open(img)
-	return sha.sha(img.tostring()).hexdigest()
+	return sha.sha(img.tobytes()).hexdigest()
 
 
 #-----------------------------------------------------report_progress---
