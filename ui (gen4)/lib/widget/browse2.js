@@ -1147,79 +1147,75 @@ var BaseBrowserPrototype = {
 		path = path instanceof Array ? path : [path]
 		var options = args.pop() || {}
 
+		// options...
 		options = Object.assign(Object.create(this.options || {}), options || {})
 		var iterateNonIterable = options.iterateAll || options.iterateNonIterable
 		var iterateCollapsed = options.iterateAll || options.iterateCollapsed
 		var skipNested = !options.iterateAll && options.skipNested
-
-		// XXX this does not handle nesting in a correct manner
 		var reverse = !!options.reverseIteration
 		
-		var doElem = function(elem){
+		// NOTE: func is in closure as it will not change within one run 
+		// 		on any level of nesting...
+		var doElem = function(elem, path){
 			return [func ? 
 				func.call(that, elem, path.concat(elem.id), that) 
 				: elem] }
+		var doLevel = function(elem, nested, path){
+			return [ 
+				doElem(elem, path),
+				(!iterateCollapsed && elem.collapsed) ?
+					[]
+					: nested ]
+				// reverse level order...
+				.run(function(){
+					reverse 
+						&& this.reverse() })
+				.flat() }
+		// NOTE: we need to reverse two things:
+		// 		- level order (done here)
+		// 		- linearization order (done below)
+		var walk = function(path, list){
+			return list 
+				// reverse the items...
+				.run(function(){
+					return reverse ?
+						// NOTE: we .slice() as we do not want to affect 
+						// 		the actual list...
+						this.slice().reverse() 
+						: this })
+				.map(function(elem){
+					return (
+						// item not iterable -> skip...
+						(!iterateNonIterable && elem.noniterable) ?
+							[]
+						// value is Browser (inline)...
+						: elem.value instanceof Browser ?
+							elem.value.map(func, 
+								options.inlinedPaths ?
+									path.concat(elem.id)
+									: path.slice(), 
+								options)	
+						// .sublist is Browser (nested)...
+						: (!skipNested 
+								&& elem.sublist instanceof Browser) ?
+							doLevel(
+								elem,
+								elem.sublist
+									.map(func, path.concat(elem.id), options), 
+								path)
+						// .sublist is Array (nested)...
+						: (!skipNested 
+								&& elem.sublist instanceof Array) ?
+							doLevel(
+								elem,
+								walk(path.concat(elem.id), elem.sublist),
+								path)
+						// normal item...
+						: doElem(elem, path) ) })
+				.flat() }
 
-		var _render
-		return this.items
-			// check if we need to go from the end...
-			// NOTE: we need to reverse two things:
-			// 		- level order (done here)
-			// 		- linearization order (done below)
-			.run(function(){
-				return reverse ?
-					this.slice().reverse() 
-					: this })
-			// XXX need path threaded into this -- not sure how to do it yet...
-			.map(_render = function(elem){
-				return (
-					// item not iterable -- skip...
-					(!iterateNonIterable && elem.noniterable) ?
-						[]
-					// value is Browser (inline) -- list browser items...
-					: elem.value instanceof Browser ?
-						elem.value.map(func, 
-							options.inlinedPaths ?
-								path.concat(elem.id)
-								: path.slice(), 
-							options)	
-					// .sublist is Browser (nested) -- list header then browser items...
-					: (!skipNested 
-							&& elem.sublist instanceof Browser) ?
-						[doElem(elem),
-							(!iterateCollapsed && elem.collapsed) ?
-								[]
-								: elem.sublist.map(func, path.concat(elem.id), options)]
-							// handle reverse...
-							.run(function(){
-								reverse 
-									&& this.reverse() })
-							.flat()
-					// .sublist is Array (nested) -- list header then array content...
-					// XXX this skips nested browser .sublists...
-					: (!skipNested 
-							&& elem.sublist instanceof Array) ?
-						doElem(elem)
-							.concat((!iterateCollapsed && elem.collapsed) ?
-								[]
-								/*/ XXX need to path.concat(..) in the context for this...
-								: elem.sublist.map(_render)).flat()
-								/*/
-								: (func ? 
-									elem.sublist
-										.map(function(e){ 
-											return func.call(that, e, path.concat(elem.id, e.id), that) })
-									: elem.sublist.slice()))
-								//*/
-							// handle reverse...
-							// XXX if we support nested browsers in lists 
-							// 		this will mess things up...
-							.run(function(){
-								reverse 
-									&& this.reverse() })
-					// normal item -- list...
-					: doElem(elem) ) })
-			.flat() },
+		return walk(path, this.items) 
+	},
 
 	// Sublist map functions...
 	// NOTE: there are different from .map(..) in that instead of paths 
