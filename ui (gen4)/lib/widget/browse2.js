@@ -1174,6 +1174,7 @@ var BaseBrowserPrototype = {
 		// NOTE: we need to reverse two things:
 		// 		- level order (done here)
 		// 		- linearization order (done below)
+		// XXX can we make this even simpler???
 		var walk = function(path, list){
 			return list 
 				// reverse the items...
