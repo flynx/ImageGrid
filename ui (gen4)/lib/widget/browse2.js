@@ -663,6 +663,8 @@ var BaseBrowserPrototype = {
 	//
 	// NOTE: currently options and context are distinguished only via 
 	// 		the .options attribute...
+	//
+	// XXX should this use .map(..) internally???
 	render: function(options){
 		var that = this
 		// XXX Q: should options and context be distinguished only via 
