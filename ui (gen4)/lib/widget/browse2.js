@@ -665,6 +665,9 @@ var BaseBrowserPrototype = {
 	// 		the .options attribute...
 	//
 	// XXX should this use .map(..) internally???
+	// 		...there are two ways to go:
+	// 			- local recursion (as-is now or via .map(.., { .. }))
+	// 			- outer recursion (.map(..))
 	render: function(options){
 		var that = this
 		// XXX Q: should options and context be distinguished only via 
