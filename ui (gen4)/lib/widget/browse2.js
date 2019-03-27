@@ -733,7 +733,6 @@ var BaseBrowserPrototype = {
 			: items
 	},
 
-
 	// Update state (make then render)...
 	//
 	// 	.update()
@@ -1137,6 +1136,7 @@ var BaseBrowserPrototype = {
 	// XXX make item access by index lazy... 
 	// 		- index nested stuff and lengths... (.sublist_length)
 	// 		- stop when target reached... (control callback???)
+	// XXX Q: should we have an option to treat groups as elements???
 	map: function(func, options){
 		var that = this
 
