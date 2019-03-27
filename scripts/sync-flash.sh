@@ -4,6 +4,16 @@ DATE=`date +%Y%m%d`
 COUNT=1
 TITLE=""
 
+RSYNC=rsync
+RSYNCFLAGS="-arptgoA --info=progress2,flist --human-readable"
+
+CP=cp
+CPFLAGS=-Rpfv
+
+# override default...
+COPY=$RSYNC
+COPYFLAGS=$RSYNCFLAGS
+
 # base mount dir...
 # systems with /mnt
 if [ -d /mnt ] ; then
@@ -32,6 +42,8 @@ while true ; do
 			echo "			process-archive.sh after copying."
 			echo "	-b|-base	the base dir to look for drives in"
 			echo "			default: $BASE"
+			echo "	--rsync		use rsync (default)"
+			echo "	--cp		use cp"
 			echo
 			exit
 			;;
@@ -51,6 +63,16 @@ while true ; do
 		-b|-base|--base)
 			BASE=1
 			shift
+			;;
+		-cp|--cp)
+			COPY=cp
+			COPYFLAGS=-Rpfv
+			break
+			;;
+		-rsync|--rsync)
+			COPY=$RSYNC
+			COPYFLAGS=$RSYNCFLAGS
+			break
 			;;
 		*)
 			break
@@ -118,29 +140,34 @@ while true ; do
 
 	# XXX do a real three digit count...
 	# single flash card...
+	SCOUNT=`printf "%03d" $COUNT`
 	if [ -z $MULTI ] ; then
-		DIR="./- ${DATE}.00${COUNT}${TITLE}/"
-		while [ -e "$DIR" ] ; do
+		DIR="${DATE}.${SCOUNT}${TITLE}"
+		while [ -e *"$DIR"* ] ; do
 			COUNT=$((COUNT+1))
-			DIR="./- ${DATE}.00${COUNT}${TITLE}/"
+			SCOUNT=`printf "%03d" $COUNT`
+			DIR="${DATE}.${SCOUNT}${TITLE}"
 		done
 		BASE_DIR=$DIR
 
 	# multiple flash cards shoot...
 	else
-		BASE_DIR="./- ${DATE}${TITLE}/"
-		DIR="${BASE_DIR}/${DATE}.00${COUNT}/"
-		while [ -e "$DIR" ] ; do
+		BASE_DIR="${DATE}${TITLE}/"
+		DIR="${BASE_DIR}/${DATE}.${SCOUNT}"
+		while [ -e *"$DIR"* ] ; do
 			COUNT=$((COUNT+1))
-			DIR="${BASE_DIR}/${DATE}.00${COUNT}/"
+			SCOUNT=`printf "%03d" $COUNT`
+			DIR="${BASE_DIR}/${DATE}.${SCOUNT}"
 		done
 	fi
-
+	# normalize paths...
+	BASE_DIR="./- ${BASE_DIR}/"
+	DIR="./- $DIR/"
 
 	mkdir -vp "$DIR"
 
 	echo "Copying files from $1..."
-	cp -Rpfv ${BASE}/${DRIVE}/* "$DIR"
+	$COPY $COPYFLAGS ${BASE}/${DRIVE}/* "$DIR"
 	echo "Copying files: done."
 
 

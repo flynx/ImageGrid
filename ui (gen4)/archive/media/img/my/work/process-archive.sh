@@ -117,9 +117,10 @@ JSON_NAME="%-:1d/${METADATA_DIR}/%f.json"
 if [ -z $SKIP_ARCHIVE ] ; then
 	exiftool -if '$jpgfromraw' -b -jpgfromraw -w "$PREVIEW_NAME" \
 		-execute -if '$previewimage' -b -previewimage -w "$PREVIEW_NAME" \
-		-execute '-FileModifyDate<DateTimeOriginal' -tagsfromfile @ \
-			-srcfile "$PREVIEW_NAME" -overwrite_original \
-		-execute -j -w "$JSON_NAME" \
+		-execute '-FileModifyDate<DateTimeOriginal' -addtagsfromfile @ \
+			-srcfile "$PREVIEW_NAME" '-all>all' '-xmp' \
+			-overwrite_original \
+		-execute -j -G -w "$JSON_NAME" \
 		-common_args --ext jpg -r "./$ARCHIVE_ROOT" -progress
 fi
 
@@ -288,7 +289,7 @@ fi
 # build cache...
 if [ -z $SKIP_CACHE ] ; then
 	# a little tweak to make build cache work...
-	export PYTHONIOENCODING=UTF-8	
+	export PYTHONIOENCODING=UTF-8
 	#if [ -z $TOTAL ] ; then
 	#	export TOTAL=`find . -path '*hi-res (RAW)/*.jpg' | wc -l`
 	#fi

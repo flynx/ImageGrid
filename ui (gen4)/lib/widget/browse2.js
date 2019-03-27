@@ -1433,6 +1433,7 @@ var BrowserClassPrototype = {
 // XXX render of nested lists does not affect the parent list(s)...
 // 		...need to render lists and items both as a whole or independently...
 // XXX should this use vanilla DOM or jQuery???
+// XXX add a left button type/option -- expand/collapse and friends...
 var BrowserPrototype = {
 	__proto__: BaseBrowser.prototype,
 
@@ -1644,7 +1645,7 @@ var BrowserPrototype = {
 			.run(function(){
 				// class...
 				// XXX should be done here or in the config???
-				this.classList.add('sub-list-header')
+				this.classList.add('sub-list-header', 'traversable')
 				item.collapsed
 					&& this.classList.add('collapsed')
 
