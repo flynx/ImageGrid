@@ -256,14 +256,20 @@ INCLUDE_NODE_MODULES += preact
 INCLUDE_NW_NODE_MODULES = app-module-path
 
 
+
+#**********************************************************************
 # dependencies to check...
-# XXX might be a good idea to split these to sections and check only what
-# 	is needed...
-# 	...like: base, electron, wix, ...
-DEPENDENCIES = node npm wget sed printf fgrep zip unzip zipnote git \
-	lessc electron electron-rebuild asar
-# WiX dependencies, windows only...
-#DEPENDENCIES += heat candle light
+#
+# XXX would be nice to either auto-check for these or move them to the 
+# 	respective section...
+#DEPENDENCIES_WIX = heat candle light
+DEPENDENCIES_WEB = node npm lessc
+DEPENDENCIES_HELP = sed fgrep printf 
+
+DEPENDENCIES = $(DEPENDENCIES_WEB) \
+	$(DEPENDENCIES_HELP) \
+	wget zip unzip zipnote git \
+	electron electron-rebuild asar
 
 
 
@@ -483,9 +489,16 @@ require(%):
 
 
 .PHONY: check
-check: ## Run dependency checks
+check: ## Run all dependency checks
 check: $(foreach dep,$(DEPENDENCIES),require($(dep)))
 
+.PHONY: check-web
+check-web: ## Run web build dependency checks
+check-web: $(foreach dep,$(DEPENDENCIES_WEB),require($(dep)))
+
+.PHONY: check-help
+check-help: ## Run build dependency checks 
+check-help: $(foreach dep,$(DEPENDENCIES_HELP),require($(dep)))
 
 
 #**********************************************************************
