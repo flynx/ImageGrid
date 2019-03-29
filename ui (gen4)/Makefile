@@ -312,6 +312,29 @@ help:
 
 
 #**********************************************************************
+### Dependency checking...
+
+require(%):
+	@printf "%-15s %s\n" \
+		"$*" \
+		"`which $* &> /dev/null && echo '- OK' || echo '- FAIL'`"
+
+
+.PHONY: check
+check: ## Run all dependency checks
+check: $(foreach dep,$(DEPENDENCIES),require($(dep)))
+
+.PHONY: check-web
+check-web: ## Run web build dependency checks
+check-web: $(foreach dep,$(DEPENDENCIES_WEB),require($(dep)))
+
+.PHONY: check-help
+check-help: ## Run build dependency checks 
+check-help: $(foreach dep,$(DEPENDENCIES_HELP),require($(dep)))
+
+
+
+#**********************************************************************
 ### Generic targets...
 
 .PHONY: all
@@ -477,28 +500,6 @@ nw-run: dev
 
 # XXX
 
-
-
-#**********************************************************************
-### Dependency checking...
-
-require(%):
-	@printf "%-15s %s\n" \
-		"$*" \
-		"`which $* &> /dev/null && echo '- OK' || echo '- FAIL'`"
-
-
-.PHONY: check
-check: ## Run all dependency checks
-check: $(foreach dep,$(DEPENDENCIES),require($(dep)))
-
-.PHONY: check-web
-check-web: ## Run web build dependency checks
-check-web: $(foreach dep,$(DEPENDENCIES_WEB),require($(dep)))
-
-.PHONY: check-help
-check-help: ## Run build dependency checks 
-check-help: $(foreach dep,$(DEPENDENCIES_HELP),require($(dep)))
 
 
 #**********************************************************************
