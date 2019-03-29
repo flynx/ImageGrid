@@ -1813,6 +1813,9 @@ var BrowserPrototype = {
 	// XXX do we use jQuery event handling or vanilla?
 	// 		...feels like jQuery here wins as it provides a far simpler
 	// 		API + it's a not time critical area...
+	// 		....another idea is to force the user to use the provided API
+	// 		by not implementing ANY direct functionality in DOM -- I do
+	// 		not like this idea at this point as it violates POLS...
 	//open: function(func){},
 
 	//filter: function(){},
