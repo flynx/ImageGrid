@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# XXX get this from /proc/cpuinfo...
+THREADS=6
+
 # TODO make this runnable from anywhere...
 #	- prepend paths with './' only if local/relative
 
@@ -91,7 +94,7 @@ fi
 echo "Doing: \"$ARCHIVE_ROOT\""
 
 
-if [ -z $LOW_RES_PREVIEWS ] ; then
+if [ $LOW_RES_PREVIEWS ] ; then
 	RAW_PREVIEW_DIR="hi-res (RAW)"
 else
 	RAW_PREVIEW_DIR="preview (RAW)"
@@ -245,7 +248,9 @@ cd "./${ARCHIVE_ROOT}"
 
 # make low-res previews...
 if [ -z $SKIP_PREVIEWS ] || [ $LOW_RES_PREVIEWS ] ; then
-	find . -path '*hi-res (RAW)/*.jpg' -exec bash -c 'makepreview "$SIZE" "{}"' \;
+	#find . -path '*hi-res (RAW)/*.jpg' -exec bash -c 'makepreview "$SIZE" "{}"' \;
+	find . -path '*hi-res (RAW)/*.jpg' -print0 \
+		| xargs -0 -n 1 -P $THREADS -I {} bash -c 'makepreview "$SIZE" "{}"'
 fi
 
 # collect previews to one location...
