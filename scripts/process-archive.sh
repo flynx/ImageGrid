@@ -15,6 +15,9 @@ printhelp(){
 	echo "			- build a single preview set at PATH."
 	echo "	-c		- build a single common path at ARCHIVE_ROOT;"
 	echo "			  this is a shorthand for: --common-path '.'."
+	echo "	-l --low-res-previews"
+	echo "			- generate low resolution previews and store"
+	echo "			  original previews in \"hi-res (RAW)\"."
 	echo
 	echo "	--skip-archive	- skip creating archive structure (use: exiftool)."
 	echo "	--skip-previews	- skip creating previews (use: vips)."
@@ -42,6 +45,10 @@ while true ; do
 		--common-previews)
 			COMMON_PREVIEWS="${2}"
 			shift
+			shift
+			;;
+		-l|--low-res-previews)
+			LOW_RES_PREVIEWS=1
 			shift
 			;;
 
@@ -84,9 +91,15 @@ fi
 echo "Doing: \"$ARCHIVE_ROOT\""
 
 
-METADATA_DIR="metadata"
-RAW_PREVIEW_DIR="hi-res (RAW)"
+if [ -z $LOW_RES_PREVIEWS ] ; then
+	RAW_PREVIEW_DIR="hi-res (RAW)"
+else
+	RAW_PREVIEW_DIR="preview (RAW)"
+fi
+
+
 PROCESSED_PREVIEW_DIR="preview"
+METADATA_DIR="metadata"
 
 PROCESSED_PREVIEW_NAME="%-:1d/${PROCESSED_PREVIEW_DIR}/%f.jpg"
 PREVIEW_NAME="%-:1d/${RAW_PREVIEW_DIR}/%f.jpg"
@@ -140,6 +153,11 @@ PATH=$PATH:/mnt/d/Program\ Files/vips/bin/
 #	- explicit argument
 #	- global env var, if set
 #	- hardcoded default value
+#
+# TODO:
+#	- make this run in parallel
+#	- add option --mixed-previews and check preview size once per dir
+#	  if it is not set...
 #
 # XXX cahnge global var names to be less generic...
 makepreview(){
@@ -225,14 +243,8 @@ cd "./${ARCHIVE_ROOT}"
 
 
 
-# make previews...
-if [ -z $SKIP_PREVIEWS ] ; then
-
-	#export TOTAL=$(find . -type d -name 'hi-res (RAW)' -exec ls "{}" \; | wc -l)
-	# XXX do not know how to pass and modify a var...
-	#export CUR=1
-	#export TOTAL=`find . -path '*hi-res (RAW)/*.jpg' | wc -l`
-
+# make low-res previews...
+if [ -z $SKIP_PREVIEWS ] || [ $LOW_RES_PREVIEWS ] ; then
 	find . -path '*hi-res (RAW)/*.jpg' -exec bash -c 'makepreview "$SIZE" "{}"' \;
 fi
 
