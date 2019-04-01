@@ -4,9 +4,10 @@
 KEEP_FREE=2
 
 THREADS=`cat /proc/cpuinfo | awk '/^processor/{print $3}' | wc -l`
-if [ $KEEP_FREE ] ; then
+if [ $KEEP_FREE ] && (( THREADS > KEEP_FREE )) ; then
 	THREADS=$((THREADS - KEEP_FREE))
 fi
+
 
 # TODO make this runnable from anywhere...
 #	- prepend paths with './' only if local/relative
