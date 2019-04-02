@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# SPU threads to keep free...
+# CPU threads to keep free...
 KEEP_FREE=2
 
 THREADS=`cat /proc/cpuinfo | awk '/^processor/{print $3}' | wc -l`
