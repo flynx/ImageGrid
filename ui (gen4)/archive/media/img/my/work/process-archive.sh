@@ -1,4 +1,16 @@
 #!/bin/bash
+#
+# This does not care about actual topology of the archive directory that
+# is passed it, it will find all the supported raw files and create the 
+# apropriate directories one level up.
+#
+#
+# XXX check the edge case where the passed dir directly contains the raw 
+#	files...
+#	..should nest the output dirs withing the passed dir and not 
+#	leak them to the same level...
+#	XXX document this case...
+#
 
 # CPU threads to keep free...
 KEEP_FREE=2
@@ -34,8 +46,8 @@ printhelp(){
 	echo "	--skip-all	- same as setting all of the above."
 	echo
 	echo "NOTE: common preview path is relative to ARCHIVE_ROOT."
-	echo "NOTE: if no arguments are passed then this will process all directories"
-	echo "	in current location."
+	echo "NOTE: if no ARCHIVE_ROOT is passed then this will process all"
+	echo "	directories in cwd."
 	echo
 }
 
