@@ -1,6 +1,15 @@
 #!/bin/bash
+#
+#######################################################################
+#
+# This does not care about actual topology of the archive directory 
+# that is passed it, it will find all the supported raw files and 
+# create the apropriate directories one level up.
+#
+#
+#######################################################################
 
-# SPU threads to keep free...
+# CPU threads to keep free...
 KEEP_FREE=2
 
 THREADS=`cat /proc/cpuinfo | awk '/^processor/{print $3}' | wc -l`
@@ -34,8 +43,15 @@ printhelp(){
 	echo "	--skip-all	- same as setting all of the above."
 	echo
 	echo "NOTE: common preview path is relative to ARCHIVE_ROOT."
-	echo "NOTE: if no arguments are passed then this will process all directories"
-	echo "	in current location."
+	echo "NOTE: if no ARCHIVE_ROOT is passed then this will process all"
+	echo "	directories in cwd."
+	# XXX this is how exiftool does things, need to figure out a workaround...
+	echo "NOTE: this expects the RAW files to be located at least one level"
+	echo "	down the ARCHIVE_ROOT to make room for the metadata and preview"
+	echo "	directories."
+	echo "	If any raw files are found in the ARCHIVE_ROOT directly this"
+	echo "	will create the preview and metadata directly one level above"
+	echo "	that."
 	echo
 }
 
@@ -126,6 +142,7 @@ JSON_NAME="%-:1d/${METADATA_DIR}/%f.json"
 #			- creates a file: $RAW-thumb.jpg
 #		dcraw -c $RAW | pnmtojpeg -quality=90 > $JPG
 #			- process raw and convert to jpeg (slow)
+# TODO ignore raw images located in the ARCHIVE_ROOT directly...
 
 # XXX need to also copy jpg originals to the preview dir (things that 
 #	were shot in jpeg in-camera)...
