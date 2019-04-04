@@ -1,16 +1,20 @@
 #!/bin/bash
 #
-# This does not care about actual topology of the archive directory that
-# is passed it, it will find all the supported raw files and create the 
-# apropriate directories one level up.
+#######################################################################
+#
+# This does not care about actual topology of the archive directory 
+# that is passed it, it will find all the supported raw files and 
+# create the apropriate directories one level up.
 #
 #
-# XXX check the edge case where the passed dir directly contains the raw 
-#	files...
+# XXX check the edge case where the passed dir directly contains the
+#	raw files...
 #	..should nest the output dirs withing the passed dir and not 
 #	leak them to the same level...
-#	XXX document this case...
+#	XXX document and test this case better...
 #
+#
+#######################################################################
 
 # CPU threads to keep free...
 KEEP_FREE=2
