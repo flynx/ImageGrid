@@ -138,19 +138,20 @@ while true ; do
 		esac
 	fi
 
-	# XXX do a real three digit count...
 	# single flash card...
 	SCOUNT=`printf "%03d" $COUNT`
 	if [ -z $MULTI ] ; then
-		DIR="${DATE}.${SCOUNT}${TITLE}"
+		DIR="${DATE}.${SCOUNT}"
 		while [ -e *"$DIR"* ] ; do
 			COUNT=$((COUNT+1))
 			SCOUNT=`printf "%03d" $COUNT`
-			DIR="${DATE}.${SCOUNT}${TITLE}"
+			DIR="${DATE}.${SCOUNT}"
 		done
 		BASE_DIR=$DIR
+		DIR="${DIR}${TITLE}"
 
 	# multiple flash cards shoot...
+	# XXX need to check for matches on the root too...
 	else
 		BASE_DIR="${DATE}${TITLE}/"
 		DIR="${BASE_DIR}/${DATE}.${SCOUNT}"
