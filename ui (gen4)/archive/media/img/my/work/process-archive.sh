@@ -272,7 +272,6 @@ cd "./${ARCHIVE_ROOT}"
 
 # make low-res previews...
 if [ -z $SKIP_PREVIEWS ] || [ $LOW_RES_PREVIEWS ] ; then
-	#find . -path '*hi-res (RAW)/*.jpg' -exec bash -c 'makepreview "$SIZE" "{}"' \;
 	find . -path '*hi-res (RAW)/*.jpg' -print0 \
 		| xargs -0 -n 1 -P $THREADS -I {} bash -c 'makepreview "$SIZE" "{}"'
 fi
