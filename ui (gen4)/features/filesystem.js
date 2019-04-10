@@ -1829,6 +1829,7 @@ var FileSystemWriterActions = actions.Actions({
 				delete img.base_path
 
 				if(previews || img.path){
+					var seen = new Set()
 					Object.keys(previews || {})
 						// limit preview size...
 						// NOTE: also remove the preview resolution if 
@@ -1868,6 +1869,11 @@ var FileSystemWriterActions = actions.Actions({
 							var from = (img_base || base_dir) +'/'+ preview_path
 							to = path +'/'+ (to || preview_path)
 
+							if(seen.has(to)){
+								return
+							}
+							seen.add(to)
+
 							// XXX use queue for progress reporting...
 							logger && logger.emit('queued', to)
 
@@ -1886,6 +1892,7 @@ var FileSystemWriterActions = actions.Actions({
 									.catch(function(err){
 										logger && logger.emit('error', err) }))
 							}
+
 						})
 				}
 			})
