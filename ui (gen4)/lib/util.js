@@ -215,9 +215,9 @@ Array.prototype.sortAs = function(other){
 //
 //
 // chunk_size can be:
-// 	20			- indicate chunk size
-// 	'20'		- indicate chunk size
-// 	'20C'		- indicate number of chunks
+// 	20			- chunk size
+// 	'20'		- chunk size
+// 	'20C'		- number of chunks
 //	
 //
 // The main goal of this is to not block the runtime while processing a 
