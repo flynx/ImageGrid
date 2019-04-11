@@ -1869,6 +1869,9 @@ var FileSystemWriterActions = actions.Actions({
 							var from = (img_base || base_dir) +'/'+ preview_path
 							to = path +'/'+ (to || preview_path)
 
+							// we do not need to report repeats...
+							// NOTE: these can occur because the same image can
+							// 		be included as a preview and as .path...
 							if(seen.has(to)){
 								return
 							}
