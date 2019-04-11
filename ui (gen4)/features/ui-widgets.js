@@ -356,6 +356,12 @@ var makeUIContainer =
 module.makeUIContainer = function(make){
 	return uiContainer(function(){
 		var that = this
+
+		// trigger the general modal open event...
+		that.modal
+			// XXX do we need to pass anything here????
+			|| that.firstModalOpen() 
+
 		var o = make.apply(this, arguments)
 
 		o
@@ -381,6 +387,11 @@ module.makeUIContainer = function(make){
 						// 						is in focus but keys are not 
 						// 						tracked...
 						: that.dom.focus()
+
+					// trigger the general modal close event...
+					that.modal
+						// XXX do we need to pass anything here????
+						|| that.lastModalClose() 
 				})
 				// Compensate for click focusing the parent dialog when
 				// a child is created...
@@ -746,6 +757,21 @@ var DialogsActions = actions.Actions({
 			return panel
 		})],
 
+	// Events...
+	firstModalOpen: ['- Interface/',
+		core.Event(function(gid){
+			// Triggered when the first modal container is opened.
+			//
+			// Not for direct use.
+		})],
+	// XXX due to that .close() can be called a couple of times this can 
+	// 		also be called a couple of times...
+	lastModalClose: ['- Interface/',
+		core.Event(function(gid){
+			// Triggered when the last modal container is closed.
+			//
+			// Not for direct use.
+		})],
 
 	// Helper for creating lists fast...
 	showList: ['- Interface/', 

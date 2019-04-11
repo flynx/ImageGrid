@@ -391,8 +391,19 @@ module.Slideshow = core.ImageGridFeatures.Feature({
 					this.dom.off('mouseup', release)
 					this.dom.off('touchend', toggle)
 				}
-			}]
+			}],
 		//*/
+
+		// pause/resume slideshow on modal stuff...
+		['firstModalOpen',
+			function(){ 
+				if(this.toggleSlideshow('?') == 'on' 
+						&& this.toggleSlideshowTimer('?') == 'running'){
+					this.toggleSlideshowTimer('paused') 
+					this.one('lastModalClose', function(){
+						this.toggleSlideshowTimer('running') })
+				}
+			}],
 	],
 })
 
