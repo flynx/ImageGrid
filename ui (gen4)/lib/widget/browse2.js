@@ -672,7 +672,7 @@ var BaseBrowserPrototype = {
 		var that = this
 		// XXX Q: should options and context be distinguished only via 
 		// 		the .options attr as is the case now???
-		// 		...see no reason why not...
+		// 		...see no reason why not, though it does not feel right...
 		var context = (options == null || options.options == null) ?
 				{
 					root: this,
