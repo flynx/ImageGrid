@@ -644,6 +644,9 @@ function(data, options){
 // 		// list length limit is reached...
 // 		overflow: function(selected){ ... },
 //
+// 		// predicate to test if an item is to be removed...
+// 		remove: null | function(item){ ... },
+//
 // 		// list of items to remove, if not given this will be maintained 
 // 		// internally
 // 		to_remove: null | <list>,
@@ -731,6 +734,8 @@ function(data, options){
 // 		properly...
 // XXX the problem with this is that it adds elements live while removing
 // 		elements on close, either both should be live or both on close...
+// XXX can we avoid creating the remove button on items that do not pass
+// 		the options.remove(..) predicate???
 Items.EditableList =
 function(list, options){
 	var make = this
@@ -1141,7 +1146,7 @@ function(list, options){
 				function(){ $(this).trigger('itemedit') })
 	}
 
-	// new button...
+	// new item...
 	if(options.new_item !== false){
 		var new_item = options.new_item || true
 		new_item = new_item === true ? '$New...' : new_item
@@ -1159,8 +1164,8 @@ function(list, options){
 					dialog.update()
 						.done(function(){
 							//dialog.select('"'+txt+'"')
-							dialog.select('"'+txt.replace(/\$/g, '')+'"')
-						})
+							txt 
+								&& dialog.select('"'+txt.replace(/\$/g, '')+'"') })
 				}
 			}))
 	}
@@ -1187,11 +1192,14 @@ function(list, options){
 				lst = dialog.__list[id]
 
 				// remove items...
-				to_remove.forEach(function(e){
-					var i = lst.indexOf(e)
-					i >= 0 
-						&& lst.splice(i, 1)
-				})
+				to_remove
+					.filter(options.remove 
+						|| function(){ return true })
+					.forEach(function(e){
+						var i = lst.indexOf(e)
+						i >= 0 
+							&& lst.splice(i, 1)
+					})
 
 				// sort...
 				if(options.sort){

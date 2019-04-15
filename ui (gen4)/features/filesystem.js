@@ -1603,6 +1603,7 @@ var FileSystemWriterActions = actions.Actions({
 		'export-preview-size': 1000,
 
 		'export-preview-size-limits': [
+			'no limit',
 			'900',
 			'1000',
 			'1280',
@@ -1707,9 +1708,12 @@ var FileSystemWriterActions = actions.Actions({
 
 	// Export current state as a full loadable index
 	//
+	//
+	// NOTE: if max_size is given the base image in the target path will
+	// 		be replaced with the largest preview under max_size.
+	//
 	// XXX resolve env variables in path...
 	// XXX what should happen if no path is given???
-	// XXX add preview selection...
 	// XXX handle .image.path and other stack files...
 	// XXX local collections???
 	exportIndex: ['- File/Export/Export index',
@@ -1723,6 +1727,7 @@ var FileSystemWriterActions = actions.Actions({
 			include_orig = include_orig || true
 
 			// XXX is this correct???
+			// 		...get this from config...
 			path = path || './exported'
 			path = util.normalizePath(path)
 
@@ -1830,29 +1835,45 @@ var FileSystemWriterActions = actions.Actions({
 
 				if(previews || img.path){
 					var seen = new Set()
+					var max
+					var replace_orig = false
 					Object.keys(previews || {})
 						// limit preview size...
 						// NOTE: also remove the preview resolution if 
 						// 		it's smaller...
-						// XXX if we are limiting preview size then we 
-						// 		need to also update .path to the correct
-						// 		preview size (use a preview as source)
 						.filter(function(res){ 
 							// no size limit or match...
 							if(!max_size || parseInt(res) <= max_size){
+								// get the biggest remaining preview...
+								max = max == null || parseInt(res) > parseInt(max) ?
+									res
+									: max
 								return true
+							}
 
 							// skip and remove...
-							} else {
-								delete previews[res]
-								return false
-							}
+							replace_orig = true
 						})
 						// get paths...
-						.map(function(res){ return decodeURI(previews[res]) })
-						// XXX might be a good idea to include the max 
-						// 		preview if hires is too large...
-						.concat(include_orig && img.path ? [[from_path, img.path]] : [])
+						.map(function(res){ 
+							return res != max ?
+								decodeURI(previews[res]) 
+								// NOTE: we will skip including the preview 
+								// 		we are using as the primary image to
+								// 		save space...
+								: null })
+						// add primary image...
+						.concat(include_orig && img.path ? 
+							[[
+								(replace_orig && max != null) ? 
+									// replace the base image with the 
+									// largest available preview...
+									previews[max]
+									: from_path, 
+								img.path
+							]] 
+							: null)
+						// build the from/to paths...
 						.forEach(function(preview_path){
 							var to
 							if(preview_path == null){
@@ -2402,7 +2423,8 @@ var FileSystemWriterUIActions = actions.Actions({
 					function(){ 
 						return actions.config['export-preview-size-limit'] || 'no limit' }],
 					{ buttons: [
-						['&times;', function(p){
+						//['&times;', function(p){
+						['clear', function(p){
 							actions.config['export-preview-size-limit'] = 'no limit'
 							parent.update()
 						}],
@@ -2414,7 +2436,18 @@ var FileSystemWriterUIActions = actions.Actions({
 						'export-preview-size-limit',
 						{
 							length_limit: 10,
-							sort: function(a, b){ return parseInt(a) - parseInt(b) },
+							// sort ascending + keep 'no limit' at top...
+							sort: function(a, b){ 
+								return a == 'no limit' ?
+										-1
+									: b == 'no limit' ?
+										1
+									: parseInt(a) - parseInt(b) },
+							check: function(e){
+								return e == 'no limit' 
+									|| !!parseInt(e) },
+							remove: function(e){
+								return e != 'no limit' },
 						}))
 		},
 		// XXX BUG: history closing errors -- non-critical...
