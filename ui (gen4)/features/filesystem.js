@@ -1834,6 +1834,9 @@ var FileSystemWriterActions = actions.Actions({
 						// limit preview size...
 						// NOTE: also remove the preview resolution if 
 						// 		it's smaller...
+						// XXX if we are limiting preview size then we 
+						// 		need to also update .path to the correct
+						// 		preview size (use a preview as source)
 						.filter(function(res){ 
 							// no size limit or match...
 							if(!max_size || parseInt(res) <= max_size){
