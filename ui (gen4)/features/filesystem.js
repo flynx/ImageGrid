@@ -2238,6 +2238,7 @@ var FileSystemWriterUIActions = actions.Actions({
 				alias: 'index',
 				action: 'exportIndex',
 				data: [
+					'base_path',
 					'target_dir',
 					// XXX need to add options to size: 'none',
 					// XXX use closest preview instead of hi-res when 
@@ -2255,8 +2256,9 @@ var FileSystemWriterUIActions = actions.Actions({
 				data: [
 					'pattern',
 					'size',
-					'level_dir',
+					'base_path',
 					'target_dir',
+					'level_dir',
 				],
 			},
 		},
@@ -2448,59 +2450,76 @@ var FileSystemWriterUIActions = actions.Actions({
 								return e != 'no limit' },
 						}))
 		},
+		// XXX should this be editable???
+		// XXX make this selectable...
+		'base_path': function(actions, make, parent){
+			var elem = make(['Current path: ', this.location.path], 
+				{
+					events: {
+						select: function(){
+							elem.find('.text').last().selectText()
+						},
+						deselect: function(){
+							elem.find('.text').last().selectText(null)
+						},
+					},
+				}) 
+		},
 		// XXX BUG: history closing errors -- non-critical...
 		'target_dir': function(actions, make, parent){
 			var elem = make(['$To: ', 
 				function(){ return actions.config['export-path'] || './' }], 
-				{ buttons: [
-					['browse', function(p){
-						var e = this.filter('"'+p+'"', false)
-						var path = e.find('.text').last().text()
-						var txt = e.find('.text').first().text()
+				{ 
+					buttons: [
+						['browse', function(p){
+							var e = this.filter('"'+p+'"', false)
+							var path = e.find('.text').last().text()
+							var txt = e.find('.text').first().text()
 
-						// XXX add new dir global button...
-						return actions.browsePath(path, 
-							function(path){ 
-								actions.config['export-path'] = path
-								actions.config['export-paths'].splice(0, 0, path)
+							// XXX add new dir global button...
+							return actions.browsePath(path, 
+								function(path){ 
+									actions.config['export-path'] = path
+									actions.config['export-paths'].splice(0, 0, path)
 
-								parent.update()
-								parent.select(txt)
-							})
-					}],
-					// XXX BUG: closing this breaks on parant.focus()...
-					['histroy', widgets.makeNestedConfigListEditor(actions, parent,
-						'export-paths',
-						'export-path',
-						{
-							length_limit: 10,
-							new_item: false,
-						})],
-				]})
-				// XXX make this editable???
-				.on('open', function(){
-					event.preventDefault()
-
-					var path = elem.find('.text').last()
-						.makeEditable({
-							activate: true,
-							clear_on_edit: false,
-							abort_keys: [
-								'Esc',
-							],
-						})
-						.on('edit-commit', function(_, path){
-							actions.config['export-path'] = path
-							actions.config['export-paths'].indexOf(path) < 0
-								&& actions.config['export-paths'].splice(0, 0, path)
-
-						})
-						.on('edit-abort edit-commit', function(evt, path){
-							parent.update()
-								.then(function(){
-									parent.select(path)
+									parent.update()
+									parent.select(txt)
 								})
-						})
+						}],
+						// XXX BUG: closing this breaks on parant.focus()...
+						['histroy', widgets.makeNestedConfigListEditor(actions, parent,
+							'export-paths',
+							'export-path',
+							{
+								length_limit: 10,
+								new_item: false,
+							})],
+					],
+					// XXX make this editable???
+					open: function(){
+						event.preventDefault()
+
+						var path = elem.find('.text').last()
+							.makeEditable({
+								activate: true,
+								clear_on_edit: false,
+								abort_keys: [
+									'Esc',
+								],
+							})
+							.on('edit-commit', function(_, path){
+								actions.config['export-path'] = path
+								actions.config['export-paths'].indexOf(path) < 0
+									&& actions.config['export-paths'].splice(0, 0, path)
+
+							})
+							.on('edit-abort edit-commit', function(evt, path){
+								parent.update()
+									.then(function(){
+										parent.select(path)
+									})
+							})
+					},
 				})
 		},
 		'comment': function(actions, make, parent){
@@ -2532,6 +2551,7 @@ var FileSystemWriterUIActions = actions.Actions({
 				})
 		},
 	},
+	// XXX might be a good idea to show (editable?) base path???
 	// XXX update export state: index, crop, image...
 	// XXX should this be visible directly???
 	exportDialog: ['- File/$Export/Export...',

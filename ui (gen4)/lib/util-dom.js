@@ -94,7 +94,7 @@ if(typeof(jQuery) != typeof(undefined)){
 	}
 
 
-	jQuery.fn.selectText = function(){
+	jQuery.fn.selectText = function(mode){
 		var range = document.createRange()
 
 		this.each(function(){
@@ -103,10 +103,13 @@ if(typeof(jQuery) != typeof(undefined)){
 
 		var sel = window.getSelection()
 		sel.removeAllRanges()
-		sel.addRange(range)
+
+		mode === null
+			|| sel.addRange(range)
 
 		return this
 	}
+	jQuery.fn.deselectText = function(){ this.selectText(null) }
 	jQuery.fn.caretOffset = function(){ return getCaretOffset(this) }
 	jQuery.fn.selectionCollapsed = function(){ return selectionCollapsed(this) }
 
