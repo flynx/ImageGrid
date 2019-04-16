@@ -2451,20 +2451,14 @@ var FileSystemWriterUIActions = actions.Actions({
 						}))
 		},
 		// XXX should this be editable???
-		// XXX make this selectable...
 		'base_path': function(actions, make, parent){
 			var elem = make(['Current path: ', this.location.path], 
 				{
-					events: {
-						select: function(){
-							elem.find('.text').last().selectText()
-						},
-						deselect: function(){
-							elem.find('.text').last().selectText(null)
-						},
-					},
-				}) 
-		},
+					select: function(){
+						elem.find('.text').last().selectText() },
+					deselect: function(){
+						elem.find('.text').last().selectText(null) },
+				}) },
 		// XXX BUG: history closing errors -- non-critical...
 		'target_dir': function(actions, make, parent){
 			var elem = make(['$To: ', 
@@ -2551,7 +2545,6 @@ var FileSystemWriterUIActions = actions.Actions({
 				})
 		},
 	},
-	// XXX might be a good idea to show (editable?) base path???
 	// XXX update export state: index, crop, image...
 	// XXX should this be visible directly???
 	exportDialog: ['- File/$Export/Export...',

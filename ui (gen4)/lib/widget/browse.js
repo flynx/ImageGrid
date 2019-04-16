@@ -1678,6 +1678,8 @@ var BrowserPrototype = {
 		//
 		// This is a shorthand to using options.events object.
 		itemOptionsEventShorthands: [
+			'select',
+			'deselect',
 			'open',
 			'menu',
 			'update',
