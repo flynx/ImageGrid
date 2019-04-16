@@ -2228,12 +2228,14 @@ var FileSystemWriterUIActions = actions.Actions({
 			// XXX is this the right title???
 			// XXX this is not yet working...
 			'Save index to current location': {
+				alias: 'save',
 				action: 'saveIndexHere',
 				data: [
 					'comment'
 				],
 			},
 			'Current state as index': {
+				alias: 'index',
 				action: 'exportIndex',
 				data: [
 					'target_dir',
@@ -2248,6 +2250,7 @@ var FileSystemWriterUIActions = actions.Actions({
 				],
 			},
 			'Images only': {
+				alias: 'images',
 				action: 'exportDirs',
 				data: [
 					'pattern',
@@ -2274,18 +2277,13 @@ var FileSystemWriterUIActions = actions.Actions({
 	// 		...at this point this depends on .saveIndexHere(..), thus 
 	// 		it is here...
 	// XXX should this return a promise???
-	saveFullIndex: ['File/Save (full)',
+	saveFullIndex: ['File/Save ($full)',
 		function(){
 			return this
 				.markChanged('all')
 				.saveIndexHere()}],
-
-	// XXX need to be able to make dirs...
-	browseExportIndex: ['File/Export/Export Index...',
-		makeBrowseProxy('exportIndex')],
-	// XXX need to be able to make dirs...
-	browseExportDirs: ['File/Export/Export Images...',
-		makeBrowseProxy('exportDirs')],
+	saveWithCommentDialog: ['File/Save with $comment...', 
+		'exportDialog: "save"'],
 
 
 	// Export dialog...
@@ -2403,11 +2401,11 @@ var FileSystemWriterUIActions = actions.Actions({
 							length_limit: 10,
 						}))
 		},
+		// XXX should we merge this with 'size_limit'????
 		'size': function(actions, make, parent){
 			return make(['Image $size: ', 
 					function(){ 
 						return actions.config['export-preview-size'] || 1000 }])
-				// XXX add validation???
 				.on('open', 
 					widgets.makeNestedConfigListEditor(actions, parent,
 						'export-preview-sizes',
@@ -2415,6 +2413,8 @@ var FileSystemWriterUIActions = actions.Actions({
 						{
 							length_limit: 10,
 							sort: function(a, b){ return parseInt(a) - parseInt(b) },
+							check: function(e){
+								return !!parseInt(e) },
 						}))
 
 		},
@@ -2423,13 +2423,11 @@ var FileSystemWriterUIActions = actions.Actions({
 					function(){ 
 						return actions.config['export-preview-size-limit'] || 'no limit' }],
 					{ buttons: [
-						//['&times;', function(p){
 						['clear', function(p){
 							actions.config['export-preview-size-limit'] = 'no limit'
 							parent.update()
 						}],
 					] })
-				// XXX add validation???
 				.on('open', 
 					widgets.makeNestedConfigListEditor(actions, parent,
 						'export-preview-size-limits',
@@ -2534,14 +2532,26 @@ var FileSystemWriterUIActions = actions.Actions({
 				})
 		},
 	},
-	// XXX indicate export state: index, crop, image...
-	exportDialog: ['File/Export/$Export...',
-		widgets.makeUIDialog(function(){
+	// XXX update export state: index, crop, image...
+	// XXX should this be visible directly???
+	exportDialog: ['- File/$Export/Export...',
+		widgets.makeUIDialog(function(mode){
 			var that = this
+
+			// mode aliases...
+			var mode_aliases = Object.entries(that.config['export-dialog-modes'] || {})
+				.reduce(function(res, [key, value]){
+					res[value.alias || key] = key
+					return res
+				}, {})
+			var show_mode = mode_aliases[mode] || mode
 
 			var o = browse.makeLister(null, function(path, make){
 				var dialog = this
-				var mode = that.config['export-dialog-mode'] || 'Images only'
+
+				mode = show_mode 
+					|| that.config['export-dialog-mode'] 
+					|| 'Images only'
 				// if invalid mode get the first...
 				mode = !that.config['export-dialog-modes'][mode] ?
 					Object.keys(that.config['export-dialog-modes']).shift()
@@ -2549,20 +2559,23 @@ var FileSystemWriterUIActions = actions.Actions({
 				var data = that.config['export-dialog-modes'][mode].data
 
 				// mode selector...
-				make(['Export $mode: ', 
-						function(){ return mode }])
-					.on('open', 
-						// XXX for some reason o is initially undefined when
-						// 		it should be set to the dialog...
-						//widgets.makeNestedConfigListEditor(that, o,
-						widgets.makeNestedConfigListEditor(that, make.dialog,
-							'export-dialog-modes',
-							'export-dialog-mode',
-							{
-								length_limit: 10,
-								new_item: false,
-								itemButtons: [],
-							}))
+				!show_mode
+					&& make(['Export $mode: ', 
+							function(){ 
+								return mode }], 
+						{
+							// XXX for some reason o is initially undefined when
+							// 		it should be set to the dialog...
+							//widgets.makeNestedConfigListEditor(that, o,
+							open: widgets.makeNestedConfigListEditor(that, make.dialog,
+									'export-dialog-modes',
+									'export-dialog-mode',
+									{
+										length_limit: 10,
+										new_item: false,
+										itemButtons: [],
+									}),
+						})
 
 				// get the root and user fields...
 				var fields = that.__export_dialog_fields__ || {}
@@ -2578,15 +2591,19 @@ var FileSystemWriterUIActions = actions.Actions({
 				// Start action...
 				make([function(){
 						// XXX indicate export state: index, crop, image...
-						return '$Export'}]) 
-					.on('open', function(){
-						var mode = 
-							that.config['export-dialog-modes'][that.config['export-dialog-mode']]
-						that[mode.action](
-							that.config['export-path'] || undefined)
-						dialog.close()
-					})
-					.addClass('selected')
+						return mode == mode_aliases['save'] ? 
+							'$Save' 
+							: '$Export'}], 
+					{
+						cls: 'selected',
+						open: function(){
+							var mode = 
+								that.config['export-dialog-modes'][that.config['export-dialog-mode']]
+							that[mode.action](
+								that.config['export-path'] || undefined)
+							dialog.close()
+						},
+					}) 
 
 				make.done()
 			})
@@ -2595,6 +2612,13 @@ var FileSystemWriterUIActions = actions.Actions({
 
 			return o
 		})],
+
+	// aliases...
+	// NOTE: .saveWithCommentDialog(..) is another alias (see above)...
+	exportIndexDialog: ['File/Export/$Export Index...', 
+		'exportDialog: "index"'],
+	exportImagesDialog: ['File/Export/Export $Images...', 
+		'exportDialog: "images"'],
 })
 
 
