@@ -2547,7 +2547,7 @@ var FileSystemWriterUIActions = actions.Actions({
 	},
 	// XXX update export state: index, crop, image...
 	// XXX should this be visible directly???
-	exportDialog: ['- File/$Export/Export...',
+	exportDialog: ['- File/Export...',
 		widgets.makeUIDialog(function(mode){
 			var that = this
 
@@ -2628,9 +2628,9 @@ var FileSystemWriterUIActions = actions.Actions({
 
 	// aliases...
 	// NOTE: .saveWithCommentDialog(..) is another alias (see above)...
-	exportIndexDialog: ['File/Export/$Export Index...', 
+	exportIndexDialog: ['File/$Export index...', 
 		'exportDialog: "index"'],
-	exportImagesDialog: ['File/Export/Export $Images...', 
+	exportImagesDialog: ['File/Export $images...', 
 		'exportDialog: "images"'],
 })
 
