@@ -440,8 +440,8 @@ module.GLOBAL_KEYBOARD = {
 		// do the default copy thing...
 		// NOTE: this stops the default: handler from getting the ctrl:
 		// 		key case...
-		ctrl_C: '',
-		ctrl_V: '',
+		ctrl_C: 'NEXT',
+		ctrl_V: 'NEXT',
 
 
 		// sort...
