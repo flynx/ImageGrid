@@ -27,8 +27,7 @@
 # 	- web
 #
 #
-## Building:
-##    To print full list of user make targets use:
+## To print full list of user make targets use:
 ## 	make help
 ##
 ##
@@ -56,9 +55,16 @@
 ## NOTE: cross compilation is at this time not supported, if you try it 
 ## 	and it works then 1) you got very lucky and 2) tell me about it =)
 ## 	...at least the node native packages (sharp) will likely either 
-## 	fail or	win get compiled to the wrong arch and not be used and
-## 	for the most part ImageGrid is cleaver about and will simply not
-## 	load the depending features...
+## 	fail or	will get compiled to the wrong arch and not be used and 
+##	some non-native packages may misbehave (though I'm not aware of 
+##	any at this point, so report them if you encounter one).
+##	This is complicated by the fact that most of ImageGrid.Viewer is
+##	platform-agnostic and will run on almost anything and will simply 
+##	try to ignore broken packages and features depending on them, so
+##	check the console log for any odd load reports...
+##	...but note that cross-building and packaging is possible either
+##	without the native modules or with them pre-built for the target
+##	platform.
 ##
 ##
 ## Examples:
@@ -329,7 +335,7 @@ check-web: ## Run web build dependency checks
 check-web: $(foreach dep,$(DEPENDENCIES_WEB),require($(dep)))
 
 .PHONY: check-help
-check-help: ## Run build dependency checks 
+check-help: ## Run help/build (Makefile) dependency checks 
 check-help: $(foreach dep,$(DEPENDENCIES_HELP),require($(dep)))
 
 
