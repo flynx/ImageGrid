@@ -95,8 +95,9 @@
 # 		- msi (wix)
 # 		- deb
 # 		- rpm
+# 		- ...
 # 	- cross-compiling support (???)
-# 	- upstream clean build: git clone -> make dist
+# 	- cross-package with pre-build libs...
 # 	- nwjs???
 #
 #
