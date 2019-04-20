@@ -103,10 +103,10 @@ requirejs([
 
 	// XXX split this into several dialogues, show each and then combine...
 	dialog_1 = browser.Browser(function(make){
-		make([321, 321, 123])
+		make(['list', 'of', 'text'])
 		make.group(
-			make('a'),
-			'b')
+			make('group item 0'),
+			'group item 1 (bare)')
 		// XXX Q: should we show only one if multiple lines are in sequence???
 		make('---')
 		//make('---')
@@ -115,19 +115,19 @@ requirejs([
 		//make('e')
 		// embeded browser...
 		make(browser.Browser(function(make){
+			make('nested browser item 0')
 			make(1)
-			make(2)
 		}))
 		// basic nested list...
-		make.nest('A', [
+		make.nest('nested', [
 			make('moo', {disabled: true}),
 			2,
 			// XXX this is not supported by .map(..)...
-			make.nest('AB', browser.Browser(function(make){
+			make.nest('nested', browser.Browser(function(make){
 				make('ab')
 			})),
 		])
-		make('in between...')
+		make('in between two subtrees...')
 		// nested browser...
 		make.nest('B', 
 			browser.Browser(function(make){

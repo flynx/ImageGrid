@@ -136,7 +136,7 @@ Items.group = function(...items){
 		items[0]
 		: items
 	// replace the items with the group...
-	this.items.splice(this.items.length, 0, ...collectItems(this, items))
+	this.items.splice(this.items.length, 0, collectItems(this, items))
 	return this
 }
 
@@ -1194,6 +1194,9 @@ var BaseBrowserPrototype = {
 						// item not iterable -> skip...
 						(!iterateNonIterable && elem.noniterable) ?
 							[]
+						// group...
+						: elem instanceof Array ?
+							walk(path, elem)
 						// value is Browser (inline)...
 						: elem.value instanceof Browser ?
 							elem.value.map(func, 
@@ -1222,6 +1225,13 @@ var BaseBrowserPrototype = {
 
 		return walk(path, this.items) 
 	},
+
+
+
+	walk: function(func, options){
+	},
+
+
 
 	// Sublist map functions...
 	// NOTE: there are different from .map(..) in that instead of paths 
