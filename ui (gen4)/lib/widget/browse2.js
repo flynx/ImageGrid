@@ -1308,7 +1308,11 @@ var BaseBrowserPrototype = {
 	// 		// If true skip iterating nested items...
 	// 		skipNested: <bool>,
 	//
+	// 		// XXX
+	// 		reverseIteration: <bool>,
+	//
 	// 		// If true include inlined parent id in path...
+	// 		// XXX not implemented yet -- can we implement this???...
 	// 		inlinedPaths: <bool>,
 	// 	}
 	//
@@ -1340,6 +1344,7 @@ var BaseBrowserPrototype = {
 		var skipNested = !options.iterateAll && options.skipNested
 		var reverse = !!options.reverseIteration
 
+		// level walk function...
 		var walk = function(path, list){
 			return list
 				// reverse the items...
@@ -1350,12 +1355,17 @@ var BaseBrowserPrototype = {
 						this.slice().reverse() 
 						: this })
 				.map(function(elem){
-					var elem_id = elem.id || elem.value
+					// skip non-iterable items...
+					if(!iterateNonIterable && elem.noniterable){
+						return []
+					}
 
+					var elem_id = elem.id || elem.value
 					// these will be set in the return expression below...
 					var sublist
 					var p 
 
+					// nested browser/list handler...
 					var nested_called = false
 					var nested = function(list, opts){
 						var skip = skipNested && !list
@@ -1370,14 +1380,10 @@ var BaseBrowserPrototype = {
 								[]
 							:list instanceof Array ?
 								walk(p, list)
-							// user-defined recursion (function)...
+							// user-defined recursion...
 							: recursion instanceof Function ?
 								recursion.call(that, func, p, list, opts || options)
 							: list[recursion || 'walk'](func, p, opts || options)) }
-
-					if(!iterateNonIterable && elem.noniterable){
-						return []
-					}
 
 					return (
 							// inline browser or array...
@@ -1385,36 +1391,31 @@ var BaseBrowserPrototype = {
 									|| elem instanceof Browser) ?
 								func.call(that, 
 									p = path, 
-									null, 
-									nested, 
+									null, nested, 
 									sublist = elem)
 							// nested browser / array...
 							: (elem.sublist instanceof Browser 
 									|| elem.sublist instanceof Array) ?
 								func.call(that, 
 									p = path.concat([elem_id]), 
-									elem, 
-									nested, 
+									elem, nested, 
 									sublist = elem.sublist)
 							// normal element...
 							: func.call(that, 
 								p = path.concat([elem_id]), 
-								elem, 
-								null, 
+								elem, null, 
 								sublist = null) )
 						// append nested elements...
 						.concat((!sublist || nested_called) ? 
 							[] 
 							: nested(sublist))
 				})
-				.flat()
-		}
+				.flat() }
 
 		return walk(path, this.items)
 	},
 
-	// XXX
-	render2text: function(options, renderer){
+	text2: function(options, renderer){
 		var that = this
 		// XXX Q: should options and context be distinguished only via 
 		// 		the .options attr as is the case now???
@@ -1453,13 +1454,14 @@ var BaseBrowserPrototype = {
 						: [item.value || item]
 					) },
 				function(func, path, sublist, options){
-					return sublist.render2text(context) },
+					return sublist.text2(context) },
 				options)
 
 		return context.root === this ?
 			items.join('\n')
 			: items
 	},
+	// XXX
 	render2: function(options, renderer){
 		var that = this
 		// XXX Q: should options and context be distinguished only via 
@@ -1506,7 +1508,10 @@ var BaseBrowserPrototype = {
 			: items
 	},
 
-
+	// XXX this is different to .map(..) in that here options.reverseIteration 
+	// 		will reverse each level but keep the up-down order while 
+	// 		.map({reverseIteration: true}) is similar to .map().reverse()
+	// 		...not sure which is better or if we should support both...
 	map2: function(func, options){
 		var that = this
 
