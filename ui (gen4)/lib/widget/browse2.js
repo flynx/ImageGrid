@@ -1267,30 +1267,63 @@ var BaseBrowserPrototype = {
 
 
 
-	// XXX EXPERIMENTAL...
 	//
-	// 	.walk(func[, options])
+	// 	.walk(item_handler[, options])
 	// 		-> result
 	//
-	// 	func(elem, nested, sublist)
+	// 	.walk(item_handler, nested_handler[, options])
+	// 		-> result
+	//
+	//
+	// 	item_handler(path, elem, nested, sublist)
 	// 		-> array
 	//
 	// 	nested(list[, options])
 	// 		-> items
 	//
 	//
-	// XXX this should be just like .map(..) but add ability to handle 
-	// 		node types in func...
-	// 		this can be done in several ways:
-	// 			- pass type info + control callback (do/skip)
-	// 			- pass a set of handlers 
-	// 				(a-la how .render(..) uses node render methods)
+	// 	XXX
+	// 	nested_handler(..)
+	// 		-> 
+	//
+	//
+	// 	Request manual iteration...
+	// 	nested(false)
+	// 		-> undefined
+	//
+	//
+	// options format:
+	// 	{
+	// 		// Iterate ALL items...
+	// 		//
+	// 		// NOTE: this if true overrides all other iteration coverage 
+	// 		//		options... 
+	// 		iterateAll: <bool>,
+	//
+	// 		// If true do not skip items with .noniterable set to true...
+	// 		iterateNonIterable: <bool>,
+	// 		// If true do not skip item.sublist of items with .collapsed 
+	// 		// set to true...
+	// 		iterateCollapsed: <bool>,
+	// 		// If true skip iterating nested items...
+	// 		skipNested: <bool>,
+	//
+	// 		// If true include inlined parent id in path...
+	// 		inlinedPaths: <bool>,
+	// 	}
+	//
+	//
+	// XXX EXPERIMENTAL...
 	walk: function(func, options){
 		var that = this
 
 		// parse args...
 		var args = [...arguments]
 		func = args[0] instanceof Function ? 
+			args.shift() 
+			: undefined
+		var recursion = (args[0] instanceof Function 
+				|| typeof(args[0]) == typeof('str')) ? 
 			args.shift() 
 			: undefined
 		var path = (args[0] instanceof Array 
@@ -1300,9 +1333,22 @@ var BaseBrowserPrototype = {
 		path = path instanceof Array ? path : [path]
 		var options = args.pop() || {}
 
+		// options...
+		options = Object.assign(Object.create(this.options || {}), options || {})
+		var iterateNonIterable = options.iterateAll || options.iterateNonIterable
+		var iterateCollapsed = options.iterateAll || options.iterateCollapsed
+		var skipNested = !options.iterateAll && options.skipNested
+		var reverse = !!options.reverseIteration
+
 		var walk = function(path, list){
 			return list
-				// XXX add reversing support...
+				// reverse the items...
+				.run(function(){
+					return reverse ?
+						// NOTE: we .slice() as we do not want to affect 
+						// 		the actual list...
+						this.slice().reverse() 
+						: this })
 				.map(function(elem){
 					var elem_id = elem.id || elem.value
 
@@ -1312,10 +1358,26 @@ var BaseBrowserPrototype = {
 
 					var nested_called = false
 					var nested = function(list, opts){
+						var skip = skipNested && !list
+						list = (!iterateCollapsed && elem.collapsed) ?
+							[]
+							: (list || sublist)
+						list = list === true ? sublist : list
 						nested_called = true
-						return list instanceof Array ?
-							walk(p, list)
-							: list.walk(func, p, opts || options) }
+						return (
+							// request manual iteration...
+							(skip || list === false) ?
+								[]
+							:list instanceof Array ?
+								walk(p, list)
+							// user-defined recursion (function)...
+							: recursion instanceof Function ?
+								recursion.call(that, func, p, list, opts || options)
+							: list[recursion || 'walk'](func, p, opts || options)) }
+
+					if(!iterateNonIterable && elem.noniterable){
+						return []
+					}
 
 					return (
 							// inline browser or array...
@@ -1333,7 +1395,6 @@ var BaseBrowserPrototype = {
 									p = path.concat([elem_id]), 
 									elem, 
 									nested, 
-									// XXX handle elem.collapsed and friends...
 									sublist = elem.sublist)
 							// normal element...
 							: func.call(that, 
@@ -1352,23 +1413,130 @@ var BaseBrowserPrototype = {
 		return walk(path, this.items)
 	},
 
+	// XXX
+	render2text: function(options, renderer){
+		var that = this
+		// XXX Q: should options and context be distinguished only via 
+		// 		the .options attr as is the case now???
+		// 		...see no reason why not, though it does not feel right...
+		var context = (options == null || options.options == null) ?
+				{
+					root: this,
+					// NOTE: we are not combining this with .options as nested 
+					// 		lists can have their own unique sets of options 
+					// 		independently of the root list...
+					//options: options || this.options || {},
+					options: Object.assign(Object.create(this.options || {}), options || {}),
+				}
+			: options
+		options = context.options
+		renderer = renderer || this
+
+		var items = this
+			.walk(
+				function(path, item, nested, sublist){
+					var indent = path.map(e => '  ').join('')
+					return (
+						// inline...
+						(item == null && sublist) ?
+							// NOTE: here we are forcing rendering of the 
+							// 		inline browser/list, i.e. ignoring 
+							// 		options.skipNested for inline stuff...
+							nested(true)
+								.map(e => indent + (e.value || e))
+						// nested...
+						: sublist ?
+							[item.value]
+								.concat(
+									nested()
+										.map(e => indent + (e.value || e)))
+						: [item.value || item]
+					) },
+				function(func, path, sublist, options){
+					return sublist.render2text(context) },
+				options)
+
+		return context.root === this ?
+			items.join('\n')
+			: items
+	},
+	render2: function(options, renderer){
+		var that = this
+		// XXX Q: should options and context be distinguished only via 
+		// 		the .options attr as is the case now???
+		// 		...see no reason why not, though it does not feel right...
+		var context = (options == null || options.options == null) ?
+				{
+					root: this,
+					// NOTE: we are not combining this with .options as nested 
+					// 		lists can have their own unique sets of options 
+					// 		independently of the root list...
+					//options: options || this.options || {},
+					options: Object.assign(Object.create(this.options || {}), options || {}),
+				}
+			: options
+		options = context.options
+		renderer = renderer || this
+
+		var items = this
+			.walk(
+				function(path, item, nested, sublist){
+					var indent = path.map(e => '  ').join('')
+					return (
+						// inline...
+						(item == null && sublist) ?
+							// NOTE: here we are forcing rendering of the 
+							// 		inline browser/list, i.e. ignoring 
+							// 		options.skipNested for inline stuff...
+							nested(true)
+								.map(e => indent + (e.value || e))
+						// nested...
+						: sublist ?
+							[item.value]
+								.concat(
+									nested()
+										.map(e => indent + (e.value || e)))
+						: [item.value || item]
+					) },
+				function(func, path, sublist, options){
+					return sublist.render2(context) })
+
+		return context.root === this ?
+			items.join('\n')
+			: items
+	},
+
 
 	map2: function(func, options){
 		var that = this
+
+		// parse args...
+		// XXX can we avoid argument parsing here???
 		var args = [...arguments]
 		func = args[0] instanceof Function ? 
 			args.shift() 
 			: undefined
+		var path = (args[0] instanceof Array 
+				|| typeof(args[0]) == typeof('str')) ?
+			args.shift()
+			: []
 		var options = args.pop() || {}
 
-		return this.walk(function(path, elem){
-			return elem != null ?
-				[func === undefined ?
-					elem
-					: func.call(that, elem, path)]
-				: [] }, options)
+		return this.walk(
+			function(path, elem){
+				return elem != null ?
+					[func === undefined ?
+						elem
+						: func.call(that, elem, path)]
+					: [] }, 
+			function(_, path, sublist, options){
+				// NOTE: this needs to call the actual func that the user
+				// 		gave us and not the constructed function that we 
+				// 		pass to .walk(..) above...
+				return sublist.map2(func, path, options) },
+			path, 
+			options)
 	},
-
 
 
 	// Sublist map functions...
