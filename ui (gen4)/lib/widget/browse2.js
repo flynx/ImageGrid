@@ -501,6 +501,7 @@ var BaseBrowserPrototype = {
 	// 		calls for such items...
 	//
 	// XXX revise options handling for .__list__(..)
+	// XXX make(browser) should add a browser as-is without any options... (???)
 	make: function(options){
 		options = Object.assign(Object.create(this.options || {}), options || {})
 
@@ -510,83 +511,112 @@ var BaseBrowserPrototype = {
 
 		// item constructor...
 		//
+		// 	Make an item...
 		// 	make(value[, options])
 		// 	make(value, func[, options])
 		// 		-> make
 		//
+		// 	Inline a browser instance...
+		// 	make(browser)
+		// 		-> make
+		//
+		//
+		// NOTE: when inlining a browser, options are ignored.
+		// NOTE: when inlining a browser it's .parent will be set this 
+		// 		reusing the inlined object browser may mess up this 
+		// 		property...
+		//
+		// XXX problem: make(Browser(..), ..) and make.group(...) produce 
+		// 		different formats -- the first stores {value: browser, ...}
+		// 		while the latter stores a list of items.
+		// 		...would be more logical to store the object (i.e. browser/list)
+		// 		directly as the element...
 		var make_called = false
 		var make = function(value, opts){
 			make_called = true
-			var args = [...arguments]
 
-			opts = opts || {}
-			// handle: make(.., func, ..)
-			opts = opts instanceof Function ?
-				{open: opts}
-				: opts
-			// handle trailing options...
-			opts = args.length > 2 ?
-				Object.assign({},
-					args.pop(),
-					opts)
-				: opts
-			opts = Object.assign(
-				{},
-				opts, 
-				{value: value})
+			// special-case: inlined browser...
+			//
+			// NOTE: we ignore opts here...
+			// XXX not sure if this is the right way to go...
+			// 		...for removal just remove the if statement and its
+			// 		first branch...
+			if(value instanceof Browser){
+				var item = value
+				item.parent = this
 
-			// item id...
-			var key = this.__key__(opts)
-			var id_changed = (old_index[key] || {}).id_changed
+			// normal item...
+			} else {
+				var args = [...arguments]
+				opts = opts || {}
+				// handle: make(.., func, ..)
+				opts = opts instanceof Function ?
+					{open: opts}
+					: opts
+				// handle trailing options...
+				opts = args.length > 2 ?
+					Object.assign({},
+						args.pop(),
+						opts)
+					: opts
+				opts = Object.assign(
+					{},
+					opts, 
+					{value: value})
 
-			// handle duplicate ids -> err if found...
-			if(opts.id && opts.id in new_index){
-				throw new Error(`make(..): duplicate id "${key}": `
-					+`can't create multiple items with the same key.`) }
-			// handle duplicate keys...
-			// NOTE: we can't reuse an old copy when re-making the list
-			// 		because there is now way to correctly identify an 
-			// 		object when it's id is tweaked (and we can not rely
-			// 		on item order)...
-			// 		...for this reason all "persistent" state for such 
-			// 		an element will be lost when calling .make(..) again
-			// 		and re-making the list...
-			// 		a solution to this would be to manually assign an .id 
-			// 		to such elements in .__list__(..)...
-			// 		XXX can we go around this without requiring the user 
-			// 			to manage ids???
-			var k = key
-			while(k in new_index){
-				// duplicate keys disabled...
-				if(options.noDuplicateValues){
-					throw new Error(`make(..): duplicate key "${key}": `
+				// item id...
+				var key = this.__key__(opts)
+				var id_changed = (old_index[key] || {}).id_changed
+
+				// handle duplicate ids -> err if found...
+				if(opts.id && opts.id in new_index){
+					throw new Error(`make(..): duplicate id "${key}": `
 						+`can't create multiple items with the same key.`) }
+				// handle duplicate keys...
+				// NOTE: we can't reuse an old copy when re-making the list
+				// 		because there is now way to correctly identify an 
+				// 		object when it's id is tweaked (and we can not rely
+				// 		on item order)...
+				// 		...for this reason all "persistent" state for such 
+				// 		an element will be lost when calling .make(..) again
+				// 		and re-making the list...
+				// 		a solution to this would be to manually assign an .id 
+				// 		to such elements in .__list__(..)...
+				// 		XXX can we go around this without requiring the user 
+				// 			to manage ids???
+				var k = key
+				while(k in new_index){
+					// duplicate keys disabled...
+					if(options.noDuplicateValues){
+						throw new Error(`make(..): duplicate key "${key}": `
+							+`can't create multiple items with the same key.`) }
 
-				// mark both the current and the first items as id-mutated...
-				opts.id_changed = true
-				new_index[key].id_changed = true
+					// mark both the current and the first items as id-mutated...
+					opts.id_changed = true
+					new_index[key].id_changed = true
 
-				// create a new key...
-				k = this.__id__(key)
+					// create a new key...
+					k = this.__id__(key)
+				}
+				key = opts.id = k
+
+				// build the item...
+				var item = Object.assign(
+					Object.create(options || {}), 
+					// get the old item values (only for non duplicate items)...
+					id_changed ?
+						{}
+						: old_index[key] || {},
+					// XXX inherit from this...
+					opts,
+					{
+						parent: this,
+					})
+
+				// XXX do we need both this and the above ref???
+				item.sublist instanceof Browser
+					&& (item.sublist.parent = this)
 			}
-			key = opts.id = k
-
-			// build the item...
-			var item = Object.assign(
-				Object.create(options || {}), 
-				// get the old item values (only for non duplicate items)...
-				id_changed ?
-					{}
-					: old_index[key] || {},
-				// XXX inherit from this...
-				opts,
-				{
-					parent: this,
-				})
-
-			// XXX do we need both this and the above ref???
-			item.sublist instanceof Browser
-				&& (item.sublist.parent = this)
 
 			// store the item...
 			items.push(item)
@@ -1191,19 +1221,28 @@ var BaseBrowserPrototype = {
 						: this })
 				.map(function(elem){
 					return (
-						// item not iterable -> skip...
-						(!iterateNonIterable && elem.noniterable) ?
-							[]
 						// group...
-						: elem instanceof Array ?
+						(elem instanceof Array ?
 							walk(path, elem)
+						// item not iterable -> skip...
+						: !iterateNonIterable && elem.noniterable) ?
+							[]
+						// elem is Browser (inline)...
+						: elem instanceof Browser ?
+							elem.map(func, 
+								options.inlinedPaths ?
+									path.concat(elem.id)
+									: path.slice(), 
+								options)	
 						// value is Browser (inline)...
+						/*/ XXX legacy...
 						: elem.value instanceof Browser ?
 							elem.value.map(func, 
 								options.inlinedPaths ?
 									path.concat(elem.id)
 									: path.slice(), 
 								options)	
+						//*/
 						// .sublist is Browser (nested)...
 						: (!skipNested 
 								&& elem.sublist instanceof Browser) ?
@@ -1228,7 +1267,106 @@ var BaseBrowserPrototype = {
 
 
 
+	// XXX EXPERIMENTAL...
+	//
+	// 	.walk(func[, options])
+	// 		-> result
+	//
+	// 	func(elem, nested, sublist)
+	// 		-> array
+	//
+	// 	nested(list[, options])
+	// 		-> items
+	//
+	//
+	// XXX this should be just like .map(..) but add ability to handle 
+	// 		node types in func...
+	// 		this can be done in several ways:
+	// 			- pass type info + control callback (do/skip)
+	// 			- pass a set of handlers 
+	// 				(a-la how .render(..) uses node render methods)
 	walk: function(func, options){
+		var that = this
+
+		// parse args...
+		var args = [...arguments]
+		func = args[0] instanceof Function ? 
+			args.shift() 
+			: undefined
+		var path = (args[0] instanceof Array 
+				|| typeof(args[0]) == typeof('str')) ?
+			args.shift()
+			: []
+		path = path instanceof Array ? path : [path]
+		var options = args.pop() || {}
+
+		var walk = function(path, list){
+			return list
+				// XXX add reversing support...
+				.map(function(elem){
+					var elem_id = elem.id || elem.value
+
+					// these will be set in the return expression below...
+					var sublist
+					var p 
+
+					var nested_called = false
+					var nested = function(list, opts){
+						nested_called = true
+						return list instanceof Array ?
+							walk(p, list)
+							: list.walk(func, p, opts || options) }
+
+					return (
+							// inline browser or array...
+							(elem instanceof Array 
+									|| elem instanceof Browser) ?
+								func.call(that, 
+									p = path, 
+									null, 
+									nested, 
+									sublist = elem)
+							// nested browser / array...
+							: (elem.sublist instanceof Browser 
+									|| elem.sublist instanceof Array) ?
+								func.call(that, 
+									p = path.concat([elem_id]), 
+									elem, 
+									nested, 
+									// XXX handle elem.collapsed and friends...
+									sublist = elem.sublist)
+							// normal element...
+							: func.call(that, 
+								p = path.concat([elem_id]), 
+								elem, 
+								null, 
+								sublist = null) )
+						// append nested elements...
+						.concat((!sublist || nested_called) ? 
+							[] 
+							: nested(sublist))
+				})
+				.flat()
+		}
+
+		return walk(path, this.items)
+	},
+
+
+	map2: function(func, options){
+		var that = this
+		var args = [...arguments]
+		func = args[0] instanceof Function ? 
+			args.shift() 
+			: undefined
+		var options = args.pop() || {}
+
+		return this.walk(function(path, elem){
+			return elem != null ?
+				[func === undefined ?
+					elem
+					: func.call(that, elem, path)]
+				: [] }, options)
 	},
 
 
