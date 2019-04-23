@@ -115,8 +115,9 @@ requirejs([
 		//make('e')
 		// embeded browser...
 		make(browser.Browser(function(make){
-			make('nested browser item 0')
+			make('inlined browser item 0')
 			make(1)
+			make(2)
 		}))
 		// basic nested list...
 		make.nest('nested', [

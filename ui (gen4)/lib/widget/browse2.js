@@ -742,11 +742,11 @@ var BaseBrowserPrototype = {
 							// collapsed...
 							(item.collapsed ?
 									null
-							// renderable...
-							:item.sublist.render instanceof Function ?
-								item.sublist.render(context)
-							// list of items...
-							: item.sublist.map(_render)),
+								// renderable...
+								: item.sublist.render instanceof Function ?
+									item.sublist.render(context)
+								// list of items...
+								: item.sublist.map(_render)),
 							item, 
 							context)
 					// basic item...
@@ -1275,7 +1275,7 @@ var BaseBrowserPrototype = {
 	// 		-> result
 	//
 	//
-	// 	item_handler(path, elem, nested, sublist)
+	// 	item_handler(path, elem, index, nested, sublist)
 	// 		-> array
 	//
 	// 	nested(list[, options])
@@ -1317,6 +1317,7 @@ var BaseBrowserPrototype = {
 	// 	}
 	//
 	//
+	// XXX item count is broken...
 	// XXX EXPERIMENTAL...
 	walk: function(func, options){
 		var that = this
@@ -1330,6 +1331,9 @@ var BaseBrowserPrototype = {
 				|| typeof(args[0]) == typeof('str')) ? 
 			args.shift() 
 			: undefined
+		var i = typeof(args[0]) == typeof(123) ?
+			args.shift()
+			: 0
 		var path = (args[0] instanceof Array 
 				|| typeof(args[0]) == typeof('str')) ?
 			args.shift()
@@ -1374,35 +1378,39 @@ var BaseBrowserPrototype = {
 							: (list || sublist)
 						list = list === true ? sublist : list
 						nested_called = true
+
 						return (
-							// request manual iteration...
-							(skip || list === false) ?
-								[]
-							:list instanceof Array ?
-								walk(p, list)
-							// user-defined recursion...
-							: recursion instanceof Function ?
-								recursion.call(that, func, p, list, opts || options)
-							: list[recursion || 'walk'](func, p, opts || options)) }
+								// request manual iteration...
+								(skip || list === false) ?
+									[]
+								:list instanceof Array ?
+									walk(p, list)
+								// user-defined recursion...
+								: recursion instanceof Function ?
+									recursion.call(that, func, i, p, list, opts || options)
+								: list[recursion || 'walk'](func, i, p, opts || options))
+				   			.run(function(){
+								i += this.length-1 })}
 
 					return (
 							// inline browser or array...
 							(elem instanceof Array 
 									|| elem instanceof Browser) ?
+								// XXX need to decrement i here...
 								func.call(that, 
-									p = path, 
+									i, p = path, 
 									null, nested, 
 									sublist = elem)
 							// nested browser / array...
 							: (elem.sublist instanceof Browser 
 									|| elem.sublist instanceof Array) ?
 								func.call(that, 
-									p = path.concat([elem_id]), 
+									i++, p = path.concat([elem_id]), 
 									elem, nested, 
 									sublist = elem.sublist)
 							// normal element...
 							: func.call(that, 
-								p = path.concat([elem_id]), 
+								i++, p = path.concat([elem_id]), 
 								elem, null, 
 								sublist = null) )
 						// append nested elements...
@@ -1433,9 +1441,12 @@ var BaseBrowserPrototype = {
 		options = context.options
 		renderer = renderer || this
 
+		var getValue = function(item){
+			return item.value || item }
+
 		var items = this
 			.walk(
-				function(path, item, nested, sublist){
+				function(i, path, item, nested, sublist){
 					var indent = path.map(e => '  ').join('')
 					return (
 						// inline...
@@ -1444,16 +1455,19 @@ var BaseBrowserPrototype = {
 							// 		inline browser/list, i.e. ignoring 
 							// 		options.skipNested for inline stuff...
 							nested(true)
-								.map(e => indent + (e.value || e))
+								.map(function(e){
+									return indent + getValue(e) })
 						// nested...
 						: sublist ?
 							[item.value]
 								.concat(
 									nested()
-										.map(e => indent + (e.value || e)))
-						: [item.value || item]
+										.map(function(e){
+											return indent + getValue(e) }))
+						// single item...
+						: [getValue(item)]
 					) },
-				function(func, path, sublist, options){
+				function(func, i, path, sublist, options){
 					return sublist.text2(context) },
 				options)
 
@@ -1480,10 +1494,14 @@ var BaseBrowserPrototype = {
 		options = context.options
 		renderer = renderer || this
 
+		var getValue = function(item){
+			return item.value || item }
+
 		var items = this
 			.walk(
-				function(path, item, nested, sublist){
+				function(i, path, item, nested, sublist){
 					var indent = path.map(e => '  ').join('')
+					// XXX call renderers...
 					return (
 						// inline...
 						(item == null && sublist) ?
@@ -1491,20 +1509,21 @@ var BaseBrowserPrototype = {
 							// 		inline browser/list, i.e. ignoring 
 							// 		options.skipNested for inline stuff...
 							nested(true)
-								.map(e => indent + (e.value || e))
 						// nested...
 						: sublist ?
-							[item.value]
-								.concat(
-									nested()
-										.map(e => indent + (e.value || e)))
-						: [item.value || item]
+							renderer.renderNested(
+								that.renderNestedHeader(item, i, context),
+								nested(),
+								item, 
+								context)
+						// normal item...
+						: that.renderItem(item, i, context)
 					) },
 				function(func, path, sublist, options){
 					return sublist.render2(context) })
 
 		return context.root === this ?
-			items.join('\n')
+			renderer.renderList(items, context)
 			: items
 	},
 
@@ -1521,6 +1540,9 @@ var BaseBrowserPrototype = {
 		func = args[0] instanceof Function ? 
 			args.shift() 
 			: undefined
+		var i = typeof(args[0]) == typeof(123) ?
+			args.shift()
+			: 0
 		var path = (args[0] instanceof Array 
 				|| typeof(args[0]) == typeof('str')) ?
 			args.shift()
@@ -1528,17 +1550,19 @@ var BaseBrowserPrototype = {
 		var options = args.pop() || {}
 
 		return this.walk(
-			function(path, elem){
+			function(i, path, elem){
 				return elem != null ?
 					[func === undefined ?
 						elem
-						: func.call(that, elem, path)]
+						: func.call(that, elem, i, path)]
 					: [] }, 
-			function(_, path, sublist, options){
+			function(_, i, path, sublist, options){
 				// NOTE: this needs to call the actual func that the user
 				// 		gave us and not the constructed function that we 
 				// 		pass to .walk(..) above...
-				return sublist.map2(func, path, options) },
+				// XXX need to get the number of items passed here into current i...
+				return sublist.map2(func, i, path, options) },
+			i,
 			path, 
 			options)
 	},
