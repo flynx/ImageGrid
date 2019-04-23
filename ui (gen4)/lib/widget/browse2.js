@@ -1390,13 +1390,16 @@ var BaseBrowserPrototype = {
 									recursion.call(that, func, i, p, list, opts || options)
 								: list[recursion || 'walk'](func, i, p, opts || options))
 				   			.run(function(){
-								i += this.length-1 })}
+								console.log('---', i, this)
+								// XXX BUG: here we add up the sum of total level lengths...
+								// 		...i.e. for [a, b, [c, d]] this will be 2 + 4 
+								// 		and not 2 + 2...
+								i += this.length })}
 
 					return (
 							// inline browser or array...
 							(elem instanceof Array 
 									|| elem instanceof Browser) ?
-								// XXX need to decrement i here...
 								func.call(that, 
 									i, p = path, 
 									null, nested, 
