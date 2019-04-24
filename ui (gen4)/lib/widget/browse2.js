@@ -698,6 +698,7 @@ var BaseBrowserPrototype = {
 	// 		...there are two ways to go:
 	// 			- local recursion (as-is now or via .map(.., { .. }))
 	// 			- outer recursion (.map(..))
+	/* XXX LEGACY...
 	render: function(options){
 		var that = this
 		// XXX Q: should options and context be distinguished only via 
@@ -763,6 +764,7 @@ var BaseBrowserPrototype = {
 			// 		renderer like .renderNested(..) ???
 			: items
 	},
+	//*/
 
 	// Update state (make then render)...
 	//
@@ -1167,6 +1169,7 @@ var BaseBrowserPrototype = {
 	// 		- index nested stuff and lengths... (.sublist_length)
 	// 		- stop when target reached... (control callback???)
 	// XXX Q: should we have an option to treat groups as elements???
+	/* XXX LEGACY...
 	map: function(func, options){
 		var that = this
 
@@ -1235,14 +1238,13 @@ var BaseBrowserPrototype = {
 									: path.slice(), 
 								options)	
 						// value is Browser (inline)...
-						/*/ XXX legacy...
-						: elem.value instanceof Browser ?
-							elem.value.map(func, 
-								options.inlinedPaths ?
-									path.concat(elem.id)
-									: path.slice(), 
-								options)	
-						//*/
+						// XXX legacy...
+						//: elem.value instanceof Browser ?
+						//	elem.value.map(func, 
+						//		options.inlinedPaths ?
+						//			path.concat(elem.id)
+						//			: path.slice(), 
+						//		options)	
 						// .sublist is Browser (nested)...
 						: (!skipNested 
 								&& elem.sublist instanceof Browser) ?
@@ -1264,6 +1266,7 @@ var BaseBrowserPrototype = {
 
 		return walk(path, this.items) 
 	},
+	//*/
 
 
 
@@ -1317,6 +1320,7 @@ var BaseBrowserPrototype = {
 	// 	}
 	//
 	//
+	// XXX make sublist test customizable...
 	// XXX EXPERIMENTAL...
 	walk: function(func, options){
 		var that = this
@@ -1389,7 +1393,12 @@ var BaseBrowserPrototype = {
 									recursion.call(that, func, i, p, list, opts || options)
 								: list[recursion || 'walk'](func, i, p, opts || options))
 				   			.run(function(){
-								i += this.length })}
+								var res = this instanceof Array ? 
+									this 
+									: [this] 
+								i += this.length 
+								return res
+							})}
 
 					return (
 							// inline browser or array...
@@ -1421,7 +1430,8 @@ var BaseBrowserPrototype = {
 		return walk(i, path, this.items)
 	},
 
-	text2: function(options, renderer){
+	// XXX rename this??
+	text: function(options, renderer){
 		var that = this
 		// XXX Q: should options and context be distinguished only via 
 		// 		the .options attr as is the case now???
@@ -1466,7 +1476,7 @@ var BaseBrowserPrototype = {
 						: [getValue(item)]
 					) },
 				function(func, i, path, sublist, options){
-					return sublist.text2(context) },
+					return sublist.text(context) },
 				options)
 
 		return context.root === this ?
@@ -1474,8 +1484,8 @@ var BaseBrowserPrototype = {
 			: items
 	},
 
-	// XXX should this be able to render a specific sub-path???
-	render2: function(options, renderer){
+	// XXX test sublist via .render rather than instanceof...
+	render: function(options, renderer){
 		var that = this
 		// XXX Q: should options and context be distinguished only via 
 		// 		the .options attr as is the case now???
@@ -1489,6 +1499,7 @@ var BaseBrowserPrototype = {
 					//options: options || this.options || {},
 					options: Object.assign(
 						Object.create(this.options || {}),
+						// defaults...
 						// XXX is this the correct way to setup defaults???
 						{
 							iterateNonIterable: true,
@@ -1499,6 +1510,11 @@ var BaseBrowserPrototype = {
 		options = context.options
 		renderer = renderer || this
 
+		// XXX should we control render parameters (range, start, end, ...)
+		// 		from outside render and pass this info down to nested lists???
+		// 		...if yes how??
+		// 			- options
+		// 			- arg threading
 		var items = this
 			.walk(
 				function(i, path, item, nested, sublist){
@@ -1521,11 +1537,14 @@ var BaseBrowserPrototype = {
 						// normal item...
 						: [ renderer.renderItem(item, i, context) ] ) },
 				function(func, i, path, sublist, options){
-					return sublist.render2(context, renderer) },
+					return sublist.render(context, renderer) },
 				options)
 
+		// determine the render mode...
 		return context.root === this ?
+			// root context -> render list and return this...
 			renderer.renderList(items, context)
+			// nested context -> return item list...
 			: items
 	},
 
@@ -1533,7 +1552,7 @@ var BaseBrowserPrototype = {
 	// 		will reverse each level but keep the up-down order while 
 	// 		.map({reverseIteration: true}) is similar to .map().reverse()
 	// 		...not sure which is better or if we should support both...
-	map2: function(func, options){
+	map: function(func, options){
 		var that = this
 
 		// parse args...
@@ -1556,13 +1575,15 @@ var BaseBrowserPrototype = {
 				return elem != null ?
 					[func === undefined ?
 						elem
-						: func.call(that, elem, i, path)]
+						// XXX should this pass the current or the root 
+						// 		container to func???
+						: func.call(that, elem, i, path, that)]
 					: [] }, 
 			function(_, i, path, sublist, options){
 				// NOTE: this needs to call the actual func that the user
 				// 		gave us and not the constructed function that we 
 				// 		pass to .walk(..) above...
-				return sublist.map2(func, i, path, options) },
+				return sublist.map(func, i, path, options) },
 			i,
 			path, 
 			options)
@@ -1600,12 +1621,14 @@ var BaseBrowserPrototype = {
 	prev: function(){},
 
 	// XXX should there return an array or a .constructor(..) instance??
+	// XXX should these call respective methods (.forEach(..), .filter(..), 
+	// 		.reduce(..)) on the nested browsers???
 	forEach: function(func, options){
 		this.map(...arguments)
 		return this },
 	filter: function(func, options){
-		return this.map(function(e, p, b){
-			return func.call(this, e, p, b) ? [e] : [] })
+		return this.map(function(e, i, p, b){
+			return func.call(this, e, i, p, b) ? [e] : [] })
 		.flat() },
 	reduce: function(){},
 
