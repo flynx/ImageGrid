@@ -1631,7 +1631,12 @@ var BrowserPrototype = {
 	// 	- wrap a list of nodes (nested list) in a div
 	//
 	// Format:
-	// 	XXX
+	// 	if list of items passed:
+	// 		<div>
+	// 			<!-- items -->
+	// 			...
+	// 		</div>
+	// 	or same as .renderList(..)
 	//
 	// XXX revise...
 	finalizeRender: function(items, context){
