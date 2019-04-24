@@ -1521,7 +1521,7 @@ var BaseBrowserPrototype = {
 						// normal item...
 						: [ renderer.renderItem(item, i, context) ] ) },
 				function(func, i, path, sublist, options){
-					return sublist.render2(context) },
+					return sublist.render2(context, renderer) },
 				options)
 
 		return context.root === this ?
