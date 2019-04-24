@@ -1120,6 +1120,7 @@ var BaseBrowserPrototype = {
 	},
 
 
+	/* XXX LEGACY...
 	// Extended map...
 	//
 	//	Generic map...
@@ -1169,7 +1170,6 @@ var BaseBrowserPrototype = {
 	// 		- index nested stuff and lengths... (.sublist_length)
 	// 		- stop when target reached... (control callback???)
 	// XXX Q: should we have an option to treat groups as elements???
-	/* XXX LEGACY...
 	map: function(func, options){
 		var that = this
 
@@ -1311,7 +1311,10 @@ var BaseBrowserPrototype = {
 	// 		// If true skip iterating nested items...
 	// 		skipNested: <bool>,
 	//
-	// 		// XXX
+	// 		// If true, reverse iteration order...
+	// 		// NOTE: containing items will still precede the contained,
+	// 		//		i.e. this will reverse the level order but not 
+	// 		//		nesting order...
 	// 		reverseIteration: <bool>,
 	//
 	// 		// If true include inlined parent id in path...
@@ -1321,7 +1324,6 @@ var BaseBrowserPrototype = {
 	//
 	//
 	// XXX make sublist test customizable...
-	// XXX EXPERIMENTAL...
 	walk: function(func, options){
 		var that = this
 
@@ -1442,8 +1444,14 @@ var BaseBrowserPrototype = {
 					// NOTE: we are not combining this with .options as nested 
 					// 		lists can have their own unique sets of options 
 					// 		independently of the root list...
-					//options: options || this.options || {},
-					options: Object.assign(Object.create(this.options || {}), options || {}),
+					options: Object.assign(
+						Object.create(this.options || {}),
+						// defaults...
+						// XXX is this the correct way to setup defaults???
+						{
+							iterateNonIterable: true,
+						}, 
+						options || {}),
 				}
 			: options
 		options = context.options
@@ -1548,14 +1556,48 @@ var BaseBrowserPrototype = {
 			: items
 	},
 
-	// XXX this is different to .map(..) in that here options.reverseIteration 
-	// 		will reverse each level but keep the up-down order while 
-	// 		.map({reverseIteration: true}) is similar to .map().reverse()
-	// 		...not sure which is better or if we should support both...
+	// Extended map...
+	//
+	//	Get all items...
+	//	.map([options])
+	//		-> items
+	//
+	//	Map func to items...
+	//	.map(func[, options])
+	//		-> items
+	//
+	//
+	//
+	//	func(item, index, path, browser)
+	//		-> result
+	//
+	//
+	//
+	// For supported options see docs for .walk(..)
+	//
+	// By default this will not iterate items that are:
+	// 	- non-iterable (item.noniterable is true)
+	// 	- collapsed sub-items (item.collapsed is true)
+	//
+	// This extends the Array .map(..) by adding:
+	// 	- ability to run without arguments
+	// 	- support for options
+	//
+	//
+	// XXX make item access by index lazy... 
+	// 		- index nested stuff and lengths... (.sublist_length)
+	// 		- stop when target reached... (control callback???)
+	// XXX Q: should we have an option to treat groups as elements???
 	map: function(func, options){
 		var that = this
 
 		// parse args...
+		//
+		// NOTE: in addition to the user signatures documented above this
+		// 		also supports two variants used internally:
+		// 			.map(func, path[, options])
+		// 			.map(func, i, path[, options])
+		// 		these set the "base" path and index passed to func...
 		// XXX can we avoid argument parsing here???
 		var args = [...arguments]
 		func = args[0] instanceof Function ? 
