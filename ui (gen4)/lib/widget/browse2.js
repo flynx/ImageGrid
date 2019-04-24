@@ -482,6 +482,359 @@ var BaseBrowserPrototype = {
 			+ Date.now() },
 
 
+	//
+	// 	.walk(item_handler[, options])
+	// 		-> result
+	//
+	// 	.walk(item_handler, nested_handler[, options])
+	// 		-> result
+	//
+	//
+	// 	item_handler(path, elem, index, nested, sublist)
+	// 		-> array
+	//
+	// 	nested(list[, options])
+	// 		-> items
+	//
+	//
+	// 	XXX
+	// 	nested_handler(..)
+	// 		-> 
+	//
+	//
+	// 	Request manual iteration...
+	// 	nested(false)
+	// 		-> undefined
+	//
+	//
+	// options format:
+	// 	{
+	// 		// Iterate ALL items...
+	// 		//
+	// 		// NOTE: this if true overrides all other iteration coverage 
+	// 		//		options... 
+	// 		iterateAll: <bool>,
+	//
+	// 		// If true do not skip items with .noniterable set to true...
+	// 		iterateNonIterable: <bool>,
+	// 		// If true do not skip item.sublist of items with .collapsed 
+	// 		// set to true...
+	// 		iterateCollapsed: <bool>,
+	// 		// If true skip iterating nested items...
+	// 		skipNested: <bool>,
+	//
+	// 		// If true, reverse iteration order...
+	// 		// NOTE: containing items will still precede the contained,
+	// 		//		i.e. this will reverse the level order but not 
+	// 		//		nesting order...
+	// 		reverseIteration: <bool>,
+	//
+	// 		// If true include inlined parent id in path...
+	// 		// XXX not implemented yet -- can we implement this???...
+	// 		inlinedPaths: <bool>,
+	// 	}
+	//
+	//
+	// XXX make sublist test customizable...
+	walk: function(func, options){
+		var that = this
+
+		// parse args...
+		var args = [...arguments]
+		func = args[0] instanceof Function ? 
+			args.shift() 
+			: undefined
+		var recursion = (args[0] instanceof Function 
+				|| typeof(args[0]) == typeof('str')) ? 
+			args.shift() 
+			: undefined
+		var i = typeof(args[0]) == typeof(123) ?
+			args.shift()
+			: 0
+		var path = (args[0] instanceof Array 
+				|| typeof(args[0]) == typeof('str')) ?
+			args.shift()
+			: []
+		path = path instanceof Array ? path : [path]
+		var options = args.pop() || {}
+
+		// options...
+		options = Object.assign(Object.create(this.options || {}), options || {})
+		var iterateNonIterable = options.iterateAll || options.iterateNonIterable
+		var iterateCollapsed = options.iterateAll || options.iterateCollapsed
+		var skipNested = !options.iterateAll && options.skipNested
+		var reverse = !!options.reverseIteration
+
+		// level walk function...
+		var walk = function(i, path, list){
+			return list
+				// reverse the items...
+				.run(function(){
+					return reverse ?
+						// NOTE: we .slice() as we do not want to affect 
+						// 		the actual list...
+						this.slice().reverse() 
+						: this })
+				.map(function(elem){
+					// skip non-iterable items...
+					if(!iterateNonIterable && elem.noniterable){
+						return []
+					}
+
+					var elem_id = elem.id || elem.value
+					// these will be set in the return expression below...
+					var sublist
+					var p 
+
+					// nested browser/list handler...
+					var nested_called = false
+					var nested = function(list, opts){
+						var skip = skipNested && !list
+						list = (!iterateCollapsed && elem.collapsed) ?
+							[]
+							: (list || sublist)
+						list = list === true ? sublist : list
+						nested_called = true
+
+						return (
+								// request manual iteration...
+								(skip || list === false) ?
+									[]
+								:list instanceof Array ?
+									walk(i, p, list)
+								// user-defined recursion...
+								: recursion instanceof Function ?
+									recursion.call(that, func, i, p, list, opts || options)
+								: list[recursion || 'walk'](func, i, p, opts || options))
+				   			.run(function(){
+								var res = this instanceof Array ? 
+									this 
+									: [this] 
+								i += this.length 
+								return res
+							})}
+
+					return (
+							// inline browser or array...
+							(elem instanceof Array 
+									|| elem instanceof Browser) ?
+								func.call(that, 
+									i, p = path, 
+									null, nested, 
+									sublist = elem)
+							// nested browser / array...
+							: (elem.sublist instanceof Browser 
+									|| elem.sublist instanceof Array) ?
+								func.call(that, 
+									i++, p = path.concat([elem_id]), 
+									elem, nested, 
+									sublist = elem.sublist)
+							// normal element...
+							: func.call(that, 
+								i++, p = path.concat([elem_id]), 
+								elem, null, 
+								sublist = null) )
+						// append nested elements...
+						.concat((!sublist || nested_called) ? 
+							[] 
+							: nested(sublist))
+				})
+				.flat() }
+
+		return walk(i, path, this.items)
+	},
+
+
+	// Text render...
+	//
+	// This is mainly here for doc/debug purposes...
+	//
+	// XXX rename this??
+	text: function(options, renderer){
+		var that = this
+		// XXX Q: should options and context be distinguished only via 
+		// 		the .options attr as is the case now???
+		// 		...see no reason why not, though it does not feel right...
+		var context = (options == null || options.options == null) ?
+				{
+					root: this,
+					// NOTE: we are not combining this with .options as nested 
+					// 		lists can have their own unique sets of options 
+					// 		independently of the root list...
+					options: Object.assign(
+						Object.create(this.options || {}),
+						// defaults...
+						// XXX is this the correct way to setup defaults???
+						{
+							iterateNonIterable: true,
+						}, 
+						options || {}),
+				}
+			: options
+		options = context.options
+		renderer = renderer || this
+
+		var getValue = function(item){
+			return item.value || item }
+
+		var items = this
+			.walk(
+				function(i, path, item, nested, sublist){
+					var indent = path.map(e => '  ').join('')
+					return (
+						// inline...
+						(item == null && sublist) ?
+							// NOTE: here we are forcing rendering of the 
+							// 		inline browser/list, i.e. ignoring 
+							// 		options.skipNested for inline stuff...
+							nested(true)
+								.map(function(e){
+									return indent + getValue(e) })
+						// nested...
+						: sublist ?
+							[item.value]
+								.concat(
+									nested()
+										.map(function(e){
+											return indent + getValue(e) }))
+						// single item...
+						: [getValue(item)]
+					) },
+				function(func, i, path, sublist, options){
+					return sublist.text(context) },
+				options)
+
+		return context.root === this ?
+			items.join('\n')
+			: items
+	},
+
+
+	// Extended map...
+	//
+	//	Get all items...
+	//	.map([options])
+	//		-> items
+	//
+	//	Map func to items...
+	//	.map(func[, options])
+	//		-> items
+	//
+	//
+	//
+	//	func(item, index, path, browser)
+	//		-> result
+	//
+	//
+	//
+	// For supported options see docs for .walk(..)
+	//
+	// By default this will not iterate items that are:
+	// 	- non-iterable (item.noniterable is true)
+	// 	- collapsed sub-items (item.collapsed is true)
+	//
+	// This extends the Array .map(..) by adding:
+	// 	- ability to run without arguments
+	// 	- support for options
+	//
+	//
+	// XXX make item access by index lazy... 
+	// 		- index nested stuff and lengths... (.sublist_length)
+	// 		- stop when target reached... (control callback???)
+	// XXX Q: should we have an option to treat groups as elements???
+	map: function(func, options){
+		var that = this
+
+		// parse args...
+		//
+		// NOTE: in addition to the user signatures documented above this
+		// 		also supports two variants used internally:
+		// 			.map(func, path[, options])
+		// 			.map(func, i, path[, options])
+		// 		these set the "base" path and index passed to func...
+		// XXX can we avoid argument parsing here???
+		var args = [...arguments]
+		func = args[0] instanceof Function ? 
+			args.shift() 
+			: undefined
+		var i = typeof(args[0]) == typeof(123) ?
+			args.shift()
+			: 0
+		var path = (args[0] instanceof Array 
+				|| typeof(args[0]) == typeof('str')) ?
+			args.shift()
+			: []
+		var options = args.pop() || {}
+
+		return this.walk(
+			function(i, path, elem){
+				return elem != null ?
+					[func === undefined ?
+						elem
+						// XXX should this pass the current or the root 
+						// 		container to func???
+						: func.call(that, elem, i, path, that)]
+					: [] }, 
+			function(_, i, path, sublist, options){
+				// NOTE: this needs to call the actual func that the user
+				// 		gave us and not the constructed function that we 
+				// 		pass to .walk(..) above...
+				return sublist.map(func, i, path, options) },
+			i,
+			path, 
+			options)
+	},
+
+
+	// Sublist map functions...
+	// NOTE: there are different from .map(..) in that instead of paths 
+	// 		func(..) will get indexes in the current browser...
+	// NOTE: these will return a sparse array...
+	sublists: function(func, options){
+		var that = this
+		//options = options || {}
+		options = Object.assign(Object.create(this.options || {}), options || {})
+		var skipNested = options.skipNested
+		var skipInlined = options.skipInlined
+
+		var res = []
+		this.items
+			.forEach(function(elem, i){
+				if((!skipInlined && elem.value instanceof Browser)
+							|| (!skipNested && elem.sublist)){
+					res[i] = func ?
+						func.call(that, elem, i, that)
+						: elem 
+				} })
+		return res 
+	},
+	nested: function(func){
+		return this.sublists(func, {skipInlined: true}) },
+	inlined: function(func){
+		return this.sublists(func, {skipNested: true}) },
+
+	next: function(){},
+	prev: function(){},
+
+	// XXX should there return an array or a .constructor(..) instance??
+	// XXX should these call respective methods (.forEach(..), .filter(..), 
+	// 		.reduce(..)) on the nested browsers???
+	forEach: function(func, options){
+		this.map(...arguments)
+		return this },
+	filter: function(func, options){
+		return this.map(function(e, i, p, b){
+			return func.call(this, e, i, p, b) ? [e] : [] })
+		.flat() },
+	reduce: function(){},
+
+
+	// XXX do we need edit ability here? 
+	// 		i.e. .set(..), .remove(..), .sort(..), ...
+	// 		...if we are going to implement editing then we'll need to 
+	// 		callback the user code or update the user state...
+
+
 
 	// Make .items and .item_key_index...
 	//
@@ -765,6 +1118,90 @@ var BaseBrowserPrototype = {
 			: items
 	},
 	//*/
+
+
+	// Render state...
+	//
+	//	.render()
+	//	.render(options)
+	//	.render(context)
+	//		-> state
+	//
+	//
+	// context format:
+	// 	{
+	// 		root: <root-browser>,
+	// 		options: <options>,
+	// 	}
+	//
+	//
+	// NOTE: currently options and context are distinguished only via 
+	// 		the .options attribute...
+	//
+	// XXX test sublist via .render rather than instanceof...
+	render: function(options, renderer){
+		var that = this
+		// XXX Q: should options and context be distinguished only via 
+		// 		the .options attr as is the case now???
+		// 		...see no reason why not, though it does not feel right...
+		var context = (options == null || options.options == null) ?
+				{
+					root: this,
+					// NOTE: we are not combining this with .options as nested 
+					// 		lists can have their own unique sets of options 
+					// 		independently of the root list...
+					//options: options || this.options || {},
+					options: Object.assign(
+						Object.create(this.options || {}),
+						// defaults...
+						// XXX is this the correct way to setup defaults???
+						{
+							iterateNonIterable: true,
+						}, 
+						options || {}),
+				}
+			: options
+		options = context.options
+		renderer = renderer || this
+
+		// XXX should we control render parameters (range, start, end, ...)
+		// 		from outside render and pass this info down to nested lists???
+		// 		...if yes how??
+		// 			- options
+		// 			- arg threading
+		var items = this
+			.walk(
+				function(i, path, item, nested, sublist){
+					return (
+						// inline...
+						(item == null && sublist) ?
+							// NOTE: here we are forcing rendering of the 
+							// 		inline browser/list, i.e. ignoring 
+							// 		options.skipNested for inline stuff...
+							// NOTE: we here do not distinguish between
+							// 		inlined lists and browsers... (XXX ???)
+							[ renderer.renderGroup(nested(true), context) ]
+						// nested...
+						: sublist ?
+							[ renderer.renderNested(
+								renderer.renderNestedHeader(item, i, context),
+								nested(),
+								item, 
+								context) ]
+						// normal item...
+						: [ renderer.renderItem(item, i, context) ] ) },
+				function(func, i, path, sublist, options){
+					return sublist.render(context, renderer) },
+				options)
+
+		// determine the render mode...
+		return context.root === this ?
+			// root context -> render list and return this...
+			renderer.renderList(items, context)
+			// nested context -> return item list...
+			: items
+	},
+	
 
 	// Update state (make then render)...
 	//
@@ -1270,415 +1707,6 @@ var BaseBrowserPrototype = {
 
 
 
-	//
-	// 	.walk(item_handler[, options])
-	// 		-> result
-	//
-	// 	.walk(item_handler, nested_handler[, options])
-	// 		-> result
-	//
-	//
-	// 	item_handler(path, elem, index, nested, sublist)
-	// 		-> array
-	//
-	// 	nested(list[, options])
-	// 		-> items
-	//
-	//
-	// 	XXX
-	// 	nested_handler(..)
-	// 		-> 
-	//
-	//
-	// 	Request manual iteration...
-	// 	nested(false)
-	// 		-> undefined
-	//
-	//
-	// options format:
-	// 	{
-	// 		// Iterate ALL items...
-	// 		//
-	// 		// NOTE: this if true overrides all other iteration coverage 
-	// 		//		options... 
-	// 		iterateAll: <bool>,
-	//
-	// 		// If true do not skip items with .noniterable set to true...
-	// 		iterateNonIterable: <bool>,
-	// 		// If true do not skip item.sublist of items with .collapsed 
-	// 		// set to true...
-	// 		iterateCollapsed: <bool>,
-	// 		// If true skip iterating nested items...
-	// 		skipNested: <bool>,
-	//
-	// 		// If true, reverse iteration order...
-	// 		// NOTE: containing items will still precede the contained,
-	// 		//		i.e. this will reverse the level order but not 
-	// 		//		nesting order...
-	// 		reverseIteration: <bool>,
-	//
-	// 		// If true include inlined parent id in path...
-	// 		// XXX not implemented yet -- can we implement this???...
-	// 		inlinedPaths: <bool>,
-	// 	}
-	//
-	//
-	// XXX make sublist test customizable...
-	walk: function(func, options){
-		var that = this
-
-		// parse args...
-		var args = [...arguments]
-		func = args[0] instanceof Function ? 
-			args.shift() 
-			: undefined
-		var recursion = (args[0] instanceof Function 
-				|| typeof(args[0]) == typeof('str')) ? 
-			args.shift() 
-			: undefined
-		var i = typeof(args[0]) == typeof(123) ?
-			args.shift()
-			: 0
-		var path = (args[0] instanceof Array 
-				|| typeof(args[0]) == typeof('str')) ?
-			args.shift()
-			: []
-		path = path instanceof Array ? path : [path]
-		var options = args.pop() || {}
-
-		// options...
-		options = Object.assign(Object.create(this.options || {}), options || {})
-		var iterateNonIterable = options.iterateAll || options.iterateNonIterable
-		var iterateCollapsed = options.iterateAll || options.iterateCollapsed
-		var skipNested = !options.iterateAll && options.skipNested
-		var reverse = !!options.reverseIteration
-
-		// level walk function...
-		var walk = function(i, path, list){
-			return list
-				// reverse the items...
-				.run(function(){
-					return reverse ?
-						// NOTE: we .slice() as we do not want to affect 
-						// 		the actual list...
-						this.slice().reverse() 
-						: this })
-				.map(function(elem){
-					// skip non-iterable items...
-					if(!iterateNonIterable && elem.noniterable){
-						return []
-					}
-
-					var elem_id = elem.id || elem.value
-					// these will be set in the return expression below...
-					var sublist
-					var p 
-
-					// nested browser/list handler...
-					var nested_called = false
-					var nested = function(list, opts){
-						var skip = skipNested && !list
-						list = (!iterateCollapsed && elem.collapsed) ?
-							[]
-							: (list || sublist)
-						list = list === true ? sublist : list
-						nested_called = true
-
-						return (
-								// request manual iteration...
-								(skip || list === false) ?
-									[]
-								:list instanceof Array ?
-									walk(i, p, list)
-								// user-defined recursion...
-								: recursion instanceof Function ?
-									recursion.call(that, func, i, p, list, opts || options)
-								: list[recursion || 'walk'](func, i, p, opts || options))
-				   			.run(function(){
-								var res = this instanceof Array ? 
-									this 
-									: [this] 
-								i += this.length 
-								return res
-							})}
-
-					return (
-							// inline browser or array...
-							(elem instanceof Array 
-									|| elem instanceof Browser) ?
-								func.call(that, 
-									i, p = path, 
-									null, nested, 
-									sublist = elem)
-							// nested browser / array...
-							: (elem.sublist instanceof Browser 
-									|| elem.sublist instanceof Array) ?
-								func.call(that, 
-									i++, p = path.concat([elem_id]), 
-									elem, nested, 
-									sublist = elem.sublist)
-							// normal element...
-							: func.call(that, 
-								i++, p = path.concat([elem_id]), 
-								elem, null, 
-								sublist = null) )
-						// append nested elements...
-						.concat((!sublist || nested_called) ? 
-							[] 
-							: nested(sublist))
-				})
-				.flat() }
-
-		return walk(i, path, this.items)
-	},
-
-	// XXX rename this??
-	text: function(options, renderer){
-		var that = this
-		// XXX Q: should options and context be distinguished only via 
-		// 		the .options attr as is the case now???
-		// 		...see no reason why not, though it does not feel right...
-		var context = (options == null || options.options == null) ?
-				{
-					root: this,
-					// NOTE: we are not combining this with .options as nested 
-					// 		lists can have their own unique sets of options 
-					// 		independently of the root list...
-					options: Object.assign(
-						Object.create(this.options || {}),
-						// defaults...
-						// XXX is this the correct way to setup defaults???
-						{
-							iterateNonIterable: true,
-						}, 
-						options || {}),
-				}
-			: options
-		options = context.options
-		renderer = renderer || this
-
-		var getValue = function(item){
-			return item.value || item }
-
-		var items = this
-			.walk(
-				function(i, path, item, nested, sublist){
-					var indent = path.map(e => '  ').join('')
-					return (
-						// inline...
-						(item == null && sublist) ?
-							// NOTE: here we are forcing rendering of the 
-							// 		inline browser/list, i.e. ignoring 
-							// 		options.skipNested for inline stuff...
-							nested(true)
-								.map(function(e){
-									return indent + getValue(e) })
-						// nested...
-						: sublist ?
-							[item.value]
-								.concat(
-									nested()
-										.map(function(e){
-											return indent + getValue(e) }))
-						// single item...
-						: [getValue(item)]
-					) },
-				function(func, i, path, sublist, options){
-					return sublist.text(context) },
-				options)
-
-		return context.root === this ?
-			items.join('\n')
-			: items
-	},
-
-	// XXX test sublist via .render rather than instanceof...
-	render: function(options, renderer){
-		var that = this
-		// XXX Q: should options and context be distinguished only via 
-		// 		the .options attr as is the case now???
-		// 		...see no reason why not, though it does not feel right...
-		var context = (options == null || options.options == null) ?
-				{
-					root: this,
-					// NOTE: we are not combining this with .options as nested 
-					// 		lists can have their own unique sets of options 
-					// 		independently of the root list...
-					//options: options || this.options || {},
-					options: Object.assign(
-						Object.create(this.options || {}),
-						// defaults...
-						// XXX is this the correct way to setup defaults???
-						{
-							iterateNonIterable: true,
-						}, 
-						options || {}),
-				}
-			: options
-		options = context.options
-		renderer = renderer || this
-
-		// XXX should we control render parameters (range, start, end, ...)
-		// 		from outside render and pass this info down to nested lists???
-		// 		...if yes how??
-		// 			- options
-		// 			- arg threading
-		var items = this
-			.walk(
-				function(i, path, item, nested, sublist){
-					return (
-						// inline...
-						(item == null && sublist) ?
-							// NOTE: here we are forcing rendering of the 
-							// 		inline browser/list, i.e. ignoring 
-							// 		options.skipNested for inline stuff...
-							// NOTE: we here do not distinguish between
-							// 		inlined lists and browsers... (XXX ???)
-							[ renderer.renderGroup(nested(true), context) ]
-						// nested...
-						: sublist ?
-							[ renderer.renderNested(
-								renderer.renderNestedHeader(item, i, context),
-								nested(),
-								item, 
-								context) ]
-						// normal item...
-						: [ renderer.renderItem(item, i, context) ] ) },
-				function(func, i, path, sublist, options){
-					return sublist.render(context, renderer) },
-				options)
-
-		// determine the render mode...
-		return context.root === this ?
-			// root context -> render list and return this...
-			renderer.renderList(items, context)
-			// nested context -> return item list...
-			: items
-	},
-
-	// Extended map...
-	//
-	//	Get all items...
-	//	.map([options])
-	//		-> items
-	//
-	//	Map func to items...
-	//	.map(func[, options])
-	//		-> items
-	//
-	//
-	//
-	//	func(item, index, path, browser)
-	//		-> result
-	//
-	//
-	//
-	// For supported options see docs for .walk(..)
-	//
-	// By default this will not iterate items that are:
-	// 	- non-iterable (item.noniterable is true)
-	// 	- collapsed sub-items (item.collapsed is true)
-	//
-	// This extends the Array .map(..) by adding:
-	// 	- ability to run without arguments
-	// 	- support for options
-	//
-	//
-	// XXX make item access by index lazy... 
-	// 		- index nested stuff and lengths... (.sublist_length)
-	// 		- stop when target reached... (control callback???)
-	// XXX Q: should we have an option to treat groups as elements???
-	map: function(func, options){
-		var that = this
-
-		// parse args...
-		//
-		// NOTE: in addition to the user signatures documented above this
-		// 		also supports two variants used internally:
-		// 			.map(func, path[, options])
-		// 			.map(func, i, path[, options])
-		// 		these set the "base" path and index passed to func...
-		// XXX can we avoid argument parsing here???
-		var args = [...arguments]
-		func = args[0] instanceof Function ? 
-			args.shift() 
-			: undefined
-		var i = typeof(args[0]) == typeof(123) ?
-			args.shift()
-			: 0
-		var path = (args[0] instanceof Array 
-				|| typeof(args[0]) == typeof('str')) ?
-			args.shift()
-			: []
-		var options = args.pop() || {}
-
-		return this.walk(
-			function(i, path, elem){
-				return elem != null ?
-					[func === undefined ?
-						elem
-						// XXX should this pass the current or the root 
-						// 		container to func???
-						: func.call(that, elem, i, path, that)]
-					: [] }, 
-			function(_, i, path, sublist, options){
-				// NOTE: this needs to call the actual func that the user
-				// 		gave us and not the constructed function that we 
-				// 		pass to .walk(..) above...
-				return sublist.map(func, i, path, options) },
-			i,
-			path, 
-			options)
-	},
-
-
-	// Sublist map functions...
-	// NOTE: there are different from .map(..) in that instead of paths 
-	// 		func(..) will get indexes in the current browser...
-	// NOTE: these will return a sparse array...
-	sublists: function(func, options){
-		var that = this
-		//options = options || {}
-		options = Object.assign(Object.create(this.options || {}), options || {})
-		var skipNested = options.skipNested
-		var skipInlined = options.skipInlined
-
-		var res = []
-		this.items
-			.forEach(function(elem, i){
-				if((!skipInlined && elem.value instanceof Browser)
-							|| (!skipNested && elem.sublist)){
-					res[i] = func ?
-						func.call(that, elem, i, that)
-						: elem 
-				} })
-		return res 
-	},
-	nested: function(func){
-		return this.sublists(func, {skipInlined: true}) },
-	inlined: function(func){
-		return this.sublists(func, {skipNested: true}) },
-
-	next: function(){},
-	prev: function(){},
-
-	// XXX should there return an array or a .constructor(..) instance??
-	// XXX should these call respective methods (.forEach(..), .filter(..), 
-	// 		.reduce(..)) on the nested browsers???
-	forEach: function(func, options){
-		this.map(...arguments)
-		return this },
-	filter: function(func, options){
-		return this.map(function(e, i, p, b){
-			return func.call(this, e, i, p, b) ? [e] : [] })
-		.flat() },
-	reduce: function(){},
-
-
-	// XXX do we need edit ability here? 
-	// 		i.e. .set(..), .remove(..), .sort(..), ...
-	// 		...if we are going to implement editing then we'll need to 
-	// 		callback the user code or update the user state...
 
 
 	// Events...
