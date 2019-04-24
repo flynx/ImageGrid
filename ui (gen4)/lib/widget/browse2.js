@@ -1473,7 +1473,8 @@ var BaseBrowserPrototype = {
 			items.join('\n')
 			: items
 	},
-	// XXX
+
+	// XXX still need to wrap inline lists of items (groups and friends)...
 	render2: function(options, renderer){
 		var that = this
 		// XXX Q: should options and context be distinguished only via 
@@ -1486,7 +1487,13 @@ var BaseBrowserPrototype = {
 					// 		lists can have their own unique sets of options 
 					// 		independently of the root list...
 					//options: options || this.options || {},
-					options: Object.assign(Object.create(this.options || {}), options || {}),
+					options: Object.assign(
+						Object.create(this.options || {}),
+						// XXX is this the correct way to setup defaults???
+						{
+							iterateNonIterable: true,
+						}, 
+						options || {}),
 				}
 			: options
 		options = context.options
@@ -1502,6 +1509,7 @@ var BaseBrowserPrototype = {
 					// XXX call renderers...
 					return (
 						// inline...
+						// XXX need to wrap groups/inline stuff...
 						(item == null && sublist) ?
 							// NOTE: here we are forcing rendering of the 
 							// 		inline browser/list, i.e. ignoring 
@@ -1509,16 +1517,17 @@ var BaseBrowserPrototype = {
 							nested(true)
 						// nested...
 						: sublist ?
-							renderer.renderNested(
-								that.renderNestedHeader(item, i, context),
+							[renderer.renderNested(
+								renderer.renderNestedHeader(item, i, context),
 								nested(),
 								item, 
-								context)
+								context)]
 						// normal item...
-						: that.renderItem(item, i, context)
+						: [renderer.renderItem(item, i, context)]
 					) },
-				function(func, path, sublist, options){
-					return sublist.render2(context) })
+				function(func, i, path, sublist, options){
+					return sublist.render2(context) },
+				options)
 
 		return context.root === this ?
 			renderer.renderList(items, context)
