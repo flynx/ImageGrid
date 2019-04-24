@@ -828,6 +828,244 @@ var BaseBrowserPrototype = {
 		.flat() },
 	reduce: function(){},
 
+	// Get item...
+	//
+	// 	.get()
+	// 	.get(id)
+	// 	.get(index)
+	// 	.get(path)
+	// 		-> item
+	// 		-> undefined
+	//
+	//
+	// options format:
+	// 	{
+	// 		ignoreKeywords: <bool>,
+	//
+	// 		// rest of the options are the same as for .map(..)
+	// 		...
+	// 	}
+	//
+	//
+	// XXX this is not too fast for indexing very long lists...
+	// XXX use cache for these -- currently these use .map(..)...
+	// XXX do we need to support negative indexes???
+	get: function(key, options){
+		key = key == null ? 0 : key
+		key = typeof(key) == typeof('str') ?
+			key.split(/[\\\/]/g)
+				.filter(function(e){ return e.length > 0 })
+			: key
+		key = typeof(key) == typeof('str') ?
+			[key]
+			: key
+
+		options = Object.assign(Object.create(this.options || {}), options || {})
+		var iterateCollapsed = options.iterateAll || options.iterateCollapsed
+		var ignoreKeywords = options.ignoreKeywords
+
+		// keywords...
+		if(!ignoreKeywords){
+			// XXX don't like how this feels...
+			if(key == 'next' || key == 'prev'){
+				var reference = this.focused
+				key = key == 'next' ?
+					(reference ? 
+						this.indexOf(reference) + 1 
+						: 0)
+					: (reference ? 
+						this.indexOf(reference) - 1 
+						: -1)
+			}
+
+			if(key == 'first'){
+				var res = this.items[0]
+				return res.value instanceof Browser ?
+					res.value.get(key, options)
+					: res
+
+			} else if(key == 'last'){
+				var res = this.items[this.items.length - 1]
+				return res.value instanceof Browser ?
+						res.value.get(key, options)
+					: res.sublist && (!this.collapsed || iterateCollapsed) ?
+						(res.sublist instanceof Browser ?
+							res.sublist.get(key, options)
+							: res.sublist[res.sublist.length - 1])
+					: res
+			}
+		}
+
+		// get path...
+		if(key instanceof Array){
+			var res = this.item_key_index[key.shift()]
+			return key.length == 0 ?
+				res
+				// nested...
+				: iterateCollapsed || !res.collapsed ?
+					res.sublist.get(key, options) 
+				: undefined }
+
+		// get index...
+		// XXX getting an element by index is o(n) and not o(1)...
+		// 		...unless we cache .sublists() not sure if this can be 
+		// 		made better in the general case...
+		// XXX do we need to support negative indexes???
+		var Stop = new Error('.get(..): Result found exception.')
+		var i = 0
+		var res
+		try {
+			this.map(function(e){
+				res = key == i ?
+					e
+					: res
+				if(res){
+					throw Stop }
+				i++
+			}, options)
+		} catch(e){
+			if(e === Stop){
+				return res
+			}
+			throw e
+		}
+
+		return res
+	},
+	// XXX move these to a more logical spot...
+	// XXX these are almost identical -- reuse???
+	indexOf: function(item, options){
+		item = typeof(item) == typeof('str') ?
+			item.split(/[\\\/]/g)
+			: item
+
+		var Stop = new Error('.indexOf(..): Result found exception.')
+
+		var i = 0
+		try{
+			this.map(function(e, p){
+				if(item instanceof Array ? item.cmp(p) : (item === e)){
+					throw Stop }
+				i++
+			}, options)
+
+		} catch(e){
+			if(e === Stop){
+				return i
+			}
+		}
+		return -1
+	},
+	pathOf: function(item, options){
+		var Stop = new Error('.pathOf(..): Result found exception.')
+
+		var path
+		var i = 0
+		try{
+			this.map(function(e, p){
+				path = p
+				if(typeof(item) == typeof(123) ? item == i : (item === e)){
+					throw Stop }
+				i++
+			}, options)
+
+		} catch(e){
+			if(e === Stop){
+				return path
+			}
+		}
+		return undefined
+	},
+
+	// Like .get(.., {iterateCollapsed: true}) but will expand all the 
+	// path items to reveal the target...
+	// XXX should this return the item or this???
+	reveal: function(key, options){
+		// get the item...
+		var res = this.get(key, Object.assign({iterateCollapsed: true}, options))
+
+		// expand the path up...
+		var cur = res.parent
+		while(cur && cur.parent instanceof Browser){
+			delete (cur.parent.item_key_index[cur.id]
+				|| cur.parent.items
+					.filter(function(e){ 
+						return e.sublist === cur })
+				.shift()).collapsed
+			cur = cur.parent }
+
+		// re-render...
+		this.render()
+
+		return res
+	},
+
+
+	//
+	//	.find(id[, options])
+	//	.find(index[, options])
+	//	.find(path[, options])
+	//	.find(func[, options])
+	//		-> list
+	//
+	// XXX add '**' patterns...
+	// XXX should this return item paths???
+	// 		...one way to do this is to return an object instead of a list...
+	find: function(query, options){
+		query = typeof(query) == typeof('str') ?
+			query.split(/[\\\/]/g)
+				.filter(function(e){ return e.length > 0 })
+			: query
+		query = typeof(query) == typeof('str') ?
+			[query]
+			: query
+		query = query instanceof Array ?
+			query
+				.map(function(d){
+					return d == '*' ?
+							d
+						: d.indexOf('*') >= 0 ?
+							new RegExp(d
+								.replace(/\*/g, '.*'))
+						: d})
+			: query
+
+		var i = -1
+		return this
+			.filter(function(e, p){
+				i++
+				return (query === e
+					|| (
+						// index...
+						typeof(query) == typeof(123) ?
+							query == i
+						// predicate...
+						: query instanceof Function ?
+							// XXX revise signature...
+							query.call(this, e, p, i, this)
+						// regular expression...
+						: query instanceof RegExp ?
+							query.test(p.join('/'))
+						// direct path comparison...
+						: query instanceof Array ?
+							query.cmp(p)
+							|| (query.length == p.length
+								&& query
+									.filter(function(q, i){
+										return q == '*' 
+											|| (q instanceof RegExp 
+												&& q.test(p[i]))
+											|| q == p[i] })
+									.length == p.length)
+						: false)) }, options) },
+
+	// XXX support: up/down/left/right/first/last/next/prev
+	// XXX extend support for screen oriented nav in a subclass...
+	navigate: function(direction){
+		// XXX get then return element...
+	},
+
+
 
 	// XXX do we need edit ability here? 
 	// 		i.e. .set(..), .remove(..), .sort(..), ...
@@ -1127,243 +1365,7 @@ var BaseBrowserPrototype = {
 			.render(options) },
 
 
-	// Get item...
-	//
-	// 	.get()
-	// 	.get(id)
-	// 	.get(index)
-	// 	.get(path)
-	// 		-> item
-	// 		-> undefined
-	//
-	//
-	// options format:
-	// 	{
-	// 		ignoreKeywords: <bool>,
-	//
-	// 		// rest of the options are the same as for .map(..)
-	// 		...
-	// 	}
-	//
-	//
-	// XXX this is not too fast for indexing very long lists...
-	// XXX use cache for these -- currently these use .map(..)...
-	// XXX do we need to support negative indexes???
-	get: function(key, options){
-		key = key == null ? 0 : key
-		key = typeof(key) == typeof('str') ?
-			key.split(/[\\\/]/g)
-				.filter(function(e){ return e.length > 0 })
-			: key
-		key = typeof(key) == typeof('str') ?
-			[key]
-			: key
-
-		options = Object.assign(Object.create(this.options || {}), options || {})
-		var iterateCollapsed = options.iterateAll || options.iterateCollapsed
-		var ignoreKeywords = options.ignoreKeywords
-
-		// keywords...
-		if(!ignoreKeywords){
-			// XXX don't like how this feels...
-			if(key == 'next' || key == 'prev'){
-				var reference = this.focused
-				key = key == 'next' ?
-					(reference ? 
-						this.indexOf(reference) + 1 
-						: 0)
-					: (reference ? 
-						this.indexOf(reference) - 1 
-						: -1)
-			}
-
-			if(key == 'first'){
-				var res = this.items[0]
-				return res.value instanceof Browser ?
-					res.value.get(key, options)
-					: res
-
-			} else if(key == 'last'){
-				var res = this.items[this.items.length - 1]
-				return res.value instanceof Browser ?
-						res.value.get(key, options)
-					: res.sublist && (!this.collapsed || iterateCollapsed) ?
-						(res.sublist instanceof Browser ?
-							res.sublist.get(key, options)
-							: res.sublist[res.sublist.length - 1])
-					: res
-			}
-		}
-
-		// get path...
-		if(key instanceof Array){
-			var res = this.item_key_index[key.shift()]
-			return key.length == 0 ?
-				res
-				// nested...
-				: iterateCollapsed || !res.collapsed ?
-					res.sublist.get(key, options) 
-				: undefined }
-
-		// get index...
-		// XXX getting an element by index is o(n) and not o(1)...
-		// 		...unless we cache .sublists() not sure if this can be 
-		// 		made better in the general case...
-		// XXX do we need to support negative indexes???
-		var Stop = new Error('.get(..): Result found exception.')
-		var i = 0
-		var res
-		try {
-			this.map(function(e){
-				res = key == i ?
-					e
-					: res
-				if(res){
-					throw Stop }
-				i++
-			}, options)
-		} catch(e){
-			if(e === Stop){
-				return res
-			}
-			throw e
-		}
-
-		return res
-	},
-	// XXX move these to a more logical spot...
-	// XXX these are almost identical -- reuse???
-	indexOf: function(item, options){
-		item = typeof(item) == typeof('str') ?
-			item.split(/[\\\/]/g)
-			: item
-
-		var Stop = new Error('.indexOf(..): Result found exception.')
-
-		var i = 0
-		try{
-			this.map(function(e, p){
-				if(item instanceof Array ? item.cmp(p) : (item === e)){
-					throw Stop }
-				i++
-			}, options)
-
-		} catch(e){
-			if(e === Stop){
-				return i
-			}
-		}
-		return -1
-	},
-	pathOf: function(item, options){
-		var Stop = new Error('.pathOf(..): Result found exception.')
-
-		var path
-		var i = 0
-		try{
-			this.map(function(e, p){
-				path = p
-				if(typeof(item) == typeof(123) ? item == i : (item === e)){
-					throw Stop }
-				i++
-			}, options)
-
-		} catch(e){
-			if(e === Stop){
-				return path
-			}
-		}
-		return undefined
-	},
-
-	// Like .get(.., {iterateCollapsed: true}) but will expand all the 
-	// path items to reveal the target...
-	// XXX should this return the item or this???
-	reveal: function(key, options){
-		// get the item...
-		var res = this.get(key, Object.assign({iterateCollapsed: true}, options))
-
-		// expand the path up...
-		var cur = res.parent
-		while(cur && cur.parent instanceof Browser){
-			delete (cur.parent.item_key_index[cur.id]
-				|| cur.parent.items
-					.filter(function(e){ 
-						return e.sublist === cur })
-				.shift()).collapsed
-			cur = cur.parent }
-
-		// re-render...
-		this.render()
-
-		return res
-	},
-
-
-	//
-	//	.find(id[, options])
-	//	.find(index[, options])
-	//	.find(path[, options])
-	//	.find(func[, options])
-	//		-> list
-	//
-	// XXX add '**' patterns...
-	// XXX should this return item paths???
-	// 		...one way to do this is to return an object instead of a list...
-	find: function(query, options){
-		query = typeof(query) == typeof('str') ?
-			query.split(/[\\\/]/g)
-				.filter(function(e){ return e.length > 0 })
-			: query
-		query = typeof(query) == typeof('str') ?
-			[query]
-			: query
-		query = query instanceof Array ?
-			query
-				.map(function(d){
-					return d == '*' ?
-							d
-						: d.indexOf('*') >= 0 ?
-							new RegExp(d
-								.replace(/\*/g, '.*'))
-						: d})
-			: query
-
-		var i = -1
-		return this
-			.filter(function(e, p){
-				i++
-				return (query === e
-					|| (
-						// index...
-						typeof(query) == typeof(123) ?
-							query == i
-						// predicate...
-						: query instanceof Function ?
-							// XXX revise signature...
-							query.call(this, e, p, i, this)
-						// regular expression...
-						: query instanceof RegExp ?
-							query.test(p.join('/'))
-						// direct path comparison...
-						: query instanceof Array ?
-							query.cmp(p)
-							|| (query.length == p.length
-								&& query
-									.filter(function(q, i){
-										return q == '*' 
-											|| (q instanceof RegExp 
-												&& q.test(p[i]))
-											|| q == p[i] })
-									.length == p.length)
-						: false)) }, options) },
-
-	// XXX support: up/down/left/right/first/last/next/prev
-	// XXX extend support for screen oriented nav in a subclass...
-	navigate: function(direction){
-		// XXX get then return element...
-	},
-
+	// XXX should these be moved to the HTML class...
 
 	// Events...
 	//
@@ -2004,6 +2006,7 @@ module.TextBrowser =
 object.makeConstructor('TextBrowser', 
 		TextBrowserClassPrototype, 
 		TextBrowserPrototype)
+
 
 
 
