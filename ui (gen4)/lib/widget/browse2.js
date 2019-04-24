@@ -1474,7 +1474,7 @@ var BaseBrowserPrototype = {
 			: items
 	},
 
-	// XXX still need to wrap inline lists of items (groups and friends)...
+	// XXX should this be able to render a specific sub-path???
 	render2: function(options, renderer){
 		var that = this
 		// XXX Q: should options and context be distinguished only via 
@@ -1499,32 +1499,27 @@ var BaseBrowserPrototype = {
 		options = context.options
 		renderer = renderer || this
 
-		var getValue = function(item){
-			return item.value || item }
-
 		var items = this
 			.walk(
 				function(i, path, item, nested, sublist){
-					var indent = path.map(e => '  ').join('')
-					// XXX call renderers...
 					return (
 						// inline...
-						// XXX need to wrap groups/inline stuff...
 						(item == null && sublist) ?
 							// NOTE: here we are forcing rendering of the 
 							// 		inline browser/list, i.e. ignoring 
 							// 		options.skipNested for inline stuff...
-							nested(true)
+							// NOTE: we here do not distinguish between
+							// 		inlined lists and browsers... (XXX ???)
+							[ renderer.renderGroup(nested(true), context) ]
 						// nested...
 						: sublist ?
-							[renderer.renderNested(
+							[ renderer.renderNested(
 								renderer.renderNestedHeader(item, i, context),
 								nested(),
 								item, 
-								context)]
+								context) ]
 						// normal item...
-						: [renderer.renderItem(item, i, context)]
-					) },
+						: [ renderer.renderItem(item, i, context) ] ) },
 				function(func, i, path, sublist, options){
 					return sublist.render2(context) },
 				options)
