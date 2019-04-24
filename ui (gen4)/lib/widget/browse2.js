@@ -1317,7 +1317,6 @@ var BaseBrowserPrototype = {
 	// 	}
 	//
 	//
-	// XXX item count is broken...
 	// XXX EXPERIMENTAL...
 	walk: function(func, options){
 		var that = this
@@ -1349,7 +1348,7 @@ var BaseBrowserPrototype = {
 		var reverse = !!options.reverseIteration
 
 		// level walk function...
-		var walk = function(path, list){
+		var walk = function(i, path, list){
 			return list
 				// reverse the items...
 				.run(function(){
@@ -1384,16 +1383,12 @@ var BaseBrowserPrototype = {
 								(skip || list === false) ?
 									[]
 								:list instanceof Array ?
-									walk(p, list)
+									walk(i, p, list)
 								// user-defined recursion...
 								: recursion instanceof Function ?
 									recursion.call(that, func, i, p, list, opts || options)
 								: list[recursion || 'walk'](func, i, p, opts || options))
 				   			.run(function(){
-								console.log('---', i, this)
-								// XXX BUG: here we add up the sum of total level lengths...
-								// 		...i.e. for [a, b, [c, d]] this will be 2 + 4 
-								// 		and not 2 + 2...
 								i += this.length })}
 
 					return (
@@ -1423,7 +1418,7 @@ var BaseBrowserPrototype = {
 				})
 				.flat() }
 
-		return walk(path, this.items)
+		return walk(i, path, this.items)
 	},
 
 	text2: function(options, renderer){
@@ -1563,7 +1558,6 @@ var BaseBrowserPrototype = {
 				// NOTE: this needs to call the actual func that the user
 				// 		gave us and not the constructed function that we 
 				// 		pass to .walk(..) above...
-				// XXX need to get the number of items passed here into current i...
 				return sublist.map2(func, i, path, options) },
 			i,
 			path, 
