@@ -1239,6 +1239,7 @@ var BaseBrowserPrototype = {
 
 	// Renderers...
 	//
+	// 	.finalizeRender(items, context)
 	// 	.renderList(items, context)
 	// 	.renderNested(header, sublist, item, context)
 	// 	.renderNestedHeader(item, i, context)
@@ -1246,6 +1247,8 @@ var BaseBrowserPrototype = {
 	// 	.renderGroup(items, context)
 	//
 	//
+	finalizeRender: function(items, context){
+		return this.renderList(items, context) },
 	renderList: function(items, context){
 		return items },
 	// NOTE: to skip rendering an item/list return null...
@@ -1344,7 +1347,7 @@ var BaseBrowserPrototype = {
 		// determine the render mode...
 		return context.root === this ?
 			// root context -> render list and return this...
-			renderer.renderList(items, context)
+			renderer.finalizeRender(items, context)
 			// nested context -> return item list...
 			: items
 	},
@@ -1623,6 +1626,29 @@ var BrowserPrototype = {
 
 	// Element renderers...
 	//
+	// This does tow additional things:
+	// 	- save the rendered state to .dom 
+	// 	- wrap a list of nodes (nested list) in a div
+	//
+	// Format:
+	// 	XXX
+	//
+	// XXX revise...
+	finalizeRender: function(items, context){
+		var d = this.renderList(items, context)
+
+		// wrap the list (nested list) of nodes in a div...
+		if(d instanceof Array){
+			var c = document.createElement('div')
+			d.forEach(function(e){
+				c.appendChild(e) })
+			d = c
+		}
+
+		this.dom = d
+		return this.dom
+	},
+	//
 	// Foramt:
 	// 	<div class="browse-widget" tabindex="0">
 	// 		<!-- header -->
@@ -1888,23 +1914,6 @@ var BrowserPrototype = {
 		return elem 
 	},
 
-	// This does tow additional things:
-	// 	- save the rendered state to .dom 
-	// 	- wrap a list of nodes (nested list) in a div
-	render: function(options){
-		var d = object.parent(BrowserPrototype.render, this).call(this, ...arguments)
-
-		// wrap the list (nested list) of nodes in a div...
-		if(d instanceof Array){
-			var c = document.createElement('div')
-			d.forEach(function(e){
-				c.appendChild(e) })
-			d = c
-		}
-
-		this.dom = d
-		return this.dom
-	},
 
 	// Custom events...
 	// XXX do we use jQuery event handling or vanilla?
@@ -1962,6 +1971,7 @@ var TextBrowserPrototype = {
 	__proto__: BaseBrowser.prototype,
 
 	options: {
+		valueSeparator: ' ',
 		renderIndent: '\t',
 	},
 	
@@ -1973,6 +1983,9 @@ var TextBrowserPrototype = {
 			.join('\n') },
 	renderItem: function(item, i, options){
 		var value = item.value || item
+		value = value instanceof Array ? 
+			value.join(this.options.valueSeparator || ' ')
+			: value
 		return item.current ?
 			`[ ${value} ]`
    			: value },
