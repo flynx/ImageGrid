@@ -538,6 +538,14 @@ var BaseBrowserPrototype = {
 	//
 	// options format:
 	// 	{
+	// 		// Partial walking...
+	// 		//
+	// 		// XXX not implemented yet...
+	// 		start: <index> | <path>,
+	// 		count: <number>,
+	// 		end: <index> | <path>,
+	//
+	//
 	// 		// Iterate ALL items...
 	// 		//
 	// 		// NOTE: this if true overrides all other iteration coverage 
@@ -605,22 +613,24 @@ var BaseBrowserPrototype = {
 		var options = args.pop() || {}
 
 		// options...
-		options = Object.assign(Object.create(this.options || {}), options || {})
+		options = Object.assign(Object.create(this.options || {}), options)
+		/*var start = options.start || 0
+		var end = options.end 
+			|| (options.count >= 0 && start + (options.count))
+			|| Infinity
+		//*/
 		var iterateNonIterable = options.iterateAll || options.iterateNonIterable
 		var iterateCollapsed = options.iterateAll || options.iterateCollapsed
 		var skipNested = !options.iterateAll && options.skipNested
-		var reverse = options.reverse
-		reverse = reverse === true ?
+		var reverse = options.reverse === true ?
 			(options.defaultReverse || 'tree')
-			: reverse
+			: options.reverse
 
 		var isWalkable = userIsWalkable ?
 			function(elem){
-				return elem instanceof Array 
-					|| userIsWalkable(elem) }
+				return elem instanceof Array || userIsWalkable(elem) }
 			: function(elem){
-				return elem instanceof Array 
-					|| elem instanceof Browser }
+				return elem instanceof Array || elem instanceof Browser }
 
 		// level walk function...
 		var walk = function(i, path, list){
@@ -663,13 +673,12 @@ var BaseBrowserPrototype = {
 							: undefined
 						opts = args.shift() || options
 
-						// normalize list...
+						// normalize...
 						list = list === true ?
 						   		sublist	
 							: (!iterateCollapsed && elem.collapsed) ?
 								[]
 							: (list || sublist)
-						// adjust index...
 						i = j != null ? j : i
 
 						return (
@@ -681,7 +690,7 @@ var BaseBrowserPrototype = {
 								// user-defined recursion...
 								: recursion instanceof Function ?
 									recursion.call(that, func, i, p, list, opts)
-								: list[recursion || 'walk'](func, i, p, opts))
+								: list[recursion || 'walk'](func, i, p, opts) )
 				   			.run(function(){
 								var res = this instanceof Array ? 
 									this 
@@ -721,10 +730,9 @@ var BaseBrowserPrototype = {
 						// append the actual element...
 						.concat(
 							// NOTE: func MUST return an array...
-							// XXX can we make this more lenient???
 							func.call(that, 
 								// NOTE: for inline elements we do not need to 
-								//		count the header...
+								//		count the header as it's not present...
 								inline ? i : i++, 
 								p, 
 								// NOTE: inlined sets have no header...
