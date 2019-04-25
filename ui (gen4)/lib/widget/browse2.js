@@ -666,7 +666,7 @@ var BaseBrowserPrototype = {
 						// normalize list...
 						list = list === true ?
 						   		sublist	
-							:(!iterateCollapsed && elem.collapsed) ?
+							: (!iterateCollapsed && elem.collapsed) ?
 								[]
 							: (list || sublist)
 						// adjust index...
@@ -676,7 +676,7 @@ var BaseBrowserPrototype = {
 								// request manual iteration...
 								list === false ?
 									[]
-								:list instanceof Array ?
+								: list instanceof Array ?
 									walk(i, p, list)
 								// user-defined recursion...
 								: recursion instanceof Function ?
@@ -720,6 +720,8 @@ var BaseBrowserPrototype = {
 							: [])
 						// append the actual element...
 						.concat(
+							// NOTE: func MUST return an array...
+							// XXX can we make this more lenient???
 							func.call(that, 
 								// NOTE: for inline elements we do not need to 
 								//		count the header...
