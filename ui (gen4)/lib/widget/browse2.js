@@ -516,7 +516,7 @@ var BaseBrowserPrototype = {
 	// 	doNested(true, ..)
 	// 		-> items
 	//
-	// 	NOTE: doNested(..) has no effect of options.reverseIteration is
+	// 	NOTE: doNested(..) has no effect of options.reverse is
 	// 		set to 'flat'...
 	// 	NOTE: only the first call to doNested(..) as any effect, all 
 	// 		consecutive calls will return cached results of the first 
@@ -564,7 +564,11 @@ var BaseBrowserPrototype = {
 	//		// NOTE: in 'flat' mode the client loses control over the 
 	//		//		order of processing via doNested(..) as it will be 
 	//		//		called before handleItem(..)
-	// 		reverseIteration: <bool> | 'flat' | 'tree',
+	// 		reverse: <bool> | 'flat' | 'tree',
+	//
+	// 		// The value to be used if .reverse is set to true...
+	// 		defaultReverse: 'tree' (default) | 'flat',
+	//
 	//
 	// 		// If true include inlined parent id in path...
 	// 		// XXX not implemented yet -- can we implement this???...
@@ -573,6 +577,7 @@ var BaseBrowserPrototype = {
 	// 	}
 	//
 	//
+	// XXX can we add support for partial walks, i.e. start/end ranges???
 	// XXX revise protocol...
 	walk: function(func, options){
 		var that = this
@@ -604,7 +609,10 @@ var BaseBrowserPrototype = {
 		var iterateNonIterable = options.iterateAll || options.iterateNonIterable
 		var iterateCollapsed = options.iterateAll || options.iterateCollapsed
 		var skipNested = !options.iterateAll && options.skipNested
-		var reverse = options.reverseIteration
+		var reverse = options.reverse
+		reverse = reverse === true ?
+			(options.defaultReverse || 'tree')
+			: reverse
 
 		var isWalkable = userIsWalkable ?
 			function(elem){
@@ -707,7 +715,7 @@ var BaseBrowserPrototype = {
 
 					return (
 						// prepend nested elements on flat reverse...
-						(sublist && options.reverseIteration == 'flat' ?
+						(sublist && reverse == 'flat' ?
 							doNested(sublist)
 							: [])
 						// append the actual element...
@@ -798,21 +806,10 @@ var BaseBrowserPrototype = {
 	//
 	// options format:
 	// 	{
-	// 		// Reverse iteration order...
-	//		//
-	//		// modes:
-	//		//	false | null		- normal order (default)
-	//		//	true | 'flat' 		- full flat reverse
-	//		//	'tree'				- reverse order of levels but keep 
-	//		//							topology order, i.e. containers
-	//		//							will precede contained elements.
-	//		//
-	//		// NOTE: in 'flat' mode the client loses control over the 
-	//		//		order of processing via doNested(..) as it will be 
-	//		//		called before handleItem(..)
-	//		// NOTE: the semantics of this are slightly different to how
-	//		//		this option is handled by .walk(..)
-	// 		reverseIteration: <bool> | 'flat' | 'tree',
+	// 		// The value used if .reverse is set to true...
+	// 		//
+	// 		// NOTE: the default is different from .walk(..)
+	// 		defaultReverse: 'flat' (default) | 'tree',
 	//
 	// 		// For other supported options see docs for .walk(..)
 	// 		...
@@ -843,7 +840,6 @@ var BaseBrowserPrototype = {
 		// 			.map(func, path[, options])
 		// 			.map(func, i, path[, options])
 		// 		these set the "base" path and index passed to func...
-		// XXX can we avoid argument parsing here???
 		var args = [...arguments]
 		func = args[0] instanceof Function ? 
 			args.shift() 
@@ -856,12 +852,10 @@ var BaseBrowserPrototype = {
 			args.shift()
 			: []
 		var options = args.pop() || {}
-
-		// normalize .reverseIteration default...
-		options = options.reverseIteration === true ?
+		options = !options.defaultReverse ?
 			Object.assign({},
 				options, 
-				{ reverseIteration: 'flat' })
+				{ defaultReverse: 'flat' })
 			: options
 
 		return this.walk(
@@ -951,7 +945,6 @@ var BaseBrowserPrototype = {
 	//
 	// XXX this is not too fast for indexing very long lists...
 	// XXX use cache for these -- currently these use .map(..)...
-	// XXX do we need to support negative indexes???
 	get: function(key, options){
 		key = key == null ? 0 : key
 		key = typeof(key) == typeof('str') ?
@@ -1017,7 +1010,7 @@ var BaseBrowserPrototype = {
 		var i = 0
 		// reverse indexing...
 		options = Object.assign(
-			{reverseIteration: key < 0 && 'flat'}, 
+			{ reverse: key < 0 }, 
 			options || {})
 		key = key < 0 ? 
 			-key - 1 
