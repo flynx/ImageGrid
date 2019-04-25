@@ -556,7 +556,7 @@ var BaseBrowserPrototype = {
 	//		//
 	//		// modes:
 	//		//	false | null		- normal order (default)
-	//		//	true				- reverse order of levels but keep 
+	//		//	true | 'tree'		- reverse order of levels but keep 
 	//		//							topology order, i.e. containers
 	//		//							will precede contained elements.
 	//		//	'flat'				- full flat reverse
@@ -564,7 +564,7 @@ var BaseBrowserPrototype = {
 	//		// NOTE: in 'flat' mode the client loses control over the 
 	//		//		order of processing via doNested(..) as it will be 
 	//		//		called before handleItem(..)
-	// 		reverseIteration: <bool> | 'flat',
+	// 		reverseIteration: <bool> | 'flat' | 'tree',
 	//
 	// 		// If true include inlined parent id in path...
 	// 		// XXX not implemented yet -- can we implement this???...
@@ -796,7 +796,28 @@ var BaseBrowserPrototype = {
 	//
 	//
 	//
-	// For supported options see docs for .walk(..)
+	// options format:
+	// 	{
+	// 		// Reverse iteration order...
+	//		//
+	//		// modes:
+	//		//	false | null		- normal order (default)
+	//		//	true | 'flat' 		- full flat reverse
+	//		//	'tree'				- reverse order of levels but keep 
+	//		//							topology order, i.e. containers
+	//		//							will precede contained elements.
+	//		//
+	//		// NOTE: in 'flat' mode the client loses control over the 
+	//		//		order of processing via doNested(..) as it will be 
+	//		//		called before handleItem(..)
+	//		// NOTE: the semantics of this are slightly different to how
+	//		//		this option is handled by .walk(..)
+	// 		reverseIteration: <bool> | 'flat' | 'tree',
+	//
+	// 		// For other supported options see docs for .walk(..)
+	// 		...
+	// 	}
+	//
 	//
 	// By default this will not iterate items that are:
 	// 	- non-iterable (item.noniterable is true)
@@ -805,6 +826,7 @@ var BaseBrowserPrototype = {
 	// This extends the Array .map(..) by adding:
 	// 	- ability to run without arguments
 	// 	- support for options
+	//
 	//
 	//
 	// XXX make item access by index lazy... 
@@ -834,6 +856,13 @@ var BaseBrowserPrototype = {
 			args.shift()
 			: []
 		var options = args.pop() || {}
+
+		// normalize .reverseIteration default...
+		options = options.reverseIteration === true ?
+			Object.assign({},
+				options, 
+				{ reverseIteration: 'flat' })
+			: options
 
 		return this.walk(
 			function(i, path, elem, doNested){
