@@ -349,6 +349,7 @@ var BaseBrowserPrototype = {
 	// visible only...
 	get length(){
 		return this.map({skipNested: true}).length
+			// XXX this is wrong as it will not account for nested nested elements...
 			+ this.nested()
 				.reduce(function(res, e){ 
 					return e.collapsed ?
@@ -357,12 +358,14 @@ var BaseBrowserPrototype = {
 	// tree -- ignores .collapsed...
 	get lengthTree(){
 		return this.map({skipNested: true}).length
+			// XXX this is wrong as it will not account for nested nested elements...
 			+ this.nested()
 				.reduce(function(res, e){ 
 					return res + e.sublist.length }, 0) },
 	// full -- ignores .collapsed and .noniterable...
 	get lengthAll(){
 		return this.map({skipNested: true, iterateNonIterable: true}).length
+			// XXX this is wrong as it will not account for nested nested elements...
 			+ this.nested()
 				.reduce(function(res, e){ 
 					return res + (e.sublist.lengthAll || e.sublist.length) }, 0) },
@@ -483,27 +486,30 @@ var BaseBrowserPrototype = {
 
 
 	//
-	// 	.walk(item_handler[, options])
+	// 	.walk(handleItem[, options])
 	// 		-> result
 	//
-	// 	.walk(item_handler, nested_handler[, options])
+	// 	.walk(handleItem, handleNested[, options])
+	// 		-> result
+	//
+	// 	.walk(handleItem, handleNested, isWalkable[, options])
 	// 		-> result
 	//
 	//
-	// 	item_handler(path, elem, index, nested, sublist)
+	// 	handleItem(path, elem, index, doNested, sublist)
 	// 		-> array
 	//
-	// 	nested(list[, options])
+	// 	doNested(list[, options])
 	// 		-> items
 	//
 	//
 	// 	XXX
-	// 	nested_handler(..)
+	// 	handleNested(..)
 	// 		-> 
 	//
 	//
 	// 	Request manual iteration...
-	// 	nested(false)
+	// 	doNested(false)
 	// 		-> undefined
 	//
 	//
@@ -531,10 +537,13 @@ var BaseBrowserPrototype = {
 	//
 	// 		// If true include inlined parent id in path...
 	// 		// XXX not implemented yet -- can we implement this???...
+	// 		// XXX do we need this??
 	// 		inlinedPaths: <bool>,
 	// 	}
 	//
 	//
+	// XXX add 'flat' reverseIteration mode...
+	// XXX revise protocol...
 	// XXX make sublist test customizable...
 	walk: function(func, options){
 		var that = this
@@ -548,6 +557,11 @@ var BaseBrowserPrototype = {
 				|| typeof(args[0]) == typeof('str')) ? 
 			args.shift() 
 			: undefined
+		var isWalkable = args[0] instanceof Function ?
+			args.shift() 
+			// XXX revise...
+			: function(elem){
+				return elem instanceof Browser }
 		var i = typeof(args[0]) == typeof(123) ?
 			args.shift()
 			: 0
@@ -563,7 +577,7 @@ var BaseBrowserPrototype = {
 		var iterateNonIterable = options.iterateAll || options.iterateNonIterable
 		var iterateCollapsed = options.iterateAll || options.iterateCollapsed
 		var skipNested = !options.iterateAll && options.skipNested
-		var reverse = !!options.reverseIteration
+		var reverse = options.reverseIteration
 
 		// level walk function...
 		var walk = function(i, path, list){
@@ -588,8 +602,7 @@ var BaseBrowserPrototype = {
 
 					// nested browser/list handler...
 					var nested_called = false
-					var nested = function(list, opts){
-						var skip = skipNested && !list
+					var doNested = function(list, opts){
 						list = (!iterateCollapsed && elem.collapsed) ?
 							[]
 							: (list || sublist)
@@ -598,7 +611,7 @@ var BaseBrowserPrototype = {
 
 						return (
 								// request manual iteration...
-								(skip || list === false) ?
+								list === false ?
 									[]
 								:list instanceof Array ?
 									walk(i, p, list)
@@ -617,17 +630,18 @@ var BaseBrowserPrototype = {
 					return (
 							// inline browser or array...
 							(elem instanceof Array 
-									|| elem instanceof Browser) ?
+									|| isWalkable(elem)) ?
 								func.call(that, 
 									i, p = path, 
-									null, nested, 
+									null, doNested, 
 									sublist = elem)
 							// nested browser / array...
-							: (elem.sublist instanceof Browser 
-									|| elem.sublist instanceof Array) ?
+							: (!skipNested 
+									&& (elem.sublist instanceof Array
+										|| isWalkable(elem.sublist))) ?
 								func.call(that, 
 									i++, p = path.concat([elem_id]), 
-									elem, nested, 
+									elem, doNested, 
 									sublist = elem.sublist)
 							// normal element...
 							: func.call(that, 
@@ -637,7 +651,7 @@ var BaseBrowserPrototype = {
 						// append nested elements...
 						.concat((!sublist || nested_called) ? 
 							[] 
-							: nested(sublist))
+							: doNested(sublist))
 				})
 				.flat() }
 
@@ -786,13 +800,17 @@ var BaseBrowserPrototype = {
 	},
 
 
+	// XXX BROKEN...
 	// Sublist map functions...
+	//
 	// NOTE: there are different from .map(..) in that instead of paths 
 	// 		func(..) will get indexes in the current browser...
 	// NOTE: these will return a sparse array...
+	//
+	// XXX this is broken because it does not account for sublists 
+	// 		beyond the 0'th level...
 	sublists: function(func, options){
 		var that = this
-		//options = options || {}
 		options = Object.assign(Object.create(this.options || {}), options || {})
 		var skipNested = options.skipNested
 		var skipInlined = options.skipInlined
@@ -913,6 +931,12 @@ var BaseBrowserPrototype = {
 		// XXX do we need to support negative indexes???
 		var Stop = new Error('.get(..): Result found exception.')
 		var i = 0
+		options = Object.assign(
+			{reverseIteration: key < 0}, 
+			options || {})
+		key = key < 0 ? 
+			-key - 1 
+			: key
 		var res
 		try {
 			this.map(function(e){
@@ -1092,7 +1116,6 @@ var BaseBrowserPrototype = {
 	// 		calls for such items...
 	//
 	// XXX revise options handling for .__list__(..)
-	// XXX make(browser) should add a browser as-is without any options... (???)
 	make: function(options){
 		options = Object.assign(Object.create(this.options || {}), options || {})
 
@@ -1239,7 +1262,7 @@ var BaseBrowserPrototype = {
 
 	// Renderers...
 	//
-	// 	.finalizeRender(items, context)
+	// 	.renderFinalize(items, context)
 	// 	.renderList(items, context)
 	// 	.renderNested(header, sublist, item, context)
 	// 	.renderNestedHeader(item, i, context)
@@ -1247,7 +1270,7 @@ var BaseBrowserPrototype = {
 	// 	.renderGroup(items, context)
 	//
 	//
-	finalizeRender: function(items, context){
+	renderFinalize: function(items, context){
 		return this.renderList(items, context) },
 	renderList: function(items, context){
 		return items },
@@ -1270,11 +1293,12 @@ var BaseBrowserPrototype = {
 	renderGroup: function(items, context){
 		return items },
 
+
 	// Render state...
 	//
 	//	.render()
-	//	.render(options)
-	//	.render(context)
+	//	.render(options[, renderer])
+	//	.render(context[, renderer])
 	//		-> state
 	//
 	//
@@ -1285,10 +1309,24 @@ var BaseBrowserPrototype = {
 	// 	}
 	//
 	//
+	// options:
+	// 	{
+	// 		nonFinalized: <bool>,
+	//
+	//		// for more supported options see: .walk(..)
+	// 		...
+	// 	}
+	//
+	//
+	// NOTE: it is not recommended to extend this. all the responsibility
+	// 		of actual rendering should lay on the renderer methods...
+	// NOTE: calling this will re-render the existing state. to re-make 
+	// 		the state anew that use .update(..)...
 	// NOTE: currently options and context are distinguished only via 
 	// 		the .options attribute...
 	//
-	// XXX test sublist via .render rather than instanceof...
+	// XXX would be nice to add ability to do a full render but not 
+	// 		finalize the result...
 	render: function(options, renderer){
 		var that = this
 		// XXX Q: should options and context be distinguished only via 
@@ -1342,12 +1380,16 @@ var BaseBrowserPrototype = {
 						: [ renderer.renderItem(item, i, context) ] ) },
 				function(func, i, path, sublist, options){
 					return sublist.render(context, renderer) },
+				// make the element render less strict...
+				function(elem){
+					return elem 
+						&& elem.render instanceof Function },
 				options)
 
 		// determine the render mode...
-		return context.root === this ?
+		return (!options.nonFinalized && context.root === this) ?
 			// root context -> render list and return this...
-			renderer.finalizeRender(items, context)
+			renderer.renderFinalize(items, context)
 			// nested context -> return item list...
 			: items
 	},
@@ -1358,10 +1400,6 @@ var BaseBrowserPrototype = {
 	// 	.update()
 	// 		-> state
 	//
-	//
-	// XXX options here are a relatively blunt means of overriding options
-	// 		in the tree...
-	// 		...do we need this???
 	update: function(options){
 		return this
 			.make(options)
@@ -1451,6 +1489,7 @@ var BaseBrowserPrototype = {
 		return this
 	},
 
+
 	// domain events/actions...
 	// XXX need a way to extend these to:
 	// 		- be able to trigger an external (DOM) event...
@@ -1497,6 +1536,7 @@ var BaseBrowserPrototype = {
 
 	close: makeEventMethod('close', function(evt, reason){}),
 	
+
 	// XXX should we update on on init....
 	__init__: function(func, options){
 		this.__list__ = func
@@ -1639,7 +1679,7 @@ var BrowserPrototype = {
 	// 	or same as .renderList(..)
 	//
 	// XXX revise...
-	finalizeRender: function(items, context){
+	renderFinalize: function(items, context){
 		var d = this.renderList(items, context)
 
 		// wrap the list (nested list) of nodes in a div...
