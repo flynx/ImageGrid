@@ -485,32 +485,55 @@ var BaseBrowserPrototype = {
 			+ Date.now() },
 
 
+	// Walk the browser...
 	//
 	// 	.walk(handleItem[, options])
 	// 		-> result
 	//
-	// 	.walk(handleItem, handleNested[, options])
+	// 	.walk(handleItem, handleRecursion[, options])
 	// 		-> result
 	//
-	// 	.walk(handleItem, handleNested, isWalkable[, options])
+	// 	.walk(handleItem, handleRecursion, isWalkable[, options])
 	// 		-> result
+	//
 	//
 	//
 	// 	handleItem(path, elem, index, doNested, sublist)
-	// 		-> array
-	//
-	// 	doNested(list[, options])
 	// 		-> items
 	//
+	// 	Trigger nested item handling...
+	// 	doNested([options])
+	// 	doNested(list[, options])
+	// 	doNested(index[, options])
+	// 	doNested(list, index[, options])
+	// 		-> items
 	//
-	// 	XXX
-	// 	handleNested(..)
-	// 		-> 
-	//
-	//
-	// 	Request manual iteration...
+	// 	Disable automatic nested item handling...
 	// 	doNested(false)
 	// 		-> undefined
+	//
+	// 	Force nested item handling...
+	// 	doNested(true, ..)
+	// 		-> items
+	//
+	// 	NOTE: doNested(..) has no effect of options.reverseIteration is
+	// 		set to 'flat'...
+	// 	NOTE: only the first call to doNested(..) as any effect, all 
+	// 		consecutive calls will return cached results of the first 
+	// 		call...
+	//
+	//
+	//
+	// 	Handle recursion down...
+	// 	handleRecursion(func, index, path, sublist, options)
+	// 		-> items 
+	//
+	//
+	//
+	//	Test if item is walkable...
+	//	isWalkable(item)
+	//		-> bool
+	//
 	//
 	//
 	// options format:
@@ -529,11 +552,19 @@ var BaseBrowserPrototype = {
 	// 		// If true skip iterating nested items...
 	// 		skipNested: <bool>,
 	//
-	// 		// If true, reverse iteration order...
-	// 		// NOTE: containing items will still precede the contained,
-	// 		//		i.e. this will reverse the level order but not 
-	// 		//		nesting order...
-	// 		reverseIteration: <bool>,
+	// 		// Reverse iteration order...
+	//		//
+	//		// modes:
+	//		//	false | null		- normal order (default)
+	//		//	true				- reverse order of levels but keep 
+	//		//							topology order, i.e. containers
+	//		//							will precede contained elements.
+	//		//	'flat'				- full flat reverse
+	//		//
+	//		// NOTE: in 'flat' mode the client loses control over the 
+	//		//		order of processing via doNested(..) as it will be 
+	//		//		called before handleItem(..)
+	// 		reverseIteration: <bool> | 'flat',
 	//
 	// 		// If true include inlined parent id in path...
 	// 		// XXX not implemented yet -- can we implement this???...
@@ -542,9 +573,7 @@ var BaseBrowserPrototype = {
 	// 	}
 	//
 	//
-	// XXX add 'flat' reverseIteration mode...
 	// XXX revise protocol...
-	// XXX make sublist test customizable...
 	walk: function(func, options){
 		var that = this
 
@@ -557,11 +586,9 @@ var BaseBrowserPrototype = {
 				|| typeof(args[0]) == typeof('str')) ? 
 			args.shift() 
 			: undefined
-		var isWalkable = args[0] instanceof Function ?
+		var userIsWalkable = args[0] instanceof Function ?
 			args.shift() 
-			// XXX revise...
-			: function(elem){
-				return elem instanceof Browser }
+			: null 
 		var i = typeof(args[0]) == typeof(123) ?
 			args.shift()
 			: 0
@@ -578,6 +605,14 @@ var BaseBrowserPrototype = {
 		var iterateCollapsed = options.iterateAll || options.iterateCollapsed
 		var skipNested = !options.iterateAll && options.skipNested
 		var reverse = options.reverseIteration
+
+		var isWalkable = userIsWalkable ?
+			function(elem){
+				return elem instanceof Array 
+					|| userIsWalkable(elem) }
+			: function(elem){
+				return elem instanceof Array 
+					|| elem instanceof Browser }
 
 		// level walk function...
 		var walk = function(i, path, list){
@@ -601,13 +636,33 @@ var BaseBrowserPrototype = {
 					var p 
 
 					// nested browser/list handler...
-					var nested_called = false
-					var doNested = function(list, opts){
-						list = (!iterateCollapsed && elem.collapsed) ?
-							[]
+					var nested = false
+					var doNested = function(list, j, opts){
+						// this can be called only once...
+						if(nested !== false){
+							return nested
+						}
+
+						// parse args...
+						var args = [...arguments]
+						list = (args[0] === true 
+								|| args[0] === false
+								|| isWalkable(args[0])) ?
+							args.shift()
+							: undefined
+						j = typeof(args[0]) == typeof(123) ?
+							args.shift()
+							: undefined
+						opts = args.shift() || options
+
+						// normalize list...
+						list = list === true ?
+						   		sublist	
+							:(!iterateCollapsed && elem.collapsed) ?
+								[]
 							: (list || sublist)
-						list = list === true ? sublist : list
-						nested_called = true
+						// adjust index...
+						i = j != null ? j : i
 
 						return (
 								// request manual iteration...
@@ -617,41 +672,59 @@ var BaseBrowserPrototype = {
 									walk(i, p, list)
 								// user-defined recursion...
 								: recursion instanceof Function ?
-									recursion.call(that, func, i, p, list, opts || options)
-								: list[recursion || 'walk'](func, i, p, opts || options))
+									recursion.call(that, func, i, p, list, opts)
+								: list[recursion || 'walk'](func, i, p, opts))
 				   			.run(function(){
 								var res = this instanceof Array ? 
 									this 
 									: [this] 
 								i += this.length 
+								nested = res
 								return res
-							})}
+							})
+					}
+
+					// setup some context...
+					var inline = false
+					// inline browser or array...
+					if(isWalkable(elem)){
+						inline = true
+						p = path
+						sublist = elem
+
+					// nested browser / array...
+					} else if(!skipNested
+							&& isWalkable(elem.sublist)){
+						p = path.concat([elem_id])
+						sublist = elem.sublist
+
+					// normal element...
+					} else {
+						p = path.concat([elem_id]) 
+						sublist = null
+						doNested = null
+					}
 
 					return (
-							// inline browser or array...
-							(elem instanceof Array 
-									|| isWalkable(elem)) ?
-								func.call(that, 
-									i, p = path, 
-									null, doNested, 
-									sublist = elem)
-							// nested browser / array...
-							: (!skipNested 
-									&& (elem.sublist instanceof Array
-										|| isWalkable(elem.sublist))) ?
-								func.call(that, 
-									i++, p = path.concat([elem_id]), 
-									elem, doNested, 
-									sublist = elem.sublist)
-							// normal element...
-							: func.call(that, 
-								i++, p = path.concat([elem_id]), 
-								elem, null, 
-								sublist = null) )
-						// append nested elements...
-						.concat((!sublist || nested_called) ? 
+						// prepend nested elements on flat reverse...
+						(sublist && options.reverseIteration == 'flat' ?
+							doNested(sublist)
+							: [])
+						// append the actual element...
+						.concat(
+							func.call(that, 
+								// NOTE: for inline elements we do not need to 
+								//		count the header...
+								inline ? i : i++, 
+								p, 
+								// NOTE: inlined sets have no header...
+								inline ? null : elem, 
+								doNested, 
+								sublist))
+						// append nested elements if not done so...
+						.concat((!sublist || nested !== false) ? 
 							[] 
-							: doNested(sublist))
+							: doNested(sublist)) )
 				})
 				.flat() }
 
@@ -664,29 +737,23 @@ var BaseBrowserPrototype = {
 	// This is mainly here for doc/debug purposes...
 	//
 	// XXX rename this??
-	text: function(options, renderer){
+	text: function(options, base){
 		var that = this
-		// XXX Q: should options and context be distinguished only via 
-		// 		the .options attr as is the case now???
-		// 		...see no reason why not, though it does not feel right...
 		var context = (options == null || options.options == null) ?
-				{
-					root: this,
-					// NOTE: we are not combining this with .options as nested 
-					// 		lists can have their own unique sets of options 
-					// 		independently of the root list...
-					options: Object.assign(
-						Object.create(this.options || {}),
-						// defaults...
-						// XXX is this the correct way to setup defaults???
-						{
-							iterateNonIterable: true,
-						}, 
-						options || {}),
-				}
+			{
+				root: this,
+				// NOTE: we are not combining this with .options as nested 
+				// 		lists can have their own unique sets of options 
+				// 		independently of the root list...
+				options: Object.assign(
+					Object.create(this.options || {}),
+					// defaults...
+					{ iterateNonIterable: true }, 
+					options || {}),
+			}
 			: options
 		options = context.options
-		renderer = renderer || this
+		base = base || []
 
 		var getValue = function(item){
 			return item.value || item }
@@ -694,28 +761,16 @@ var BaseBrowserPrototype = {
 		var items = this
 			.walk(
 				function(i, path, item, nested, sublist){
-					var indent = path.map(e => '  ').join('')
-					return (
-						// inline...
-						(item == null && sublist) ?
-							// NOTE: here we are forcing rendering of the 
-							// 		inline browser/list, i.e. ignoring 
-							// 		options.skipNested for inline stuff...
-							nested(true)
-								.map(function(e){
-									return indent + getValue(e) })
-						// nested...
-						: sublist ?
-							[item.value]
-								.concat(
-									nested()
-										.map(function(e){
-											return indent + getValue(e) }))
-						// single item...
-						: [getValue(item)]
-					) },
+					var indent = base
+						.concat(path)
+						.slice(1)
+							.map(e => '  ')
+							.join('')
+					return item ? 
+						indent + getValue(item) 
+						: [] },
 				function(func, i, path, sublist, options){
-					return sublist.text(context) },
+					return sublist.text(context, base.concat(path)) },
 				options)
 
 		return context.root === this ?
@@ -781,14 +836,14 @@ var BaseBrowserPrototype = {
 		var options = args.pop() || {}
 
 		return this.walk(
-			function(i, path, elem){
+			function(i, path, elem, doNested){
 				return elem != null ?
-					[func === undefined ?
-						elem
-						// XXX should this pass the current or the root 
-						// 		container to func???
-						: func.call(that, elem, i, path, that)]
-					: [] }, 
+						[func === undefined ?
+							elem
+							// XXX should this pass the current or the root 
+							// 		container to func???
+							: func.call(that, elem, i, path, that)]
+						: [] }, 
 			function(_, i, path, sublist, options){
 				// NOTE: this needs to call the actual func that the user
 				// 		gave us and not the constructed function that we 
@@ -931,8 +986,9 @@ var BaseBrowserPrototype = {
 		// XXX do we need to support negative indexes???
 		var Stop = new Error('.get(..): Result found exception.')
 		var i = 0
+		// reverse indexing...
 		options = Object.assign(
-			{reverseIteration: key < 0}, 
+			{reverseIteration: key < 0 && 'flat'}, 
 			options || {})
 		key = key < 0 ? 
 			-key - 1 
