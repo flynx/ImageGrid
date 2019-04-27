@@ -611,7 +611,14 @@ var BaseBrowserPrototype = {
 			args.shift()
 			: []
 		path = path instanceof Array ? path : [path]
-		var options = args.pop() || {}
+		options = args.pop() || {}
+		// set call context...
+		options = !options.root ?
+			Object.assign({},
+				options,
+				{root: this})
+			: options
+
 
 		// options...
 		options = Object.assign(Object.create(this.options || {}), options)
@@ -696,9 +703,14 @@ var BaseBrowserPrototype = {
 								var res = this instanceof Array ? 
 									this 
 									: [this] 
+								// XXX BUG: this depends on the length 
+								// 		of the result and not on the number
+								// 		of func calls...
+								// 		...i.e. should depend on input 
+								// 		and not on output...
 								i += res.length 
-								nested = res
-								return res
+								nested = res.flat()
+								return nested
 							})
 					}
 
@@ -745,9 +757,15 @@ var BaseBrowserPrototype = {
 							[] 
 							: doNested(sublist)) )
 				})
-				.flat() }
+				// XXX this here loses the length information we need in doNested(..)
+				// 		to calc indexes...
+				//.flat()
+		}
 
-		return walk(i, path, this.items)
+		var res = walk(i, path, this.items)
+		return options.root === this ?
+			res.flat()
+			: res
 	},
 
 
@@ -853,7 +871,8 @@ var BaseBrowserPrototype = {
 		// 			.map(func, i, path[, options])
 		// 		these set the "base" path and index passed to func...
 		var args = [...arguments]
-		func = args[0] instanceof Function ? 
+		func = (args[0] instanceof Function 
+				|| args[0] === undefined) ? 
 			args.shift() 
 			: undefined
 		options = args[args.length-1] || {}
@@ -866,6 +885,7 @@ var BaseBrowserPrototype = {
 				options, 
 				{ defaultReverse: 'flat' })
 			: options
+
 
 		return this.walk(
 			function(i, path, elem, doNested){
@@ -905,7 +925,7 @@ var BaseBrowserPrototype = {
 		options = args[args.length-1] || {}
 		options = !(typeof(options) == typeof(123) 
 				|| options instanceof Array) ?
-			args.pop()
+			(args.pop() || {})
 			: {}
 
 		// normalize the test predicate...
@@ -917,6 +937,7 @@ var BaseBrowserPrototype = {
 			// XXX BUG: this for some reason matches ['B', '*'] to ['nested', 'moo']
 			: pattern instanceof Array ?
 				function(elem, i, path){
+					console.log('%%%', path, pattern)
 					return path.length > 0
 						&& pattern.length == path.length
 						&& (pattern[path.length-1] == '*' 
@@ -928,27 +949,23 @@ var BaseBrowserPrototype = {
 					&& i == pattern } )
 
 
-		var Stop = new Error('Stop iteration...')
-		var res
-
-		try {
-			this
-				.map(function(elem, i, path){
-					if(func.call(this, elem, i, path)){
+			return this.walk(
+				function(i, path, elem, doNested){
+					console.log('---', i, path)
+					if(elem && func.call(this, elem, i, path)){
 						res = elem
-						throw Stop
+						//throw Stop
+						return [elem]
 					}
-				}, options)
-
-		} catch(err){
-			if(err === Stop){
-				return res
-			}
-
-			throw err
-		}
-
-		return res
+					return []
+				},
+				function(_, i, path, sublist, options){
+					// XXX skip paths...
+					// XXX
+					return sublist.search(pattern, i, path, options)
+				},
+				...args,
+				options)
 	},
 
 
