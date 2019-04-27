@@ -586,6 +586,7 @@ var BaseBrowserPrototype = {
 	//
 	//
 	// XXX can we add support for partial walks, i.e. start/end ranges???
+	// XXX can this support breadth first walking???
 	// XXX revise protocol...
 	walk: function(func, options){
 		var that = this
@@ -855,7 +856,11 @@ var BaseBrowserPrototype = {
 		func = args[0] instanceof Function ? 
 			args.shift() 
 			: undefined
-		var options = args.pop() || {}
+		options = args[args.length-1] || {}
+		options = !(typeof(options) == typeof(123) 
+				|| options instanceof Array) ?
+			args.pop()
+			: {}
 		options = !options.defaultReverse ?
 			Object.assign({},
 				options, 
@@ -884,48 +889,66 @@ var BaseBrowserPrototype = {
 	// XXX EXPERIMENTAL...
 	// XXX make this a bit smarter and accept an index or a path...
 	// XXX can this replace .get(..)
-	search: function(func, options){
+	search: function(pattern, options){
 		var that = this
 
-		// XXX can we avoid this in every client???
 		var args = [...arguments]
-		func = args[0] instanceof Function ? 
-			args.shift() 
-			: undefined
-		var options = args.pop() || {}
+		pattern = args.shift() 
+		options = args[args.length-1] || {}
+		options = !(typeof(options) == typeof(123) 
+				|| options instanceof Array) ?
+			args.pop()
+			: {}
 
-		// XXX better name...
+		// XXX better name???
 		var allMatching = options.allMatching
+
+		var func = (
+			// predicate...
+			pattern instanceof Function ?
+				pattern
+			// path...
+			: pattern instanceof Array ?
+				function(elem, i, path){
+					return path.length > 0
+						&& pattern.length == path.length
+						&& (pattern[path.length-1] == '*' 
+							|| pattern[path.length-1] == path[path.length-1]) }
+			// index...
+			: function(elem, i, path){
+				return i == pattern } )
 
 		var Stop = new Error('Stop search exception...')
 		var res = []
 
 		try {
-			this.walk(
+			res = this.walk(
 				function(i, path, elem, doNested){
-					// check the element and if it matches then break the search...
-					func.call(that, elem, i, path, that) ?
-						// XXX returning path and i might be a good idea...
-						res.push(elem)
-						: null
+					// XXX returning path and/or i might be a good idea...
+					// predicate...
+					res = func.call(that, elem, i, path, that) ?
+						[elem]
+						: []
 
 					if(res.length > 0 && !allMatching){
 						throw Stop
 					}
 
-					return []
+					return res
 				}, 
 				// XXX for path tests use this to narrow down the options...
 				function(_, i, path, sublist, options){
-					// NOTE: this needs to call the actual func that the user
-					// 		gave us and not the constructed function that we 
-					// 		pass to .walk(..) above...
-					return sublist.search(func, i, path, options) || [] },
+					// skip mismatching paths...
+					// XXX this does not do the right thing...
+					// 		dialog_1.search(['B', '*'], {allMatching: true})
+					if(pattern instanceof Array 
+							&& pattern[path.length-1] != '*' 
+							&& pattern[path.length-1] != path[path.length-1]){
+						return []
+					}
+					return sublist.search(pattern, i, path, options) || [] },
 				...args,
 				options)
-
-			// nothing found...
-			return res
 
 		} catch(e){
 			// we got a result...
@@ -935,6 +958,10 @@ var BaseBrowserPrototype = {
 			// error...
 			throw e
 		}
+
+		return allMatching ? 
+			res 
+			: res[0]
 	},
 
 
