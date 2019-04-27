@@ -696,7 +696,7 @@ var BaseBrowserPrototype = {
 								var res = this instanceof Array ? 
 									this 
 									: [this] 
-								i += this.length 
+								i += res.length 
 								nested = res
 								return res
 							})
@@ -859,7 +859,7 @@ var BaseBrowserPrototype = {
 		options = args[args.length-1] || {}
 		options = !(typeof(options) == typeof(123) 
 				|| options instanceof Array) ?
-			args.pop()
+			(args.pop() || {})
 			: {}
 		options = !options.defaultReverse ?
 			Object.assign({},
@@ -887,6 +887,14 @@ var BaseBrowserPrototype = {
 
 
 	// XXX EXPERIMENTAL...
+	//
+	// 	.search(index[, options])
+	// 	.search(path[, options])
+	// 	.search(func[, options])
+	// 		-> item
+	// 		-> undefined
+	//
+	//
 	// XXX make this a bit smarter and accept an index or a path...
 	// XXX can this replace .get(..)
 	search: function(pattern, options){
@@ -900,14 +908,13 @@ var BaseBrowserPrototype = {
 			args.pop()
 			: {}
 
-		// XXX better name???
-		var allMatching = options.allMatching
-
+		// normalize the test predicate...
 		var func = (
 			// predicate...
 			pattern instanceof Function ?
 				pattern
 			// path...
+			// XXX BUG: this for some reason matches ['B', '*'] to ['nested', 'moo']
 			: pattern instanceof Array ?
 				function(elem, i, path){
 					return path.length > 0
@@ -916,52 +923,32 @@ var BaseBrowserPrototype = {
 							|| pattern[path.length-1] == path[path.length-1]) }
 			// index...
 			: function(elem, i, path){
-				return i == pattern } )
+				return elem 
+					&& path.length > 0 
+					&& i == pattern } )
 
-		var Stop = new Error('Stop search exception...')
-		var res = []
+
+		var Stop = new Error('Stop iteration...')
+		var res
 
 		try {
-			res = this.walk(
-				function(i, path, elem, doNested){
-					// XXX returning path and/or i might be a good idea...
-					// predicate...
-					res = func.call(that, elem, i, path, that) ?
-						[elem]
-						: []
-
-					if(res.length > 0 && !allMatching){
+			this
+				.map(function(elem, i, path){
+					if(func.call(this, elem, i, path)){
+						res = elem
 						throw Stop
 					}
+				}, options)
 
-					return res
-				}, 
-				// XXX for path tests use this to narrow down the options...
-				function(_, i, path, sublist, options){
-					// skip mismatching paths...
-					// XXX this does not do the right thing...
-					// 		dialog_1.search(['B', '*'], {allMatching: true})
-					if(pattern instanceof Array 
-							&& pattern[path.length-1] != '*' 
-							&& pattern[path.length-1] != path[path.length-1]){
-						return []
-					}
-					return sublist.search(pattern, i, path, options) || [] },
-				...args,
-				options)
-
-		} catch(e){
-			// we got a result...
-			if(e === Stop){
-				return res[0]
+		} catch(err){
+			if(err === Stop){
+				return res
 			}
-			// error...
-			throw e
+
+			throw err
 		}
 
-		return allMatching ? 
-			res 
-			: res[0]
+		return res
 	},
 
 
