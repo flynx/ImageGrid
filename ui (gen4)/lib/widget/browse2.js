@@ -836,6 +836,7 @@ var BaseBrowserPrototype = {
 	//
 	//
 	//
+	// XXX should we move the defaults to .config???
 	// XXX make item access by index lazy... 
 	// 		- index nested stuff and lengths... (.sublist_length)
 	// 		- stop when target reached... (control callback???)
@@ -885,6 +886,74 @@ var BaseBrowserPrototype = {
 			i,
 			path, 
 			options)
+	},
+
+
+	// XXX EXPERIMENTAL...
+	// XXX make this a bit smarter and accept an index or a path...
+	// XXX can this replace .get(..)
+	search: function(func, options){
+		var that = this
+
+		// XXX can we avoid this in every client???
+		var args = [...arguments]
+		func = args[0] instanceof Function ? 
+			args.shift() 
+			: undefined
+		var i = typeof(args[0]) == typeof(123) ?
+			args.shift()
+			: 0
+		var path = (args[0] instanceof Array 
+				|| typeof(args[0]) == typeof('str')) ?
+			args.shift()
+			: []
+		var options = args.pop() || {}
+
+		// XXX better name...
+		var allMatching = options.allMatching
+
+		var Stop = new Error('Stop search exception...')
+		var res = []
+
+		try {
+			this.walk(
+				function(i, path, elem, doNested){
+					// check the element and if it matches then break the search...
+					func.call(that, elem, i, path, that) ?
+						// XXX returning path and i might be a good idea...
+						res.push(elem)
+						: null
+
+					if(res.length > 0 && !allMatching){
+						throw Stop
+					}
+
+					return []
+				}, 
+				// XXX for path tests use this to narrow down the options...
+				function(_, i, path, sublist, options){
+					// NOTE: this needs to call the actual func that the user
+					// 		gave us and not the constructed function that we 
+					// 		pass to .walk(..) above...
+					return sublist.search(func, i, path, options) || [] },
+				// XXX this is essentially the only place we need parsed arguments...
+				// 		...can we either pass in the args in some standard format 
+				// 		or spec the format and let walk handle it???
+				i,
+				path,
+				options)
+
+			// nothing found...
+			return res
+
+		} catch(e){
+			// we got a result...
+			if(e === Stop){
+				return res[0]
+			}
+			// error...
+			throw e
+		}
 	},
 
 
