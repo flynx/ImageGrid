@@ -855,13 +855,6 @@ var BaseBrowserPrototype = {
 		func = args[0] instanceof Function ? 
 			args.shift() 
 			: undefined
-		var i = typeof(args[0]) == typeof(123) ?
-			args.shift()
-			: 0
-		var path = (args[0] instanceof Array 
-				|| typeof(args[0]) == typeof('str')) ?
-			args.shift()
-			: []
 		var options = args.pop() || {}
 		options = !options.defaultReverse ?
 			Object.assign({},
@@ -883,8 +876,7 @@ var BaseBrowserPrototype = {
 				// 		gave us and not the constructed function that we 
 				// 		pass to .walk(..) above...
 				return sublist.map(func, i, path, options) },
-			i,
-			path, 
+			...args,
 			options)
 	},
 
@@ -900,13 +892,6 @@ var BaseBrowserPrototype = {
 		func = args[0] instanceof Function ? 
 			args.shift() 
 			: undefined
-		var i = typeof(args[0]) == typeof(123) ?
-			args.shift()
-			: 0
-		var path = (args[0] instanceof Array 
-				|| typeof(args[0]) == typeof('str')) ?
-			args.shift()
-			: []
 		var options = args.pop() || {}
 
 		// XXX better name...
@@ -936,11 +921,7 @@ var BaseBrowserPrototype = {
 					// 		gave us and not the constructed function that we 
 					// 		pass to .walk(..) above...
 					return sublist.search(func, i, path, options) || [] },
-				// XXX this is essentially the only place we need parsed arguments...
-				// 		...can we either pass in the args in some standard format 
-				// 		or spec the format and let walk handle it???
-				i,
-				path,
+				...args,
 				options)
 
 			// nothing found...
@@ -1536,11 +1517,13 @@ var BaseBrowserPrototype = {
 						// normal item...
 						: [ renderer.renderItem(item, i, context) ] ) },
 				function(func, i, path, sublist, options){
-					return sublist.render(context, renderer) },
+					return sublist.render(context, renderer, i, path) },
 				// make the element render less strict...
 				function(elem){
 					return elem 
 						&& elem.render instanceof Function },
+				// pass on i and path if given...
+				...[...arguments].slice(2),
 				options)
 
 		// determine the render mode...
