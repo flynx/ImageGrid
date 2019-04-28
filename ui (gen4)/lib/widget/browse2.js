@@ -937,7 +937,6 @@ var BaseBrowserPrototype = {
 			// XXX BUG: this for some reason matches ['B', '*'] to ['nested', 'moo']
 			: pattern instanceof Array ?
 				function(elem, i, path){
-					console.log('%%%', path, pattern)
 					return path.length > 0
 						&& pattern.length == path.length
 						&& (pattern[path.length-1] == '*' 
@@ -949,23 +948,42 @@ var BaseBrowserPrototype = {
 					&& i == pattern } )
 
 
+		/*
+		var Stop = new Error('Target found.')
+		var res
+		try {
+		//*/
+
 			return this.walk(
 				function(i, path, elem, doNested){
-					console.log('---', i, path)
 					if(elem && func.call(this, elem, i, path)){
-						res = elem
+						//res = elem
 						//throw Stop
 						return [elem]
 					}
 					return []
 				},
 				function(_, i, path, sublist, options){
-					// XXX skip paths...
-					// XXX
+					// XXX does not work yet...
+					if(pattern instanceof Array 
+							&& pattern[path.length-1] != '*' 
+							&& pattern[path.length-1] != path[path.length-1]){
+						return []
+					}
+
 					return sublist.search(pattern, i, path, options)
 				},
 				...args,
 				options)
+
+		/* XXX need to do this only in the root call...
+		} catch(err){
+			if(err === Stop){
+				return res
+			}
+			throw err
+		}
+		//*/
 	},
 
 
