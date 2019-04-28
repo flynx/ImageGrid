@@ -612,7 +612,9 @@ var BaseBrowserPrototype = {
 			: []
 		path = path instanceof Array ? path : [path]
 		options = args.pop() || {}
+
 		// set call context...
+		// XXX revise this....
 		options = !options.root ?
 			Object.assign({},
 				options,
@@ -947,43 +949,28 @@ var BaseBrowserPrototype = {
 					&& path.length > 0 
 					&& i == pattern } )
 
+		return this.walk(
+			function(i, path, elem, doNested){
+				if(elem && func.call(this, elem, i, path)){
+					return [elem]
+				}
+				return []
+			},
+			/* XXX
+			function(_, i, path, sublist, options){
+				// XXX does not work yet...
+				//// skip paths that do not match...
+				//if(pattern instanceof Array 
+				//		&& pattern[path.length-1] != '*' 
+				//		&& pattern[path.length-1] != path[path.length-1]){
+				//	return []
+				//}
 
-		/*
-		var Stop = new Error('Target found.')
-		var res
-		try {
-		//*/
-
-			return this.walk(
-				function(i, path, elem, doNested){
-					if(elem && func.call(this, elem, i, path)){
-						//res = elem
-						//throw Stop
-						return [elem]
-					}
-					return []
-				},
-				function(_, i, path, sublist, options){
-					// XXX does not work yet...
-					if(pattern instanceof Array 
-							&& pattern[path.length-1] != '*' 
-							&& pattern[path.length-1] != path[path.length-1]){
-						return []
-					}
-
-					return sublist.search(pattern, i, path, options)
-				},
-				...args,
-				options)
-
-		/* XXX need to do this only in the root call...
-		} catch(err){
-			if(err === Stop){
-				return res
-			}
-			throw err
-		}
-		//*/
+				return sublist.search(pattern, i, path, options)
+			},
+			...args,
+			//*/
+			options)
 	},
 
 
@@ -1027,10 +1014,14 @@ var BaseBrowserPrototype = {
 	forEach: function(func, options){
 		this.map(...arguments)
 		return this },
+	// XXX should we use a recursive .walk(..), .map(..) .filter(..) or 
+	// 		try and make do with what is available in a child???
 	filter: function(func, options){
-		return this.map(function(e, i, p, b){
-			return func.call(this, e, i, p, b) ? [e] : [] })
-		.flat() },
+		return this.walk(function(i, p, e, b){
+			return e && func.call(this, e, i, p, b) ? [e] : [] }) },
+		//return this.map(function(e, i, p, b){
+		//	return func.call(this, e, i, p, b) ? [e] : [] })
+		//.flat() },
 	reduce: function(){},
 
 	// Get item...
