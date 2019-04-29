@@ -931,18 +931,19 @@ var BaseBrowserPrototype = {
 			: {}
 
 		// normalize the test predicate...
+		// XXX add support for regex...
 		var func = (
 			// predicate...
 			pattern instanceof Function ?
 				pattern
 			// path...
-			// XXX BUG: this for some reason matches ['B', '*'] to ['nested', 'moo']
+			// XXX add support for regex...
 			: pattern instanceof Array ?
 				function(elem, i, path){
 					return path.length > 0
 						&& pattern.length == path.length
-						&& (pattern[path.length-1] == '*' 
-							|| pattern[path.length-1] == path[path.length-1]) }
+						&& !pattern.reduce(function(res, e, i){
+							return res || (e != '*' && e != path[i]) }, false) }
 			// index...
 			: function(elem, i, path){
 				return elem 
