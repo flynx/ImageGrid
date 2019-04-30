@@ -917,11 +917,11 @@ var BaseBrowserPrototype = {
 	// 		-> undefined
 	//
 	//
-	// XXX make this a bit smarter and accept an index or a path...
 	// XXX can this replace .get(..)
+	// XXX do we actually need to stop this as soon as we find something, 
+	// 		i.e. options.firstOnly???
 	search: function(pattern, options){
 		var that = this
-
 		var args = [...arguments]
 		pattern = args.shift() 
 		options = args[args.length-1] || {}
@@ -930,48 +930,86 @@ var BaseBrowserPrototype = {
 			(args.pop() || {})
 			: {}
 
-		// normalize the test predicate...
-		// XXX add support for regex...
+		// handle pattern keywords...
+		pattern = pattern == 'first' ?
+				0
+			: pattern == 'last' ?
+				-1
+			: pattern
+
+		// normalize negative index...
+		if(typeof(pattern) == typeof(123) && pattern < 0){
+			pattern = -pattern - 1
+			options.reverse = 'flat'
+		}
+
+		// normalize/build the test predicate...
 		var func = (
 			// predicate...
 			pattern instanceof Function ?
 				pattern
+			// regexp...
+			: pattern instanceof RegExp ?
+				function(elem, i, path){
+					return pattern.test(elem.value)
+						|| pattern.test('/'+ path.join('/')) }
 			// path...
-			// XXX add support for regex and glob...
 			: pattern instanceof Array ?
 				function(elem, i, path){
 					return path.length > 0
 						&& pattern.length == path.length
-						&& !pattern.reduce(function(res, e, i){
-							return res || !(e == '*' || e == path[i]) }, false) }
+						&& !pattern
+							// XXX add support for '**' ???
+							.reduce(function(res, e, i){
+								return res || !(
+									e == '*' 
+										|| (e instanceof RegExp 
+											&& e.test(path[i]))
+										|| e == path[i]) }, false) }
 			// index...
-			: function(elem, i, path){
-				return elem 
-					&& path.length > 0 
-					&& i == pattern } )
+			: typeof(pattern) == typeof(123) ?
+				function(elem, i, path){
+					return elem 
+						&& path.length > 0 
+						&& i == pattern }
+			// object query...
+			: function(elem){
+				return Object.entries(pattern)
+					.reduce(function(res, [key, pattern]){
+						return res 
+							&& (elem[key] == pattern
+								// bool...
+								|| ((pattern === true || pattern === false)
+									&& pattern === !!elem[key])
+								// predicate...
+								|| (pattern instanceof Function 
+									&& pattern.call(that, elem[key]))
+								// regexp...
+								|| (pattern instanceof RegExp
+									&& pattern.test(elem[key]))
+								// type...
+								// XXX problem, we can't distinguish this 
+								// 		and a predicate...
+								// 		...so for now use:
+								// 			.search(v => v instanceof Array)
+								//|| (typeof(pattern) == typeof({})
+								//	&& pattern instanceof Function
+								//	&& elem[key] instanceof pattern)
+							) }, true) } )
 
 		return this.walk(
 			function(i, path, elem, doNested){
+				// match...
+				// XXX should this use that???
 				if(elem && func.call(this, elem, i, path)){
-					// XXX is this the right output format???
-					return [[elem, i, path]]
+					return [[
+						elem, 
+						i, 
+						path,
+					]]
 				}
 				return []
 			},
-			/* XXX
-			function(_, i, path, sublist, options){
-				// XXX does not work yet...
-				//// skip paths that do not match...
-				//if(pattern instanceof Array 
-				//		&& pattern[path.length-1] != '*' 
-				//		&& pattern[path.length-1] != path[path.length-1]){
-				//	return []
-				//}
-
-				return sublist.search(pattern, i, path, options)
-			},
-			...args,
-			//*/
 			options)
 	},
 
