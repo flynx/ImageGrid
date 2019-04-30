@@ -943,7 +943,7 @@ var BaseBrowserPrototype = {
 					return path.length > 0
 						&& pattern.length == path.length
 						&& !pattern.reduce(function(res, e, i){
-							return res || (e != '*' && e != path[i]) }, false) }
+							return res || !(e == '*' || e == path[i]) }, false) }
 			// index...
 			: function(elem, i, path){
 				return elem 
@@ -953,7 +953,8 @@ var BaseBrowserPrototype = {
 		return this.walk(
 			function(i, path, elem, doNested){
 				if(elem && func.call(this, elem, i, path)){
-					return [elem]
+					// XXX is this the right output format???
+					return [[elem, i, path]]
 				}
 				return []
 			},
