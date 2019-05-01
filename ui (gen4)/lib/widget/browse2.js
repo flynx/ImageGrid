@@ -913,6 +913,7 @@ var BaseBrowserPrototype = {
 	// 	.search(index[, options])
 	// 	.search(path[, options])
 	// 	.search(func[, options])
+	// 	.search(regexp[, options])
 	// 		-> item
 	// 		-> undefined
 	//
