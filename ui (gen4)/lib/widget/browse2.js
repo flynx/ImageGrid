@@ -910,21 +910,62 @@ var BaseBrowserPrototype = {
 
 	// XXX EXPERIMENTAL...
 	//
-	// 	.search(index[, options])
-	// 	.search(path[, options])
-	// 	.search(func[, options])
-	// 	.search(regexp[, options])
-	// 		-> item
-	// 		-> undefined
+	// 	Get list of matching elements...
+	// 	NOTE: this is similar to .filter(..)
+	// 	.search(test[, options])
+	// 		-> items
+	//
+	// 	Map func to list of matching elements and return results...
+	// 	NOTE: this is similar to .filter(..).map(func)
+	// 	.search(test, func[, options])
+	// 		-> items
+	//
+	//
+	// test can be:
+	// 	predicate(..)	- function returning true or false
+	// 	index			- element index
+	// 						NOTE: index can be positive or negative to 
+	// 							access items from the end.
+	// 	path			- array of path elements or '*' (matches any element)
+	// 	regexp			- regexp object to test item path
+	// 	query			- object to test against the element 
+	//
+	//
+	// 	predicate(elem, i, path)
+	// 		-> bool
+	//
+	//
+	// query format:
+	// 	{
+	// 		// match if <attr-name> exists...
+	// 		<attr-name>: true,
+	//
+	// 		// match if <attr-name> does not exist...
+	// 		<attr-name>: false,
+	//
+	// 		// match if <attr-name> equals value...
+	// 		<attr-name>: <value>,
+	//
+	// 		// match if func(<attr-value>) return true...
+	// 		<attr-name>: <func>,
+	//
+	// 		...
+	// 	}
 	//
 	//
 	// XXX can this replace .get(..)
 	// XXX do we actually need to stop this as soon as we find something, 
 	// 		i.e. options.firstOnly???
-	search: function(pattern, options){
+	search: function(pattern, func, options){
 		var that = this
+
+		// parse args...
 		var args = [...arguments]
 		pattern = args.shift() 
+		func = (args[0] instanceof Function 
+				|| args[0] === undefined) ? 
+			args.shift() 
+			: undefined
 		options = args[args.length-1] || {}
 		options = !(typeof(options) == typeof(123) 
 				|| options instanceof Array) ?
@@ -945,7 +986,7 @@ var BaseBrowserPrototype = {
 		}
 
 		// normalize/build the test predicate...
-		var func = (
+		var test = (
 			// predicate...
 			pattern instanceof Function ?
 				pattern
@@ -1002,12 +1043,14 @@ var BaseBrowserPrototype = {
 			function(i, path, elem, doNested){
 				// match...
 				// XXX should this use that???
-				if(elem && func.call(this, elem, i, path)){
-					return [[
-						elem, 
-						i, 
-						path,
-					]]
+				if(elem && test.call(this, elem, i, path)){
+					return func ?
+						[func.call(this, elem, i, path)]
+						: [[
+							elem, 
+							i, 
+							path,
+						]]
 				}
 				return []
 			},
