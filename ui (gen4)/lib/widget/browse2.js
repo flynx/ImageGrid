@@ -929,6 +929,7 @@ var BaseBrowserPrototype = {
 	// 	path			- array of path elements or '*' (matches any element)
 	// 	regexp			- regexp object to test item path
 	// 	query			- object to test against the element 
+	// 	keyword			- 
 	//
 	//
 	// 	predicate(elem, i, path)
@@ -937,10 +938,12 @@ var BaseBrowserPrototype = {
 	//
 	// query format:
 	// 	{
-	// 		// match if <attr-name> exists...
+	// 		// match if <attr-name> exists and is true...
+	// 		// XXX revise...
 	// 		<attr-name>: true,
 	//
-	// 		// match if <attr-name> does not exist...
+	// 		// match if <attr-name> does not exist or is false...
+	// 		// XXX revise...
 	// 		<attr-name>: false,
 	//
 	// 		// match if <attr-name> equals value...
@@ -953,7 +956,17 @@ var BaseBrowserPrototype = {
 	// 	}
 	//
 	//
-	// XXX can this replace .get(..)
+	// supported keywords:
+	// 	'first'		- get first item (same as 0)
+	// 	'last'		- get last item (same as -1)
+	// 	'selected'
+	// 	'focused'
+	// 	'next'
+	// 	'prev'
+	//
+	//
+	// XXX add options.ignoreKeywords ???
+	// XXX add support for 'next'/'prev', ... keywords... (here or in .get(..)???)
 	// XXX do we actually need to stop this as soon as we find something, 
 	// 		i.e. options.firstOnly???
 	search: function(pattern, func, options){
@@ -977,6 +990,10 @@ var BaseBrowserPrototype = {
 				0
 			: pattern == 'last' ?
 				-1
+			: pattern == 'selected' ?
+				{selected: true}
+			: pattern == 'focused' ?
+				{focused: true}
 			: pattern
 
 		// normalize negative index...
@@ -987,8 +1004,10 @@ var BaseBrowserPrototype = {
 
 		// normalize/build the test predicate...
 		var test = (
+			pattern === true ?
+				pattern
 			// predicate...
-			pattern instanceof Function ?
+			: pattern instanceof Function ?
 				pattern
 			// regexp...
 			: pattern instanceof RegExp ?
@@ -1043,7 +1062,7 @@ var BaseBrowserPrototype = {
 			function(i, path, elem, doNested){
 				// match...
 				// XXX should this use that???
-				if(elem && test.call(this, elem, i, path)){
+				if(elem && (test === true || test.call(this, elem, i, path))){
 					return func ?
 						[func.call(this, elem, i, path)]
 						: [[
@@ -1055,6 +1074,75 @@ var BaseBrowserPrototype = {
 				return []
 			},
 			options)
+	},
+
+
+	// XXX EXPERIMENTAL...
+	//
+	// 	.get()
+	// 		-> item
+	// 		-> undefined
+	//
+	// 	.get(pattern[, options])
+	// 		-> item
+	// 		-> undefined
+	//
+	//
+	// NOTE: this is just like a lazy .search(..) that will return the 
+	// 		first result only.
+	//
+	// XXX add defaults (if no args get selected/focused...)
+	// XXX add support for 'next'/'prev', ... keywords... (here or in .search(..)???)
+	// XXX revise return value...
+	get: function(pattern, options){
+		// XXX selected or focused???
+		pattern = pattern === undefined ? 
+			'selected' 
+			: pattern
+
+		var res
+		var Stop = new Error('.get(..): found match.')
+
+		try {
+			// XXX can we simplify/merge these???
+			if(pattern == 'next'){
+				this.search(true, 
+					function(elem, i, path){
+						if(elem.selected == true){
+							res = true 
+
+						} else if(res === true){
+							res = [elem, i, path]
+							throw Stop
+						}
+					})
+				res = res === true ? undefined : res
+
+			} else if(pattern == 'prev'){
+				this.search(true, 
+					function(elem, i, path){
+						if(elem.selected == true){
+							throw Stop
+						}
+						res = [elem, i, path]
+					})
+				res = undefined
+
+			} else {
+				this.search(pattern, 
+					function(elem, i, path){
+						res = [elem, i, path]
+						throw Stop
+					})
+			}
+
+		} catch(e){
+			if(e !== Stop){
+				throw e
+			}
+		}
+
+		return res
 	},
 
 
@@ -1108,116 +1196,6 @@ var BaseBrowserPrototype = {
 		//.flat() },
 	reduce: function(){},
 
-	// Get item...
-	//
-	// 	.get()
-	// 	.get(id)
-	// 	.get(index)
-	// 	.get(path)
-	// 		-> item
-	// 		-> undefined
-	//
-	//
-	// options format:
-	// 	{
-	// 		ignoreKeywords: <bool>,
-	//
-	// 		// rest of the options are the same as for .map(..)
-	// 		...
-	// 	}
-	//
-	//
-	// XXX this is not too fast for indexing very long lists...
-	// XXX use cache for these -- currently these use .map(..)...
-	get: function(key, options){
-		key = key == null ? 0 : key
-		key = typeof(key) == typeof('str') ?
-			key.split(/[\\\/]/g)
-				.filter(function(e){ return e.length > 0 })
-			: key
-		key = typeof(key) == typeof('str') ?
-			[key]
-			: key
-
-		options = Object.assign(Object.create(this.options || {}), options || {})
-		var iterateCollapsed = options.iterateAll || options.iterateCollapsed
-		var ignoreKeywords = options.ignoreKeywords
-
-		// keywords...
-		if(!ignoreKeywords){
-			// XXX don't like how this feels...
-			if(key == 'next' || key == 'prev'){
-				var reference = this.focused
-				key = key == 'next' ?
-					(reference ? 
-						this.indexOf(reference) + 1 
-						: 0)
-					: (reference ? 
-						this.indexOf(reference) - 1 
-						: -1)
-			}
-
-			if(key == 'first'){
-				var res = this.items[0]
-				return res.value instanceof Browser ?
-					res.value.get(key, options)
-					: res
-
-			} else if(key == 'last'){
-				var res = this.items[this.items.length - 1]
-				return res.value instanceof Browser ?
-						res.value.get(key, options)
-					: res.sublist && (!this.collapsed || iterateCollapsed) ?
-						(res.sublist instanceof Browser ?
-							res.sublist.get(key, options)
-							: res.sublist[res.sublist.length - 1])
-					: res
-			}
-		}
-
-		// get path...
-		if(key instanceof Array){
-			var res = this.item_key_index[key.shift()]
-			return key.length == 0 ?
-				res
-				// nested...
-				: iterateCollapsed || !res.collapsed ?
-					res.sublist.get(key, options) 
-				: undefined }
-
-		// get index...
-		// XXX getting an element by index is o(n) and not o(1)...
-		// 		...unless we cache .sublists() not sure if this can be 
-		// 		made better in the general case...
-		// XXX do we need to support negative indexes???
-		var Stop = new Error('.get(..): Result found exception.')
-		var i = 0
-		// reverse indexing...
-		options = Object.assign(
-			{ reverse: key < 0 }, 
-			options || {})
-		key = key < 0 ? 
-			-key - 1 
-			: key
-		var res
-		try {
-			this.map(function(e){
-				res = key == i ?
-					e
-					: res
-				if(res){
-					throw Stop }
-				i++
-			}, options)
-		} catch(e){
-			if(e === Stop){
-				return res
-			}
-			throw e
-		}
-
-		return res
-	},
 	// XXX move these to a more logical spot...
 	// XXX these are almost identical -- reuse???
 	indexOf: function(item, options){

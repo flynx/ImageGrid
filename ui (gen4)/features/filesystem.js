@@ -2606,7 +2606,7 @@ var FileSystemWriterUIActions = actions.Actions({
 						// XXX indicate export state: index, crop, image...
 						return mode == mode_aliases['save'] ? 
 							'$Save' 
-							: '$Export'}], 
+							: '$Export' }], 
 					{
 						cls: 'selected',
 						open: function(){
