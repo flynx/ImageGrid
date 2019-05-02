@@ -959,12 +959,11 @@ var BaseBrowserPrototype = {
 	// supported keywords:
 	// 	'first'		- get first item (same as 0)
 	// 	'last'		- get last item (same as -1)
-	// 	'selected'
-	// 	'focused'
-	// 	'next'
-	// 	'prev'
+	// 	'selected'	- get selected items (shorthand to {selected: true})
+	// 	'focused'	- get focused items (shorthand to {focused: true})
 	//
 	//
+	// XXX use diff
 	// XXX add options.ignoreKeywords ???
 	// XXX add support for 'next'/'prev', ... keywords... (here or in .get(..)???)
 	// XXX do we actually need to stop this as soon as we find something, 
@@ -1063,6 +1062,10 @@ var BaseBrowserPrototype = {
 				// match...
 				// XXX should this use that???
 				if(elem && (test === true || test.call(this, elem, i, path))){
+					// XXX i is not logical when getting items from the 
+					// 		tail of the list...
+					// 		...need to either set it to the negative index 
+					// 		or .length - i (expensive?)
 					return func ?
 						[func.call(this, elem, i, path)]
 						: [[
@@ -1087,62 +1090,89 @@ var BaseBrowserPrototype = {
 	// 		-> item
 	// 		-> undefined
 	//
+	// 	.get('prev'[, offset][, options])
+	// 	.get('next'[, offset][, options])
+	// 		-> item
+	// 		-> undefined
+	//
+	// pattern mostly follows the same scheme as in .select(..) so docs 
+	// for that for more info.
+	//
+	//
 	//
 	// NOTE: this is just like a lazy .search(..) that will return the 
 	// 		first result only.
 	//
 	// XXX add defaults (if no args get selected/focused...)
-	// XXX add support for 'next'/'prev', ... keywords... (here or in .search(..)???)
+	// XXX should we be able to get offset values relative to any match?
 	// XXX revise return value...
 	get: function(pattern, options){
-		// XXX selected or focused???
+		var args = [...arguments]
+		pattern = args.shift()
 		pattern = pattern === undefined ? 
-			'selected' 
+			'focused' 
 			: pattern
+		var offset = (pattern == 'next' || pattern == 'prev')
+				&& typeof(args[0]) == typeof(123) ?
+			args.shift()
+			: 1
+		options = args.pop() || {}
 
-		var res
+		// sanity checks...
+		if(offset <= 0){
+			throw new Error(`.get(..): offset must be a positive number, got: ${offset}.`)
+		}
+
+		var res = []
 		var Stop = new Error('.get(..): found match.')
 
 		try {
-			// XXX can we simplify/merge these???
-			if(pattern == 'next'){
+			// next + offset...
+			pattern == 'next' ?
 				this.search(true, 
 					function(elem, i, path){
-						if(elem.selected == true){
-							res = true 
+						if(elem.focused == true){
+							res = offset + 1
 
-						} else if(res === true){
+						// get the offset item...
+						} else if(res <= 0){
 							res = [elem, i, path]
 							throw Stop
 						}
+						// countdown to offset...
+						res = typeof(res) == typeof(123) ? 
+							res - 1 
+							: res
 					})
-				res = res === true ? undefined : res
-
-			} else if(pattern == 'prev'){
+			// prev + offset...
+			: pattern == 'prev' ?
 				this.search(true, 
 					function(elem, i, path){
-						if(elem.selected == true){
+						if(elem.focused == true){
+							res = res.length >= offset ? 
+								res[0] 
+								: undefined
 							throw Stop
 						}
-						res = [elem, i, path]
+						// buffer the previous offset items...
+						res.push([elem, i, path])
+						res.length > offset
+							&& res.shift()
 					})
-				res = undefined
-
-			} else {
-				this.search(pattern, 
-					function(elem, i, path){
-						res = [elem, i, path]
-						throw Stop
-					})
-			}
+			// base case -> get first match...
+			: this.search(pattern, 
+				function(elem, i, path){
+					res = [elem, i, path]
+					throw Stop
+				})
 
 		} catch(e){
+			// pass on other errors...
 			if(e !== Stop){
 				throw e
 			}
+			return res
 		}
-
-		return res
 	},
 
 
