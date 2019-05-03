@@ -560,6 +560,9 @@ var BaseBrowserPrototype = {
 	// 		// If true skip iterating nested items...
 	// 		skipNested: <bool>,
 	//
+	// 		// XXX not yet supported...
+	// 		skipInlined: <bool>,
+	//
 	// 		// Reverse iteration order...
 	//		//
 	//		// modes:
@@ -586,6 +589,7 @@ var BaseBrowserPrototype = {
 	//
 	//
 	// XXX can we add support for partial walks, i.e. start/end ranges???
+	// 		...or abort walk and return result on user request...
 	// XXX can this support breadth first walking???
 	// XXX revise protocol...
 	walk: function(func, options){
@@ -1082,28 +1086,30 @@ var BaseBrowserPrototype = {
 
 	// XXX EXPERIMENTAL...
 	//
+	// 	Get focused item...
 	// 	.get()
+	// 	.get('focused')
 	// 		-> item
 	// 		-> undefined
 	//
-	// 	.get(pattern[, options])
-	// 		-> item
-	// 		-> undefined
-	//
+	// 	Get next/prev item relative to focused...
 	// 	.get('prev'[, offset][, options])
 	// 	.get('next'[, offset][, options])
 	// 		-> item
 	// 		-> undefined
 	//
-	// pattern mostly follows the same scheme as in .select(..) so docs 
-	// for that for more info.
+	// 	Get first item matching pattern...
+	// 	.get(pattern[, options])
+	// 		-> item
+	// 		-> undefined
 	//
+	// pattern mostly follows the same scheme as in .select(..) so see 
+	// docs for that for more info.
 	//
 	//
 	// NOTE: this is just like a lazy .search(..) that will return the 
 	// 		first result only.
 	//
-	// XXX add defaults (if no args get selected/focused...)
 	// XXX should we be able to get offset values relative to any match?
 	// XXX revise return value...
 	get: function(pattern, options){
@@ -1179,29 +1185,10 @@ var BaseBrowserPrototype = {
 	// XXX BROKEN...
 	// Sublist map functions...
 	//
-	// NOTE: there are different from .map(..) in that instead of paths 
-	// 		func(..) will get indexes in the current browser...
-	// NOTE: these will return a sparse array...
-	//
-	// XXX this is broken because it does not account for sublists 
-	// 		beyond the 0'th level...
+	// XXX NOTE: these will return a sparse array... ???
 	sublists: function(func, options){
-		var that = this
-		options = Object.assign(Object.create(this.options || {}), options || {})
-		var skipNested = options.skipNested
-		var skipInlined = options.skipInlined
-
-		var res = []
-		this.items
-			.forEach(function(elem, i){
-				if((!skipInlined && elem.value instanceof Browser)
-							|| (!skipNested && elem.sublist)){
-					res[i] = func ?
-						func.call(that, elem, i, that)
-						: elem 
-				} })
-		return res 
-	},
+		return this.search({sublist: true}, func, options) },
+	// XXX broken, needs support for options.skipInlined ...
 	nested: function(func){
 		return this.sublists(func, {skipInlined: true}) },
 	inlined: function(func){
