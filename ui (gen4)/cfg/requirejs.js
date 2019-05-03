@@ -3,7 +3,6 @@
 *
 *
 **********************************************************************/
-
 var requirejs_cfg = {
 	// XXX this does not work on direct filesystem access...
 	//urlArgs: 'bust='+Date.now(),
@@ -20,6 +19,8 @@ var requirejs_cfg = {
 		'lib/actions': 'node_modules/ig-actions/actions',
 		'lib/features': 'node_modules/ig-features/features',
 		//'lib/keyboard': './node_modules/ig-keyboard/keyboard',
+		
+		'lib/walk': 'node_modules/generic-walk/walk',
 	},	
 	map: {
 		'*': {
@@ -31,6 +32,8 @@ var requirejs_cfg = {
 			'ig-features': 'lib/features',
 
 			//'ig-keyboard': 'lib/keyboard',
+
+			'generic-walk': 'lib/walk',
 		},
 	},
 }

@@ -12,6 +12,10 @@ var keyboard = require('../keyboard')
 var object = require('../object')
 var widget = require('./widget')
 
+// XXX
+//var walk = require('lib/walk')
+var walk = require('../../node_modules/generic-walk/walk').walk
+
 
 
 /*********************************************************************/
@@ -592,6 +596,7 @@ var BaseBrowserPrototype = {
 	// 		...or abort walk and return result on user request...
 	// XXX can this support breadth first walking???
 	// XXX revise protocol...
+	// XXX use generic-walk.... (???)
 	walk: function(func, options){
 		var that = this
 
@@ -720,7 +725,7 @@ var BaseBrowserPrototype = {
 							})
 					}
 
-					// setup some context...
+					// setup iteration context...
 					var inline = false
 					// inline browser or array...
 					if(isWalkable(elem)){
@@ -772,6 +777,49 @@ var BaseBrowserPrototype = {
 		return options.root === this ?
 			res.flat()
 			: res
+	},
+
+
+	// XXX need to make this the same as .walk(..) from the user's 
+	// 		perspective with one addition, expose the root stop(..) 
+	// 		function to func...
+	// 		next steps:
+	// 			- get a feeling of this running
+	// 			- see if we need to change the API
+	// 			- either embed into .walk(..) or reimplement...
+	walk2: function(func, i, path, options){
+
+		i = i || 0
+		path = path || []
+
+		return walk(
+			function(state, node, next, stop){
+				node.value 
+					&& console.log('---', i++, path, node.value)
+
+				return (
+					// inline...
+					node instanceof Array ?
+						next('do', state, ...node)
+					: node.walk2 instanceof Function ?
+						// XXX pass stop(..) to this...
+						state.concat(node.walk2(func, i, path, options))
+
+					// nested...
+					// XXX add node to state...
+					: node.sublist instanceof Array ?
+						// XXX need to update path...
+						next('do', state, ...node.sublist)
+					: node.sublist && node.sublist.walk2 instanceof Function ?
+						// XXX pass stop(..) to this...
+						state.concat(node.sublist.walk2(func, i, path.concat([node.value]), options))
+
+					: state)
+			}, 
+			// XXX done(..) 
+			//function(state){ console.log('done:', state) }, 
+			[], 
+			...this.items)
 	},
 
 
