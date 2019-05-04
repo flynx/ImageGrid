@@ -779,20 +779,45 @@ var BaseBrowserPrototype = {
 	},
 
 
+	//
+	//	.walk2()
+	//		-> list
+	//
+	//	.walk2(func[, options])
+	//	.walk2(func, recursion[, options])
+	//	.walk2(func, recursion, walkable[, options])
+	//		-> list
+	//
+	//
+	//	func(node, index, path, next(..), stop(..), children)
+	//		-> list
+	//
+	//	next(children)
+	//		-> list
+	//
+	//	stop(result)
+	//
+	//
+	//	recursion(func(..), stop(..), index, path, children, options)
+	//		-> list
+	//
+	//
+	//	walkable(node)
+	//		-> bool
+	//
+	//
 	// XXX need to make this the same as .walk(..) from the user's 
 	// 		perspective with one addition, expose the root stop(..) 
 	// 		function to func...
-	// 		next steps:
-	// 			- get a feeling of this running
-	// 			- see if we need to change the API
-	// 			- either embed into .walk(..) or reimplement...
+	// XXX this uses a slightly different signature to func(..) that .walk(..) does...
 	// XXX can this be simpler???
 	walk2: function(func, recursion, walkable, options){
 		var that = this
 
 		// parse args...
 		var args = [...arguments]
-		func = args[0] instanceof Function ? 
+		func = (args[0] instanceof Function 
+				|| args[0] == null) ? 
 			args.shift() 
 			: undefined
 		var recursion = (args[0] instanceof Function 
@@ -806,17 +831,18 @@ var BaseBrowserPrototype = {
 			: null 
 		options = args.shift() || {} 
 
-		// threaded args...
+		// recursion-threaded args...
 		var i = args.shift() || 0
 		var path = args.shift() || []
+		var stopParent = args.shift() || null 
 
 		// options specifics...
 		options = !options.root ?
 			Object.assign({},
-				this.options,
+				this.options || {},
 				options,
 				// set call context...
-				{root: this})
+				{ root: this })
 			: options
 		var iterateNonIterable = options.iterateAll || options.iterateNonIterable
 		var iterateCollapsed = options.iterateAll || options.iterateCollapsed
@@ -855,11 +881,12 @@ var BaseBrowserPrototype = {
 					return (list === false ?
 								[]	
 							: list instanceof Array ?
+								// NOTE: this gets the path and i from context...
 								next('do', state, ...(reverse ? list.slice().reverse() : list))
 							// user-defined recursion...
 							: recursion instanceof Function ?
-								recursion.call(that, func, i, p, list, options)
-							: list[recursion || 'walk2'](func, recursion, walkable, options, i, p))
+								recursion.call(that, func, stop, i, p, list, options)
+							: list.walk2(func, recursion, walkable, options, i, p, stop))
 						.run(function(){
 							// normalize...
 							nested = this instanceof Array ?
@@ -896,12 +923,14 @@ var BaseBrowserPrototype = {
 					&& doNested()
 				// element...
 				state.splice(state.length, 0,
-					...[func.call(that, 
-						...(inline ? [null, i] : [node, i++]),
-						p, 
-						doNested, 
-						stop,
-						children) || []])
+					...[ func ? 
+						(func.call(that, 
+							...(inline ? [null, i] : [node, i++]),
+							p, 
+							doNested, 
+							stop,
+							children) || []) 
+						: [node] ])
 				// normal order -> do children...
 				children
 					&& (doNested(), 
@@ -911,8 +940,14 @@ var BaseBrowserPrototype = {
 				return state
 			}, 
 			// normalize the root result...
-			function(state){ 
-				return options.root === that ?
+			function(state, mode){ 
+				// if we stopped, thread the stop up...
+				mode == 'stopped' 
+					&& stopParent instanceof Function
+					&& stopParent(state)
+				// normalize the result...
+				return (options.root === that 
+						&& state instanceof Array) ?
 					state.flat()
 					: state }, 
 			[], 
