@@ -798,12 +798,21 @@ var BaseBrowserPrototype = {
 	//	stop(result)
 	//
 	//
+	//	Handle walkable node children (recursively)...
 	//	recursion(func(..), stop(..), index, path, children, options)
 	//		-> list
 	//
 	//
+	//	Test if node is walkable...
 	//	walkable(node)
 	//		-> bool
+	//
+	//
+	// NOTE: if recursion(..) is not given then .walk2(..) is used to 
+	// 		handle nested children...
+	// NOTE: if walkable(..) is not given then we check for .walk2(..)
+	// 		availability...
+	// NOTE: children arrays are handled internally...
 	//
 	//
 	// XXX need to make this the same as .walk(..) from the user's 
@@ -885,7 +894,7 @@ var BaseBrowserPrototype = {
 								next('do', state, ...(reverse ? list.slice().reverse() : list))
 							// user-defined recursion...
 							: recursion instanceof Function ?
-								recursion.call(that, func, stop, i, p, list, options)
+								recursion.call(that, list, i, p, func, stop, options)
 							: list.walk2(func, recursion, walkable, options, i, p, stop))
 						.run(function(){
 							// normalize...
@@ -964,44 +973,59 @@ var BaseBrowserPrototype = {
 	// XXX rename this??
 	text: function(options, base){
 		var that = this
-		var context = (options == null || options.options == null) ?
-			{
-				root: this,
-				// NOTE: we are not combining this with .options as nested 
-				// 		lists can have their own unique sets of options 
-				// 		independently of the root list...
-				options: Object.assign(
-					Object.create(this.options || {}),
-					// defaults...
-					{ iterateNonIterable: true }, 
-					options || {}),
-			}
+		options = options || {}
+		options = !options.root ?
+			Object.assign({},
+				this.options || {},
+				options,
+				// set call context...
+				{ root: this })
 			: options
-		options = context.options
 		base = base || []
 
-		var getValue = function(item){
-			return item.value || item }
-
-		var items = this
-			.walk(
-				function(i, path, item, nested, children){
-					var indent = base
-						.concat(path)
-						.slice(1)
-							.map(e => '  ')
-							.join('')
-					return item ? 
-						indent + getValue(item) 
+		return this
+			.walk2(
+				function(node, i, path){
+					return node ? 
+						base
+							.concat(path)
+							.slice(1)
+								.map(e => '  ')
+								.join('') + (node.value || node)
 						: [] },
-				function(func, i, path, children, options){
-					return children.text(context, base.concat(path)) },
+				function(children, i, path){
+					return children.text(options, base.concat(path)) },
+				function(node){
+					return node && node.text instanceof Function },
 				options)
+			.run(function(){
+				return options.root === that ?
+					this.join('\n')
+					: this }) },
 
-		return context.root === this ?
-			items.join('\n')
-			: items
-	},
+	// XXX Q: do we go down the tree using the respective method (.paths(..)) 
+	// 		in this case or the more generic .walk2()???
+	// 		...the two examples below illustrate both approaches...
+	paths: function(options, base){
+		base = base || []
+		return this.walk2(
+			function(n, i, p){
+				return n 
+					&& [(options || {}).joinPaths !== false ? 
+						base.concat(p).join('/') 
+						: base.concat(p)] }, 
+			function(children, i, path){
+				return children.paths(options, base.concat(path)) },
+			function(node){
+				return node && node.paths instanceof Function },
+			options) },
+	paths2: function(options){
+		return this.walk2(
+			function(n, i, p){
+				return n 
+					&& [ (options || {}).joinPaths !== false ? 
+						p.join('/') 
+						: p ] }, options) },
 
 
 	// Extended map...
