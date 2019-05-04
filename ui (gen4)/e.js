@@ -45,8 +45,8 @@ function createSplash(){
 		transparent: true,
 		frame: false,
 		center: true,
-		width: 800, 
-		height: 500,
+		width: 840, 
+		height: 540,
 
 		alwaysOnTop: true,
 
