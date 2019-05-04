@@ -252,6 +252,18 @@ var makeItemEventMethod = function(event, handler){
 	}) }
 
 
+var makeWalker = function(name, func, options){
+	return function(...args){
+		// XXX do we get passed options??
+		return this.walk2(
+			func,
+			function(children){
+				return children[name](...args) },
+			function(node){
+				return node && node[name] instanceof Function },
+			options || {}) } }
+
+
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
@@ -1026,6 +1038,13 @@ var BaseBrowserPrototype = {
 					&& [ (options || {}).joinPaths !== false ? 
 						p.join('/') 
 						: p ] }, options) },
+	// XXX need to be able to update context (i.e. path) ...
+	paths3: makeWalker('path3',
+		function(n, i, p){
+			return n 
+				&& [ (options || {}).joinPaths !== false ? 
+					p.join('/') 
+					: p ] }),
 
 
 	// Extended map...
