@@ -799,7 +799,7 @@ var BaseBrowserPrototype = {
 	//
 	//
 	//	Handle walkable node children (recursively)...
-	//	recursion(func(..), stop(..), index, path, children, options)
+	//	recursion(children, index, path, func(..), stop(..), options)
 	//		-> list
 	//
 	//
