@@ -322,7 +322,7 @@ help:
 ### Dependency checking...
 
 require(%):
-	@printf "%-15s %s\n" \
+	@printf "%-20s %s\n" \
 		"$*" \
 		"`which $* &> /dev/null && echo '- OK' || echo '- FAIL'`"
 
