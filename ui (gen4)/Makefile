@@ -47,11 +47,11 @@
 ## 	make can get fussy about...
 ## NOTE: to do a repack build call:
 ## 		(export BUILD_MODE=repack && make)
-## NOTE: in most cases we do not add a "/" to target dirs to destinguish 
-## 	them from target files except for one case:
-##		$(BUILD_DIR)/$(APP_NAME)-%/
-##	this will help make destinguish it from things like:
-##		$(DIST_DIR)/$(APP_NAME)-%.zip
+ # NOTE: in most cases we do not add a "/" to target dirs to destinguish 
+ # 	them from target files except for one case:
+ #		$(BUILD_DIR)/$(APP_NAME)-%/
+ #	this will help make destinguish it from things like:
+ #		$(DIST_DIR)/$(APP_NAME)-%.zip
 ## NOTE: cross compilation is at this time not supported, if you try it 
 ## 	and it works then 1) you got very lucky and 2) tell me about it =)
 ## 	...at least the node native packages (sharp) will likely either 
@@ -327,17 +327,23 @@ require(%):
 		"`which $* &> /dev/null && echo '- OK' || echo '- FAIL'`"
 
 
+.PHONY: check-message
+check-message:
+	@echo "NOTE: simplified versions of utils like grep or sed may"
+	@echo "	misbihave, if this happens please install the full"
+	@echo "	version..."
+
 .PHONY: check
 check: ## Run all dependency checks
-check: $(foreach dep,$(DEPENDENCIES),require($(dep)))
+check: check-message $(foreach dep,$(DEPENDENCIES),require($(dep)))
 
 .PHONY: check-web
 check-web: ## Run web build dependency checks
-check-web: $(foreach dep,$(DEPENDENCIES_WEB),require($(dep)))
+check-web: check-message $(foreach dep,$(DEPENDENCIES_WEB),require($(dep)))
 
 .PHONY: check-help
 check-help: ## Run help/build (Makefile) dependency checks 
-check-help: $(foreach dep,$(DEPENDENCIES_HELP),require($(dep)))
+check-help: check-message $(foreach dep,$(DEPENDENCIES_HELP),require($(dep)))
 
 
 
