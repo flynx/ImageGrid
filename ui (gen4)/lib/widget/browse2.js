@@ -837,8 +837,10 @@ var BaseBrowserPrototype = {
 	// 		perspective with one addition, expose the root stop(..) 
 	// 		function to func...
 	// XXX this uses a slightly different signature to func(..) that .walk(..) does...
+	// XXX which of the forms should be documented in the signature???
+	// 		NOTE: it does not matter which is used as we manually
+	// 		parse arguments...
 	// XXX can this be simpler???
-	//walk2: function(func, name, formArgs, walkable, options){
 	walk2: function(func, recursion, walkable, options){
 		var that = this
 
@@ -1047,9 +1049,6 @@ var BaseBrowserPrototype = {
 					this.join('\n')
 					: this }) },
 
-	// XXX Q: do we go down the tree using the respective method (.paths(..)) 
-	// 		in this case or the more generic .walk2()???
-	// 		...the two examples below illustrate both approaches...
 	paths: function(options, base){
 		base = base || []
 		return this.walk2(
