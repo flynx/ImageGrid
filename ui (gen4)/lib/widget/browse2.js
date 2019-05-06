@@ -842,6 +842,11 @@ var BaseBrowserPrototype = {
 	// XXX which of the forms should be documented in the signature???
 	// 		NOTE: it does not matter which is used as we manually
 	// 		parse arguments...
+	// XXX BUG: indexes broken on reverse walking...
+	// 		to reproduce:
+	// 			dialog_1.walk2((e, i, p) => i, {reverse: false}) //-> correct numbers
+	// 			dialog_1.walk2((e, i, p) => i, {reverse: 'flat'}) //-> mess 
+	// 			dialog_1.walk2((e, i, p) => i, {reverse: 'tree'}) //-> mess 
 	// XXX can this be simpler???
 	walk2: function(func, recursion, walkable, options){
 		var that = this
@@ -872,7 +877,7 @@ var BaseBrowserPrototype = {
 			: null 
 		options = args.shift() || {} 
 
-		// recursion context...
+		// build context...
 		var context = args.shift()
 		var path = context instanceof Array ? 
 			context 
@@ -881,7 +886,7 @@ var BaseBrowserPrototype = {
 			{path: path} 
 			: (context || {})
 		context.root = context.root || this
-		var i = context.index = context.index || 0
+		context.index = context.index || 0
 
 		// options specifics...
 		var iterateNonIterable = options.iterateAll || options.iterateNonIterable
@@ -904,6 +909,9 @@ var BaseBrowserPrototype = {
 
 		return walk(
 			function(state, node, next, stop){
+				// stop all instances...
+				//stop = context.stop = stop
+
 				// skip non-iterable items...
 				if(!iterateNonIterable && node.noniterable){
 					return state
@@ -946,11 +954,12 @@ var BaseBrowserPrototype = {
 								next('do', state, ...(reverse ? list.slice().reverse() : list))
 							// user-defined recursion...
 							: recursion instanceof Function ?
-								recursion.call(that, list, i, p, options, context, func, stop, useWalk)
+								recursion.call(that, list, context.index, p, options, context, func, useWalk)
 							// method with arg forming...
 							: formArgs instanceof Function 
 									&& list[recursion] ?
-								list[recursion](...(formArgs(list, i, p, options, context, func, stop) || []))
+								list[recursion](
+									...(formArgs(list, context.index, p, options, context, func) || []))
 							: useWalk())
 						.run(function(){
 							// normalize...
@@ -960,7 +969,7 @@ var BaseBrowserPrototype = {
 							// merge recursion results into states...
 							if(!(list === false || list instanceof Array)){
 								state.splice(state.length, 0, ...nested)
-								i += nested.length
+								context.index += nested.length
 							}
 							return nested
 						})
@@ -991,7 +1000,7 @@ var BaseBrowserPrototype = {
 				state.splice(state.length, 0,
 					...[ func ? 
 						(func.call(that, 
-							...(inline ? [null, i] : [node, i++]),
+							...(inline ? [null, context.index] : [node, context.index++]),
 							p, 
 							doNested, 
 							stop,
@@ -1009,6 +1018,7 @@ var BaseBrowserPrototype = {
 			function(state, mode){ 
 				// if we stopped, thread the stop up...
 				mode == 'stopped' 
+					&& context.root !== that
 					&& context.stop instanceof Function
 					&& context.stop(state)
 				// normalize the result...
@@ -1208,8 +1218,7 @@ var BaseBrowserPrototype = {
 			args.shift() 
 			: undefined
 		options = args.shift() || {}
-
-		var context = args.pop()
+		var context = args.shift()
 
 		// pattern -- normalize and pattern keywords...
 		pattern = options.ignoreKeywords ?
@@ -1262,9 +1271,7 @@ var BaseBrowserPrototype = {
 			// index...
 			: typeof(pattern) == typeof(123) ?
 				function(elem, i, path){
-					return elem 
-						&& path.length > 0 
-						&& i == pattern }
+					return i == pattern }
 			// object query...
 			: function(elem){
 				return Object.entries(pattern)
@@ -1292,9 +1299,9 @@ var BaseBrowserPrototype = {
 
 		return this.walk2(
 			function(elem, i, path, _, stop){
-				console.log('---', path.join('/'))
+				console.log('--', i, path.join('/'))
 				// match...
-				var res = (elem 
+				var res = (elem
 						&& (test === true 
 							|| test.call(this, elem, i, path))) ?
 					[ func ?
@@ -1304,14 +1311,13 @@ var BaseBrowserPrototype = {
 				return ((options.firstMatch 
 							|| typeof(pattern) == typeof(123)) 
 						&& res.length > 0) ? 
-					// XXX BUG: from nested browsers this does not stop
-					// 		the current level...
-					stop(res) 
+					stop(res)
 					: res },
 			'search',
 			function(_, i, p, options, context){
 				return [pattern, func, options, context] },
-			options, context)
+			options, 
+			context)
 	},
 
 
