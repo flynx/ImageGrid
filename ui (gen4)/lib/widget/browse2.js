@@ -780,12 +780,25 @@ var BaseBrowserPrototype = {
 
 
 	//
+	//	Get list of nodes in tree...
 	//	.walk2()
 	//		-> list
 	//
-	//	.walk2(func[, options])
-	//	.walk2(func, recursion[, options])
-	//	.walk2(func, recursion, walkable[, options])
+	//	Walk the tree passing each node to func(..)
+	//	.walk2(func(..)[, options])
+	//		-> list
+	//
+	//	Walk tree passing each node to func(..) using method name to 
+	//	walk nested browsers...
+	//	NOTE: 'walk2' is used as name if name is not present in the object...
+	//	.walk2(func(..), name, args(..)[, options])
+	//	.walk2(func(..), name, args(..), walkable(..)[, options])
+	//		-> list
+	//
+	//	Walk tree passign each node to func(..) and handle nested browser 
+	//	walking in recursion(..) optionally testing if walkable with walkable(..)
+	//	.walk2(func(..), recursion(..)[, options])
+	//	.walk2(func(..), recursion(..), walkable(..)[, options])
 	//		-> list
 	//
 	//
@@ -799,7 +812,12 @@ var BaseBrowserPrototype = {
 	//
 	//
 	//	Handle walkable node children (recursively)...
-	//	recursion(children, index, path, func(..), stop(..), options)
+	//	recursion(children, index, path, func(..), stop(..), walk(), options)
+	//		-> list
+	//
+	//
+	//	Prepare arguments for call of name function on nested browser...
+	//	args(...list)
 	//		-> list
 	//
 	//
@@ -820,6 +838,7 @@ var BaseBrowserPrototype = {
 	// 		function to func...
 	// XXX this uses a slightly different signature to func(..) that .walk(..) does...
 	// XXX can this be simpler???
+	//walk2: function(func, name, formArgs, walkable, options){
 	walk2: function(func, recursion, walkable, options){
 		var that = this
 
@@ -834,11 +853,20 @@ var BaseBrowserPrototype = {
 				|| args[0] == null) ? 
 			args.shift() 
 			: undefined
+		var formArgs = (typeof(recursion) == typeof('str')
+				&& args[0] instanceof Function) ?
+			args.shift()
+			: null
 		var walkable = (args[0] instanceof Function 
 				|| args[0] == null) ?
 			args.shift() 
 			: null 
 		options = args.shift() || {} 
+
+		// sanity check...
+		if(formArgs == null && typeof(recursion) == typeof('str')){
+			throw new Error(`.walk2(func, name, formArgs, ..): `
+				+`expected function as third argument, got: ${formArgs}.`) }
 
 		// recursion-threaded args...
 		var i = args.shift() || 0
@@ -864,7 +892,12 @@ var BaseBrowserPrototype = {
 			function(node){
 				return node instanceof Array || walkable(node) }
 			: function(node){
-				return node && (node instanceof Array || node.walk2) }
+				return node 
+					&& (node instanceof Array 
+						// requested method name is available...
+						|| (typeof(recursion) == typeof('str') 
+							&& node[recursion])
+						|| node.walk2 ) }
 
 		return walk(
 			function(state, node, next, stop){
@@ -887,6 +920,14 @@ var BaseBrowserPrototype = {
 							[]
 						: list
 
+					var useWalk = function(){
+						return list.walk2(func, recursion, walkable, options, i, p, stop) }
+
+					// XXX can we add a simpler default case option where:
+					// 		- we call the target method name (given in recursion as string)
+					// 			- need a way to form the arguments, i.e. get the 
+					// 				current state and form the args for the next call...
+					// 		- if above not available, call walk()
 					return (list === false ?
 								[]	
 							: list instanceof Array ?
@@ -894,8 +935,12 @@ var BaseBrowserPrototype = {
 								next('do', state, ...(reverse ? list.slice().reverse() : list))
 							// user-defined recursion...
 							: recursion instanceof Function ?
-								recursion.call(that, list, i, p, func, stop, options)
-							: list.walk2(func, recursion, walkable, options, i, p, stop))
+								recursion.call(that, list, i, p, func, stop, useWalk, options)
+							// method with arg forming...
+							: formArgs instanceof Function 
+									&& list[recursion] ?
+								list[recursion](...(formArgs(list, i, p, func, stop, options) || []))
+							: useWalk())
 						.run(function(){
 							// normalize...
 							nested = this instanceof Array ?
@@ -993,10 +1038,9 @@ var BaseBrowserPrototype = {
 								.map(e => '  ')
 								.join('') + (node.value || node)
 						: [] },
-				function(children, i, path){
-					return children.text(options, base.concat(path)) },
-				function(node){
-					return node && node.text instanceof Function },
+				'text',
+				function(func, i, path){
+					return [options, base.concat(path)] },
 				options)
 			.run(function(){
 				return options.root === that ?
@@ -1014,18 +1058,10 @@ var BaseBrowserPrototype = {
 					&& [(options || {}).joinPaths !== false ? 
 						base.concat(p).join('/') 
 						: base.concat(p)] }, 
+			'paths',
 			function(children, i, path){
-				return children.paths(options, base.concat(path)) },
-			function(node){
-				return node && node.paths instanceof Function },
+				return [options, base.concat(path)] },
 			options) },
-	paths2: function(options){
-		return this.walk2(
-			function(n, i, p){
-				return n 
-					&& [ (options || {}).joinPaths !== false ? 
-						p.join('/') 
-						: p ] }, options) },
 
 
 	// Extended map...
