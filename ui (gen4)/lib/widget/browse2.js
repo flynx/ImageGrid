@@ -842,11 +842,10 @@ var BaseBrowserPrototype = {
 	// XXX which of the forms should be documented in the signature???
 	// 		NOTE: it does not matter which is used as we manually
 	// 		parse arguments...
-	// XXX BUG: indexes broken on reverse walking...
-	// 		to reproduce:
-	// 			dialog_1.walk2((e, i, p) => i, {reverse: false}) //-> correct numbers
-	// 			dialog_1.walk2((e, i, p) => i, {reverse: 'flat'}) //-> mess 
-	// 			dialog_1.walk2((e, i, p) => i, {reverse: 'tree'}) //-> mess 
+	// XXX passing both index directly and context containing index 
+	// 		(context.index) feels excessive...
+	// 		...if this can produce errors we need to simplify...
+	// XXX add docs about maintaining context to implement/extend walkers...
 	// XXX can this be simpler???
 	walk2: function(func, recursion, walkable, options){
 		var that = this
@@ -931,6 +930,7 @@ var BaseBrowserPrototype = {
 							[]
 						: list
 
+					// call .walk2(..) recursively...
 					var useWalk = function(){
 						return list.walk2(
 							func, 
@@ -942,24 +942,28 @@ var BaseBrowserPrototype = {
 							options, 
 							context) }
 
-					// XXX can we add a simpler default case option where:
-					// 		- we call the target method name (given in recursion as string)
-					// 			- need a way to form the arguments, i.e. get the 
-					// 				current state and form the args for the next call...
-					// 		- if above not available, call walk()
 					return (list === false ?
 								[]	
 							: list instanceof Array ?
 								// NOTE: this gets the path and i from context...
-								next('do', state, ...(reverse ? list.slice().reverse() : list))
+								next('do', state, 
+									...(reverse ? 
+										list.slice().reverse() 
+										: list))
 							// user-defined recursion...
 							: recursion instanceof Function ?
-								recursion.call(that, list, context.index, p, options, context, func, useWalk)
+								recursion.call(that, 
+									list, context.index, p, 
+									options, context, 
+									func, useWalk)
 							// method with arg forming...
 							: formArgs instanceof Function 
 									&& list[recursion] ?
 								list[recursion](
-									...(formArgs(list, context.index, p, options, context, func) || []))
+									...(formArgs(
+										list, context.index, p, 
+										options, context, 
+										func, useWalk) || []))
 							: useWalk())
 						.run(function(){
 							// normalize...
@@ -967,18 +971,19 @@ var BaseBrowserPrototype = {
 								this
 								: [this]
 							// merge recursion results into states...
-							if(!(list === false || list instanceof Array)){
-								state.splice(state.length, 0, ...nested)
-								context.index += nested.length
-							}
+							// NOTE: since we pass on the context we do 
+							// 		not really need to update the index
+							// 		here...
+							!(list === false || list instanceof Array)
+								&& state.splice(state.length, 0, ...nested)
+
 							return nested
 						})
 				}
 
 				// prepare context...
 				var id = node.id || node.value
-				// XXX this is all over the place -- revise path handling...
-				path = context.path = this.path = this.path || path
+				path = context.path = context.path || path
 				var [inline, p, children] = 
 					// inline...
 					isWalkable(node) ?
@@ -987,7 +992,8 @@ var BaseBrowserPrototype = {
 					: (!skipNested && isWalkable(node.children)) ?
 						[false, 
 							// prepare context for nested items...
-							context.path = this.path = path.concat([id]), 
+							path.push(id) 
+								&& path, 
 							node.children]
 					// leaf...
 					: [false, path.concat([id]), undefined]
@@ -1012,7 +1018,7 @@ var BaseBrowserPrototype = {
 				children
 					&& (doNested(), 
 						// restore path context...
-						this.path.pop())
+						context.path.pop())
 
 				return state
 			}, 
