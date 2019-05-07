@@ -1000,7 +1000,9 @@ var BaseBrowserPrototype = {
 				state.splice(state.length, 0,
 					...[ func ? 
 						(func.call(that, 
-							...(inline ? [null, context.index] : [node, context.index++]),
+							...(inline ? 
+								[null, context.index] 
+								: [node, context.index++]),
 							p, 
 							doNested, 
 							stop,
