@@ -835,15 +835,18 @@ var BaseBrowserPrototype = {
 	// NOTE: children arrays are handled internally...
 	//
 	//
-	// XXX need to make this the same as .walk(..) from the user's 
-	// 		perspective with one addition, expose the root stop(..) 
-	// 		function to func...
-	// XXX this uses a slightly different signature to func(..) that .walk(..) does...
 	// XXX which of the forms should be documented in the signature???
 	// 		NOTE: it does not matter which is used as we manually
 	// 		parse arguments...
 	// XXX passing both index directly and context containing index 
 	// 		(context.index) feels excessive...
+	// 			+ this is done so as to provide the user a simpler 
+	// 				.map(..)-like form...
+	// 				Ex:
+	// 					.walk2((e, i, p, next, stop) => p.join('/'))
+	// 					// vs.
+	// 					.walk2((e, c, next, stop) => c.path.join('/'))
+	// 			- two ways to get index and one to update it...
 	// 		...if this can produce errors we need to simplify...
 	// XXX add docs:
 	// 		- maintaining context to implement/extend walkers...
@@ -1046,8 +1049,7 @@ var BaseBrowserPrototype = {
 				'text',
 				function(func, i, path, options, context){
 					return [options, context] },
-				options, 
-				context)
+				options, context)
 			.join('\n') },
 	paths: function(options, context){
 		return this.walk2(
@@ -1062,8 +1064,7 @@ var BaseBrowserPrototype = {
 				// 		levels we need to thread the context on, here and
 				// 		into the base .walk2(..) call below...
 				return [options, context] },
-			options, 
-			context) },
+			options, context) },
 
 
 	// Extended map...
@@ -1135,8 +1136,7 @@ var BaseBrowserPrototype = {
 			'map',
 			function(_, i, p, options, context){
 				return [func, options, context] },
-			options,
-			context) },
+			options, context) },
 
 
 	// XXX EXPERIMENTAL...
@@ -1293,7 +1293,6 @@ var BaseBrowserPrototype = {
 
 		return this.walk2(
 			function(elem, i, path, _, stop){
-				console.log('--', i, path.join('/'))
 				// match...
 				var res = (elem
 						&& (test === true 
@@ -1310,9 +1309,7 @@ var BaseBrowserPrototype = {
 			'search',
 			function(_, i, p, options, context){
 				return [pattern, func, options, context] },
-			options, 
-			context)
-	},
+			options, context) },
 
 
 	// XXX EXPERIMENTAL...
