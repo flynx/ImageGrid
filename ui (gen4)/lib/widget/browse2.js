@@ -1000,7 +1000,7 @@ var BaseBrowserPrototype = {
 					&& doNested()
 				// do element...
 				state.splice(state.length, 0,
-					...( func ? 
+					...[ func ? 
 						(func.call(that, 
 							...(inline ? 
 								[null, context.index] 
@@ -1009,7 +1009,7 @@ var BaseBrowserPrototype = {
 							doNested, 
 							stop,
 							children) || []) 
-						: [node] ))
+						: [node] ].flat())
 				// normal order -> do children...
 				// NOTE: doNested(..) is executed only once so in reverse 
 				// 		the call will have no effect, but we need to 
@@ -1194,10 +1194,81 @@ var BaseBrowserPrototype = {
 	// 	'focused'	- get focused items (shorthand to {focused: true})
 	//
 	//
-	// XXX use diff
+	//
+	//
+	// __search_test_generators__ format:
+	// 	{
+	// 		// NOTE: generator order is significant as patterns are testen 
+	// 		//		in order the generators are defined...
+	// 		// NOTE: <key> is only used for documentation...
+	// 		<key>: testGenerator(..),
+	//
+	// 		...
+	// 	}
+	//
+	//	testGenerator(pattern)
+	//		-> test(elem, i, path)
+	//		-> false
+	//
+	//
 	// XXX add support for 'next'/'prev', ... keywords... (here or in .get(..)???)
 	// XXX do we actually need to stop this as soon as we find something, 
 	// 		i.e. options.firstOnly???
+	// XXX add diff support...
+	__search_test_generators__: {
+		// regexp path test...
+		regexp: function(pattern){
+			return pattern instanceof RegExp
+				&& function(elem, i, path){
+					return pattern.test(elem.value)
+						|| pattern.test('/'+ path.join('/')) } },
+		// path test...
+		path: function(pattern){
+			return pattern instanceof Array 
+				&& function(elem, i, path){
+					return path.length > 0
+						&& pattern.length == path.length
+						&& !pattern
+							// XXX add support for '**' ???
+							.reduce(function(res, e, i){
+								return res || !(
+									e == '*' 
+										|| (e instanceof RegExp 
+											&& e.test(path[i]))
+										|| e == path[i]) }, false) } },
+		// item index test...
+		index: function(pattern){
+			return typeof(pattern) == typeof(123)
+				&& function(elem, i, path){
+					return i == pattern } },
+		// XXX add diff support...
+		// object query..
+		// NOTE: this must be last as it will return a test unconditionally...
+		query: function(pattern){ 
+			return function(elem){
+				return Object.entries(pattern)
+					.reduce(function(res, [key, pattern]){
+						return res 
+							&& (elem[key] == pattern
+								// bool...
+								|| ((pattern === true || pattern === false)
+									&& pattern === !!elem[key])
+								// predicate...
+								|| (pattern instanceof Function 
+									&& pattern.call(that, elem[key]))
+								// regexp...
+								|| (pattern instanceof RegExp
+									&& pattern.test(elem[key]))
+								// type...
+								// XXX problem, we can't distinguish this 
+								// 		and a predicate...
+								// 		...so for now use:
+								// 			.search(v => v instanceof Array)
+								//|| (typeof(pattern) == typeof({})
+								//	&& pattern instanceof Function
+								//	&& elem[key] instanceof pattern)
+							) }, true) } },
+	},
 	search: function(pattern, func, options){
 		var that = this
 
@@ -1236,7 +1307,6 @@ var BaseBrowserPrototype = {
 		}
 
 		// normalize/build the test predicate...
-		// XXX add diff support...
 		var test = (
 			// all...
 			pattern === true ?
@@ -1244,52 +1314,15 @@ var BaseBrowserPrototype = {
 			// predicate...
 			: pattern instanceof Function ?
 				pattern
-			// regexp...
-			: pattern instanceof RegExp ?
-				function(elem, i, path){
-					return pattern.test(elem.value)
-						|| pattern.test('/'+ path.join('/')) }
-			// path...
-			: pattern instanceof Array ?
-				function(elem, i, path){
-					return path.length > 0
-						&& pattern.length == path.length
-						&& !pattern
-							// XXX add support for '**' ???
-							.reduce(function(res, e, i){
-								return res || !(
-									e == '*' 
-										|| (e instanceof RegExp 
-											&& e.test(path[i]))
-										|| e == path[i]) }, false) }
-			// index...
-			: typeof(pattern) == typeof(123) ?
-				function(elem, i, path){
-					return i == pattern }
-			// object query...
-			: function(elem){
-				return Object.entries(pattern)
-					.reduce(function(res, [key, pattern]){
-						return res 
-							&& (elem[key] == pattern
-								// bool...
-								|| ((pattern === true || pattern === false)
-									&& pattern === !!elem[key])
-								// predicate...
-								|| (pattern instanceof Function 
-									&& pattern.call(that, elem[key]))
-								// regexp...
-								|| (pattern instanceof RegExp
-									&& pattern.test(elem[key]))
-								// type...
-								// XXX problem, we can't distinguish this 
-								// 		and a predicate...
-								// 		...so for now use:
-								// 			.search(v => v instanceof Array)
-								//|| (typeof(pattern) == typeof({})
-								//	&& pattern instanceof Function
-								//	&& elem[key] instanceof pattern)
-							) }, true) } )
+			// other -> get a compatible test function...
+			: Object.values(this.__search_test_generators__)
+				.reduce(function(res, get){
+					return res 
+						|| get.call(this.__search_test_generators__, pattern) }, false) )
+
+		// sanity check...
+		if(!test){
+			throw new Error(`.search(..): unknown pattern type: ${pattern}`) }
 
 		return this.walk2(
 			function(elem, i, path, _, stop){
