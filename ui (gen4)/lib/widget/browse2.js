@@ -845,7 +845,9 @@ var BaseBrowserPrototype = {
 	// XXX passing both index directly and context containing index 
 	// 		(context.index) feels excessive...
 	// 		...if this can produce errors we need to simplify...
-	// XXX add docs about maintaining context to implement/extend walkers...
+	// XXX add docs:
+	// 		- maintaining context to implement/extend walkers...
+	// 		- correctly stopping recursive calls (call root stop(..))
 	// XXX can this be simpler???
 	walk2: function(func, recursion, walkable, options){
 		var that = this
@@ -876,13 +878,10 @@ var BaseBrowserPrototype = {
 			: null 
 		options = args.shift() || {} 
 
-		// build context...
+		// get/build context...
 		var context = args.shift()
-		var path = context instanceof Array ? 
-			context 
-			: ((context && context.path) || [])
 		context = context instanceof Array ? 
-			{path: path} 
+			{ path: context } 
 			: (context || {})
 		context.root = context.root || this
 		context.index = context.index || 0
@@ -908,20 +907,18 @@ var BaseBrowserPrototype = {
 
 		return walk(
 			function(state, node, next, stop){
-				// stop all instances...
-				//stop = context.stop = stop
+				// keep only the root stop(..) -> stop the entire call tree...
+				stop = context.stop = context.stop || stop
 
 				// skip non-iterable items...
 				if(!iterateNonIterable && node.noniterable){
-					return state
-				}
+					return state }
 
 				var nested = false
 				var doNested = function(list){
-					// this can be called only once...
+					// this can be called only once -> return cached results...
 					if(nested !== false){
-						return nested
-					}
+						return nested }
 
 					// normalize...
 					list = (list === true || list == null) ?
@@ -939,11 +936,11 @@ var BaseBrowserPrototype = {
 								[formArgs] 
 								: []), 
 							walkable, 
-							options, 
-							context) }
+							options, context) }
 
 					return (list === false ?
 								[]	
+							// handle arrays internally...
 							: list instanceof Array ?
 								// NOTE: this gets the path and i from context...
 								next('do', state, 
@@ -964,26 +961,22 @@ var BaseBrowserPrototype = {
 										list, context.index, p, 
 										options, context, 
 										func, useWalk) || []))
+							// .walk2(..)
 							: useWalk())
+						// normalize and merge to state...
 						.run(function(){
-							// normalize...
 							nested = this instanceof Array ?
 								this
 								: [this]
-							// merge recursion results into states...
-							// NOTE: since we pass on the context we do 
-							// 		not really need to update the index
-							// 		here...
+							// merge...
 							!(list === false || list instanceof Array)
 								&& state.splice(state.length, 0, ...nested)
-
 							return nested
-						})
-				}
+						}) }
 
 				// prepare context...
 				var id = node.id || node.value
-				path = context.path = context.path || path
+				var path = context.path = context.path || []
 				var [inline, p, children] = 
 					// inline...
 					isWalkable(node) ?
@@ -991,7 +984,7 @@ var BaseBrowserPrototype = {
 					// nested...
 					: (!skipNested && isWalkable(node.children)) ?
 						[false, 
-							// prepare context for nested items...
+							// update context for nested items...
 							path.push(id) 
 								&& path, 
 							node.children]
@@ -1002,9 +995,9 @@ var BaseBrowserPrototype = {
 				reverse == 'flat' 
 					&& children
 					&& doNested()
-				// element...
+				// do element...
 				state.splice(state.length, 0,
-					...[ func ? 
+					...( func ? 
 						(func.call(that, 
 							...(inline ? 
 								[null, context.index] 
@@ -1013,8 +1006,11 @@ var BaseBrowserPrototype = {
 							doNested, 
 							stop,
 							children) || []) 
-						: [node] ])
+						: [node] ))
 				// normal order -> do children...
+				// NOTE: doNested(..) is executed only once so in reverse 
+				// 		the call will have no effect, but we need to 
+				// 		update the context...
 				children
 					&& (doNested(), 
 						// restore path context...
@@ -1022,23 +1018,13 @@ var BaseBrowserPrototype = {
 
 				return state
 			}, 
-			// normalize the root result...
-			function(state, mode){ 
-				// if we stopped, thread the stop up...
-				mode == 'stopped' 
-					&& context.root !== that
-					&& context.stop instanceof Function
-					&& context.stop(state)
-				// normalize the result...
-				return (context.root === that 
-						&& state instanceof Array) ?
-					state.flat()
-					: state }, 
 			[], 
+			// input items...
 			...(reverse ? 
-				this.items.slice().reverse() 
-				: this.items))
-	},
+				this.items
+					.slice()
+					.reverse() 
+				: this.items)) },
 
 
 	// Text render...
