@@ -893,6 +893,7 @@ var BaseBrowserPrototype = {
 		var iterateNonIterable = options.iterateAll || options.iterateNonIterable
 		var iterateCollapsed = options.iterateAll || options.iterateCollapsed
 		var skipNested = !options.iterateAll && options.skipNested
+		var skipInlined = !options.iterateAll && options.skipInlined
 		var reverse = options.reverse === true ?
 			(options.defaultReverse || 'tree')
 			: options.reverse
@@ -994,6 +995,10 @@ var BaseBrowserPrototype = {
 					// leaf...
 					: [false, path.concat([id]), undefined]
 
+				if(inline && skipInlined){
+					return state
+				}
+
 				// reverse -> do children...
 				reverse == 'flat' 
 					&& children
@@ -1044,8 +1049,6 @@ var BaseBrowserPrototype = {
 	//
 	// XXX rename this??
 	text: function(options, context){
-		var that = this
-
 		return this
 			.walk2(
 				function(node, i, path){
@@ -1202,6 +1205,15 @@ var BaseBrowserPrototype = {
 	// 	'focused'	- get focused items (shorthand to {focused: true})
 	//
 	//
+	// options format:
+	// 	{
+	// 		noIdentityCheck: <bool>,
+	//
+	// 		noQueryCheck: <bool>,
+	//
+	// 		...
+	// 	}
+	//
 	//
 	//
 	// __search_test_generators__ format:
@@ -1323,20 +1335,26 @@ var BaseBrowserPrototype = {
 			: pattern instanceof Function ?
 				pattern
 			// other -> get a compatible test function...
-			: Object.values(this.__search_test_generators__)
-				.reduce(function(res, get){
+			: Object.entries(this.__search_test_generators__)
+				.filter(function([key, get]){
+					return !(options.noQueryCheck 
+						&& key == 'query') })
+				.reduce(function(res, [_, get]){
 					return res 
 						|| get.call(this.__search_test_generators__, pattern) }, false) )
-		// sanity check...
-		if(!test){
-			throw new Error(`.search(..): unknown pattern type: ${pattern}`) }
 
 		return this.walk2(
 			function(elem, i, path, _, stop){
 				// match...
 				var res = (elem
 						&& (test === true 
-							|| test.call(this, elem, i, path))) ?
+							// identity check...
+							|| (!options.noIdentityCheck 
+								&& pattern === elem)
+							// test...
+							|| (test 
+								&& test.call(this, elem, i, path)))) ?
+					// handle the passed items...
 					[ func ?
 						func.call(this, elem, i, path, stop)
 						: elem ]
@@ -1379,7 +1397,6 @@ var BaseBrowserPrototype = {
 	// 		first result only.
 	//
 	// XXX should we be able to get offset values relative to any match?
-	// XXX add a callback...
 	// XXX should we use .wald2(..) here???
 	// XXX revise return value...
 	get: function(pattern, options){
@@ -1445,7 +1462,7 @@ var BaseBrowserPrototype = {
 	// XXX BROKEN...
 	// Sublist map functions...
 	//
-	// XXX NOTE: these will return a sparse array... ???
+	// XXX should these return a sparse array... ???
 	sublists: function(func, options){
 		return this.search({children: true}, func, options) },
 	// XXX broken, needs support for options.skipInlined ...
@@ -1463,60 +1480,30 @@ var BaseBrowserPrototype = {
 	forEach: function(func, options){
 		this.map(...arguments)
 		return this },
-	// XXX should we use a recursive .walk(..), .map(..) .filter(..) or 
-	// 		try and make do with what is available in a child???
-	filter: function(func, options){
-		return this.walk(function(i, p, e, b){
-			return e && func.call(this, e, i, p, b) ? [e] : [] }) },
-		//return this.map(function(e, i, p, b){
-		//	return func.call(this, e, i, p, b) ? [e] : [] })
-		//.flat() },
+	filter: function(func, options, context){
+		return this.walk2(
+			function(e, i, p){
+				return e && func.call(this, e, i, p) ? [e] : [] },
+			'filter',
+			function(_, i, p, options, context){
+				return [func, options, context] },
+			options, context) },
 	reduce: function(){},
 
-	// XXX move these to a more logical spot...
-	// XXX these are almost identical -- reuse???
+	positionOf: function(item, options){
+		return this.search(item, 
+			function(_, i, p){ 
+				return [i, p] }, 
+			Object.assign(
+				{
+					firstMatch: true, 
+					noQueryCheck: true,
+				},
+				options || {})).concat([[-1, undefined]]).shift() },
 	indexOf: function(item, options){
-		item = typeof(item) == typeof('str') ?
-			item.split(/[\\\/]/g)
-			: item
-
-		var Stop = new Error('.indexOf(..): Result found exception.')
-
-		var i = 0
-		try{
-			this.map(function(e, p){
-				if(item instanceof Array ? item.cmp(p) : (item === e)){
-					throw Stop }
-				i++
-			}, options)
-
-		} catch(e){
-			if(e === Stop){
-				return i
-			}
-		}
-		return -1
-	},
+		return this.positionOf(item, options)[0] },
 	pathOf: function(item, options){
-		var Stop = new Error('.pathOf(..): Result found exception.')
-
-		var path
-		var i = 0
-		try{
-			this.map(function(e, p){
-				path = p
-				if(typeof(item) == typeof(123) ? item == i : (item === e)){
-					throw Stop }
-				i++
-			}, options)
-
-		} catch(e){
-			if(e === Stop){
-				return path
-			}
-		}
-		return undefined
-	},
+		return this.positionOf(item, options)[1] },
 
 	// Like .get(.., {iterateCollapsed: true}) but will expand all the 
 	// path items to reveal the target...
