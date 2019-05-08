@@ -1000,6 +1000,14 @@ var BaseBrowserPrototype = {
 					&& doNested()
 				// do element...
 				state.splice(state.length, 0,
+					// NOTE: here we use:
+					// 			[ func(..) ].flat() 
+					// 		to normalize the return value of func to an array
+					// 		but this is not equivalent to:
+					// 			x instanceof Array ? x : [x]
+					// 		as it creates a new array instance in all cases
+					// 		and this is less efficient, though in most cases
+					// 		negligibly so... 
 					...[ func ? 
 						(func.call(that, 
 							...(inline ? 
@@ -1200,6 +1208,8 @@ var BaseBrowserPrototype = {
 	// 	{
 	// 		// NOTE: generator order is significant as patterns are testen 
 	// 		//		in order the generators are defined...
+	// 		// NOTE: testGenerator(..) is called in the context of 
+	// 		//		__search_test_generators__ (XXX ???)
 	// 		// NOTE: <key> is only used for documentation...
 	// 		<key>: testGenerator(..),
 	//
@@ -1285,7 +1295,7 @@ var BaseBrowserPrototype = {
 		options = args.shift() || {}
 		var context = args.shift()
 
-		// pattern -- normalize and pattern keywords...
+		// pattern -- normalize and do pattern keywords...
 		pattern = options.ignoreKeywords ?
 				pattern
 			: (pattern === 'all' || pattern == '*') ?
@@ -1299,13 +1309,11 @@ var BaseBrowserPrototype = {
 			: pattern == 'focused' ?
 				{focused: true}
 			: pattern
-
 		// normalize negative index...
 		if(typeof(pattern) == typeof(123) && pattern < 0){
 			pattern = -pattern - 1
 			options.reverse = 'flat'
 		}
-
 		// normalize/build the test predicate...
 		var test = (
 			// all...
@@ -1319,7 +1327,6 @@ var BaseBrowserPrototype = {
 				.reduce(function(res, get){
 					return res 
 						|| get.call(this.__search_test_generators__, pattern) }, false) )
-
 		// sanity check...
 		if(!test){
 			throw new Error(`.search(..): unknown pattern type: ${pattern}`) }
@@ -1331,7 +1338,7 @@ var BaseBrowserPrototype = {
 						&& (test === true 
 							|| test.call(this, elem, i, path))) ?
 					[ func ?
-						func.call(this, elem, i, path)
+						func.call(this, elem, i, path, stop)
 						: elem ]
 					: [] 
 				return ((options.firstMatch 
@@ -1349,18 +1356,18 @@ var BaseBrowserPrototype = {
 	//
 	// 	Get focused item...
 	// 	.get()
-	// 	.get('focused')
+	// 	.get('focused'[, func])
 	// 		-> item
 	// 		-> undefined
 	//
 	// 	Get next/prev item relative to focused...
-	// 	.get('prev'[, offset][, options])
-	// 	.get('next'[, offset][, options])
+	// 	.get('prev'[, offset][, func][, options])
+	// 	.get('next'[, offset][, func][, options])
 	// 		-> item
 	// 		-> undefined
 	//
 	// 	Get first item matching pattern...
-	// 	.get(pattern[, options])
+	// 	.get(pattern[, func][, options])
 	// 		-> item
 	// 		-> undefined
 	//
@@ -1372,6 +1379,8 @@ var BaseBrowserPrototype = {
 	// 		first result only.
 	//
 	// XXX should we be able to get offset values relative to any match?
+	// XXX add a callback...
+	// XXX should we use .wald2(..) here???
 	// XXX revise return value...
 	get: function(pattern, options){
 		var args = [...arguments]
@@ -1383,64 +1392,54 @@ var BaseBrowserPrototype = {
 				&& typeof(args[0]) == typeof(123) ?
 			args.shift()
 			: 1
+		var func = args[0] instanceof Function ?
+			args.shift() 
+			// XXX return format...
+			: function(e, i, p){ return e }
 		options = args.pop() || {}
 
 		// sanity checks...
 		if(offset <= 0){
-			throw new Error(`.get(..): offset must be a positive number, got: ${offset}.`)
-		}
+			throw new Error(`.get(..): offset must be a positive number, got: ${offset}.`) }
 
+		// NOTE: we do not care about return values here as we'll return 
+		// 		via stop(..)...
 		var res = []
-		var Stop = new Error('.get(..): found match.')
-
-		try {
+		return [
 			// next + offset...
 			pattern == 'next' ?
 				this.search(true, 
-					function(elem, i, path){
+					function(elem, i, path, stop){
 						if(elem.focused == true){
 							res = offset + 1
 
 						// get the offset item...
 						} else if(res <= 0){
-							res = [elem, i, path]
-							throw Stop
+							stop([func(elem, i, path)])
 						}
 						// countdown to offset...
 						res = typeof(res) == typeof(123) ? 
 							res - 1 
-							: res
-					})
+							: res },
+					options)
 			// prev + offset...
 			: pattern == 'prev' ?
 				this.search(true, 
-					function(elem, i, path){
-						if(elem.focused == true){
-							res = res.length >= offset ? 
+					function(elem, i, path, stop){
+						elem.focused == true
+							&& stop([func(res.length >= offset ? 
 								res[0] 
-								: undefined
-							throw Stop
-						}
+								: undefined)])
 						// buffer the previous offset items...
-						res.push([elem, i, path])
+						res.push((elem, i, path))
 						res.length > offset
-							&& res.shift()
-					})
+							&& res.shift() },
+					options)
 			// base case -> get first match...
 			: this.search(pattern, 
-				function(elem, i, path){
-					res = [elem, i, path]
-					throw Stop
-				})
-
-		} catch(e){
-			// pass on other errors...
-			if(e !== Stop){
-				throw e
-			}
-			return res
-		}
-	},
+				function(elem, i, path, stop){
+					stop([func(elem, i, path)]) }, 
+				options) ].flat()[0] },
 
 
 	// XXX BROKEN...
