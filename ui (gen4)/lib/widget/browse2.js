@@ -352,27 +352,11 @@ var BaseBrowserPrototype = {
 	//
 	// visible only...
 	get length(){
-		return this.map({skipNested: true}).length
-			// XXX this is wrong as it will not account for nested nested elements...
-			+ this.nested()
-				.reduce(function(res, e){ 
-					return e.collapsed ?
-						res + 1
-						: res + e.children.length }, 0) },
-	// tree -- ignores .collapsed...
+		return this.map().length },
 	get lengthTree(){
-		return this.map({skipNested: true}).length
-			// XXX this is wrong as it will not account for nested nested elements...
-			+ this.nested()
-				.reduce(function(res, e){ 
-					return res + e.children.length }, 0) },
-	// full -- ignores .collapsed and .noniterable...
+		return this.map({iterateCollapsed: true}).length },
 	get lengthAll(){
-		return this.map({skipNested: true, iterateNonIterable: true}).length
-			// XXX this is wrong as it will not account for nested nested elements...
-			+ this.nested()
-				.reduce(function(res, e){ 
-					return res + (e.children.lengthAll || e.children.length) }, 0) },
+		return this.map({iterateAll: true}).length },
 
 
 	// Item list constructor...
@@ -925,10 +909,12 @@ var BaseBrowserPrototype = {
 						return nested }
 
 					// normalize...
-					list = (list === true || list == null) ?
+					list = list === true ?
 							children	
 						: (!iterateCollapsed && node.collapsed) ?
 							[]
+						: list == null ?
+							children	
 						: list
 
 					// call .walk2(..) recursively...
