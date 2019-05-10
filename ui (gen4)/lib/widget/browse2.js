@@ -353,8 +353,10 @@ var BaseBrowserPrototype = {
 	// visible only...
 	get length(){
 		return this.map().length },
+	// include collapsed elements...
 	get lengthTree(){
 		return this.map({iterateCollapsed: true}).length },
+	// include non-iterable elements...
 	get lengthAll(){
 		return this.map({iterateAll: true}).length },
 
@@ -914,7 +916,7 @@ var BaseBrowserPrototype = {
 						: (!iterateCollapsed && node.collapsed) ?
 							[]
 						: list == null ?
-							children	
+							children
 						: list
 
 					// call .walk2(..) recursively...
@@ -1231,19 +1233,35 @@ var BaseBrowserPrototype = {
 					return pattern.test(elem.value)
 						|| pattern.test('/'+ path.join('/')) } },
 		// path test...
+		// NOTE: this does not go down branches that do not match the path...
 		path: function(pattern){
+			// XXX add support for '**' ???
+			var cmp = function(a, b){
+				return a.length == b.length
+					&& !a
+						.reduce(function(res, e, i){
+							return res || !(
+								e == '*' 
+									|| (e instanceof RegExp 
+										&& e.test(b[i]))
+									|| e == b[i]) }, false) }
+			var onPath = function(path){
+				return pattern.length >= path.length 
+					&& cmp(
+						pattern.slice(0, path.length), 
+						path) }
+
 			return pattern instanceof Array 
-				&& function(elem, i, path){
+				&& function(elem, i, path, next){
+					// do not go down branches beyond pattern length or 
+					// ones that are not on path...
+					;(pattern.length == path.length
+							|| !onPath(path))
+						&& next(false)
+					// do the test...
 					return path.length > 0
 						&& pattern.length == path.length
-						&& !pattern
-							// XXX add support for '**' ???
-							.reduce(function(res, e, i){
-								return res || !(
-									e == '*' 
-										|| (e instanceof RegExp 
-											&& e.test(path[i]))
-										|| e == path[i]) }, false) } },
+						&& cmp(pattern, path) } },
 		// item index test...
 		index: function(pattern){
 			return typeof(pattern) == typeof(123)
@@ -1330,7 +1348,8 @@ var BaseBrowserPrototype = {
 						|| get.call(this.__search_test_generators__, pattern) }, false) )
 
 		return this.walk2(
-			function(elem, i, path, _, stop){
+			function(elem, i, path, next, stop){
+				console.log('->', path.join('/'))
 				// match...
 				var res = (elem
 						&& (test === true 
@@ -1339,7 +1358,11 @@ var BaseBrowserPrototype = {
 								&& pattern === elem)
 							// test...
 							|| (test 
-								&& test.call(this, elem, i, path)))) ?
+								// NOTE: we pass next here to provide the 
+								// 		test with the option to filter out
+								// 		branches that it knows will not 
+								// 		match...
+								&& test.call(this, elem, i, path, next)))) ?
 					// handle the passed items...
 					[ func ?
 						func.call(this, elem, i, path, stop)
@@ -1449,13 +1472,9 @@ var BaseBrowserPrototype = {
 	// Sublist map functions...
 	//
 	// XXX should these return a sparse array... ???
+	// XXX this does not include inlined sections, should it???
 	sublists: function(func, options){
 		return this.search({children: true}, func, options) },
-	// XXX broken, needs support for options.skipInlined ...
-	nested: function(func){
-		return this.sublists(func, {skipInlined: true}) },
-	inlined: function(func){
-		return this.sublists(func, {skipNested: true}) },
 
 	next: function(){},
 	prev: function(){},
@@ -1474,7 +1493,23 @@ var BaseBrowserPrototype = {
 			function(_, i, p, options, context){
 				return [func, options, context] },
 			options, context) },
-	reduce: function(){},
+	reduce: function(func, start, options){
+		var that = this
+		var context = arguments[3] || {result: start}
+		this.walk2(
+			function(e, i, p){
+				context.result = e ? 
+					func.call(that, context.result, e, i, p) 
+					: context.result
+				return context.result 
+			},
+			'reduce',
+			function(_, i, p, options, context){
+				return [func, context.result, options, context]
+			},
+			options, context)
+		return context.result
+	},
 
 	positionOf: function(item, options){
 		return this.search(item, 
@@ -1495,24 +1530,21 @@ var BaseBrowserPrototype = {
 	// path items to reveal the target...
 	// XXX should this return the item or this???
 	reveal: function(key, options){
-		// get the item...
-		var res = this.get(key, Object.assign({iterateCollapsed: true}, options))
-
-		// expand the path up...
-		var cur = res.parent
-		while(cur && cur.parent instanceof Browser){
-			delete (cur.parent.item_key_index[cur.id]
-				|| cur.parent.items
-					.filter(function(e){ 
-						return e.children === cur })
-				.shift()).collapsed
-			cur = cur.parent }
-
-		// re-render...
-		this.render()
-
-		return res
-	},
+		var that = this
+		return this.get(key, 
+			function(e, i, path){
+				var cur = that
+				path.forEach(function(n){
+					// XXX ugly
+					delete cur.item_key_index[n].collapsed
+					cur = cur.item_key_index[n].children
+				})
+				that.render()
+				return e
+			}, 
+			Object.assign(
+				{iterateCollapsed: true}, 
+				options)) },
 
 
 	//
