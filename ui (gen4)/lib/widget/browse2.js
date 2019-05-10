@@ -1235,24 +1235,24 @@ var BaseBrowserPrototype = {
 		// path test...
 		// NOTE: this does not go down branches that do not match the path...
 		path: function(pattern){
-			// XXX add support for '**' ???
-			var cmp = function(a, b){
-				return a.length == b.length
-					&& !a
-						.reduce(function(res, e, i){
-							return res || !(
-								e == '*' 
-									|| (e instanceof RegExp 
-										&& e.test(b[i]))
-									|| e == b[i]) }, false) }
-			var onPath = function(path){
-				return pattern.length >= path.length 
-					&& cmp(
-						pattern.slice(0, path.length), 
-						path) }
+			if(pattern instanceof Array){
+				// XXX add support for '**' ???
+				var cmp = function(a, b){
+					return a.length == b.length
+						&& !a
+							.reduce(function(res, e, i){
+								return res || !(
+									e == '*' 
+										|| (e instanceof RegExp 
+											&& e.test(b[i]))
+										|| e == b[i]) }, false) }
+				var onPath = function(path){
+					return pattern.length >= path.length 
+						&& cmp(
+							pattern.slice(0, path.length), 
+							path) }
 
-			return pattern instanceof Array 
-				&& function(elem, i, path, next){
+				return function(elem, i, path, next){
 					// do not go down branches beyond pattern length or 
 					// ones that are not on path...
 					;(pattern.length == path.length
@@ -1261,7 +1261,10 @@ var BaseBrowserPrototype = {
 					// do the test...
 					return path.length > 0
 						&& pattern.length == path.length
-						&& cmp(pattern, path) } },
+						&& cmp(pattern, path) } 
+			}
+			return false
+		},
 		// item index test...
 		index: function(pattern){
 			return typeof(pattern) == typeof(123)
@@ -1300,10 +1303,9 @@ var BaseBrowserPrototype = {
 
 		// parse args...
 		var args = [...arguments]
-		pattern = args.shift() 
-		pattern = pattern === undefined ? 
+		pattern = args.length == 0 ? 
 			true 
-			: pattern
+			: args.shift() 
 		func = (args[0] instanceof Function 
 				|| args[0] === undefined) ? 
 			args.shift() 
@@ -1314,16 +1316,18 @@ var BaseBrowserPrototype = {
 		// pattern -- normalize and do pattern keywords...
 		pattern = options.ignoreKeywords ?
 				pattern
-			: (pattern === 'all' || pattern == '*') ?
-				true
-			: pattern == 'first' ?
-				0
-			: pattern == 'last' ?
-				-1
-			: pattern == 'selected' ?
-				{selected: true}
-			: pattern == 'focused' ?
-				{focused: true}
+			: typeof(pattern) == typeof('str') ?
+				((pattern === 'all' || pattern == '*') ?
+					true
+				: pattern == 'first' ?
+					0
+				: pattern == 'last' ?
+					-1
+				: pattern == 'selected' ?
+					{selected: true}
+				: pattern == 'focused' ?
+					{focused: true}
+				: pattern)
 			: pattern
 		// normalize negative index...
 		if(typeof(pattern) == typeof(123) && pattern < 0){
@@ -1340,7 +1344,7 @@ var BaseBrowserPrototype = {
 				pattern
 			// other -> get a compatible test function...
 			: Object.entries(this.__search_test_generators__)
-				.filter(function([key, get]){
+				.filter(function([key, _]){
 					return !(options.noQueryCheck 
 						&& key == 'query') })
 				.reduce(function(res, [_, get]){
@@ -1349,7 +1353,6 @@ var BaseBrowserPrototype = {
 
 		return this.walk2(
 			function(elem, i, path, next, stop){
-				console.log('->', path.join('/'))
 				// match...
 				var res = (elem
 						&& (test === true 
@@ -1529,81 +1532,59 @@ var BaseBrowserPrototype = {
 	// Like .get(.., {iterateCollapsed: true}) but will expand all the 
 	// path items to reveal the target...
 	// XXX should this return the item or this???
+	// XXX make .reveal('all'/'*') only do the actual nodes that need expanding...
+	// 		...currently for path 'a/b/c/d' we'll go through:
+	// 			'a/b'
+	// 			'a/b/c'
+	// 			'a/b/c/d'
+	// XXX need a universal item name/value comparison / getter...
 	reveal: function(key, options){
 		var that = this
-		return this.get(key, 
-			function(e, i, path){
+		var seen = new Set()
+		return this.search(key, 
+				function(e, i, path){
+					return [path, e] }, 
+				Object.assign(
+					{
+						iterateCollapsed: true,
+						reverse: 'flat',
+					}, 
+					options || {}))
+			// sort paths long to short...
+			//.sort(function(a, b){
+			//	return b[0].length - a[0].length })
+			.map(function([path, e]){
+				// skip paths we have already seen...
+				if(seen.has(e.id)){
+					return e
+				}
+				seen.add(e.id)
+
 				var cur = that
-				path.forEach(function(n){
-					// XXX ugly
-					delete cur.item_key_index[n].collapsed
-					cur = cur.item_key_index[n].children
-				})
-				that.render()
+				path.length > 1
+					&& path
+						.slice(0, -1)
+						.forEach(function(n){
+							// array children...
+							if(cur instanceof Array){
+								var e = cur
+									.filter(function(e){ 
+										// XXX need a universal item name test...
+										return n == (e.value || e.id) })
+									.pop()
+								delete e.collapsed
+								cur = e.children
+
+							} else {
+								// XXX .item_key_index feels ugly...
+								delete cur.item_key_index[n].collapsed
+								cur = cur.item_key_index[n].children
+							}
+						})
 				return e
-			}, 
-			Object.assign(
-				{iterateCollapsed: true}, 
-				options)) },
-
-
-	//
-	//	.find(id[, options])
-	//	.find(index[, options])
-	//	.find(path[, options])
-	//	.find(func[, options])
-	//		-> list
-	//
-	// XXX add '**' patterns...
-	// XXX should this return item paths???
-	// 		...one way to do this is to return an object instead of a list...
-	find: function(query, options){
-		query = typeof(query) == typeof('str') ?
-			query.split(/[\\\/]/g)
-				.filter(function(e){ return e.length > 0 })
-			: query
-		query = typeof(query) == typeof('str') ?
-			[query]
-			: query
-		query = query instanceof Array ?
-			query
-				.map(function(d){
-					return d == '*' ?
-							d
-						: d.indexOf('*') >= 0 ?
-							new RegExp(d
-								.replace(/\*/g, '.*'))
-						: d})
-			: query
-
-		var i = -1
-		return this
-			.filter(function(e, p){
-				i++
-				return (query === e
-					|| (
-						// index...
-						typeof(query) == typeof(123) ?
-							query == i
-						// predicate...
-						: query instanceof Function ?
-							// XXX revise signature...
-							query.call(this, e, p, i, this)
-						// regular expression...
-						: query instanceof RegExp ?
-							query.test(p.join('/'))
-						// direct path comparison...
-						: query instanceof Array ?
-							query.cmp(p)
-							|| (query.length == p.length
-								&& query
-									.filter(function(q, i){
-										return q == '*' 
-											|| (q instanceof RegExp 
-												&& q.test(p[i]))
-											|| q == p[i] })
-									.length == p.length)
-						: false)) }, options) },
+			})
+			.run(function(){
+				that.render() }) },
 
 	// XXX support: up/down/left/right/first/last/next/prev
 	// XXX extend support for screen oriented nav in a subclass...
