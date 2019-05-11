@@ -1623,8 +1623,9 @@ var BaseBrowserPrototype = {
 				options || {})
 		context.options = context.options || options
 
+		// do the walk...
 		var elems = this.walk(
-			function(elem, i, path, nested, stop, children){
+			function(elem, i, path, nested){
 				return (
 					// inline...
 					elem == null ?
@@ -1646,7 +1647,7 @@ var BaseBrowserPrototype = {
 				return [options, renderer, context] },
 			options, context)
 
-		// determine the render mode...
+		// finalize depending on render mode...
 		return (!options.nonFinalized && context.root === this) ?
 			// root context -> render list and return this...
 			renderer.renderFinalize(elems, context)
