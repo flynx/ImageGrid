@@ -498,12 +498,15 @@ var BaseBrowserPrototype = {
 	//		-> list
 	//
 	//
+	//	Item handler...
 	//	func(node, index, path, next(..), stop(..), children)
 	//		-> list
 	//
+	//	Trigger next/nested item handling...
 	//	next(children)
 	//		-> list
 	//
+	//	Stop handling...
 	//	stop(result)
 	//
 	//
@@ -578,7 +581,7 @@ var BaseBrowserPrototype = {
 	//
 	//
 	// NOTE: if recursion(..) is not given then .walk(..) is used to 
-	// 		handle nested children...
+	// 		handle all the nested elements (children)...
 	// NOTE: if walkable(..) is not given then we check for .walk(..)
 	// 		availability...
 	// NOTE: children arrays are handled internally...
@@ -672,7 +675,7 @@ var BaseBrowserPrototype = {
 					// this can be called only once -> return cached results...
 					if(nested !== false){
 						return nested }
-
+					// calling this on a node without .children is a no-op...
 					if(children == null){
 						return [] }
 
@@ -745,43 +748,36 @@ var BaseBrowserPrototype = {
 					: [false, path.concat([id]), undefined]
 
 				if(inline && skipInlined){
-					return state
-				}
+					return state }
 
-				// reverse -> do children...
-				reverse == 'flat' 
-					&& children
-					&& state.splice(state.length, 0, ...doNested())
-				// do element...
+				// go through the elements...
 				state.splice(state.length, 0,
-					// NOTE: here we use:
-					// 			[ func(..) ].flat() 
-					// 		to normalize the return value of func to an array
-					// 		but this is not equivalent to:
-					// 			x instanceof Array ? x : [x]
-					// 		as it creates a new array instance in all cases
-					// 		and this is less efficient, though in most cases
-					// 		negligibly so... 
-					...[ func ? 
-						(func.call(that, 
-							...(inline ? 
-								[null, context.index] 
-								: [node, context.index++]),
-							p, 
-							// NOTE: when calling this it is the 
-							// 		responsibility of the caller to return
-							// 		the result to be added to state...
-							doNested, 
-							stop,
-							children) || []) 
-						: [node] ].flat())
-				// normal order -> do children...
-				// NOTE: doNested(..) is executed only once so in reverse 
-				// 		the call will have no effect, but we need to 
-				// 		update the context...
-				children
-					&& nested === false
-					&& state.splice(state.length, 0, ...doNested())
+					...[
+						// reverse -> do children...
+						reverse == 'flat' 
+							&& children
+							&& doNested() 
+							|| [],
+						// do element...
+						func ? 
+							(func.call(that, 
+								...(inline ? 
+									[null, context.index] 
+									: [node, context.index++]),
+								p, 
+								// NOTE: when calling this it is the 
+								// 		responsibility of the caller to return
+								// 		the result to be added to state...
+								doNested, 
+								stop,
+								children) || []) 
+							: [node],
+						// normal order -> do children...
+						children
+							&& nested === false
+							&& doNested() 
+							|| [],
+				   	].flat())
 
 				// restore path context...
 				children
@@ -817,21 +813,6 @@ var BaseBrowserPrototype = {
 					return [options, context] },
 				options, context)
 			.join('\n') },
-	paths: function(options, context){
-		return this.walk(
-			function(n, i, p){
-				return n 
-					&& [(options || {}).joinPaths !== false ? 
-						p.join('/') 
-						: p] }, 
-			'paths',
-			function(_, i, path, options, context){
-				// NOTE: for paths and indexes to be consistent between
-				// 		levels we need to thread the context on, here and
-				// 		into the base .walk(..) call below...
-				return [options, context] },
-			options, context) },
-
 	// XXX test manual recursion...
 	text2: function(options, context){
 		return this
@@ -850,6 +831,20 @@ var BaseBrowserPrototype = {
 					return [options, context] },
 				options, context)
 			.join('\n') },
+	paths: function(options, context){
+		return this.walk(
+			function(n, i, p){
+				return n 
+					&& [(options || {}).joinPaths !== false ? 
+						p.join('/') 
+						: p] }, 
+			'paths',
+			function(_, i, path, options, context){
+				// NOTE: for paths and indexes to be consistent between
+				// 		levels we need to thread the context on, here and
+				// 		into the base .walk(..) call below...
+				return [options, context] },
+			options, context) },
 
 	// Extended map...
 	//
