@@ -695,8 +695,7 @@ var BaseBrowserPrototype = {
 							recursion, 
 							...(formArgs instanceof Function ? 
 								[formArgs] 
-								: []), 
-							walkable, 
+								: [walkable]), 
 							options, context) }
 
 					return (list === false ?
@@ -794,12 +793,23 @@ var BaseBrowserPrototype = {
 				: this.items)) },
 
 
-	// Text render...
+	// Test/Example Text renders...
 	//
-	// This is mainly here for doc/debug purposes...
+	//	Recursively render the browser as text tree...
+	//	._test_texttree(..)
+	//		-> string
 	//
-	// XXX rename this??
-	text: function(options, context){
+	//	Recursively render the browser as text tree with manual nesting...
+	//	._test_texttree_manual(..)
+	//		-> string
+	//
+	//	Build a nested object tree from the browser...
+	//	._test_tree(..)
+	//		-> object
+	//
+	_test_texttree: function(options, context){
+		// NOTE: here we do not care about the topology (other than path 
+		// 		depth) and just handle items...
 		return this
 			.walk(
 				function(node, i, path){
@@ -808,29 +818,66 @@ var BaseBrowserPrototype = {
 							.map(e => '  ')
 							.join('') + (node.value || node)
 						: [] },
-				'text',
+				'_test_texttree',
 				function(func, i, path, options, context){
 					return [options, context] },
 				options, context)
 			.join('\n') },
-	// XXX test manual recursion...
-	text2: function(options, context){
+	_test_texttree_manual: function(options, context){
+		// NOTE: here we do basic topology -- append children to their 
+		// 		respective node...
 		return this
 			.walk(
 				function(node, i, path, next){
 					return node == null ? 
 							[]
+						// make a node...
 						: [path.slice(1)
 							.map(e => '  ')
 							.join('') + (node.value || node)]
+							// append child nodes if present...
 			   				.concat(node.children ?
 								next()
 								: []) },
-				'text2',
+				'_test_texttree_manual',
 				function(func, i, path, options, context){
 					return [options, context] },
 				options, context)
 			.join('\n') },
+	_test_tree: function(options, context){
+		var toObject = function(res, e){
+			if(e == null || e[0] == null){
+				return res
+			}
+			res[e[0]] = e[1] instanceof Array ? 
+				// handle nested arrays...
+				// NOTE: these did not get through the .reduce(..) below
+				// 		as they are simple arrays that do not implement
+				// 		either .walk(..) or ._test_tree(..)
+				e.slice(1).reduce(toObject, {}) 
+				: e[1]
+			return res
+		}
+		return this
+			// build [key, children] pairs...
+			.walk(
+				function(node, i, path, next){
+					return node == null ? 
+							[]
+						// make a node...
+						: [[(node.value || node)]
+							// append child nodes if present...
+			   				.concat(node.children ?
+								next()
+								: null) ] },
+				'_test_tree',
+				function(func, i, path, options, context){
+					return [options, context] },
+				options, context)
+			// construct the object...
+   			.reduce(toObject, {}) },
+
+
 	paths: function(options, context){
 		return this.walk(
 			function(n, i, p){
@@ -845,6 +892,7 @@ var BaseBrowserPrototype = {
 				// 		into the base .walk(..) call below...
 				return [options, context] },
 			options, context) },
+
 
 	// Extended map...
 	//
