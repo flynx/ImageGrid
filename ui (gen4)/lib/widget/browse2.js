@@ -477,53 +477,52 @@ var BaseBrowserPrototype = {
 
 	// Walk the browser...
 	//
-	// 	.walk(handleItem[, options])
-	// 		-> result
+	//	Get list of nodes in tree...
+	//	.walk()
+	//		-> list
 	//
-	// 	.walk(handleItem, handleRecursion[, options])
-	// 		-> result
+	//	Walk the tree passing each node to func(..)
+	//	.walk(func(..)[, options])
+	//		-> list
 	//
-	// 	.walk(handleItem, handleRecursion, isWalkable[, options])
-	// 		-> result
+	//	Walk tree passing each node to func(..) using method name to 
+	//	walk nested browsers...
+	//	NOTE: 'walk' is used as name if name is not present in the object...
+	//	.walk(func(..), name, args(..)[, options])
+	//	.walk(func(..), name, args(..), walkable(..)[, options])
+	//		-> list
 	//
-	//
-	//
-	// 	handleItem(path, elem, index, doNested, children)
-	// 		-> items
-	//
-	// 	Trigger nested item handling...
-	// 	doNested([options])
-	// 	doNested(list[, options])
-	// 	doNested(index[, options])
-	// 	doNested(list, index[, options])
-	// 		-> items
-	//
-	// 	Disable automatic nested item handling...
-	// 	doNested(false)
-	// 		-> undefined
-	//
-	// 	Force nested item handling...
-	// 	doNested(true, ..)
-	// 		-> items
-	//
-	// 	NOTE: doNested(..) has no effect of options.reverse is
-	// 		set to 'flat'...
-	// 	NOTE: only the first call to doNested(..) as any effect, all 
-	// 		consecutive calls will return cached results of the first 
-	// 		call...
+	//	Walk tree passign each node to func(..) and handle nested browser 
+	//	walking in recursion(..) optionally testing if walkable with walkable(..)
+	//	.walk(func(..), recursion(..)[, options])
+	//		-> list
 	//
 	//
+	//	func(node, index, path, next(..), stop(..), children)
+	//		-> list
 	//
-	// 	Handle recursion down...
-	// 	handleRecursion(func, index, path, children, options)
-	// 		-> items 
+	//	next(children)
+	//		-> list
+	//
+	//	stop(result)
 	//
 	//
+	//	Handle walkable node children (recursively)...
+	//	recursion(children, index, path, options, context, func(..), stop(..), walk())
+	//		-> list
 	//
-	//	Test if item is walkable...
-	//	isWalkable(item)
+	//
+	//	Prepare arguments for call of name function on nested browser...
+	//	args(list, index, path, options, context, func(..), stop(..))
+	//		-> list
+	//
+	//
+	//	Test if node is walkable...
+	//	walkable(node)
 	//		-> bool
 	//
+	//
+	// For examples see: .text(..), .paths(..) and .map(..)
 	//
 	//
 	// options format:
@@ -576,239 +575,6 @@ var BaseBrowserPrototype = {
 	// 		// XXX do we need this??
 	// 		inlinedPaths: <bool>,
 	// 	}
-	//
-	//
-	// XXX can we add support for partial walks, i.e. start/end ranges???
-	// 		...or abort walk and return result on user request...
-	// XXX can this support breadth first walking???
-	// XXX revise protocol...
-	// XXX use generic-walk.... (???)
-	/*
-	walk: function(func, options){
-		var that = this
-
-		// parse args...
-		var args = [...arguments]
-		func = args[0] instanceof Function ? 
-			args.shift() 
-			: undefined
-		var recursion = (args[0] instanceof Function 
-				|| typeof(args[0]) == typeof('str')) ? 
-			args.shift() 
-			: undefined
-		var walkable = args[0] instanceof Function ?
-			args.shift() 
-			: null 
-		var i = typeof(args[0]) == typeof(123) ?
-			args.shift()
-			: 0
-		var path = (args[0] instanceof Array 
-				|| typeof(args[0]) == typeof('str')) ?
-			args.shift()
-			: []
-		path = path instanceof Array ? path : [path]
-		options = args.pop() || {} 
-
-		// set call context...
-		options = !options.root ?
-			Object.assign({},
-				this.options,
-				options,
-				{root: this})
-			: options
-
-		var iterateNonIterable = options.iterateAll || options.iterateNonIterable
-		var iterateCollapsed = options.iterateAll || options.iterateCollapsed
-		var skipNested = !options.iterateAll && options.skipNested
-		var reverse = options.reverse === true ?
-			(options.defaultReverse || 'tree')
-			: options.reverse
-
-		var isWalkable = walkable ?
-			function(elem){
-				return elem instanceof Array || walkable(elem) }
-			: function(elem){
-				return elem instanceof Array || elem instanceof Browser }
-
-		// level walk function...
-		var walk = function(i, path, list){
-			return list
-				// reverse the items...
-				.run(function(){
-					return reverse ?
-						// NOTE: we .slice() as we do not want to affect 
-						// 		the actual list...
-						this.slice().reverse() 
-						: this })
-				.map(function(elem){
-					// skip non-iterable items...
-					if(!iterateNonIterable && elem.noniterable){
-						return []
-					}
-
-					var elem_id = elem.id || elem.value
-					// these will be set in the return expression below...
-					var children
-					var p 
-
-					// nested browser/list handler...
-					var nested = false
-					var doNested = function(list, j, opts){
-						// this can be called only once...
-						if(nested !== false){
-							return nested
-						}
-
-						// parse args...
-						var args = [...arguments]
-						list = (args[0] === true 
-								|| args[0] === false
-								|| isWalkable(args[0])) ?
-							args.shift()
-							: undefined
-						j = typeof(args[0]) == typeof(123) ?
-							args.shift()
-							: undefined
-						opts = args.shift() || options
-
-						// normalize...
-						list = list === true ?
-						   		children	
-							: list === false ?
-								list
-							: (!iterateCollapsed && elem.collapsed) ?
-								[]
-							: (list || children)
-						i = j != null ? j : i
-
-						return (
-								// request manual iteration...
-								list === false ?
-									[]
-								: list instanceof Array ?
-									walk(i, p, list)
-								// user-defined recursion...
-								: recursion instanceof Function ?
-									recursion.call(that, func, i, p, list, opts)
-								: list[recursion || 'walk'](func, i, p, opts) )
-				   			.run(function(){
-								var res = this instanceof Array ? 
-									this 
-									: [this] 
-								// XXX BUG: this depends on the length 
-								// 		of the result and not on the number
-								// 		of func calls...
-								// 		...i.e. should depend on input 
-								// 		and not on output...
-								i += res.length 
-								nested = res.flat()
-								return nested
-							})
-					}
-
-					// setup iteration context...
-					var inline = false
-					// inline browser or array...
-					if(isWalkable(elem)){
-						inline = true
-						p = path
-						children = elem
-
-					// nested browser / array...
-					} else if(!skipNested
-							&& isWalkable(elem.children)){
-						p = path.concat([elem_id])
-						children = elem.children
-
-					// normal element...
-					} else {
-						p = path.concat([elem_id]) 
-						children = null
-						doNested = null
-					}
-
-					return (
-						// prepend nested elements on flat reverse...
-						(children && reverse == 'flat' ?
-							doNested(children)
-							: [])
-						// append the actual element...
-						.concat(
-							// NOTE: func MUST return an array...
-							func.call(that, 
-								// NOTE: for inline elements we do not need to 
-								//		count the header as it's not present...
-								inline ? i : i++, 
-								p, 
-								// NOTE: inlined sets have no header...
-								inline ? null : elem, 
-								doNested, 
-								children))
-						// append nested elements if not done so...
-						.concat((!children || nested !== false) ? 
-							[] 
-							: doNested(children)) )
-				})
-				// XXX this here loses the length information we need in doNested(..)
-				// 		to calc indexes...
-				//.flat()
-		}
-
-		var res = walk(i, path, this.items)
-		return options.root === this ?
-			res.flat()
-			: res
-	},
-	//*/
-
-
-	//
-	//	Get list of nodes in tree...
-	//	.walk()
-	//		-> list
-	//
-	//	Walk the tree passing each node to func(..)
-	//	.walk(func(..)[, options])
-	//		-> list
-	//
-	//	Walk tree passing each node to func(..) using method name to 
-	//	walk nested browsers...
-	//	NOTE: 'walk' is used as name if name is not present in the object...
-	//	.walk(func(..), name, args(..)[, options])
-	//	.walk(func(..), name, args(..), walkable(..)[, options])
-	//		-> list
-	//
-	//	Walk tree passign each node to func(..) and handle nested browser 
-	//	walking in recursion(..) optionally testing if walkable with walkable(..)
-	//	.walk(func(..), recursion(..)[, options])
-	//		-> list
-	//
-	//
-	//	func(node, index, path, next(..), stop(..), children)
-	//		-> list
-	//
-	//	next(children)
-	//		-> list
-	//
-	//	stop(result)
-	//
-	//
-	//	Handle walkable node children (recursively)...
-	//	recursion(children, index, path, options, context, func(..), stop(..), walk())
-	//		-> list
-	//
-	//
-	//	Prepare arguments for call of name function on nested browser...
-	//	args(list, index, path, options, context, func(..), stop(..))
-	//		-> list
-	//
-	//
-	//	Test if node is walkable...
-	//	walkable(node)
-	//		-> bool
-	//
-	//
-	// For examples see: .text(..), .paths(..) and .map(..)
 	//
 	//
 	// NOTE: if recursion(..) is not given then .walk(..) is used to 
