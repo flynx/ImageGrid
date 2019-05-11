@@ -966,7 +966,6 @@ var BaseBrowserPrototype = {
 			options, context) },
 
 
-	// XXX EXPERIMENTAL...
 	//
 	// 	Get list of matching elements...
 	// 	NOTE: this is similar to .filter(..)

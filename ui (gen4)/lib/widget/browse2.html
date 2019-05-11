@@ -106,14 +106,10 @@ requirejs([
 	dialog_1 = browser.Browser(function(make){
 		make(['list', 'of', 'text'])
 		make.group(
-			make('group item 0'),
+			make('group item 0', function(){ console.log('###') }),
 			'group item 1 (bare)')
 		// XXX Q: should we show only one if multiple lines are in sequence???
 		make('---')
-		//make('---')
-		// XXX not yet visible...
-		//make('...')
-		//make('e')
 		// embeded browser...
 		make(browser.Browser(function(make){
 			make('inlined browser item 0')
