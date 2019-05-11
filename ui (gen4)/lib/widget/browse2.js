@@ -583,6 +583,7 @@ var BaseBrowserPrototype = {
 	// XXX can this support breadth first walking???
 	// XXX revise protocol...
 	// XXX use generic-walk.... (???)
+	/*
 	walk: function(func, options){
 		var that = this
 
@@ -616,11 +617,6 @@ var BaseBrowserPrototype = {
 				{root: this})
 			: options
 
-		/*var start = options.start || 0
-		var end = options.end 
-			|| (options.count >= 0 && start + (options.count))
-			|| Infinity
-		//*/
 		var iterateNonIterable = options.iterateAll || options.iterateNonIterable
 		var iterateCollapsed = options.iterateAll || options.iterateCollapsed
 		var skipNested = !options.iterateAll && options.skipNested
@@ -763,27 +759,28 @@ var BaseBrowserPrototype = {
 			res.flat()
 			: res
 	},
+	//*/
 
 
 	//
 	//	Get list of nodes in tree...
-	//	.walk2()
+	//	.walk()
 	//		-> list
 	//
 	//	Walk the tree passing each node to func(..)
-	//	.walk2(func(..)[, options])
+	//	.walk(func(..)[, options])
 	//		-> list
 	//
 	//	Walk tree passing each node to func(..) using method name to 
 	//	walk nested browsers...
-	//	NOTE: 'walk2' is used as name if name is not present in the object...
-	//	.walk2(func(..), name, args(..)[, options])
-	//	.walk2(func(..), name, args(..), walkable(..)[, options])
+	//	NOTE: 'walk' is used as name if name is not present in the object...
+	//	.walk(func(..), name, args(..)[, options])
+	//	.walk(func(..), name, args(..), walkable(..)[, options])
 	//		-> list
 	//
 	//	Walk tree passign each node to func(..) and handle nested browser 
 	//	walking in recursion(..) optionally testing if walkable with walkable(..)
-	//	.walk2(func(..), recursion(..)[, options])
+	//	.walk(func(..), recursion(..)[, options])
 	//		-> list
 	//
 	//
@@ -814,9 +811,9 @@ var BaseBrowserPrototype = {
 	// For examples see: .text(..), .paths(..) and .map(..)
 	//
 	//
-	// NOTE: if recursion(..) is not given then .walk2(..) is used to 
+	// NOTE: if recursion(..) is not given then .walk(..) is used to 
 	// 		handle nested children...
-	// NOTE: if walkable(..) is not given then we check for .walk2(..)
+	// NOTE: if walkable(..) is not given then we check for .walk(..)
 	// 		availability...
 	// NOTE: children arrays are handled internally...
 	//
@@ -829,16 +826,16 @@ var BaseBrowserPrototype = {
 	// 			+ this is done so as to provide the user a simpler 
 	// 				.map(..)-like form...
 	// 				Ex:
-	// 					.walk2((e, i, p, next, stop) => p.join('/'))
+	// 					.walk((e, i, p, next, stop) => p.join('/'))
 	// 					// vs.
-	// 					.walk2((e, c, next, stop) => c.path.join('/'))
+	// 					.walk((e, c, next, stop) => c.path.join('/'))
 	// 			- two ways to get index and one to update it...
 	// 		...if this can produce errors we need to simplify...
 	// XXX add docs:
 	// 		- maintaining context to implement/extend walkers...
 	// 		- correctly stopping recursive calls (call root stop(..))
 	// XXX can this be simpler???
-	walk2: function(func, recursion, walkable, options){
+	walk: function(func, recursion, walkable, options){
 		var that = this
 
 		// parse args...
@@ -858,7 +855,7 @@ var BaseBrowserPrototype = {
 			: null
 		// sanity check...
 		if(formArgs == null && typeof(recursion) == typeof('str')){
-			throw new Error(`.walk2(func, name, formArgs, ..): `
+			throw new Error(`.walk(func, name, formArgs, ..): `
 				+`expected function as third argument, got: ${formArgs}.`) }
 		var walkable = (!formArgs 
 				&& (args[0] instanceof Function 
@@ -893,7 +890,7 @@ var BaseBrowserPrototype = {
 						// requested method name is available...
 						|| (typeof(recursion) == typeof('str') 
 							&& node[recursion])
-						|| node.walk2 ) }
+						|| node.walk ) }
 
 		return walk(
 			function(state, node, next, stop){
@@ -910,6 +907,9 @@ var BaseBrowserPrototype = {
 					if(nested !== false){
 						return nested }
 
+					if(children == null){
+						return [] }
+
 					// normalize...
 					list = list === true ?
 							children	
@@ -919,9 +919,9 @@ var BaseBrowserPrototype = {
 							children
 						: list
 
-					// call .walk2(..) recursively...
+					// call .walk(..) recursively...
 					var useWalk = function(){
-						return list.walk2(
+						return list.walk(
 							func, 
 							recursion, 
 							...(formArgs instanceof Function ? 
@@ -935,7 +935,7 @@ var BaseBrowserPrototype = {
 							// handle arrays internally...
 							: list instanceof Array ?
 								// NOTE: this gets the path and i from context...
-								next('do', state, 
+								next('do', [], 
 									...(reverse ? 
 										list.slice().reverse() 
 										: list))
@@ -953,18 +953,13 @@ var BaseBrowserPrototype = {
 										list, context.index, p, 
 										options, context, 
 										func, useWalk) || []))
-							// .walk2(..)
+							// .walk(..)
 							: useWalk())
 						// normalize and merge to state...
 						.run(function(){
-							nested = this instanceof Array ?
+							return (nested = this instanceof Array ?
 								this
-								: [this]
-							// merge...
-							!(list === false || list instanceof Array)
-								&& state.splice(state.length, 0, ...nested)
-							return nested
-						}) }
+								: [this]) }) }
 
 				// prepare context...
 				var id = node.id || node.value
@@ -990,7 +985,7 @@ var BaseBrowserPrototype = {
 				// reverse -> do children...
 				reverse == 'flat' 
 					&& children
-					&& doNested()
+					&& state.splice(state.length, 0, ...doNested())
 				// do element...
 				state.splice(state.length, 0,
 					// NOTE: here we use:
@@ -1007,6 +1002,9 @@ var BaseBrowserPrototype = {
 								[null, context.index] 
 								: [node, context.index++]),
 							p, 
+							// NOTE: when calling this it is the 
+							// 		responsibility of the caller to return
+							// 		the result to be added to state...
 							doNested, 
 							stop,
 							children) || []) 
@@ -1016,9 +1014,12 @@ var BaseBrowserPrototype = {
 				// 		the call will have no effect, but we need to 
 				// 		update the context...
 				children
-					&& (doNested(), 
-						// restore path context...
-						context.path.pop())
+					&& nested === false
+					&& state.splice(state.length, 0, ...doNested())
+
+				// restore path context...
+				children
+					&& context.path.pop()
 
 				return state
 			}, 
@@ -1038,7 +1039,7 @@ var BaseBrowserPrototype = {
 	// XXX rename this??
 	text: function(options, context){
 		return this
-			.walk2(
+			.walk(
 				function(node, i, path){
 					return node ? 
 						path.slice(1)
@@ -1051,7 +1052,7 @@ var BaseBrowserPrototype = {
 				options, context)
 			.join('\n') },
 	paths: function(options, context){
-		return this.walk2(
+		return this.walk(
 			function(n, i, p){
 				return n 
 					&& [(options || {}).joinPaths !== false ? 
@@ -1061,10 +1062,28 @@ var BaseBrowserPrototype = {
 			function(_, i, path, options, context){
 				// NOTE: for paths and indexes to be consistent between
 				// 		levels we need to thread the context on, here and
-				// 		into the base .walk2(..) call below...
+				// 		into the base .walk(..) call below...
 				return [options, context] },
 			options, context) },
 
+	// XXX test manual recursion...
+	text2: function(options, context){
+		return this
+			.walk(
+				function(node, i, path, next){
+					return node == null ? 
+							[]
+						: [path.slice(1)
+							.map(e => '  ')
+							.join('') + (node.value || node)]
+			   				.concat(node.children ?
+								next()
+								: []) },
+				'text2',
+				function(func, i, path, options, context){
+					return [options, context] },
+				options, context)
+			.join('\n') },
 
 	// Extended map...
 	//
@@ -1123,7 +1142,7 @@ var BaseBrowserPrototype = {
 			: options
 		var context = args.shift()
 
-		return this.walk2(
+		return this.walk(
 			function(elem, i, path){
 				return elem != null ?
 					[func === undefined ?
@@ -1351,7 +1370,7 @@ var BaseBrowserPrototype = {
 					return res 
 						|| get.call(this.__search_test_generators__, pattern) }, false) )
 
-		return this.walk2(
+		return this.walk(
 			function(elem, i, path, next, stop){
 				// match...
 				var res = (elem
@@ -1489,7 +1508,7 @@ var BaseBrowserPrototype = {
 		this.map(...arguments)
 		return this },
 	filter: function(func, options, context){
-		return this.walk2(
+		return this.walk(
 			function(e, i, p){
 				return e && func.call(this, e, i, p) ? [e] : [] },
 			'filter',
@@ -1499,7 +1518,7 @@ var BaseBrowserPrototype = {
 	reduce: function(func, start, options){
 		var that = this
 		var context = arguments[3] || {result: start}
-		this.walk2(
+		this.walk(
 			function(e, i, p){
 				context.result = e ? 
 					func.call(that, context.result, e, i, p) 
@@ -1529,8 +1548,9 @@ var BaseBrowserPrototype = {
 	pathOf: function(item, options){
 		return this.positionOf(item, options)[1] },
 
-	// Like .get(.., {iterateCollapsed: true}) but will expand all the 
+	// Like .select(.., {iterateCollapsed: true}) but will expand all the 
 	// path items to reveal the target...
+	//
 	// XXX should this return the item or this???
 	// XXX make .reveal('all'/'*') only do the actual nodes that need expanding...
 	// 		...currently for path 'a/b/c/d' we'll go through:
@@ -1827,75 +1847,45 @@ var BaseBrowserPrototype = {
 	// 		the state anew that use .update(..)...
 	// NOTE: currently options and context are distinguished only via 
 	// 		the .options attribute...
-	//
-	// XXX would be nice to add ability to do a full render but not 
-	// 		finalize the result...
-	// XXX BUG: calling .render() removes all non-iterable items for some reason...
-	render: function(options, renderer){
-		var that = this
-		// XXX Q: should options and context be distinguished only via 
-		// 		the .options attr as is the case now???
-		// 		...see no reason why not, though it does not feel right...
-		var context = (options == null || options.options == null) ?
-				{
-					root: this,
-					// NOTE: we are not combining this with .options as nested 
-					// 		lists can have their own unique sets of options 
-					// 		independently of the root list...
-					//options: options || this.options || {},
-					options: Object.assign(
-						Object.create(this.options || {}),
-						// defaults...
-						// XXX is this the correct way to setup defaults???
-						{ iterateNonIterable: true }, 
-						options || {}),
-				}
-			: options
-		options = context.options
+	render: function(options, renderer, context){
+		context = context || {}
 		renderer = renderer || this
+		options = context.options 
+			|| Object.assign(
+				Object.create(this.options || {}),
+				{ iterateNonIterable: true }, 
+				options || {})
+		context.options = context.options || options
 
-		// XXX should we control render parameters (range, start, end, ...)
-		// 		from outside render and pass this info down to nested lists???
-		// 		...if yes how??
-		// 			- options
-		// 			- arg threading
-		var items = this
-			.walk(
-				function(i, path, item, nested, children){
-					return (
-						// inline...
-						(item == null && children) ?
-							// NOTE: here we are forcing rendering of the 
-							// 		inline browser/list, i.e. ignoring 
-							// 		options.skipNested for inline stuff...
-							// NOTE: we here do not distinguish between
-							// 		inlined lists and browsers... (XXX ???)
-							[ renderer.renderGroup(nested(true), context) ]
-						// nested...
-						: children ?
-							[ renderer.renderNested(
-								renderer.renderNestedHeader(item, i, context),
-								nested(),
-								item, 
-								context) ]
-						// normal item...
-						: [ renderer.renderItem(item, i, context) ] ) },
-				function(func, i, path, children, options){
-					return children.render(context, renderer, i, path) },
-				// make the element render less strict...
-				function(elem){
-					return elem 
-						&& elem.render instanceof Function },
-				// pass on i and path if given...
-				...[...arguments].slice(2),
-				options)
+		var elems = this.walk(
+			function(elem, i, path, nested, stop, children){
+				return (
+					// inline...
+					elem == null ?
+						// NOTE: here we are forcing rendering of the 
+						// 		inline browser/list, i.e. ignoring 
+						// 		options.skipNested for inline stuff...
+						[ renderer.renderGroup(nested(true), context) ]
+					// nested...
+					: elem.children ?
+						[ renderer.renderNested(
+							renderer.renderNestedHeader(elem, i, context),
+							nested(),
+							elem, 
+							context) ]
+					// normal elem...
+					: [ renderer.renderItem(elem, i, context) ] ) },
+			'render',
+			function(_, i, p, options, context){
+				return [options, renderer, context] },
+			options, context)
 
 		// determine the render mode...
 		return (!options.nonFinalized && context.root === this) ?
 			// root context -> render list and return this...
-			renderer.renderFinalize(items, context)
+			renderer.renderFinalize(elems, context)
 			// nested context -> return item list...
-			: items
+			: elems
 	},
 	
 
