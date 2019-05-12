@@ -1416,8 +1416,33 @@ var BaseBrowserPrototype = {
 
 	// XXX support: up/down/left/right/first/last/next/prev
 	// XXX extend support for screen oriented nav in a subclass...
-	navigate: function(direction){
-		// XXX get then return element...
+	// XXX merge this with focus event...
+	// XXX skip disabled...
+	// XXX add .focus() -> current focused...
+	// XXX should this also .reveal(..) ???
+	_focus: function(elem, options){
+		var [focused, i] = this.get(
+			'focused', 
+			function(e, i){ 
+				return [e, i] }, 
+			options) || [{}, undefined]
+
+		// XXX might be good to wrap around indexes... 
+		// 		i.e. if i+1 > length -> 0 and if i-1 > -length -> -1...
+		// 		... what length we get should depend on options.iterateCollapsed...
+		elem = elem == 'next' ?
+				(i == null ? 0 : i+1)
+			: elem == 'prev' ?
+				(i == null ? 0 : i-1)
+			: (elem || 0)
+
+		delete focused.focused
+		return this.get(elem, 
+			function(e){ 
+				e.focused = true 
+				return e
+			},
+		   	options) 
 	},
 
 
