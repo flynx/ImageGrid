@@ -1628,8 +1628,7 @@ var BaseBrowserPrototype = {
 	// Render state...
 	//
 	//	.render()
-	//	.render(options[, renderer])
-	//	.render(context[, renderer])
+	//	.render(options[, renderer[, context]])
 	//		-> state
 	//
 	//
