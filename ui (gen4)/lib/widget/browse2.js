@@ -205,7 +205,7 @@ var makeEventMethod = function(event, handler){
 			return this.on(event, item) 
 		}
 
-		// XXX STUG: event object...
+		// XXX STUB: event object...
 		// XXX can we generate this in one spot???
 		// 		...currently it is generated here and in .trigger(..)
 		var evt = {
@@ -235,14 +235,20 @@ var callItemEventHandlers = function(item, event, ...args){
 			// XXX revise call signature...
 			handler.call(item, evt, item, ...args) }) }
 
-// XXX use .find(..) instead of .get(..) here....
-var makeItemEventMethod = function(event, handler){
+var makeItemEventMethod = function(event, handler, options){
 	return makeEventMethod(event, function(evt, item, ...args){
-		item = item ? 
-			// XXX
-			this.get(item) 
+		var that = this
+
+		item = 
+			item instanceof Array ?
+				item
+					.map(function(e){
+						return that.search(e, options) })
+					.flat()
+					.unique()
+			: item != null ? 
+				this.search(item, options) 
 			: []
-		item = item instanceof Array ? item : [item]
 
 		handler
 			&& handler.call(this, evt, item, ...args)
@@ -324,50 +330,18 @@ var BaseBrowserPrototype = {
 		this.__item_index = value },
 
 
-	// XXX should this be more pedantic???
-	__focused: undefined,
+	// XXX should we cache the value here???? 
 	get focused(){
-		return (this.__focused && this.__focused.focused) ?
-			this.__focused
-			: (this.__focused = this.get('focused')) },
-	// XXX should this trigger focus/blur events???
-	// 		...or should this call .focus(..)
+		return this.get('focused') },
 	set focused(value){
-		delete this.get('focused').focused
-		this.__focused = value == null ?
-			null
-			: this.get(value, 
-				function(e){
-					e.focused = true
-					return e}) },
+		this.focus(value) },
 
-	__selected: null,
+	// XXX should we cache the value here???? 
 	get selected(){
-		return this.__selected 
-			|| (this.__selected = this.search('selected')) },
-	// XXX should this trigger select/deselect events???
-	// 		...or should this call .select(..)
+		return this.search('selected') },
 	set selected(value){
-		var that = this
-		// deselect...
-		this.__selected = null
-		this.search('selected', 
-			function(e){ 
-				delete e.selected })
-		// select...
-		this.__selected = value == null ?
-			null
-			: (value instanceof Array ? 
-					value 
-					: [value])
-				.map(function(p){
-					return that.search(p, 
-						function(e){
-							e.selected = true
-							return e }) })
-				.flat()
-				.unique()
-	},
+		this.deselect('selected')
+		this.select(value) },
 
 
 	// Length...
@@ -1436,39 +1410,6 @@ var BaseBrowserPrototype = {
 			.run(function(){
 				that.render() }) },
 
-	// XXX support: up/down/left/right/first/last/next/prev
-	// 		...make this extensible to handle 2D navigation...
-	// XXX extend support for screen oriented nav in a subclass...
-	// XXX merge this with focus event...
-	// XXX skip disabled...
-	// XXX add .focus() -> current focused...
-	// XXX should this also .reveal(..) ???
-	_focus: function(elem, options){
-		var [focused, i] = this.get(
-			'focused', 
-			function(e, i){ 
-				return [e, i] }, 
-			options) || [{}, undefined]
-
-		// XXX might be good to wrap around indexes... 
-		// 		i.e. if i+1 > length -> 0 and if i-1 > -length -> -1...
-		// 		... what length we get should depend on options.iterateCollapsed...
-		elem = elem == 'next' ?
-				(i == null ? 0 : i+1)
-			: elem == 'prev' ?
-				(i == null ? 0 : i-1)
-			: (elem || 0)
-
-		delete focused.focused
-		return this.get(elem, 
-			function(e){ 
-				e.focused = true 
-				return e
-			},
-		   	options) 
-	},
-
-
 
 	// XXX do we need edit ability here? 
 	// 		i.e. .set(..), .remove(..), .sort(..), ...
@@ -1844,36 +1785,29 @@ var BaseBrowserPrototype = {
 	// XXX need a way to extend these to:
 	// 		- be able to trigger an external (DOM) event...
 	// 		- be able to be triggered from an external (DOM) event...
+	// XXX should we trigger the item's focus events??? 
+	// XXX should this return the focused item????
 	focus: makeItemEventMethod('focus', function(evt, items){
-		// NOTE: if we got multiple matches we care only about the last one...
-		var item = items.pop()
-
-		if(!item){
-			return
-		}
+		// NOTE: if we got multiple matches we care only about the first one...
+		var item = items.shift()
 
 		// blur .focused...
 		this.focused
 			&& this.blur(this.focused)
 
-		item.focused = true
+		item != null
+			&& (item.focused = true)
 	}),
 	blur: makeItemEventMethod('blur', function(evt, items){
 		items.forEach(function(item){
 			delete item.focused }) }),
-	// XXX update this.selected in a more granular way...
+	// XXX should we trigger the item's select events??? 
 	select: makeItemEventMethod('select', function(evt, items){
 		items.forEach(function(item){
-			item.selected = true
-			// XXX update this.selected in a more granular way...
-			delete this.__selected
-		}) }),
-	deselect: makeItemEventMethod('deselect', function(evt, item){
+			item.selected = true }) }),
+	deselect: makeItemEventMethod('deselect', function(evt, items){
 		items.forEach(function(item){
-			delete item.selected
-			// XXX update this.selected in a more granular way...
-			delete this.__selected
-		}) }),
+			delete item.selected }) }),
 
 	open: makeItemEventMethod('open', function(evt, item){}),
 	enter: makeItemEventMethod('enter', function(evt, item){}),
