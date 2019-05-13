@@ -324,27 +324,49 @@ var BaseBrowserPrototype = {
 		this.__item_index = value },
 
 
-	// XXX what should these return??? (item, id, ...)
+	// XXX should this be more pedantic???
 	__focused: undefined,
 	get focused(){
-		return this.__focused && this.__focused.focused ?
+		return (this.__focused && this.__focused.focused) ?
 			this.__focused
-			: (this.__focused = this
-				// XXX should we simple bailout when we find an item???
-				.filter(function(e){
-					return e.focused }).shift()) },
+			: (this.__focused = this.get('focused')) },
+	// XXX should this trigger focus/blur events???
+	// 		...or should this call .focus(..)
 	set focused(value){
-		// XXX
-	},
+		delete this.get('focused').focused
+		this.__focused = value == null ?
+			null
+			: this.get(value, 
+				function(e){
+					e.focused = true
+					return e}) },
 
 	__selected: null,
 	get selected(){
 		return this.__selected 
-			|| (this.__selected = this
-				.filter(function(e){
-					return e.selected })) },
+			|| (this.__selected = this.search('selected')) },
+	// XXX should this trigger select/deselect events???
+	// 		...or should this call .select(..)
 	set selected(value){
-		// XXX
+		var that = this
+		// deselect...
+		this.__selected = null
+		this.search('selected', 
+			function(e){ 
+				delete e.selected })
+		// select...
+		this.__selected = value == null ?
+			null
+			: (value instanceof Array ? 
+					value 
+					: [value])
+				.map(function(p){
+					return that.search(p, 
+						function(e){
+							e.selected = true
+							return e }) })
+				.flat()
+				.unique()
 	},
 
 
