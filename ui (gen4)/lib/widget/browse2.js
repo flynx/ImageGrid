@@ -198,6 +198,7 @@ Items.ListTitle = function(){}
 //
 //
 // XXX should this be simply a shorthand to .trigger(..) ???
+// XXX ASAP: should call the handlers with actual items and not the arguments...
 var makeEventMethod = function(event, handler){
 	return function(item){
 		// register handler...
@@ -1785,7 +1786,7 @@ var BaseBrowserPrototype = {
 	// XXX need a way to extend these to:
 	// 		- be able to trigger an external (DOM) event...
 	// 		- be able to be triggered from an external (DOM) event...
-	// XXX should we trigger the item's focus events??? 
+	// XXX should call the handlers with actual items and not the arguments...
 	// XXX should this return the focused item????
 	focus: makeItemEventMethod('focus', function(evt, items){
 		// NOTE: if we got multiple matches we care only about the first one...
@@ -1801,7 +1802,6 @@ var BaseBrowserPrototype = {
 	blur: makeItemEventMethod('blur', function(evt, items){
 		items.forEach(function(item){
 			delete item.focused }) }),
-	// XXX should we trigger the item's select events??? 
 	select: makeItemEventMethod('select', function(evt, items){
 		items.forEach(function(item){
 			item.selected = true }) }),

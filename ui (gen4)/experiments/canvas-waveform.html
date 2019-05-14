@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+<style>
+</style>
+
+<script src="../ext-lib/jquery.js"></script>
+<script src="../ext-lib/jquery-ui.js"></script>
+
+<script src="../lib/jli.js"></script>
+
+<script>
+
+
+Filters = {}
+
+// as input takes an HTML Image object...
+Filters.getPixels = function(img, w, h){
+	var w = w || img.width
+	var h = h || img.height
+	var c = this.getCanvas(w, h)
+	var ctx = c.getContext('2d')
+	if(img == null){
+		ctx.rect(0, 0, w, h)
+		ctx.fillStyle = "black"
+		ctx.fill()
+	} else {
+		ctx.drawImage(img, 0, 0, w, h)
+	}
+	return ctx.getImageData(0,0,c.width,c.height)
+}
+Filters.setPixels = function(c, data, w, h){
+	c.width = data.width
+	c.height = data.height
+	var ctx = c.getContext('2d')
+	ctx.putImageData(data, 0, 0)
+	//ctx.drawImage(data, 0, 0, w, h)
+}
+
+
+Filters.getCanvas = function(w, h){
+	var c = document.createElement('canvas')
+	c.width = w
+	c.height = h
+	return c
+}
+
+Filters.filterImage = function(filter, image, var_args){
+	var args = [this.getPixels(image)]
+	for(var i=2; i<arguments.length; i++){
+		args.push(arguments[i])
+	}
+	return filter.apply(null, args)
+}
+
+Filters.grayscale = function(pixels, args){
+	var d = pixels.data
+	for(var i=0; i<d.length; i+=4){
+		var r = d[i]
+		var g = d[i+1]
+		var b = d[i+2]
+		// CIE luminance for the RGB
+		// The human eye is bad at seeing red and blue, so we de-emphasize them.
+		var v = 0.2126*r + 0.7152*g + 0.0722*b
+		d[i] = d[i+1] = d[i+2] = v
+	}
+	return pixels
+}
+
+// XXX need to resize this...
+Filters.histogram = function(pixels, mode){
+	mode = mode || 'luminance'
+
+	var w = 255 
+	var h = 255 
+
+	// output buffer...
+	var out = this.getPixels(null, w, h)
+
+	// pixel hit buffer...
+	var count = []
+
+	var od = out.data
+	var d = pixels.data
+
+	// get the stats...
+	for(var i=0; i<d.length; i+=4){
+		var r = d[i]
+		var g = d[i+1]
+		var b = d[i+2]
+
+		if(mode == 'luminance'){
+			var v = Math.round(0.2126*r + 0.7152*g + 0.0722*b) * 4
+			count[v] = count[v+1] = count[v+2] = (count[v] || 0) + 1
+
+		} else {
+			if(mode == 'color' || mode == 'R'){
+				count[r*4] = (count[r*4] || 0) + 1
+			}
+			if(mode == 'color' || mode == 'G'){
+				count[g*4+1] = (count[g*4+1] || 0) + 1
+			}
+			if(mode == 'color' || mode == 'B'){
+				count[b*4+2] = (count[b*4+2] || 0) + 1
+			}
+		}
+	}
+
+	var m = 255 / Math.max(...count.filter(function(){ return true }))
+
+	var pos = function(i, value){
+		return (
+			// horixontal position...
+			i*4 
+			// value vertical offset...
+			+ (255-Math.round(value*m))*w*4) }
+
+	count.forEach(function(v, i){
+		var j = pos(i/4, v)
+		od[j] = 255
+
+		// correct for blue visibility...
+		if(mode != 'luminance' && (i-2)%4 == 0){
+			od[j-1] = od[j-2] = 180
+		}
+	})
+
+	return out
+}
+
+
+Filters.waveform = function(pixels, mode){
+	mode = mode || 'luminance'
+
+	var w = pixels.width
+
+	// normalize pixel ratio...
+	var m = (1/pixels.height)*255
+
+	var offsetTop = 0
+	var offsetBottom = 0
+
+	// output buffer...
+	var out = this.getPixels(null, 
+		w, 
+		offsetTop + 255 + offsetBottom)
+
+	// pixel hit buffer...
+	var count = []
+
+	var od = out.data
+	var d = pixels.data
+
+	var pos = function(i, value){
+		return (
+			// top margin...
+			offsetTop*w*4 
+			// horixontal position...
+			+ i%(w*4)
+			// value vertical offset...
+			+ (255-Math.round(value))*w*4) }
+
+	var gain = 100
+
+	for(var i=0; i<d.length; i+=4){
+
+		var r = d[i]
+		var g = d[i+1]
+		var b = d[i+2]
+
+		var c
+		var j
+
+		if(mode == 'luminance'){
+			// CIE luminance for RGB
+			var v = 0.2126*r + 0.7152*g + 0.0722*b
+			c = count[j = pos(i, v)] = (count[j] || 0) + m
+			od[j] = od[j+1] = od[j+2] = c * gain
+
+		} else {
+
+			if(mode == 'color' || mode == 'R'){
+				j = pos(i, r)
+				c = count[j] = (count[j] || 0) + m
+				od[j] = c * gain
+			}
+
+			if(mode == 'color' || mode == 'G'){
+				j = pos(i, g) + 1
+				c = count[j] = (count[j] || 0) + m
+				od[j] = c * gain
+			}
+
+			if(mode == 'color' || mode == 'B'){
+				j = pos(i, b) + 2
+				c = count[j] = (count[j] || 0) + m
+				od[j] = c * gain
+			}
+		}
+	}
+
+	return out
+}
+
+
+var WAVEFORM_SIZE = 1000
+
+var waveform = function(img, canvas, mode){
+	var d = Filters.getPixels(img, WAVEFORM_SIZE)
+	var w = Filters.waveform(d, mode)
+	Filters.setPixels(canvas, w)
+}
+
+var HISTOGRAM_SIZE = 1000
+
+var histogram = function(img, canvas, mode){
+	var d = Filters.getPixels(img)
+	var w = Filters.histogram(d, mode)
+	Filters.setPixels(canvas, w)
+}
+
+var start = function(){
+	waveform(document.getElementById('input'), document.getElementById('waveform'), 'color')
+	histogram(document.getElementById('input'), document.getElementById('histogram'), 'color')
+}
+
+
+</script>
+
+<body>
+
+
+<img id="input" src="../images/splash-800x500.jpg" onload="start()"/>
+<br>
+<canvas id="waveform"></canvas>
+<br>
+<button onclick="waveform(getElementById('input'), getElementById('waveform'), 'luminance')">Luminance</button>
+<button onclick="waveform(getElementById('input'), getElementById('waveform'), 'color')">Color</button>
+<button onclick="waveform(getElementById('input'), getElementById('waveform'), 'R')">R</button>
+<button onclick="waveform(getElementById('input'), getElementById('waveform'), 'G')">G</button>
+<button onclick="waveform(getElementById('input'), getElementById('waveform'), 'B')">B</button>
+
+<br>
+<canvas id="histogram"></canvas>
+<br>
+<button onclick="histogram(getElementById('input'), getElementById('histogram'), 'luminance')">Luminance</button>
+<button onclick="histogram(getElementById('input'), getElementById('histogram'), 'color')">Color</button>
+<button onclick="histogram(getElementById('input'), getElementById('histogram'), 'R')">R</button>
+<button onclick="histogram(getElementById('input'), getElementById('histogram'), 'G')">G</button>
+<button onclick="histogram(getElementById('input'), getElementById('histogram'), 'B')">B</button>
+
+</body>
+</html>
