@@ -198,7 +198,6 @@ Items.ListTitle = function(){}
 //
 //
 // XXX should this be simply a shorthand to .trigger(..) ???
-// XXX ASAP: should call the handlers with actual items and not the arguments...
 var makeEventMethod = function(event, handler){
 	return function(item){
 		// register handler...
@@ -237,26 +236,34 @@ var callItemEventHandlers = function(item, event, ...args){
 			handler.call(item, evt, item, ...args) }) }
 
 var makeItemEventMethod = function(event, handler, options){
-	return makeEventMethod(event, function(evt, item, ...args){
+	// NOTE: this is not returned directly as we need to query the items
+	// 		and pass those on to the handlers rather than the arguments 
+	// 		as-is...
+	var method = makeEventMethod(event, 
+		function(evt, item, ...args){
+			handler
+				&& handler.call(this, evt, item, ...args)
+			item.forEach(function(item){
+				callItemEventHandlers(item, event) })
+		}) 
+	return function(item, ...args){
 		var that = this
-
-		item = 
-			item instanceof Array ?
+		return method.call(this, 
+			// event handler...
+			item instanceof Function ?
+				item
+			// array of queries...
+			: item instanceof Array ?
 				item
 					.map(function(e){
 						return that.search(e, options) })
 					.flat()
 					.unique()
+			// query...
 			: item != null ? 
 				this.search(item, options) 
-			: []
-
-		handler
-			&& handler.call(this, evt, item, ...args)
-
-		item.forEach(function(item){
-			callItemEventHandlers(item, event) })
-	}) }
+			: [],
+			...args) } }
 
 
 
