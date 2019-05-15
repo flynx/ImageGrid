@@ -197,6 +197,8 @@ Items.ListTitle = function(){}
 //		-> this
 //
 //
+// XXX make the event object customizable...
+// XXX STUB event object...
 // XXX should this be simply a shorthand to .trigger(..) ???
 var makeEventMethod = function(event, handler){
 	return function(item){
@@ -219,14 +221,12 @@ var makeEventMethod = function(event, handler){
 		handler
 			&& handler.call(this, evt, ...arguments)
 
-		// XXX we should get the actual item and pass it on...
-		this.trigger(evt, ...arguments)
-
 		return this
+			.trigger(evt, ...arguments)
 	}
 }
 
-var callItemEventHandlers = function(item, event, ...args){
+var callItemEventHandlers = function(item, event, evt, ...args){
 	;(item[event] ?
 			[item[event]]
 			: [])
@@ -236,16 +236,18 @@ var callItemEventHandlers = function(item, event, ...args){
 			handler.call(item, evt, item, ...args) }) }
 
 var makeItemEventMethod = function(event, handler, options){
+	options = Object.assign(
+		{ noQueryCheck: true },
+		options || {})
 	// NOTE: this is not returned directly as we need to query the items
 	// 		and pass those on to the handlers rather than the arguments 
 	// 		as-is...
 	var method = makeEventMethod(event, 
 		function(evt, item, ...args){
 			handler
-				&& handler.call(this, evt, item, ...args)
+				&& handler.call(this, evt, item.slice(), ...args)
 			item.forEach(function(item){
-				callItemEventHandlers(item, event) })
-		}) 
+				callItemEventHandlers(item, event, evt, ...args) }) }) 
 	return function(item, ...args){
 		var that = this
 		return method.call(this, 
@@ -1105,6 +1107,7 @@ var BaseBrowserPrototype = {
 		// object query..
 		// NOTE: this must be last as it will return a test unconditionally...
 		query: function(pattern){ 
+			var that = this
 			return function(elem){
 				return Object.entries(pattern)
 					.reduce(function(res, [key, pattern]){
@@ -1724,7 +1727,6 @@ var BaseBrowserPrototype = {
 
 	// generic event infrastructure...
 	// XXX add support for tagged events...
-	// XXX should these be defined on this level or should we use DOM???
 	// XXX add support for item events...
 	// 		e.g. item.focus(..) -> root.focus(..)
 	// XXX also need to design a means for this system to interact both 
@@ -1793,7 +1795,6 @@ var BaseBrowserPrototype = {
 	// XXX need a way to extend these to:
 	// 		- be able to trigger an external (DOM) event...
 	// 		- be able to be triggered from an external (DOM) event...
-	// XXX should call the handlers with actual items and not the arguments...
 	// XXX should this return the focused item????
 	focus: makeItemEventMethod('focus', function(evt, items){
 		// NOTE: if we got multiple matches we care only about the first one...
