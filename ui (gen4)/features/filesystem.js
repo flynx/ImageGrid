@@ -1564,15 +1564,17 @@ var FileSystemWriterActions = actions.Actions({
 
 		// NOTE: file extension is added automatically...
 		// NOTE: see .formatImageName(..) for format docs...
-		'export-preview-name-pattern': '%n%(-%c)c',
+		'export-preview-name-pattern': '%(fav)l%n%(-%c)c',
 		'export-preview-name-patterns': [
-			'%n%(-bookmarked)b%(-%c)c',
-			'%n%(-bookmarked)b%(-m)m%(-%c)c',
-			'%n%(-%c)c',
-			'%i-%n',
-			'%g-%n',
+			'%(fav)l%n%(-bookmarked)b%(-%c)c',
+			'%(fav)l%n%(-bookmarked)b%(-m)m%(-%c)c',
+			'%(fav)l%n%(-%c)c',
+			'%(fav)l%i-%n',
+			'%(fav)l%g-%n',
 		],
 
+		// This is used in .exportIndex(..) to resolve name conflicts...
+		//
 		// NOTE: this is applied ONLY if there is a naming conflict...
 		// NOTE: see .formatImageName(..) for format docs...
 		// XXX adding a %c is more human-readable but is unstable as
@@ -1994,6 +1996,21 @@ var FileSystemWriterActions = actions.Actions({
 
 		NOTE: file extension is added automatically.
 		NOTE: all group patterns (i.e. '%(..)x') can include other patterns.
+
+
+		Examples:
+			These examples are for image 123.jpg at position 2 of 10 (15th
+			of 100 total), bookmarked but not marked, in ribbon 1 in a 
+			set of 3 ribbons.
+
+			'%(fav)l%i-%n'		-> 'fav/02-123.jpg'
+
+			'%(other)L/%I-John-Smith-%n%(-b)b%(-m)m'
+								-> '/10-John-Smith-123-b.jpg'
+
+			'%(best)b/%i of %t - J. Smith - %n'
+								-> 'best/02 of 10 - J. Smith - 123.jpg'
+
 		`,
 		function(pattern, name, data){
 			pattern = pattern || '%f'
