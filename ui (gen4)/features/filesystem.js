@@ -1950,6 +1950,7 @@ var FileSystemWriterActions = actions.Actions({
 
 	// XXX document data format...
 	// XXX should %T / %I be global or current crop???
+	// XXX add support of %(fav)l for level dir...
 	// XXX set length of %g in options...
 	formatImageName: ['- File/',
 		core.doc`
@@ -1962,6 +1963,9 @@ var FileSystemWriterActions = actions.Actions({
 		
 		 	%i		- image index in ribbon
 		 	%I		- global image index
+
+			%r		- ribbon number
+			%R		- ribbon number counting from the bottom
 		
 		 	%t 		- total number of images in ribbon
 		 	%T		- total number of images
@@ -1977,6 +1981,15 @@ var FileSystemWriterActions = actions.Actions({
 		 	%c		- number in set of conflicting names (default: 0).
 						NOTE: this is not stable and can change depending
 							on image order.
+			%(...)l	- image level path, level depth corresponds to ribbon 
+						number counting from the bottom
+						NOTE: if level is 0 this resolves to '/'
+						Example: '%(x)lz.jop' will resolve to '/z.jpg' for bottom 
+							ribbon and to 'x/x/x/z.jpg' for ribbon #3 from the
+							bottom.
+			%(...)L	- image level path, level depth corresponds to ribbon 
+						number counting from the top
+						NOTE: if level is 0 this resolves to '/'
 
 		NOTE: file extension is added automatically.
 		NOTE: all group patterns (i.e. '%(..)x') can include other patterns.
@@ -2002,13 +2015,18 @@ var FileSystemWriterActions = actions.Actions({
 			// XXX revise defaults...
 			var len = data.len || this.data.ribbons[ribbon].len
 			var total_len = data.total_len || this.data.length
+			var r_len = data.r_len || Object.keys(this.data.ribbons).length
 
 			var i = data.i || this.data.getImageOrder('ribbon', gid)
 			var I = data.I || this.data.getImageOrder('loaded', gid)
+			var r = data.r || this.data.getRibbonOrder(gid)
+			var R = data.R || r_len - r - 1
 
 			// pad with zeros...
 			i = (i+'').padStart((len + '').length, '0')
 			I = (I+'').padStart((total_len + '').length, '0')
+			r = (r+'').padStart((r_len + '').length, '0')
+			R = (R+'').padStart((r_len + '').length, '0')
 			//i = ((('1e'+(len+'').length)*1 + i) + '').slice(1)
 			//I = ((('1e'+(total_len+'').length)*1 + I) + '').slice(1)
 
@@ -2027,6 +2045,10 @@ var FileSystemWriterActions = actions.Actions({
 				.replace(/%i/, i)
 				.replace(/%I/, I)
 
+				// ribbon order...
+				.replace(/%r/, r)
+				.replace(/%r/, R)
+				
 				// totals...
 				.replace(/%t/, len)
 				.replace(/%T/, total_len)
@@ -2054,6 +2076,20 @@ var FileSystemWriterActions = actions.Actions({
 					/%\(([^)]*)\)C/, conflicts ? '$1' : '')
 				.replace(
 					/%\(([^)]*)\)c/, (conflicts || {})[gid] ? '$1' : '')
+
+				// level...
+				.replace(
+					/%\(([^)]*)\)L/, 
+					function(match, level, offset, str){
+						return (offset == 0 ? '' : '/') 
+							+(new Array(r*1)).fill(level).join('/')
+							+(match.length + offset == str.length ? '' : '/') })
+				.replace(
+					/%\(([^)]*)\)l/,
+					function(match, level, offset, str){
+						return (offset == 0 ? '' : '/') 
+							+(new Array(r_len - r*1 - 1)).fill(level).join('/')
+							+(match.length + offset == str.length ? '' : '/') })
 
 				+ to_ext
 		}],
@@ -2094,7 +2130,9 @@ var FileSystemWriterActions = actions.Actions({
 
 			// get/set the config data...
 			// XXX should this store the last set???
-			level_dir = level_dir || this.config['export-level-directory-name'] || 'fav'
+			level_dir = level_dir === undefined ?
+				level_dir 
+				: (level_dir || this.config['export-level-directory-name'] || 'fav')
 			size = size || this.config['export-preview-size'] || 1000
 			pattern = pattern || this.config['export-preview-name-pattern'] || '%f'
 
@@ -2163,7 +2201,9 @@ var FileSystemWriterActions = actions.Actions({
 							})
 						})
 
-					to_dir += '/'+level_dir
+					to_dir += level_dir != null ? 
+						'/'+level_dir
+						: ''
 
 					return res
 				}))
@@ -2258,7 +2298,8 @@ var FileSystemWriterUIActions = actions.Actions({
 					'size',
 					'base_path',
 					'target_dir',
-					'level_dir',
+					// XXX add option to disable this...
+					//'level_dir',
 				],
 			},
 		},
@@ -2392,6 +2433,7 @@ var FileSystemWriterUIActions = actions.Actions({
 
 			return res
 		},
+		// XXX add option not to create level dirs...
 		'level_dir': function(actions, make, parent){
 			return make(['$Level directory: ', 
 					function(){ 
@@ -2401,8 +2443,7 @@ var FileSystemWriterUIActions = actions.Actions({
 						'export-level-directory-names', 
 						'export-level-directory-name', {
 							length_limit: 10,
-						}))
-		},
+						})) },
 		// XXX should we merge this with 'size_limit'????
 		'size': function(actions, make, parent){
 			return make(['Image $size: ', 

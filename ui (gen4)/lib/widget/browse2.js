@@ -199,7 +199,6 @@ Items.ListTitle = function(){}
 //
 // XXX make the event object customizable...
 // XXX STUB event object...
-// XXX should this be simply a shorthand to .trigger(..) ???
 var makeEventMethod = function(event, handler){
 	return function(item){
 		// register handler...
@@ -217,7 +216,6 @@ var makeEventMethod = function(event, handler){
 			//},
 		}
 
-		// XXX handle more of the API???
 		handler
 			&& handler.call(this, evt, ...arguments)
 
@@ -226,6 +224,11 @@ var makeEventMethod = function(event, handler){
 	}
 }
 
+// Call item event handlers...
+//
+// 	callItemEventHandlers(item, event_name, event_object, ...)
+// 		-> null
+//
 var callItemEventHandlers = function(item, event, evt, ...args){
 	;(item[event] ?
 			[item[event]]
@@ -235,8 +238,23 @@ var callItemEventHandlers = function(item, event, evt, ...args){
 			// XXX revise call signature...
 			handler.call(item, evt, item, ...args) }) }
 
+// Generate item event method...
+//
+// This extends makeEventMethod(..) by adding an option to pass an item
+// when triggering the event, the rest of the signature is identical.
+//
+// 	Trigger an event on item(s)...
+// 	.event(item, ..)
+// 	.event([item, ..], ..)
+// 		-> this
+//
+// NOTE: item is compatible to .search(item, ..) spec, see that for more 
+// 		details...
 var makeItemEventMethod = function(event, handler, options){
 	options = Object.assign(
+		// NOTE: we need to be able to pass item objects, so we can not
+		// 		use queries at the same time as there is not way to 
+		// 		distinguish one from the other...
 		{ noQueryCheck: true },
 		options || {})
 	// NOTE: this is not returned directly as we need to query the items
@@ -261,7 +279,7 @@ var makeItemEventMethod = function(event, handler, options){
 						return that.search(e, options) })
 					.flat()
 					.unique()
-			// query...
+			// explicit item or query...
 			: item != null ? 
 				this.search(item, options) 
 			: [],
@@ -302,7 +320,7 @@ var BaseBrowserPrototype = {
 	//
 	// NOTE: this can't be a map/dict as we need both order manipulation 
 	// 		and nested structures which would overcomplicate things, as 
-	// 		a compromise we use .item_key_index below for item identification.
+	// 		a compromise we use .index below for item identification.
 	__items: null,
 	get items(){
 		this.__items
@@ -328,15 +346,16 @@ var BaseBrowserPrototype = {
 	// XXX can we make the format here simpler with less level 
 	// 		of indirection??
 	// 		...currently to go down a path we need to:
-	//			this.item_key_index.A.children.item_key_index.B.children...
+	//			this.index.A.children.index.B.children...
 	//		would be nice to be closer to:
 	//			this.A.B...
 	__item_index: null,
-	get item_key_index(){
+	get index(){
 		this.__item_index
 			|| this.make()
 		return this.__item_index },
-	set item_key_index(value){
+	// XXX should this exist???
+	set index(value){
 		this.__item_index = value },
 
 
@@ -401,7 +420,7 @@ var BaseBrowserPrototype = {
 	//
 	// The resulting item is stored in:
 	// 	.items
-	// 	.item_key_index (keyed via .id or JSONified .value)
+	// 	.index (keyed via .id or JSONified .value)
 	//
 	// Each of the above structures is reset on each call to .make(..)
 	//
@@ -1411,9 +1430,9 @@ var BaseBrowserPrototype = {
 								cur = e.children
 
 							} else {
-								// XXX .item_key_index feels ugly...
-								delete cur.item_key_index[n].collapsed
-								cur = cur.item_key_index[n].children
+								// XXX .index feels ugly...
+								delete cur.index[n].collapsed
+								cur = cur.index[n].children
 							}
 						})
 				return e
@@ -1429,7 +1448,7 @@ var BaseBrowserPrototype = {
 
 
 
-	// Make .items and .item_key_index...
+	// Make .items and .index...
 	//
 	// 	.make()
 	// 	.make(options)
@@ -1441,7 +1460,7 @@ var BaseBrowserPrototype = {
 	// For more doc on item construction see: .__init__(..)
 	//
 	//
-	// NOTE: each call to this will reset both .items and .item_key_index
+	// NOTE: each call to this will reset both .items and .index
 	// NOTE: for items with repeating values there is no way to correctly 
 	// 		identify an item thus no state is maintained between .make(..)
 	// 		calls for such items...
