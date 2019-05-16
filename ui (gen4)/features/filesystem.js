@@ -1981,6 +1981,7 @@ var FileSystemWriterActions = actions.Actions({
 		 	%c		- number in set of conflicting names (default: 0).
 						NOTE: this is not stable and can change depending
 							on image order.
+
 			%(...)l	- image level path, level depth corresponds to ribbon 
 						number counting from the bottom
 						NOTE: if level is 0 this resolves to '/'
