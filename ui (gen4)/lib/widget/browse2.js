@@ -1847,7 +1847,11 @@ var BaseBrowserPrototype = {
 		return this
 	},
 	// XXX .focus(..) and .trigger('focus', ..) should be the same...
-	// 		...should this be done via handlers???
+	// 		...now .focus(..) does all the domain stuff then calls 
+	// 		.trigger('focus', ..) while .trigger('focus') handles only 
+	// 		the event stuff... (the usual chicken/egg problem)
+	// 		...should what is currently done in .focus(..) be done via 
+	// 		handlers???
 	trigger: function(evt, ...args){
 		var that = this
 		var stopPropagation = false
