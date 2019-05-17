@@ -1786,11 +1786,6 @@ var BaseBrowserPrototype = {
 	//	.off(evt, tag)
 	//	.off([evt, ..], tag)
 	//
-	//	Clear all handlers tagged with tag...
-	//	.off(tag)
-	//		NOTE: for this to work tag must not be the same as an event
-	//			name for that case use explicit .off(evt, tag)...
-	//
 	// NOTE: evt can be '*' or 'all' to indicate all events.
 	off: function(evt, handler){
 		var handlers = this.__event_handlers || {}
@@ -1800,9 +1795,6 @@ var BaseBrowserPrototype = {
 		}
 
 		// parse args...
-		handler = (evt in handlers || evt == '*' || evt == 'all') ?
-			handler
-			: evt
 		handler = handler || '*'
 		evt = 
 			// all events / direct handler...
