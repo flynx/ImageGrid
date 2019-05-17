@@ -200,29 +200,32 @@ Items.ListTitle = function(){}
 // XXX make the event object customizable...
 // XXX STUB event object...
 var makeEventMethod = function(event, handler){
-	return function(item){
-		// register handler...
-		if(item instanceof Function){
-			return this.on(event, item) 
-		}
+	return Object.assign(
+		function(item){
+			// register handler...
+			if(item instanceof Function){
+				return this.on(event, item) 
+			}
 
-		// XXX STUB: event object...
-		// XXX can we generate this in one spot???
-		// 		...currently it is generated here and in .trigger(..)
-		var evt = {
-		 	name: event,
-			// XXX
-			//stopPropagation: function(){
-			//},
-		}
+			// XXX STUB: event object...
+			// XXX can we generate this in one spot???
+			// 		...currently it is generated here and in .trigger(..)
+			var evt = {
+				name: event,
+				// XXX
+				//stopPropagation: function(){
+				//},
+			}
 
-		handler
-			&& handler.call(this, evt, ...arguments)
+			handler
+				&& handler.call(this, evt, ...arguments)
 
-		return this
-			.trigger(evt, ...arguments)
-	}
-}
+			return this
+				.trigger(evt, ...arguments)
+		},
+		{
+			event: event,
+		}) }
 
 // Call item event handlers...
 //
@@ -266,24 +269,27 @@ var makeItemEventMethod = function(event, handler, options){
 				&& handler.call(this, evt, item.slice(), ...args)
 			item.forEach(function(item){
 				callItemEventHandlers(item, event, evt, ...args) }) }) 
-	return function(item, ...args){
-		var that = this
-		return method.call(this, 
-			// event handler...
-			item instanceof Function ?
-				item
-			// array of queries...
-			: item instanceof Array ?
-				item
-					.map(function(e){
-						return that.search(e, options) })
-					.flat()
-					.unique()
-			// explicit item or query...
-			: item != null ? 
-				this.search(item, options) 
-			: [],
-			...args) } }
+	return Object.assign(
+		function(item, ...args){
+			var that = this
+			return method.call(this, 
+				// event handler...
+				item instanceof Function ?
+					item
+				// array of queries...
+				: item instanceof Array ?
+					item
+						.map(function(e){
+							return that.search(e, options) })
+						.flat()
+						.unique()
+				// explicit item or query...
+				: item != null ? 
+					this.search(item, options) 
+				: [],
+				...args) },
+			// keep the event method format...
+   			method)	}
 
 
 
@@ -1788,11 +1794,11 @@ var BaseBrowserPrototype = {
 	//
 	// NOTE: evt can be '*' or 'all' to indicate all events.
 	off: function(evt, handler){
-		var handlers = this.__event_handlers || {}
-
 		if(arguments.length == 0){
 			return
 		}
+
+		var handlers = this.__event_handlers || {}
 
 		// parse args...
 		handler = handler || '*'
@@ -1838,14 +1844,55 @@ var BaseBrowserPrototype = {
 				} while(i > -1) })
 		return this
 	},
-	// XXX .focus(..) and .trigger('focus', ..) should be the same...
-	// 		...now .focus(..) does all the domain stuff then calls 
-	// 		.trigger('focus', ..) while .trigger('focus') handles only 
-	// 		the event stuff... (the usual chicken/egg problem)
-	// 		...should what is currently done in .focus(..) be done via 
-	// 		handlers???
+	// 
+	// 	Trigger an event by name...
+	// 	.trigger(<event-name>, ..)
+	// 		-> this
+	//
+	// 	Trigger an event...
+	// 	.trigger(<event-object>, ..)
+	// 		-> this
+	//
+	// Passing an <event-name> will do the following:
+	// 	- if an <event-name> handler is available call it and return
+	// 		- the handler should:
+	// 			- do any specifics that it needs
+	// 			- create an <event-object>
+	// 			- call trigger with <event-object>
+	//  - if <event-name> has no handler:
+	//  	- create an <event-object>
+	//  	- call the event handlers passing them <event-object> and args
+	//  	- call parent's .trigger(<event-name>, ..)
+	//
+	// <event-object> format:
+	// 	{
+	// 		name: <name>,
+	//
+	// 		propagationStopped: <bool>,
+	// 		stopPropagation: <func>,
+	// 	}
+	//
+	//
+	// XXX need to make stopPropagation(..) work even if we got an 
+	// 		externally made event object...
 	trigger: function(evt, ...args){
 		var that = this
+
+		// trigger the appropriate event handler if available...
+		// NOTE: this makes .someEvent(..) and .trigger('someEvent', ..)
+		// 		do the same thing by always triggering .someEvent(..) 
+		// 		first and letting it decide how to call .trigger(..)...
+		// NOTE: the event method should pass a fully formed event object
+		// 		into trigger when it requires to call the handlers...
+		if(typeof(evt) == typeof('str') 
+				&& this[evt] instanceof Function
+				&& this[evt].event == evt){
+			this[evt](...args)
+			return this
+		}
+
+		// XXX need to make stopPropagation(..) work even if we got an 
+		// 		externally made event object...
 		var stopPropagation = false
 		var evt = typeof(evt) == typeof('str') ?
 			// XXX construct this in one place...
@@ -1853,7 +1900,7 @@ var BaseBrowserPrototype = {
 			{
 				name: evt,
 				stopPropagation: function(){
-					stopPropagation = true },
+					this.propagationStopped = stopPropagation = true },
 			}
 			: evt
 
@@ -1866,8 +1913,13 @@ var BaseBrowserPrototype = {
 
 		// trigger the parent's event...
 		!stopPropagation
+			&& !evt.propagationStopped
 			&& this.parent
-			&& this.parent.trigger(evt, ...args)
+			&& this.parent.trigger instanceof Function
+			// XXX should we trigger with and event object or an event 
+			// 		name???
+			//&& this.parent.trigger(evt, ...args)
+			&& this.parent.trigger(evt.name, ...args)
 
 		return this
 	},
