@@ -1538,7 +1538,7 @@ var BaseBrowserPrototype = {
 						+`can't create multiple items with the same key.`) }
 				// handle duplicate keys...
 				// NOTE: we can't reuse an old copy when re-making the list
-				// 		because there is now way to correctly identify an 
+				// 		because there is no way to correctly identify an 
 				// 		object when it's id is tweaked (and we can not rely
 				// 		on item order)...
 				// 		...for this reason all "persistent" state for such 
@@ -1734,6 +1734,8 @@ var BaseBrowserPrototype = {
 	// Format:
 	// 	{
 	// 		// XXX add tagged event support...
+	// 		//		...i.e. event markers/tags that would enable the user
+	// 		//		to specifically manipulate event sets....
 	// 		<event-name>: [
 	// 			<handler>,
 	// 			...
@@ -1745,16 +1747,17 @@ var BaseBrowserPrototype = {
 	__event_handlers: null,
 
 	// generic event infrastructure...
-	// XXX add support for tagged events...
 	// XXX add support for item events...
 	// 		e.g. item.focus(..) -> root.focus(..)
 	// XXX also need to design a means for this system to interact both 
 	// 		ways with DOM events...
 	// XXX need to bubble the event up through the nested browsers...
-	on: function(evt, handler){
+	on: function(evt, handler, tag){
 		var handlers = this.__event_handlers = this.__event_handlers || {}
 		handlers = handlers[evt] = handlers[evt] || []
 		handlers.push(handler)
+		tag
+			&& (handler.tag = tag)
 		return this
 	},
 	one: function(evt, handler){
@@ -1765,22 +1768,86 @@ var BaseBrowserPrototype = {
 		this.on(evt, func)
 		return this
 	},
+	//
+	//	Clear all event handlers...
+	//	.off('*')
+	//
+	//	Clear all event handlers from evt(s)...
+	//	.off(evt)
+	//	.off([evt, ..])
+	//	.off(evt, '*')
+	//	.off([evt, ..], '*')
+	//
+	//	Clear handler of evt(s)...
+	//	.off(evt, handler)
+	//	.off([evt, ..], handler)
+	//
+	//	Clear all handlers tagged with tag of evt(s)...
+	//	.off(evt, tag)
+	//	.off([evt, ..], tag)
+	//
+	//	Clear all handlers tagged with tag...
+	//	.off(tag)
+	//		NOTE: for this to work tag must not be the same as an event
+	//			name for that case use explicit .off(evt, tag)...
+	//
+	// NOTE: evt can be '*' or 'all' to indicate all events.
 	off: function(evt, handler){
+		var handlers = this.__event_handlers || {}
+
+		if(arguments.length == 0){
+			return
+		}
+
+		// parse args...
+		handler = (evt in handlers || evt == '*' || evt == 'all') ?
+			handler
+			: evt
+		handler = handler || '*'
+		evt = 
+			// all events / direct handler...
+			(!(evt in handlers) 
+					|| evt == '*' 
+					|| evt == 'all') ? 
+				Object.keys(handlers) 
+			// list of events...
+			: evt instanceof Array ?
+				evt
+			// explicit event...
+			: [evt]
+
 		// remove all handlers
-		if(handler == '*' || handler == 'all'){
-			delete (this.__event_handlers || {})[evt]
+		handler == '*' || handler == 'all' ?
+			evt
+				.forEach(function(evt){
+					delete handlers[evt] })
+
+		// remove tagged handlers...
+		: typeof(handler) == typeof('str') ?
+			evt
+				.forEach(function(evt){
+					var h = handlers[evt] || []
+					var l = h.length
+					h
+						.slice()
+						.reverse()
+						.forEach(function(e, i){ 
+							e.tag == handler
+								&& h.splice(l-i-1, 1) }) })
 
 		// remove only the specific handler...
-		} else {
-			var handlers = (this.__event_handlers || {})[evt] || []
-			do{
-				var i = handlers.indexOf(handler)
-				i > -1
-					&& handlers.splice(i, 1)
-			} while(i > -1)
-		}
+		: evt
+			.forEach(function(evt){
+				var h = handlers[evt] || []
+				do{
+					var i = h.indexOf(handler)
+					i > -1
+						&& h.splice(i, 1)
+				} while(i > -1) })
 		return this
 	},
+	// XXX .focus(..) and .trigger('focus', ..) should be the same...
+	// 		...should this be done via handlers???
 	trigger: function(evt, ...args){
 		var that = this
 		var stopPropagation = false
