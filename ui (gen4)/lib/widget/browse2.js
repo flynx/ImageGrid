@@ -1080,6 +1080,8 @@ var BaseBrowserPrototype = {
 	//
 	//
 	// XXX add support for 'next'/'prev', ... keywords... (here or in .get(..)???)
+	// XXX add support for fuzzy match search -- match substring by default 
+	// 		and exact title if using quotes...
 	// XXX do we actually need to stop this as soon as we find something, 
 	// 		i.e. options.firstOnly???
 	// XXX add diff support...
