@@ -1093,7 +1093,13 @@ var BaseBrowserPrototype = {
 		// path test...
 		// NOTE: this does not go down branches that do not match the path...
 		path: function(pattern){
-			if(pattern instanceof Array){
+			if(pattern instanceof Array || typeof(pattern) == typeof('str')){
+				// XXX should 'B' be equivalent to '/B' or should it be more like '**/B'?
+				pattern = pattern instanceof Array ?
+					pattern
+					: pattern
+						.split(/[\\\/]/g)
+						.filter(function(e){ return e.trim().length > 0 })
 				// XXX add support for '**' ???
 				var cmp = function(a, b){
 					return a.length == b.length
@@ -1853,6 +1859,7 @@ var BaseBrowserPrototype = {
 	// 	.trigger(<event-object>, ..)
 	// 		-> this
 	//
+	//
 	// Passing an <event-name> will do the following:
 	// 	- if an <event-name> handler is available call it and return
 	// 		- the handler should:
@@ -1875,6 +1882,8 @@ var BaseBrowserPrototype = {
 	//
 	// XXX need to make stopPropagation(..) work even if we got an 
 	// 		externally made event object...
+	// XXX need to make this workable with DOM events... (???)
+	// XXX construct the event in one spot...
 	trigger: function(evt, ...args){
 		var that = this
 
