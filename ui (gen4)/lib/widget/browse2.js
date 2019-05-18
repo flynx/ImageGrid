@@ -1090,16 +1090,23 @@ var BaseBrowserPrototype = {
 				&& function(elem, i, path){
 					return pattern.test(elem.value)
 						|| pattern.test('/'+ path.join('/')) } },
-		// path test...
-		// NOTE: this does not go down branches that do not match the path...
-		path: function(pattern){
-			if(pattern instanceof Array || typeof(pattern) == typeof('str')){
-				// XXX should 'B' be equivalent to '/B' or should it be more like '**/B'?
+		// string path test...
+		// XXX should 'B' be equivalent to '/B' or should it be more like '**/B'?
+		strPath: function(pattern){
+			if(typeof(pattern) == typeof('str')){
 				pattern = pattern instanceof Array ?
 					pattern
 					: pattern
 						.split(/[\\\/]/g)
 						.filter(function(e){ return e.trim().length > 0 })
+				return this.path(pattern)
+			}
+			return false
+		},
+		// path test...
+		// NOTE: this does not go down branches that do not match the path...
+		path: function(pattern){
+			if(pattern instanceof Array){
 				// XXX add support for '**' ???
 				var cmp = function(a, b){
 					return a.length == b.length
@@ -1214,7 +1221,7 @@ var BaseBrowserPrototype = {
 						&& key == 'query') })
 				.reduce(function(res, [_, get]){
 					return res 
-						|| get.call(this.__search_test_generators__, pattern) }, false) )
+						|| get.call(that.__search_test_generators__, pattern) }, false) )
 
 		return this.walk(
 			function(elem, i, path, next, stop){
