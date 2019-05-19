@@ -232,6 +232,7 @@ var makeEventMethod = function(event, handler){
 // 	callItemEventHandlers(item, event_name, event_object, ...)
 // 		-> null
 //
+// XXX should this call item.parent.trigger(..) ???
 var callItemEventHandlers = function(item, event, evt, ...args){
 	;(item[event] ?
 			[item[event]]
@@ -267,6 +268,9 @@ var callItemEventHandlers = function(item, event, evt, ...args){
 // 			events may get triggered more than once...
 // 		- we can not rely on full bottom/up propagation as some
 // 			containers in the path may be basic Arrays...
+// 		- need to make this work with .trigger(..) for non-item events
+// 			i.e. currently .trigger(..) propagates the event to parent and
+// 			this may conflict with us triggering events on the path...
 var makeItemEventMethod = function(event, handler, options){
 	options = Object.assign(
 		// NOTE: we need to be able to pass item objects, so we can not
