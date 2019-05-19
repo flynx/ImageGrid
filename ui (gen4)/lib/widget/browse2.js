@@ -253,6 +253,20 @@ var callItemEventHandlers = function(item, event, evt, ...args){
 //
 // NOTE: item is compatible to .search(item, ..) spec, see that for more 
 // 		details...
+//
+// XXX need to trigger item parent's event too...
+// 		Q: trigger once, per call or once per item???
+// 		Q: should this be done here or in the client???
+//
+// XXX problems with event propagation: 
+// 		- the item can be within a nested browser/list and that 
+// 			container's events will not be triggered from here,
+// 			just the item's, this and parent's...
+// 		- if we get item.parent and trigger it's event directly
+// 			then that event may propogate up and this' and this.parent's
+// 			events may get triggered more than once...
+// 		- we can not rely on full bottom/up propagation as some
+// 			containers in the path may be basic Arrays...
 var makeItemEventMethod = function(event, handler, options){
 	options = Object.assign(
 		// NOTE: we need to be able to pass item objects, so we can not
@@ -267,6 +281,7 @@ var makeItemEventMethod = function(event, handler, options){
 		function(evt, item, ...args){
 			handler
 				&& handler.call(this, evt, item.slice(), ...args)
+			var parents = new Set()
 			item.forEach(function(item){
 				callItemEventHandlers(item, event, evt, ...args) }) }) 
 	return Object.assign(
@@ -1947,15 +1962,13 @@ var BaseBrowserPrototype = {
 	// XXX need a way to extend these to:
 	// 		- be able to trigger an external (DOM) event...
 	// 		- be able to be triggered from an external (DOM) event...
-	// XXX should this return the focused item????
+	// XXX should we trigger direct item's parent event???
 	focus: makeItemEventMethod('focus', function(evt, items){
-		// NOTE: if we got multiple matches we care only about the first one...
-		var item = items.shift()
-
 		// blur .focused...
 		this.focused
 			&& this.blur(this.focused)
-
+		// NOTE: if we got multiple matches we care only about the first one...
+		var item = items.shift()
 		item != null
 			&& (item.focused = true)
 	}),
