@@ -1767,8 +1767,6 @@ var BaseBrowserPrototype = {
 			.render(options) },
 
 
-	// XXX should these be moved to the HTML class...
-
 	// Events...
 	//
 	// Format:
@@ -1961,6 +1959,18 @@ var BaseBrowserPrototype = {
 		return this
 	},
 
+	// List events...
+	// XXX avoid expensive props...
+	get events(){
+		var that = this
+		return Object.deepKeys(this)
+			.map(function(key){
+				return (key != 'events' 
+						&& that[key] instanceof Function 
+						&& that[key].event) ? 
+					that[key].event 
+					: [] })
+			.flat() },
 
 	// domain events/actions...
 	// XXX need a way to extend these to:
