@@ -271,6 +271,17 @@ var callItemEventHandlers = function(item, event, evt, ...args){
 // 		- need to make this work with .trigger(..) for non-item events
 // 			i.e. currently .trigger(..) propagates the event to parent and
 // 			this may conflict with us triggering events on the path...
+// XXX one idea to do event propagation is to use the actual .search(..)
+// 		mechanic to handle each found item and collect their direct 
+// 		parents...
+// 		we need:
+// 			- trigger each item event
+// 			- propagate the event through the path for each item
+// 			- trigger each parent only once, passing it a list of only 
+// 				relevant items (i.e. items in its sub-tree only)
+// 			- handle .stopPropagation(..) correnctly
+// 				- stop propagation up but finish the level???
+// 			- trigger the root.parent's event when done
 var makeItemEventMethod = function(event, handler, options){
 	options = Object.assign(
 		// NOTE: we need to be able to pass item objects, so we can not
@@ -1761,6 +1772,7 @@ var BaseBrowserPrototype = {
 	// 	.update()
 	// 		-> state
 	//
+	// XXX should this be an event???
 	update: function(options){
 		return this
 			.make(options)
