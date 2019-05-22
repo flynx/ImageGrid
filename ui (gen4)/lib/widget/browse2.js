@@ -296,7 +296,6 @@ var makeItemEventMethod = function(event, handler, options){
 		function(evt, item, ...args){
 			handler
 				&& handler.call(this, evt, item.slice(), ...args)
-			var parents = new Set()
 			item.forEach(function(item){
 				callItemEventHandlers(item, event, evt, ...args) }) }) 
 	return Object.assign(
@@ -318,7 +317,7 @@ var makeItemEventMethod = function(event, handler, options){
 					this.search(item, options) 
 				: [],
 				...args) },
-			// keep the event method format...
+			// get method attributes -- keep the event method format...
    			method)	}
 
 
