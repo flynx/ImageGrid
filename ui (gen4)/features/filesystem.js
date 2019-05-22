@@ -510,7 +510,10 @@ var FileSystemLoaderActions = actions.Actions({
 
 			// get the image list...
 			return new Promise(function(resolve, reject){
-				glob(path + '/'+ that.config['image-file-pattern'], {stat: !!read_stat})
+				glob(path + '/'+ that.config['image-file-pattern'], {
+						stat: !!read_stat,
+						strict: false,
+					})
 					.on('error', function(err){
 						console.error(err)
 						reject(err)

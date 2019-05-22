@@ -184,6 +184,10 @@ Items.ListTitle = function(){}
 
 
 //---------------------------------------------------------------------
+// Event system...
+//
+// XXX might be a good idea to make this a generic module...
+
 
 // Generate an event method...
 //
@@ -289,19 +293,21 @@ var makeItemEventMethod = function(event, handler, options){
 		// 		distinguish one from the other...
 		{ noQueryCheck: true },
 		options || {})
+	// base event method...
 	// NOTE: this is not returned directly as we need to query the items
 	// 		and pass those on to the handlers rather than the arguments 
 	// 		as-is...
-	var method = makeEventMethod(event, 
+	var base = makeEventMethod(event, 
 		function(evt, item, ...args){
 			handler
 				&& handler.call(this, evt, item.slice(), ...args)
 			item.forEach(function(item){
 				callItemEventHandlers(item, event, evt, ...args) }) }) 
 	return Object.assign(
+		// the actual method we return...
 		function(item, ...args){
 			var that = this
-			return method.call(this, 
+			return base.call(this, 
 				// event handler...
 				item instanceof Function ?
 					item
@@ -317,8 +323,8 @@ var makeItemEventMethod = function(event, handler, options){
 					this.search(item, options) 
 				: [],
 				...args) },
-			// get method attributes -- keep the event method format...
-   			method)	}
+			// get base method attributes -- keep the event method format...
+   			base)	}
 
 
 

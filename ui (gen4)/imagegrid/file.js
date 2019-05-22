@@ -103,7 +103,7 @@ module.gGlob = function(){
 var listIndexes =
 module.listIndexes = 
 function(base, index_dir){
-	return gGlob(base +'/**/'+ (index_dir || INDEX_DIR))
+	return gGlob(base +'/**/'+ (index_dir || INDEX_DIR), {strict: false})
 }
 
 
@@ -134,7 +134,7 @@ var listPreviews =
 module.listPreviews = 
 function(base, img_pattern){
 	//return gGlob(base +'/*px/*jpg')
-	return gGlob(base +'/*px/'+(img_pattern || '*')+'.jpg')
+	return gGlob(base +'/*px/'+(img_pattern || '*')+'.jpg', {strict: false})
 }
 
 
@@ -144,7 +144,7 @@ module.listJSON =
 function(path, pattern){
 	pattern = pattern || '*'
 	path = util.normalizePath(path)
-	return gGlob(path +'/'+ pattern +'.json')
+	return gGlob(path +'/'+ pattern +'.json', {strict: false})
 }
 
 // wrap a node style callback function into a Promise...
