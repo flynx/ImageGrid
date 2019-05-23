@@ -201,6 +201,11 @@ object.makeConstructor('BrowserEvent',
 	stopPropagation: function(){
 		this.propagationStopped = true },
 
+	// XXX not used....
+	defaultPrevented: false,
+	preventDefault: function(){
+		this.defaultPrevented = true },
+
 	__init__: function(name, ...data){
 		// sanity check...
 		if(arguments.length < 1){
@@ -255,15 +260,21 @@ var makeEventMethod = function(event, handler, retrigger){
 // 		-> null
 //
 var callItemEventHandlers = function(item, event, evt, ...args){
+	evt = evt || new BrowserEvent(event)
+	// get the relevant handlers...
 	;(item[event] ?
 			[item[event]]
 			: [])
 		.concat((item.events || {})[event] || [])
+		// call the handlers...
 		.forEach(function(handler){
-			// XXX revise call signature...
 			handler.call(item, evt, item, ...args) })
 	// propagate the event...
+	// NOTE: .parent of items in an array container is the first actual
+	// 		browser container up the tree, so we do not need to skip
+	// 		non-browser parents...
 	item.parent
+		&& item.parent.trigger
 		&& item.parent.trigger(evt, item, ...args) }
 
 // Generate item event method...
@@ -285,6 +296,9 @@ var callItemEventHandlers = function(item, event, evt, ...args){
 // 				handling. (XXX is this correct?)
 // 			- a parent that may contain multiple items will get triggered
 // 				multiple times, once per each item...
+// NOTE: item events do not directly trigger the original caller's handlers
+// 		those will get celled recursively when the events are propagated
+// 		up the tree.
 //
 // XXX should we have one event instance per call or one event per item matched???
 // 		.stopPropagation() affects an event object thus creating one per item
@@ -307,7 +321,12 @@ var makeItemEventMethod = function(event, handler, options){
 				&& handler.call(this, evt, item.slice(), ...args)
 			item.forEach(function(item){
 				// XXX should we clone the event here???
-				callItemEventHandlers(item, event, evt, ...args) }) },
+				//callItemEventHandlers(item, event, evt, ...args) }) },
+				// NOTE: we ignore the root event here and force each 
+				// 		item chain to create it's own new event object...
+				// 		this will isolate each chain from the others in 
+				// 		state and handling propagation...
+				callItemEventHandlers(item, event, null, ...args) }) },
 		false) 
 	return Object.assign(
 		// the actual method we return...
