@@ -286,6 +286,23 @@ var callItemEventHandlers = function(item, event, evt, ...args){
 // 			- handle .stopPropagation(..) correnctly
 // 				- stop propagation up but finish the level???
 // 			- trigger the root.parent's event when done
+// XXX Q: do we need item event grouping???
+// 		...e.g. should .select('*') trigger a 'select' on each item and 
+// 		then on groups of contained items per container, or should it be
+// 		triggered once per item per relevant container???
+// 		....considering that I see no obvious way to implement grouping
+// 		up the tree in a recursive manner I'm starting to think that we 
+// 		should go the simple route and trigger 1:1 from each leaf and up...
+// 		NOTE: this approach would mean that .trigger(..) itself would NOT
+// 			call any handlers on the current level, it would just propagate
+// 			the event down, and the handlers would get called on the way 
+// 			back up (unless .stopPropagation(..) is called)
+// 		NOTE: this would also make item and container events behave in 
+// 			a different manner:
+// 				- container event calls handlers here and propagates up
+// 				- item event propagates down then triggers container events up
+// 					XXX how do we distinguish these (down/up) events???
+// 						...different events, event state/mode, ...???
 var makeItemEventMethod = function(event, handler, options){
 	options = Object.assign(
 		// NOTE: we need to be able to pass item objects, so we can not
