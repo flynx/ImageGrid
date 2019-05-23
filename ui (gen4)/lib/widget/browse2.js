@@ -290,20 +290,12 @@ var callItemEventHandlers = function(item, event, evt, ...args){
 // NOTE: item is compatible to .search(item, ..) spec, see that for more 
 // 		details...
 // NOTE: triggering an event that matches several items will handle each 
-// 		item-parent chain individually, but not independently, i.e.:
-// 			- each chain gets the same event instance and thus calling 
-// 				.stopPropagation() will stop all further propagation and
-// 				handling. (XXX is this correct?)
-// 			- a parent that may contain multiple items will get triggered
-// 				multiple times, once per each item...
+// 		item-parent chain individually, and independently...
+// NOTE: a parent that contains multiple items will get triggered multiple 
+// 		times, once per each item...
 // NOTE: item events do not directly trigger the original caller's handlers
 // 		those will get celled recursively when the events are propagated
 // 		up the tree.
-//
-// XXX should we have one event instance per call or one event per item matched???
-// 		.stopPropagation() affects an event object thus creating one per item
-// 		will make item call chains independent of each other, otherwise one 
-// 		call to .stopPropagation() will stop all chains...
 var makeItemEventMethod = function(event, handler, options){
 	options = Object.assign(
 		// NOTE: we need to be able to pass item objects, so we can not
@@ -320,8 +312,6 @@ var makeItemEventMethod = function(event, handler, options){
 			handler
 				&& handler.call(this, evt, item.slice(), ...args)
 			item.forEach(function(item){
-				// XXX should we clone the event here???
-				//callItemEventHandlers(item, event, evt, ...args) }) },
 				// NOTE: we ignore the root event here and force each 
 				// 		item chain to create it's own new event object...
 				// 		this will isolate each chain from the others in 
