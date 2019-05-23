@@ -184,10 +184,12 @@ Items.ListTitle = function(){}
 
 
 //---------------------------------------------------------------------
-// Event system...
+// Event system parts and helpers...
 //
 // XXX might be a good idea to make this a generic module...
 
+// Base event object...
+//
 var BrowserEvent =
 module.BrowserEvent = 
 object.makeConstructor('BrowserEvent', 
@@ -254,6 +256,7 @@ var makeEventMethod = function(event, handler, retrigger){
 			event: event,
 		}) }
 
+
 // Call item event handlers...
 //
 // 	callItemEventHandlers(item, event_name, event_object, ...)
@@ -277,6 +280,7 @@ var callItemEventHandlers = function(item, event, evt, ...args){
 		&& item.parent.trigger
 		&& item.parent.trigger(evt, item, ...args) }
 
+
 // Generate item event method...
 //
 // This extends makeEventMethod(..) by adding an option to pass an item
@@ -287,10 +291,12 @@ var callItemEventHandlers = function(item, event, evt, ...args){
 // 	.event([item, ..], ..)
 // 		-> this
 //
+//
 // NOTE: item is compatible to .search(item, ..) spec, see that for more 
 // 		details...
 // NOTE: triggering an event that matches several items will handle each 
-// 		item-parent chain individually, and independently...
+// 		item-parent chain individually, and independently when propagating
+// 		the event up...
 // NOTE: a parent that contains multiple items will get triggered multiple 
 // 		times, once per each item...
 // NOTE: item events do not directly trigger the original caller's handlers
@@ -1816,12 +1822,25 @@ var BaseBrowserPrototype = {
 	// XXX
 	__event_handlers: null,
 
-	// generic event infrastructure...
-	// XXX add support for item events...
-	// 		e.g. item.focus(..) -> root.focus(..)
-	// XXX also need to design a means for this system to interact both 
+	// Generic event infrastructure...
+	//
+	//	Bind a handler to an event...
+	// 	.on(event, func)
+	// 	.on(event, func, tag)
+	// 		-> this
+	//
+	// tag can be used to unregister several handlers in a single operation,
+	// see .off(..) for more info...
+	//
+	//
+	// NOTE: .one(..) has the same signature as .on(..) but will unregister 
+	// 		the handler as soon as it is done...
+	//
+	// XXX need to design a means for this system to interact both 
 	// 		ways with DOM events...
 	// XXX need to bubble the event up through the nested browsers...
+	// XXX should we be able to trigger events from the item directly???
+	// 		i.e. .get(42).on('open', ...) instead of .get(42).open = ...
 	on: function(evt, handler, tag){
 		var handlers = this.__event_handlers = this.__event_handlers || {}
 		handlers = handlers[evt] = handlers[evt] || []
@@ -1830,12 +1849,12 @@ var BaseBrowserPrototype = {
 			&& (handler.tag = tag)
 		return this
 	},
-	one: function(evt, handler){
+	one: function(evt, handler, tag){
 		var func = function(...args){
 			handler.call(this, ...args)
 			this.off(evt, func)
 		}
-		this.on(evt, func)
+		this.on(evt, func, tag)
 		return this
 	},
 	//
@@ -1931,7 +1950,6 @@ var BaseBrowserPrototype = {
 	//
 	// for docs on <event-object> see BrowserEvent(..)
 	//
-	// XXX need to make this workable with DOM events... (???)
 	trigger: function(evt, ...args){
 		var that = this
 
@@ -1974,8 +1992,9 @@ var BaseBrowserPrototype = {
 		return this
 	},
 
+
 	// List events...
-	// XXX avoid expensive props...
+	// XXX avoid going through expensive props...
 	get events(){
 		var that = this
 		return Object.deepKeys(this)
@@ -1988,10 +2007,15 @@ var BaseBrowserPrototype = {
 			.flat() },
 
 	// domain events/actions...
-	// XXX need a way to extend these to:
-	// 		- be able to trigger an external (DOM) event...
-	// 		- be able to be triggered from an external (DOM) event...
-	// XXX should we trigger direct item's parent event???
+	//
+	// 	Bind a handler to an event...
+	// 	.focus(func)
+	// 		-> this
+	//
+	// 	Trigger an event...
+	// 	.focus(query[, ...])
+	// 		-> this
+	//
 	focus: makeItemEventMethod('focus', function(evt, items){
 		// blur .focused...
 		this.focused
@@ -2010,7 +2034,6 @@ var BaseBrowserPrototype = {
 	deselect: makeItemEventMethod('deselect', function(evt, items){
 		items.forEach(function(item){
 			delete item.selected }) }),
-
 	open: makeItemEventMethod('open', function(evt, item){}),
 	enter: makeItemEventMethod('enter', function(evt, item){}),
 	// XXX can/should we unify these???
