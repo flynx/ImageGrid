@@ -226,9 +226,6 @@ object.makeConstructor('BrowserEvent',
 //	.event(func)
 //		-> this
 //
-//
-// XXX make the event object customizable...
-// XXX STUB event object...
 var makeEventMethod = function(event, handler, retrigger){
 	retrigger = retrigger !== false
 
@@ -245,8 +242,7 @@ var makeEventMethod = function(event, handler, retrigger){
 				&& handler.call(this, evt, ...arguments)
 
 			return retrigger ? 
-				this
-					.trigger(evt, ...arguments)
+				this.trigger(evt, ...arguments)
 				: this
 		},
 		{
@@ -258,7 +254,6 @@ var makeEventMethod = function(event, handler, retrigger){
 // 	callItemEventHandlers(item, event_name, event_object, ...)
 // 		-> null
 //
-// XXX should this call item.parent.trigger(..) ???
 var callItemEventHandlers = function(item, event, evt, ...args){
 	;(item[event] ?
 			[item[event]]
@@ -269,7 +264,7 @@ var callItemEventHandlers = function(item, event, evt, ...args){
 			handler.call(item, evt, item, ...args) })
 	// propagate the event...
 	item.parent
-		&& item.parent.trigger(evt, ...args) }
+		&& item.parent.trigger(evt, item, ...args) }
 
 // Generate item event method...
 //
@@ -283,51 +278,18 @@ var callItemEventHandlers = function(item, event, evt, ...args){
 //
 // NOTE: item is compatible to .search(item, ..) spec, see that for more 
 // 		details...
+// NOTE: triggering an event that matches several items will handle each 
+// 		item-parent chain individually, but not independently, i.e.:
+// 			- each chain gets the same event instance and thus calling 
+// 				.stopPropagation() will stop all further propagation and
+// 				handling. (XXX is this correct?)
+// 			- a parent that may contain multiple items will get triggered
+// 				multiple times, once per each item...
 //
-// XXX need to trigger item parent's event too...
-// 		Q: trigger once, per call or once per item???
-// 		Q: should this be done here or in the client???
-//
-// XXX problems with event propagation: 
-// 		- the item can be within a nested browser/list and that 
-// 			container's events will not be triggered from here,
-// 			just the item's, this and parent's...
-// 		- if we get item.parent and trigger it's event directly
-// 			then that event may propogate up and this' and this.parent's
-// 			events may get triggered more than once...
-// 		- we can not rely on full bottom/up propagation as some
-// 			containers in the path may be basic Arrays...
-// 		- need to make this work with .trigger(..) for non-item events
-// 			i.e. currently .trigger(..) propagates the event to parent and
-// 			this may conflict with us triggering events on the path...
-// XXX one idea to do event propagation is to use the actual .search(..)
-// 		mechanic to handle each found item and collect their direct 
-// 		parents...
-// 		we need:
-// 			- trigger each item event
-// 			- propagate the event through the path for each item
-// 			- trigger each parent only once, passing it a list of only 
-// 				relevant items (i.e. items in its sub-tree only)
-// 			- handle .stopPropagation(..) correnctly
-// 				- stop propagation up but finish the level???
-// 			- trigger the root.parent's event when done
-// XXX Q: do we need item event grouping???
-// 		...e.g. should .select('*') trigger a 'select' on each item and 
-// 		then on groups of contained items per container, or should it be
-// 		triggered once per item per relevant container???
-// 		....considering that I see no obvious way to implement grouping
-// 		up the tree in a recursive manner I'm starting to think that we 
-// 		should go the simple route and trigger 1:1 from each leaf and up...
-// 		NOTE: this approach would mean that .trigger(..) itself would NOT
-// 			call any handlers on the current level, it would just propagate
-// 			the event down, and the handlers would get called on the way 
-// 			back up (unless .stopPropagation(..) is called)
-// 		NOTE: this would also make item and container events behave in 
-// 			a different manner:
-// 				- container event calls handlers here and propagates up
-// 				- item event propagates down then triggers container events up
-// 					XXX how do we distinguish these (down/up) events???
-// 						...different events, event state/mode, ...???
+// XXX should we have one event instance per call or one event per item matched???
+// 		.stopPropagation() affects an event object thus creating one per item
+// 		will make item call chains independent of each other, otherwise one 
+// 		call to .stopPropagation() will stop all chains...
 var makeItemEventMethod = function(event, handler, options){
 	options = Object.assign(
 		// NOTE: we need to be able to pass item objects, so we can not
@@ -344,6 +306,7 @@ var makeItemEventMethod = function(event, handler, options){
 			handler
 				&& handler.call(this, evt, item.slice(), ...args)
 			item.forEach(function(item){
+				// XXX should we clone the event here???
 				callItemEventHandlers(item, event, evt, ...args) }) },
 		false) 
 	return Object.assign(
@@ -1959,8 +1922,6 @@ var BaseBrowserPrototype = {
 	//
 	// for docs on <event-object> see BrowserEvent(..)
 	//
-	// XXX need to make stopPropagation(..) work even if we got an 
-	// 		externally made event object...
 	// XXX need to make this workable with DOM events... (???)
 	trigger: function(evt, ...args){
 		var that = this
