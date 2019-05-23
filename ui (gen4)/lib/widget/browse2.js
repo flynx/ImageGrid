@@ -188,6 +188,32 @@ Items.ListTitle = function(){}
 //
 // XXX might be a good idea to make this a generic module...
 
+var BrowserEvent =
+module.BrowserEvent = 
+object.makeConstructor('BrowserEvent', 
+{
+	// event name...
+	name: undefined,
+
+	data: undefined,
+
+	propagationStopped: false,
+	stopPropagation: function(){
+		this.propagationStopped = true },
+
+	__init__: function(name, ...data){
+		// sanity check...
+		if(arguments.length < 1){
+			throw new Error('new BrowserEvent(..): '
+				+'at least event name must be passed as argument.') }
+
+		this.name = name
+		this.data = data.length > 0 ? 
+			data 
+			: undefined
+	},
+})
+
 
 // Generate an event method...
 //
@@ -203,7 +229,9 @@ Items.ListTitle = function(){}
 //
 // XXX make the event object customizable...
 // XXX STUB event object...
-var makeEventMethod = function(event, handler){
+var makeEventMethod = function(event, handler, retrigger){
+	retrigger = retrigger !== false
+
 	return Object.assign(
 		function(item){
 			// register handler...
@@ -211,21 +239,15 @@ var makeEventMethod = function(event, handler){
 				return this.on(event, item) 
 			}
 
-			// XXX STUB: event object...
-			// XXX can we generate this in one spot???
-			// 		...currently it is generated here and in .trigger(..)
-			var evt = {
-				name: event,
-				// XXX
-				//stopPropagation: function(){
-				//},
-			}
+			var evt = new BrowserEvent(event)
 
 			handler
 				&& handler.call(this, evt, ...arguments)
 
-			return this
-				.trigger(evt, ...arguments)
+			return retrigger ? 
+				this
+					.trigger(evt, ...arguments)
+				: this
 		},
 		{
 			event: event,
@@ -244,7 +266,10 @@ var callItemEventHandlers = function(item, event, evt, ...args){
 		.concat((item.events || {})[event] || [])
 		.forEach(function(handler){
 			// XXX revise call signature...
-			handler.call(item, evt, item, ...args) }) }
+			handler.call(item, evt, item, ...args) })
+	// propagate the event...
+	item.parent
+		&& item.parent.trigger(evt, ...args) }
 
 // Generate item event method...
 //
@@ -319,7 +344,8 @@ var makeItemEventMethod = function(event, handler, options){
 			handler
 				&& handler.call(this, evt, item.slice(), ...args)
 			item.forEach(function(item){
-				callItemEventHandlers(item, event, evt, ...args) }) }) 
+				callItemEventHandlers(item, event, evt, ...args) }) },
+		false) 
 	return Object.assign(
 		// the actual method we return...
 		function(item, ...args){
@@ -1931,19 +1957,11 @@ var BaseBrowserPrototype = {
 	//  	- call the event handlers passing them <event-object> and args
 	//  	- call parent's .trigger(<event-name>, ..)
 	//
-	// <event-object> format:
-	// 	{
-	// 		name: <name>,
-	//
-	// 		propagationStopped: <bool>,
-	// 		stopPropagation: <func>,
-	// 	}
-	//
+	// for docs on <event-object> see BrowserEvent(..)
 	//
 	// XXX need to make stopPropagation(..) work even if we got an 
 	// 		externally made event object...
 	// XXX need to make this workable with DOM events... (???)
-	// XXX construct the event in one spot...
 	trigger: function(evt, ...args){
 		var that = this
 
@@ -1959,18 +1977,14 @@ var BaseBrowserPrototype = {
 			this[evt](...args)
 			return this
 		}
+		// propagation is stopped...
+		// XXX expand this check to support DOM events...
+		if(evt.propagationStopped || evt.cancelBubble){
+			return this
+		}
 
-		// XXX need to make stopPropagation(..) work even if we got an 
-		// 		externally made event object...
-		var stopPropagation = false
 		var evt = typeof(evt) == typeof('str') ?
-			// XXX construct this in one place...
-			// 		...currently it is constructed here and in makeEventMethod(..)
-			{
-				name: evt,
-				stopPropagation: function(){
-					this.propagationStopped = stopPropagation = true },
-			}
+			new BrowserEvent(evt)
 			: evt
 
 		// call the main set of handlers...
@@ -1981,14 +1995,11 @@ var BaseBrowserPrototype = {
 				handler.call(that, evt, ...args) })
 
 		// trigger the parent's event...
-		!stopPropagation
-			&& !evt.propagationStopped
+		!(evt.propagationStopped || evt.cancelBubble)
 			&& this.parent
 			&& this.parent.trigger instanceof Function
-			// XXX should we trigger with and event object or an event 
-			// 		name???
-			//&& this.parent.trigger(evt, ...args)
-			&& this.parent.trigger(evt.name, ...args)
+			// XXX should we pass trigger and event object or event name???
+			&& this.parent.trigger(evt, ...args)
 
 		return this
 	},
