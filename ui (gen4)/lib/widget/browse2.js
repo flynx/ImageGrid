@@ -302,6 +302,8 @@ var callItemEventHandlers = function(item, event, evt, ...args){
 // NOTE: item events do not directly trigger the original caller's handlers
 // 		those will get celled recursively when the events are propagated
 // 		up the tree.
+//
+// XXX need reasonable default item selections...
 var makeItemEventMethod = function(event, handler, options){
 	options = Object.assign(
 		// NOTE: we need to be able to pass item objects, so we can not
@@ -1799,6 +1801,7 @@ var BaseBrowserPrototype = {
 	// 		-> state
 	//
 	// XXX should this be an event???
+	// XXX calling this on a nested browser should update the whole thing...
 	update: function(options){
 		return this
 			.make(options)
@@ -2016,6 +2019,7 @@ var BaseBrowserPrototype = {
 	// 	.focus(query[, ...])
 	// 		-> this
 	//
+	// XXX need reasonable default item selections...
 	focus: makeItemEventMethod('focus', function(evt, items){
 		// blur .focused...
 		this.focused
@@ -2042,6 +2046,16 @@ var BaseBrowserPrototype = {
 
 	// XXX target can be item or path...
 	load: makeEventMethod('load', function(evt, item){}),
+
+	// XXX should we be able to update specific items???
+	// XXX should a normal event trigger children down the tree???
+	// XXX should we have a pre/post events???
+	/*
+	update: makeEventMethod('update', function(evt, options){
+		return this
+			.make(options)
+			.render(options) }),
+	//*/
 
 	close: makeEventMethod('close', function(evt, reason){}),
 	
