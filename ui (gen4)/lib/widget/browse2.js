@@ -293,12 +293,14 @@ var callItemEventHandlers = function(item, event, evt, ...args){
 //
 // 	makeItemEventMethod(event_name, handler[, options])
 // 	makeItemEventMethod(event_name, handler, default_getter[, options])
+// 	makeItemEventMethod(event_name, handler, default_getter, filter[, options])
 // 		-> event_method
 //
 //
 // This extends makeEventMethod(..) by adding an option to pass an item
 // when triggering the event and if no item is passed to produce a default,
 // the rest of the signature is identical...
+// XXX document filter...
 //
 // 	Trigger an event on item(s)...
 // 	.event(item, ..)
@@ -316,16 +318,18 @@ var callItemEventHandlers = function(item, event, evt, ...args){
 // NOTE: item events do not directly trigger the original caller's handlers
 // 		those will get celled recursively when the events are propagated
 // 		up the tree.
-// 
-// XXX add a filter...
-// 		...keep only applicable items...
-var makeItemEventMethod = function(event, handler, default_item, options){
-	options = default_item instanceof Function ?
-		options
-		: default_item
-	default_item = default_item instanceof Function ?
-		default_item
-		: null
+var makeItemEventMethod = function(event, handler, default_item, filter, options){
+	// parse args...
+	var args = [...arguments].slice(2)
+	default_item = args[0] instanceof Function 
+		&& args.shift()
+	filter = args[0] instanceof Function
+		&& args.shift()
+	var filterItems = function(items){
+		return filter ? 
+			items.filter(filter) 
+			: items }
+	options = args.shift()
 	options = Object.assign(
 		// NOTE: we need to be able to pass item objects, so we can not
 		// 		use queries at the same time as there is not way to 
@@ -357,14 +361,14 @@ var makeItemEventMethod = function(event, handler, default_item, options){
 					item
 				// array of queries...
 				: item instanceof Array ?
-					item
+					filterItems(item
 						.map(function(e){
 							return that.search(e, options) })
 						.flat()
-						.unique()
+						.unique())
 				// explicit item or query...
 				: item != null ? 
-					this.search(item, options) 
+					filterItems(this.search(item, options))
 				// item is null or undefined -- get default...
 				: default_item instanceof Function ?
 					[default_item.call(that) || []].flat()
@@ -2195,13 +2199,25 @@ var BaseBrowserPrototype = {
 	toggleSelect: makeItemEventToggler('selected', 'select', 'deselect', 'focused'),
 	toggleSelect2: makeItemEventToggler2('selected', 'select', 'deselect', 'focused'),
 
-	// XXX we need to filter collapsable items...
+	// XXX should we .render(..) or .update(..) here???
+	// XXX do we need to filter via elem.collapsed too???
+	// 		...likely ignore .collapsed as this will enable us to toggle 
+	// 		with '!' correctly...
 	collapse: makeItemEventMethod('collapse', 
-		function(evt, item){},
-		function(){ return this.focused }),
+		function(evt, item){
+			console.log('>>>>', item)
+			item.forEach(function(e){ e.collapsed = true }) 
+			this.render()
+		},
+		function(){ return this.focused },
+		function(elem){ return elem.value && elem.children }),
 	expand: makeItemEventMethod('expand', 
-		function(evt, item){},
-		function(){ return this.focused }),
+		function(evt, item){
+			item.forEach(function(e){ delete e.collapsed }) 
+			this.render()
+		},
+		function(){ return this.focused },
+		function(elem){ return elem.value && elem.children }),
 	toggleCollapse: makeItemEventToggler('collapsed', 'collapse', 'expand', 'focused'),
 
 	open: makeItemEventMethod('open', 
@@ -2675,7 +2691,7 @@ var BrowserPrototype = {
 	next: function(){},
 	prev: function(){},
 
-	collapse: function(){},
+	//collapse: function(){},
 	// XXX scroll...
 
 
