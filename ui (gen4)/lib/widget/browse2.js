@@ -2581,7 +2581,9 @@ var BrowserPrototype = {
 	// 		- open
 	// 		- select
 	// 		- update
+	// XXX should we trigger the DOM event or the browser event???
 	renderItem: function(item, i, context){
+		var that = this
 		var options = context.options || this.options
 		if(options.hidden && !options.renderHidden){
 			return null
@@ -2638,11 +2640,16 @@ var BrowserPrototype = {
 					elem.appendChild(value)
 				})
 
-		// events...
-		// XXX revise signature...
+		// system events...
 		elem.addEventListener('click', 
+			// XXX revise signature...
+			// XXX should we trigger the DOM event or the browser event???
 			function(){ $(elem).trigger('open', [text, item, elem]) })
-		//elem.addEventListener('tap', function(){ $(elem).trigger('open', [text, item, elem]) })
+		//elem.addEventListener('tap', 
+		//	function(){ $(elem).trigger('open', [text, item, elem]) })
+		elem.addEventListener('focus', 
+			function(){ that.focus(item) })
+		// user events...
 		Object.entries(item.events || {})
 			// shorthand events...
 			.concat([
