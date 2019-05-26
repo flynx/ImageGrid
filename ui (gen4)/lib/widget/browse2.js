@@ -1628,31 +1628,22 @@ var BaseBrowserPrototype = {
 
 	// Like .select(.., {iterateCollapsed: true}) but will expand all the 
 	// path items to reveal the target...
-	//
-	// XXX should this return the item or this???
-	// XXX make .reveal('all'/'*') only do the actual nodes that need expanding...
-	// 		...currently for path 'a/b/c/d' we'll go through:
-	// 			'a/b'
-	// 			'a/b/c'
-	// 			'a/b/c/d'
+	// XXX should this return the matched item(s), expanded item(s) or this???
 	// XXX need a universal item name/value comparison / getter...
 	reveal: function(key, options){
 		var that = this
 		var seen = new Set()
+		var nodes = new Set()
 		return this.search(key, 
 				function(e, i, path){
 					return [path, e] }, 
 				Object.assign(
-					{
-						iterateCollapsed: true,
-						reverse: 'flat',
-					}, 
+					{ iterateCollapsed: true }, 
 					options || {}))
-			// sort paths long to short...
-			//.sort(function(a, b){
-			//	return b[0].length - a[0].length })
+			// NOTE: we expand individual items so the order here is not relevant...
 			.map(function([path, e]){
 				// skip paths we have already seen...
+				// XXX do we actually need this???
 				if(seen.has(e.id)){
 					return e
 				}
@@ -1670,19 +1661,20 @@ var BaseBrowserPrototype = {
 										// XXX need a universal item name test...
 										return n == (e.value || e.id) })
 									.pop()
-								delete e.collapsed
+								nodes.add(e)
 								cur = e.children
 
+							// browser children...
 							} else {
-								// XXX .index feels ugly...
-								delete cur.index[n].collapsed
+								nodes.add(cur.index[n])
 								cur = cur.index[n].children
 							}
 						})
-				return e
-			})
+				return e })
+			// do the actual expansion...
 			.run(function(){
-				that.render() }) },
+				//return that.expand([...nodes]) }) },
+				that.expand([...nodes]) }) },
 
 
 	// XXX do we need edit ability here? 
@@ -2537,6 +2529,7 @@ var BrowserPrototype = {
 	},
 	// NOTE: this is the similar to .renderItem(..)
 	// XXX make collapse action overloadable....
+	// XXX use item.events...
 	renderNestedHeader: function(item, i, context){
 		var that = this
 		return this.renderItem(item, i, context)
@@ -2550,10 +2543,9 @@ var BrowserPrototype = {
 
 				// collapse action handler...
 				// XXX make this overloadable...
+				// XXX use item.events...
 				$(this).on('open', function(evt){
-					item.collapsed = !item.collapsed
-					that.render(context)
-				})
+					that.toggleCollapse(item) })
 			}) },
 	//
 	// Format:
