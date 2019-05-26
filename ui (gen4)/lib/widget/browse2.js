@@ -304,7 +304,13 @@ var callItemEventHandlers = function(item, event, evt, ...args){
 // 		up the tree.
 //
 // XXX need reasonable default item selections...
-var makeItemEventMethod = function(event, handler, options){
+var makeItemEventMethod = function(event, handler, default_item, options){
+	options = default_item instanceof Function ?
+		options
+		: default_item
+	default_item = default_item instanceof Function ?
+		default_item
+		: null
 	options = Object.assign(
 		// NOTE: we need to be able to pass item objects, so we can not
 		// 		use queries at the same time as there is not way to 
@@ -344,10 +350,13 @@ var makeItemEventMethod = function(event, handler, options){
 				// explicit item or query...
 				: item != null ? 
 					this.search(item, options) 
+				// item is null or undefined -- get default...
+				: default_item instanceof Function ?
+					[default_item.call(that) || []].flat()
 				: [],
 				...args) },
 			// get base method attributes -- keep the event method format...
-   			base)	}
+   			base) }
 
 
 
@@ -2019,30 +2028,47 @@ var BaseBrowserPrototype = {
 	// 	.focus(query[, ...])
 	// 		-> this
 	//
-	// XXX need reasonable default item selections...
-	focus: makeItemEventMethod('focus', function(evt, items){
-		// blur .focused...
-		this.focused
-			&& this.blur(this.focused)
-		// NOTE: if we got multiple matches we care only about the first one...
-		var item = items.shift()
-		item != null
-			&& (item.focused = true)
-	}),
+	focus: makeItemEventMethod('focus', 
+		function(evt, items){
+			// blur .focused...
+			this.focused
+				&& this.blur(this.focused)
+			// NOTE: if we got multiple matches we care only about the first one...
+			var item = items.shift()
+			item != null
+				&& (item.focused = true)
+		},
+		// default...
+		function(){ return this.get(0) }),
 	blur: makeItemEventMethod('blur', function(evt, items){
 		items.forEach(function(item){
 			delete item.focused }) }),
-	select: makeItemEventMethod('select', function(evt, items){
-		items.forEach(function(item){
-			item.selected = true }) }),
-	deselect: makeItemEventMethod('deselect', function(evt, items){
-		items.forEach(function(item){
-			delete item.selected }) }),
-	open: makeItemEventMethod('open', function(evt, item){}),
-	enter: makeItemEventMethod('enter', function(evt, item){}),
+	// XXX should we select .focused by default???
+	select: makeItemEventMethod('select', 
+		function(evt, items){
+			items.forEach(function(item){
+				item.selected = true }) },
+		// XXX is this a good default???
+		function(){ return this.focused }),
+	// XXX should we deselect .focused by default???
+	deselect: makeItemEventMethod('deselect', 
+		function(evt, items){
+			items.forEach(function(item){
+				delete item.selected }) },
+		function(){ return this.focused }),
+	open: makeItemEventMethod('open', 
+		function(evt, item){},
+		function(){ return this.focused }),
+	enter: makeItemEventMethod('enter', 
+		function(evt, item){},
+		function(){ return this.focused }),
 	// XXX can/should we unify these???
-	collapse: makeItemEventMethod('collapse', function(evt, item){}),
-	expand: makeItemEventMethod('expand', function(evt, item){}),
+	collapse: makeItemEventMethod('collapse', 
+		function(evt, item){},
+		function(){ return this.focused }),
+	expand: makeItemEventMethod('expand', 
+		function(evt, item){},
+		function(){ return this.focused }),
 
 	// XXX target can be item or path...
 	load: makeEventMethod('load', function(evt, item){}),
