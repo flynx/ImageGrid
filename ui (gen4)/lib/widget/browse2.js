@@ -316,6 +316,9 @@ var callItemEventHandlers = function(item, event, evt, ...args){
 // NOTE: item events do not directly trigger the original caller's handlers
 // 		those will get celled recursively when the events are propagated
 // 		up the tree.
+// 
+// XXX add a filter...
+// 		...keep only applicable items...
 var makeItemEventMethod = function(event, handler, default_item, options){
 	options = default_item instanceof Function ?
 		options
@@ -371,8 +374,17 @@ var makeItemEventMethod = function(event, handler, default_item, options){
    			base) }
 
 
-
+// Generate item event/state toggler...
+//
+//
+// 
 // XXX should this be a toggler.Toggler???
+// XXX the generated toggler in multi mode handles query arrays inconsistently...
+// 		- [] is always returned...
+// 		- .toggleSelect([1, 2, 10, 20]) -- toggles items on only, returns []
+// 		- .toggleSelect([1, 2, 10, 20], 'next') -- toggles items on only, returns []
+// 		- .toggleSelect([1, 2, 10, 20], 'on') -- works but returns []
+// 		- .toggleSelect([1, 2, 10, 20], 'off') -- works but returns []
 var makeItemEventToggler = function(get_state, set_state, unset_state, default_item, multi){
 	var _get_state = get_state instanceof Function ?
 		get_state
@@ -447,7 +459,7 @@ var makeItemEventToggler = function(get_state, set_state, unset_state, default_i
 					this[0] 
 					: this }) } }
 // XXX this is incomplete...
-var makeItemEventToggler2 = function(get_state, set_state, unset_state, default_item){
+var makeItemEventToggler2 = function(get_state, set_state, unset_state, default_item, multi){
 	var _get_state = get_state instanceof Function ?
 		get_state
 		: function(e){ return !!e[get_state] }
@@ -457,6 +469,8 @@ var makeItemEventToggler2 = function(get_state, set_state, unset_state, default_
 	var _unset_state = unset_state instanceof Function ?
 		unset_state
 		: function(e){ return !this[unset_state](e) }
+	multi = multi !== false
+	var getter = multi ? 'search' : 'get'
 
 	return toggler.Toggler(
 		default_item,
@@ -2181,6 +2195,7 @@ var BaseBrowserPrototype = {
 	toggleSelect: makeItemEventToggler('selected', 'select', 'deselect', 'focused'),
 	toggleSelect2: makeItemEventToggler2('selected', 'select', 'deselect', 'focused'),
 
+	// XXX we need to filter collapsable items...
 	collapse: makeItemEventMethod('collapse', 
 		function(evt, item){},
 		function(){ return this.focused }),
