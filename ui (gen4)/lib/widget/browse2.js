@@ -178,8 +178,8 @@ Items.EditableList = function(values){}
 Items.EditablePinnedList = function(values){}
 
 // Special list components...
-Items.ListPath = function(){}
-Items.ListTitle = function(){}
+//Items.ListPath = function(){}
+//Items.ListTitle = function(){}
 
 
 
@@ -225,6 +225,7 @@ object.makeConstructor('BrowserEvent',
 // Generate an event method...
 //
 // 	Make and event method...
+// 	makeEventMethod(event_name)
 // 	makeEventMethod(event_name, handler[, options])
 // 		-> event_method
 //
@@ -291,6 +292,7 @@ var callItemEventHandlers = function(item, event, evt, ...args){
 
 // Generate item event method...
 //
+// 	makeItemEventMethod(event_name)
 // 	makeItemEventMethod(event_name, handler[, options])
 // 	makeItemEventMethod(event_name, handler, default_getter[, options])
 // 	makeItemEventMethod(event_name, handler, default_getter, filter[, options])
@@ -300,12 +302,24 @@ var callItemEventHandlers = function(item, event, evt, ...args){
 // This extends makeEventMethod(..) by adding an option to pass an item
 // when triggering the event and if no item is passed to produce a default,
 // the rest of the signature is identical...
-// XXX document filter...
 //
 // 	Trigger an event on item(s)...
 // 	.event(item, ..)
 // 	.event([item, ..], ..)
 // 		-> this
+//
+//
+// 	Handle event action...
+// 	handler(event_object, items, ...)
+//
+//
+// 	Get default item if none are given...
+// 	default_getter()
+// 		-> item
+//
+// 	Check item applicability...
+// 	filter(item)
+// 		-> bool
 //
 //
 // NOTE: item is compatible to .search(item, ..) spec, see that for more 
@@ -380,8 +394,6 @@ var makeItemEventMethod = function(event, handler, default_item, filter, options
 
 // Generate item event/state toggler...
 //
-//
-// 
 // XXX should this be a toggler.Toggler???
 // XXX the generated toggler in multi mode handles query arrays inconsistently...
 // 		- [] is always returned...
@@ -1903,10 +1915,12 @@ var BaseBrowserPrototype = {
 	// 	}
 	//
 	//
-	// NOTE: it is not recommended to extend this. all the responsibility
-	// 		of actual rendering should lay on the renderer methods...
+	// NOTE: there is no need to explicitly .make(..) the state before
+	// 		calling this as first access to .items will do so automatically...
 	// NOTE: calling this will re-render the existing state. to re-make 
 	// 		the state anew that use .update(..)...
+	// NOTE: it is not recommended to extend this. all the responsibility
+	// 		of actual rendering should lay on the renderer methods...
 	// NOTE: currently options and context are distinguished only via 
 	// 		the .options attribute...
 	render: function(options, renderer, context){
@@ -1951,19 +1965,6 @@ var BaseBrowserPrototype = {
 			: elems
 	},
 	
-
-	// Update state (make then render)...
-	//
-	// 	.update()
-	// 		-> state
-	//
-	// XXX should this be an event???
-	// XXX calling this on a nested browser should update the whole thing...
-	update: function(options){
-		return this
-			.make(options)
-			.render(options) },
-
 
 	// Events...
 	//
@@ -2011,7 +2012,7 @@ var BaseBrowserPrototype = {
 	//
 	// XXX should we be able to trigger events from the item directly???
 	// 		i.e. .get(42).on('open', ...) instead of .get(42).open = ...
-	// XXX might be a good idea to create an item wrapper object...
+	// 		...might be a good idea to create an item wrapper object...
 	on: function(evt, handler, tag){
 		var handlers = this.__event_handlers = this.__event_handlers || {}
 		handlers = handlers[evt] = handlers[evt] || []
@@ -2211,12 +2212,11 @@ var BaseBrowserPrototype = {
 	toggleSelect2: makeItemEventToggler2('selected', 'select', 'deselect', 'focused'),
 
 	// NOTE: .expand(..) / .collapse(..) / .toggleCollapse(..) ignore 
-	// 		item visibility due to item.collected state.
-	// XXX should we .render(..) or .update(..) here???
+	// 		item.collapsed state....
 	collapse: makeItemEventMethod('collapse', 
 		function(evt, item){
 			item.forEach(function(e){ e.collapsed = true }) 
-			this.render()
+			this.update()
 		},
 		function(){ return this.focused },
 		function(elem){ return elem.value && elem.children },
@@ -2224,7 +2224,7 @@ var BaseBrowserPrototype = {
 	expand: makeItemEventMethod('expand', 
 		function(evt, item){
 			item.forEach(function(e){ delete e.collapsed }) 
-			this.render()
+			this.update()
 		},
 		function(){ return this.focused },
 		function(elem){ return elem.value && elem.children },
@@ -2244,23 +2244,41 @@ var BaseBrowserPrototype = {
 		function(evt, item){},
 		function(){ return this.focused }),
 
-	// XXX target can be item or path...
-	load: makeEventMethod('load', function(evt, item){}),
-
-	// XXX should we be able to update specific items???
-	// XXX should a normal event trigger children down the tree???
-	// XXX should we have a pre/post events???
-	/*
-	update: makeEventMethod('update', function(evt, options){
-		return this
-			.make(options)
+	// Update state (make then render)...
+	//
+	// 	Update (re-render) the current state...
+	// 	.update()
+	// 	.update(options)
+	// 		-> state
+	//
+	// 	Force re-make the state and re-render...
+	// 	.update(true[, options])
+	// 		-> state
+	//
+	//
+	// NOTE: .update() is the same as .render()
+	//
+	// XXX calling this on a nested browser should update the whole thing...
+	update: makeEventMethod('update', function(evt, full, options){
+		options = (full && full !== true && full !== false) ? 
+			full 
+			: options
+		full = full === options ? 
+			false 
+			: full
+		this
+			.run(function(){
+				full && this.make(options) })
 			.render(options) }),
-	//*/
+	
+	// XXX target can be item or path...
+	load: makeEventMethod('load', function(evt, target){}),
+
 
 	close: makeEventMethod('close', function(evt, reason){}),
 	
 
-	// XXX should we update on on init....
+	// XXX should we update on init....
 	__init__: function(func, options){
 		this.__list__ = func
 		this.options = Object.assign(
