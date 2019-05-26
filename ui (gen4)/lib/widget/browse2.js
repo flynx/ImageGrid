@@ -444,7 +444,7 @@ var makeItemEventToggler = function(get_state, set_state, unset_state, default_i
 		'!': '!',
 	}
 
-	return function(item, state){
+	return (function eventToggler(item, state){
 		var that = this
 		// normalize/parse args...
 		state = item in states ?
@@ -489,7 +489,11 @@ var makeItemEventToggler = function(get_state, set_state, unset_state, default_i
 			.run(function(){
 				return this.length == 1 ? 
 					this[0] 
-					: this }) } }
+					: this }) })
+		// support instanceof Toggler tests...
+		.run(function(){
+			this.__proto__ = toggler.Toggler.prototype
+			this.constructor = toggler.Toggler })}
 // XXX this is incomplete...
 var makeItemEventToggler2 = function(get_state, set_state, unset_state, default_item, multi){
 	var _get_state = get_state instanceof Function ?
