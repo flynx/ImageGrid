@@ -389,7 +389,7 @@ var makeItemEventMethod = function(event, handler, default_item, filter, options
 // 		- .toggleSelect([1, 2, 10, 20], 'next') -- toggles items on only, returns []
 // 		- .toggleSelect([1, 2, 10, 20], 'on') -- works but returns []
 // 		- .toggleSelect([1, 2, 10, 20], 'off') -- works but returns []
-var makeItemEventToggler = function(get_state, set_state, unset_state, default_item, multi){
+var makeItemEventToggler = function(get_state, set_state, unset_state, default_item, multi, options){
 	var _get_state = get_state instanceof Function ?
 		get_state
 		: function(e){ return !!e[get_state] }
@@ -402,8 +402,21 @@ var makeItemEventToggler = function(get_state, set_state, unset_state, default_i
 	var _default_item = default_item instanceof Function ?
 		default_item
 		: function(){ return this[default_item] }
+	// filter/multi...
+	var filter = multi instanceof Function
+		&& multi
+	var filterItems = function(items){
+		return filter ? 
+			items.filter(filter) 
+			: items }
 	multi = multi !== false
 	var getter = multi ? 'search' : 'get'
+	options = Object.assign(
+		// NOTE: we need to be able to pass item objects, so we can not
+		// 		use queries at the same time as there is not way to 
+		// 		distinguish one from the other...
+		{ noQueryCheck: true },
+		options || {})
 
 	// state normalization lookup table...
 	var states = {
@@ -439,22 +452,25 @@ var makeItemEventToggler = function(get_state, set_state, unset_state, default_i
 				: item == null ?
 					false	
 				: state == '?' ?
-					[this[getter](item)]
-						.flat()
-						.map(_get_state)
+					filterItems(
+						[this[getter](item, options)]
+							.flat())
+							.map(_get_state)
 				: state === true ?
 					_set_state.call(this, item)
 				: state == false ? 
 					_unset_state.call(this, item)
-				: [this[getter](item)]
-					.flat()
-					.map(function(e){
-						// NOTE: 'next' and '!' are opposites of each other...
-						return (state == 'next' ? 
-								_get_state(e)
-								: !_get_state(e)) ?
-							_unset_state.call(that, e)
-							: _set_state.call(that, e) }) 
+				// 'next' or '!'...
+				// NOTE: 'next' and '!' are opposites of each other...
+				: filterItems(
+					[this[getter](item, options)]
+						.flat())
+						.map(function(e){
+							return (state == 'next' ? 
+									_get_state(e)
+									: !_get_state(e)) ?
+								_unset_state.call(that, e)
+								: _set_state.call(that, e) }) 
 			]
 			.flat()
 			// normalize for single item results -> return item and array...
@@ -1291,6 +1307,7 @@ var BaseBrowserPrototype = {
 	// XXX do we actually need to stop this as soon as we find something, 
 	// 		i.e. options.firstOnly???
 	// XXX add diff support...
+	// XXX should this check hidden items when doing an identity check???
 	__search_test_generators__: {
 		// regexp path test...
 		regexp: function(pattern){
@@ -2000,8 +2017,6 @@ var BaseBrowserPrototype = {
 	// NOTE: .one(..) has the same signature as .on(..) but will unregister 
 	// 		the handler as soon as it is done...
 	//
-	// XXX need to design a means for this system to interact both 
-	// 		ways with DOM events...
 	// XXX should we be able to trigger events from the item directly???
 	// 		i.e. .get(42).on('open', ...) instead of .get(42).open = ...
 	// XXX might be a good idea to create an item wrapper object...
@@ -2181,7 +2196,11 @@ var BaseBrowserPrototype = {
 	blur: makeItemEventMethod('blur', function(evt, items){
 		items.forEach(function(item){
 			delete item.focused }) }),
-	toggleFocus: makeItemEventToggler('focused', 'focus', 'blur', 'focused', false),
+	toggleFocus: makeItemEventToggler(
+		'focused', 
+		'focus', 'blur', 
+		function(){ return this.focused || 0 }, 
+		false),
 
 	select: makeItemEventMethod('select', 
 		function(evt, items){
@@ -2199,26 +2218,33 @@ var BaseBrowserPrototype = {
 	toggleSelect: makeItemEventToggler('selected', 'select', 'deselect', 'focused'),
 	toggleSelect2: makeItemEventToggler2('selected', 'select', 'deselect', 'focused'),
 
+	// NOTE: .expand(..) / .collapse(..) / .toggleCollapse(..) ignore 
+	// 		item visibility due to item.collected state.
 	// XXX should we .render(..) or .update(..) here???
-	// XXX do we need to filter via elem.collapsed too???
-	// 		...likely ignore .collapsed as this will enable us to toggle 
-	// 		with '!' correctly...
 	collapse: makeItemEventMethod('collapse', 
 		function(evt, item){
 			item.forEach(function(e){ e.collapsed = true }) 
 			this.render()
 		},
 		function(){ return this.focused },
-		function(elem){ return elem.value && elem.children }),
+		function(elem){ return elem.value && elem.children },
+		{iterateCollapsed: true}),
 	expand: makeItemEventMethod('expand', 
 		function(evt, item){
 			item.forEach(function(e){ delete e.collapsed }) 
 			this.render()
 		},
 		function(){ return this.focused },
-		function(elem){ return elem.value && elem.children }),
-	toggleCollapse: makeItemEventToggler('collapsed', 'collapse', 'expand', 'focused'),
+		function(elem){ return elem.value && elem.children },
+		{iterateCollapsed: true}),
+	toggleCollapse: makeItemEventToggler(
+		'collapsed', 
+		'collapse', 'expand', 
+		'focused',
+		function(elem){ return elem.value && elem.children },
+		{iterateCollapsed: true}),
 
+	// XXX need to make primary/secondary item actions more obvious...
 	open: makeItemEventMethod('open', 
 		function(evt, item){},
 		function(){ return this.focused }),
