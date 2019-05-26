@@ -97,6 +97,10 @@
 
 // Make a generic toggler function/method...
 //
+// 	Toggler(elem, stateGettor, states, post_callback)
+// 	Toggler(elem, stateGettor, states, pre_callback, post_callback)
+// 		-> toggler
+//
 // state_accessor signature:
 //
 // 	Get current state:
@@ -107,7 +111,7 @@
 // 	state_accessor(<elem>, <new-state>)
 // 		-> <new-state>
 //
-// `this' within state_accessor is set to toggler's context.
+// state_accessor is calles in the toggler's context.
 // 
 // The value returned by state_accessor is returned by the toggler. To pass
 // control over the return value back to the Toggler logic when setting 
@@ -129,6 +133,10 @@
 // 	function(){ ... }	- function that will return either a state or 
 // 							a list of states, `this' will be set to
 // 							the toggler's context...
+//
+//
+// Examples:
+// 	XXX
 //
 //
 // XXX technically we do not need both elem and state_accessor here, the

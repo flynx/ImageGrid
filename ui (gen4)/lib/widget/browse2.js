@@ -224,6 +224,14 @@ object.makeConstructor('BrowserEvent',
 
 // Generate an event method...
 //
+// 	Make and event method...
+// 	makeEventMethod(event_name, handler[, options])
+// 		-> event_method
+//
+// This will produce an event method that supports binding handlers to the
+// event (shorthand to: .on(event, handler, ...)) and triggering the 
+// said event (similar to: .trigger(event, ..) )...
+//
 //	Trigger an event
 //	.event()
 //	.event(arg, ..)
@@ -283,8 +291,14 @@ var callItemEventHandlers = function(item, event, evt, ...args){
 
 // Generate item event method...
 //
+// 	makeItemEventMethod(event_name, handler[, options])
+// 	makeItemEventMethod(event_name, handler, default_getter[, options])
+// 		-> event_method
+//
+//
 // This extends makeEventMethod(..) by adding an option to pass an item
-// when triggering the event, the rest of the signature is identical.
+// when triggering the event and if no item is passed to produce a default,
+// the rest of the signature is identical...
 //
 // 	Trigger an event on item(s)...
 // 	.event(item, ..)
@@ -302,8 +316,6 @@ var callItemEventHandlers = function(item, event, evt, ...args){
 // NOTE: item events do not directly trigger the original caller's handlers
 // 		those will get celled recursively when the events are propagated
 // 		up the tree.
-//
-// XXX need reasonable default item selections...
 var makeItemEventMethod = function(event, handler, default_item, options){
 	options = default_item instanceof Function ?
 		options
@@ -357,6 +369,115 @@ var makeItemEventMethod = function(event, handler, default_item, options){
 				...args) },
 			// get base method attributes -- keep the event method format...
    			base) }
+
+
+
+// XXX should this be a toggler.Toggler???
+var makeItemEventToggler = function(get_state, set_state, unset_state, default_item, multi){
+	var _get_state = get_state instanceof Function ?
+		get_state
+		: function(e){ return !!e[get_state] }
+	var _set_state = set_state instanceof Function ?
+		set_state
+		: function(e){ return !!this[set_state](e) }
+	var _unset_state = unset_state instanceof Function ?
+		unset_state
+		: function(e){ return !this[unset_state](e) }
+	var _default_item = default_item instanceof Function ?
+		default_item
+		: function(){ return this[default_item] }
+	multi = multi !== false
+	var getter = multi ? 'search' : 'get'
+
+	// state normalization lookup table...
+	var states = {
+		true: true, 
+		on: true,
+		false: false, 
+		off: false,
+		// only two states, so next/prev are the same...
+		prev: 'next', 
+		next: 'next',
+		'?': '?', 
+		'??': '??', 
+		'!': '!',
+	}
+
+	return function(item, state){
+		var that = this
+		// normalize/parse args...
+		state = item in states ?
+			item 
+			: state
+		item = (state === item ? 
+				null 
+				: item) 
+			|| _default_item.call(this)
+		state = state in states ? 
+			states[state] 
+			: 'next'
+
+		return [ 
+				state == '??' ?
+					[true, false]
+				: item == null ?
+					false	
+				: state == '?' ?
+					[this[getter](item)]
+						.flat()
+						.map(_get_state)
+				: state === true ?
+					_set_state.call(this, item)
+				: state == false ? 
+					_unset_state.call(this, item)
+				: [this[getter](item)]
+					.flat()
+					.map(function(e){
+						// NOTE: 'next' and '!' are opposites of each other...
+						return (state == 'next' ? 
+								_get_state(e)
+								: !_get_state(e)) ?
+							_unset_state.call(that, e)
+							: _set_state.call(that, e) }) 
+			]
+			.flat()
+			// normalize for single item results -> return item and array...
+			.run(function(){
+				return this.length == 1 ? 
+					this[0] 
+					: this }) } }
+// XXX this is incomplete...
+var makeItemEventToggler2 = function(get_state, set_state, unset_state, default_item){
+	var _get_state = get_state instanceof Function ?
+		get_state
+		: function(e){ return !!e[get_state] }
+	var _set_state = set_state instanceof Function ?
+		set_state
+		: function(e){ return !!this[set_state](e) }
+	var _unset_state = unset_state instanceof Function ?
+		unset_state
+		: function(e){ return !this[unset_state](e) }
+
+	return toggler.Toggler(
+		default_item,
+		function(item, state){
+			if(item == null){
+				return false
+			}
+			return state == null ?
+				_get_state(item)
+				: state
+		},
+		[true, false],
+		function(state, item){
+			// if no item focused/given return false...
+			return item == null ? 
+					false 
+				// XXX add support for item lists...
+				: state ?
+	   				_set_state.call(this, item)
+				: _unset_state.call(this, item) })
+}
 
 
 
@@ -1834,6 +1955,19 @@ var BaseBrowserPrototype = {
 	// XXX
 	__event_handlers: null,
 
+	// List events...
+	// XXX avoid going through expensive props...
+	get events(){
+		var that = this
+		return Object.deepKeys(this)
+			.map(function(key){
+				return (key != 'events' 
+						&& that[key] instanceof Function 
+						&& that[key].event) ? 
+					that[key].event 
+					: [] })
+			.flat() },
+
 	// Generic event infrastructure...
 	//
 	//	Bind a handler to an event...
@@ -1850,9 +1984,9 @@ var BaseBrowserPrototype = {
 	//
 	// XXX need to design a means for this system to interact both 
 	// 		ways with DOM events...
-	// XXX need to bubble the event up through the nested browsers...
 	// XXX should we be able to trigger events from the item directly???
 	// 		i.e. .get(42).on('open', ...) instead of .get(42).open = ...
+	// XXX might be a good idea to create an item wrapper object...
 	on: function(evt, handler, tag){
 		var handlers = this.__event_handlers = this.__event_handlers || {}
 		handlers = handlers[evt] = handlers[evt] || []
@@ -1961,7 +2095,6 @@ var BaseBrowserPrototype = {
 	//  	- call parent's .trigger(<event-name>, ..)
 	//
 	// for docs on <event-object> see BrowserEvent(..)
-	//
 	trigger: function(evt, ...args){
 		var that = this
 
@@ -2005,19 +2138,6 @@ var BaseBrowserPrototype = {
 	},
 
 
-	// List events...
-	// XXX avoid going through expensive props...
-	get events(){
-		var that = this
-		return Object.deepKeys(this)
-			.map(function(key){
-				return (key != 'events' 
-						&& that[key] instanceof Function 
-						&& that[key].event) ? 
-					that[key].event 
-					: [] })
-			.flat() },
-
 	// domain events/actions...
 	//
 	// 	Bind a handler to an event...
@@ -2043,30 +2163,36 @@ var BaseBrowserPrototype = {
 	blur: makeItemEventMethod('blur', function(evt, items){
 		items.forEach(function(item){
 			delete item.focused }) }),
-	// XXX should we select .focused by default???
+	toggleFocus: makeItemEventToggler('focused', 'focus', 'blur', 'focused', false),
+
 	select: makeItemEventMethod('select', 
 		function(evt, items){
 			items.forEach(function(item){
 				item.selected = true }) },
 		// XXX is this a good default???
 		function(){ return this.focused }),
-	// XXX should we deselect .focused by default???
 	deselect: makeItemEventMethod('deselect', 
 		function(evt, items){
 			items.forEach(function(item){
 				delete item.selected }) },
 		function(){ return this.focused }),
-	open: makeItemEventMethod('open', 
-		function(evt, item){},
-		function(){ return this.focused }),
-	enter: makeItemEventMethod('enter', 
-		function(evt, item){},
-		function(){ return this.focused }),
-	// XXX can/should we unify these???
+	// XXX use a real toggler or just emulate toggler API???
+	// 		...meke these two the same and select the simpler version...
+	toggleSelect: makeItemEventToggler('selected', 'select', 'deselect', 'focused'),
+	toggleSelect2: makeItemEventToggler2('selected', 'select', 'deselect', 'focused'),
+
 	collapse: makeItemEventMethod('collapse', 
 		function(evt, item){},
 		function(){ return this.focused }),
 	expand: makeItemEventMethod('expand', 
+		function(evt, item){},
+		function(){ return this.focused }),
+	toggleCollapse: makeItemEventToggler('collapsed', 'collapse', 'expand', 'focused'),
+
+	open: makeItemEventMethod('open', 
+		function(evt, item){},
+		function(){ return this.focused }),
+	enter: makeItemEventMethod('enter', 
 		function(evt, item){},
 		function(){ return this.focused }),
 
