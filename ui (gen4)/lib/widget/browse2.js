@@ -2205,7 +2205,6 @@ var BaseBrowserPrototype = {
 	// 		with '!' correctly...
 	collapse: makeItemEventMethod('collapse', 
 		function(evt, item){
-			console.log('>>>>', item)
 			item.forEach(function(e){ e.collapsed = true }) 
 			this.render()
 		},
