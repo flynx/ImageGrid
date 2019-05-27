@@ -148,6 +148,7 @@ Items.group = function(...items){
 // Place list in a sub-list of item...
 //
 // XXX options???
+// 		...this may leak options.children to the outside...
 Items.nest = function(item, list, options){
 	options = options || {}
 	//options = Object.assign(Object.create(this.options || {}), options || {})
@@ -340,7 +341,11 @@ var makeItemEventMethod = function(event, handler, default_item, filter, options
 	filter = args[0] instanceof Function
 		&& args.shift()
 	var filterItems = function(items){
-		items = items instanceof Array ? items : [items]
+		items = items instanceof Array ? 
+				items 
+			: items === undefined ?
+				[]
+			: [items]
 		return filter ? 
 			items.filter(filter) 
 			: items }
@@ -1447,7 +1452,9 @@ var BaseBrowserPrototype = {
 		// normalize negative index...
 		if(typeof(pattern) == typeof(123) && pattern < 0){
 			pattern = -pattern - 1
-			options.reverse = 'flat'
+			options = Object.assign({},
+				options,
+				{reverse: 'flat'})
 		}
 		// normalize/build the test predicate...
 		var test = (
@@ -1524,6 +1531,7 @@ var BaseBrowserPrototype = {
 	// 		first result only.
 	//
 	// XXX should we be able to get offset values relative to any match?
+	// XXX should next/prev wrap around??? ...option???
 	get: function(pattern, options){
 		var args = [...arguments]
 		pattern = args.shift()
@@ -2175,6 +2183,11 @@ var BaseBrowserPrototype = {
 	// 	.focus(query[, ...])
 	// 		-> this
 	//
+	// XXX BUG: .focus(-1) turns indexing around persistently -- after it
+	// 		.focus(0) will get the last element (a-la .focus(-1)) and 
+	// 		.focus(1) will get the second to last element (a-la .focus(-2))
+	// 		...are we leaking the multiplier somewhere???
+	// 		this seems to be isolated to .focus(..)...
 	focus: makeItemEventMethod('focus', 
 		function(evt, items){
 			// blur .focused...
