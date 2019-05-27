@@ -394,8 +394,8 @@ var makeItemEventMethod = function(event, handler, default_item, filter, options
 
 // Generate item event/state toggler...
 //
-// XXX should this be a toggler.Toggler???
-// XXX the generated toggler in multi mode handles query arrays inconsistently...
+// XXX should this make a toggler.Toggler???
+// XXX BUG: the generated toggler in multi mode handles query arrays inconsistently...
 // 		- [] is always returned...
 // 		- .toggleSelect([1, 2, 10, 20]) -- toggles items on only, returns []
 // 		- .toggleSelect([1, 2, 10, 20], 'next') -- toggles items on only, returns []
@@ -1974,9 +1974,6 @@ var BaseBrowserPrototype = {
 	//
 	// Format:
 	// 	{
-	// 		// XXX add tagged event support...
-	// 		//		...i.e. event markers/tags that would enable the user
-	// 		//		to specifically manipulate event sets....
 	// 		<event-name>: [
 	// 			<handler>,
 	// 			...
@@ -1984,7 +1981,10 @@ var BaseBrowserPrototype = {
 	// 		...
 	// 	}
 	//
-	// XXX
+	//
+	// NOTE: event handlers may have a .tag attribute that stores the tag
+	// 		it was created with, this is used by .off(..) to unbind handlers
+	// 		tagged with specific tags...
 	__event_handlers: null,
 
 	// List events...
@@ -2263,6 +2263,7 @@ var BaseBrowserPrototype = {
 	// NOTE: .update() is the same as .render()
 	//
 	// XXX calling this on a nested browser should update the whole thing...
+	// 		...can we restore the context via .parent???
 	update: makeEventMethod('update', function(evt, full, options){
 		options = (full && full !== true && full !== false) ? 
 			full 
@@ -2277,7 +2278,6 @@ var BaseBrowserPrototype = {
 	
 	// XXX target can be item or path...
 	load: makeEventMethod('load', function(evt, target){}),
-
 
 	close: makeEventMethod('close', function(evt, reason){}),
 	
