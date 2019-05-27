@@ -162,12 +162,12 @@ Items.nest = function(item, list, options){
 //---------------------------------------------------------------------
 // wrappers...
 
-Items.Item = function(value, options){}
+Items.Item = function(value, options){ return this(...arguments) }
+Items.Separator = function(){ return this('---') }
+Items.Spinner = function(){ return this('...') }
 Items.Action = function(value, options){}
 Items.Heading = function(value, options){}
 Items.Empty = function(value){}
-Items.Separator = function(value){}
-Items.Spinner = function(value){}
 Items.Selected = function(value){}
 Items.Editable = function(value){}
 Items.ConfirmAction = function(value){}
