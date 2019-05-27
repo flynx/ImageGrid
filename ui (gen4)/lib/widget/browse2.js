@@ -340,6 +340,7 @@ var makeItemEventMethod = function(event, handler, default_item, filter, options
 	filter = args[0] instanceof Function
 		&& args.shift()
 	var filterItems = function(items){
+		items = items instanceof Array ? items : [items]
 		return filter ? 
 			items.filter(filter) 
 			: items }
@@ -350,6 +351,7 @@ var makeItemEventMethod = function(event, handler, default_item, filter, options
 		// 		distinguish one from the other...
 		{ noQueryCheck: true },
 		options || {})
+	var getter = options.getMode || 'search' 
 	// base event method...
 	// NOTE: this is not returned directly as we need to query the items
 	// 		and pass those on to the handlers rather than the arguments 
@@ -382,7 +384,7 @@ var makeItemEventMethod = function(event, handler, default_item, filter, options
 						.unique())
 				// explicit item or query...
 				: item != null ? 
-					filterItems(this.search(item, options))
+					filterItems(this[getter](item, options))
 				// item is null or undefined -- get default...
 				: default_item instanceof Function ?
 					[default_item.call(that) || []].flat()
@@ -1522,8 +1524,6 @@ var BaseBrowserPrototype = {
 	// 		first result only.
 	//
 	// XXX should we be able to get offset values relative to any match?
-	// XXX should we use .wald2(..) here???
-	// XXX revise return value...
 	get: function(pattern, options){
 		var args = [...arguments]
 		pattern = args.shift()
@@ -1532,7 +1532,7 @@ var BaseBrowserPrototype = {
 			: pattern
 		var offset = (pattern == 'next' || pattern == 'prev')
 				&& typeof(args[0]) == typeof(123) ?
-			args.shift()
+			args.shift() + 1
 			: 1
 		var func = args[0] instanceof Function ?
 			args.shift() 
@@ -1546,36 +1546,36 @@ var BaseBrowserPrototype = {
 
 		// NOTE: we do not care about return values here as we'll return 
 		// 		via stop(..)...
-		var res = []
+		var b = pattern == 'prev' ? [] : null
 		return [
 			// next + offset...
 			pattern == 'next' ?
 				this.search(true, 
 					function(elem, i, path, stop){
 						if(elem.focused == true){
-							res = offset + 1
+							b = offset
 
 						// get the offset item...
-						} else if(res <= 0){
+						} else if(b != null && b <= 0){
 							stop([func(elem, i, path)])
 						}
 						// countdown to offset...
-						res = typeof(res) == typeof(123) ? 
-							res - 1 
-							: res },
+						b = typeof(b) == typeof(123) ? 
+							b - 1 
+							: b },
 					options)
 			// prev + offset...
 			: pattern == 'prev' ?
 				this.search(true, 
 					function(elem, i, path, stop){
 						elem.focused == true
-							&& stop([func(res.length >= offset ? 
-								res[0] 
-								: undefined)])
+							&& stop([func(...(b.length >= offset ? 
+								b[0]
+								: [undefined]))])
 						// buffer the previous offset items...
-						res.push((elem, i, path))
-						res.length > offset
-							&& res.shift() },
+						b.push([elem, i, path])
+						b.length > offset
+							&& b.shift() },
 					options)
 			// base case -> get first match...
 			: this.search(pattern, 
@@ -1591,9 +1591,6 @@ var BaseBrowserPrototype = {
 	// XXX this does not include inlined sections, should it???
 	sublists: function(func, options){
 		return this.search({children: true}, func, options) },
-
-	next: function(){},
-	prev: function(){},
 
 	// XXX should there return an array or a .constructor(..) instance??
 	// XXX should these call respective methods (.forEach(..), .filter(..), 
@@ -2189,7 +2186,8 @@ var BaseBrowserPrototype = {
 				&& (item.focused = true)
 		},
 		// default...
-		function(){ return this.get(0) }),
+		function(){ return this.get(0) },
+		{ getMode: 'get' }),
 	blur: makeItemEventMethod('blur', function(evt, items){
 		items.forEach(function(item){
 			delete item.focused }) }),
@@ -2198,6 +2196,8 @@ var BaseBrowserPrototype = {
 		'focus', 'blur', 
 		function(){ return this.focused || 0 }, 
 		false),
+	next: function(){ return this.focus('next') },
+	prev: function(){ return this.focus('prev') },
 
 	select: makeItemEventMethod('select', 
 		function(evt, items){
@@ -2734,8 +2734,8 @@ var BrowserPrototype = {
 	left: function(){},
 	right: function(){},
 
-	next: function(){},
-	prev: function(){},
+	//next: function(){},
+	//prev: function(){},
 
 	//collapse: function(){},
 	// XXX scroll...
