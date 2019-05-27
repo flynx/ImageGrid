@@ -831,6 +831,8 @@ var BaseBrowserPrototype = {
 	// 		// XXX not yet supported...
 	// 		skipInlined: <bool>,
 	//
+	// 		skipDisabled: <bool>,
+	//
 	// 		// Reverse iteration order...
 	//		//
 	//		// modes:
@@ -922,6 +924,7 @@ var BaseBrowserPrototype = {
 		var iterateCollapsed = options.iterateAll || options.iterateCollapsed
 		var skipNested = !options.iterateAll && options.skipNested
 		var skipInlined = !options.iterateAll && options.skipInlined
+		var skipDisabled = !options.iterateAll && options.skipDisabled
 		var reverse = options.reverse === true ?
 			(options.defaultReverse || 'tree')
 			: options.reverse
@@ -944,6 +947,9 @@ var BaseBrowserPrototype = {
 
 				// skip non-iterable items...
 				if(!iterateNonIterable && node.noniterable){
+					return state }
+				// skip disabled...
+				if(skipDisabled && node.disabled){
 					return state }
 
 				var nested = false
@@ -2183,11 +2189,11 @@ var BaseBrowserPrototype = {
 	// 	.focus(query[, ...])
 	// 		-> this
 	//
-	// XXX BUG: .focus(-1) turns indexing around persistently -- after it
-	// 		.focus(0) will get the last element (a-la .focus(-1)) and 
-	// 		.focus(1) will get the second to last element (a-la .focus(-2))
-	// 		...are we leaking the multiplier somewhere???
-	// 		this seems to be isolated to .focus(..)...
+	//
+	// NOTE: this will ignore disabled items.
+	// NOTE: .focus('next') / .focus('prev') will not wrap around the 
+	// 		first last elements...
+	// 		XXX should it???
 	focus: makeItemEventMethod('focus', 
 		function(evt, items){
 			// blur .focused...
@@ -2198,9 +2204,11 @@ var BaseBrowserPrototype = {
 			item != null
 				&& (item.focused = true)
 		},
-		// default...
 		function(){ return this.get(0) },
-		{ getMode: 'get' }),
+		{ 
+			getMode: 'get', 
+			skipDisabled: true,
+		}),
 	blur: makeItemEventMethod('blur', function(evt, items){
 		items.forEach(function(item){
 			delete item.focused }) }),
@@ -2209,8 +2217,14 @@ var BaseBrowserPrototype = {
 		'focus', 'blur', 
 		function(){ return this.focused || 0 }, 
 		false),
-	next: function(){ return this.focus('next') },
-	prev: function(){ return this.focus('prev') },
+	// NOTE: .next() / .prev() will wrap around the first/last elements...
+	// 		XXX should wrapping be done here or in .focus(..)???
+	next: function(){ 
+		this.focus('next').focused || this.focus('first') 
+		return this },
+	prev: function(){ 
+		this.focus('prev').focused || this.focus('last') 
+		return this },
 
 	select: makeItemEventMethod('select', 
 		function(evt, items){
