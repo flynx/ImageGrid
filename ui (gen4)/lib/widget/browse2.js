@@ -163,7 +163,9 @@ Items.nest = function(item, list, options){
 //---------------------------------------------------------------------
 // wrappers...
 
+// this is here for uniformity...
 Items.Item = function(value, options){ return this(...arguments) }
+
 Items.Separator = function(){ return this('---') }
 Items.Spinner = function(){ return this('...') }
 Items.Action = function(value, options){}
