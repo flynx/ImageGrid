@@ -147,14 +147,14 @@ Items.group = function(...items){
 
 // Place list in a sub-list of item...
 //
-// XXX options???
-// 		...this may leak options.children to the outside...
 Items.nest = function(item, list, options){
 	options = options || {}
 	//options = Object.assign(Object.create(this.options || {}), options || {})
-	options.children = list instanceof Array ?
-		collectItems(this, list)
-		: list
+	options = Object.assign({},
+		{ children: list instanceof Array ?
+			collectItems(this, list)
+			: list },
+		options)
 	return this(item, options)
 }
 
