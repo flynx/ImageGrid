@@ -55,6 +55,9 @@ var walk = require('../../node_modules/generic-walk/walk').walk
 // 		...this would enable us to uniquely identify the actual items 
 // 		and prevent allot of specific errors...
 var collectItems = function(make, items){
+	items = items instanceof Array ? 
+		items 
+		: [items]
 	var made = items
 		.filter(function(e){
 			return e === make })
@@ -546,6 +549,7 @@ var BaseBrowserClassPrototype = {
 }
 
 // XXX need a way to identify items...
+// 		...try order + text if all else fails...
 var BaseBrowserPrototype = {
 	// XXX should we mix item/list options or separate them into sub-objects???
 	options: {
@@ -610,6 +614,30 @@ var BaseBrowserPrototype = {
 	// XXX should this exist???
 	set index(value){
 		this.__item_index = value },
+
+
+	// XXX EXPERIMENTAL...
+	// 		these are two ways to create item ids...
+	get pathIndex(){
+		return this.reduce(function(index, e, i, p){
+			var id = p = p.join('/')
+			var c = 0
+			while(id in index){
+				id = p + ':' + (++c)
+			}
+			index[id] = e
+			return index
+		}, {}, {iterateAll: true}) },
+	get flatIndex(){
+		return this.reduce(function(index, e, i, p){
+			var id = e.value || e.id
+			var c = 0
+			while(id in index){
+				id = (e.value || e.id) + ':' + (++c)
+			}
+			index[id] = e
+			return index
+		}, {}, {iterateAll: true}) },
 
 
 	// XXX should we cache the value here???? 
@@ -731,26 +759,26 @@ var BaseBrowserPrototype = {
 
 	// ID generator...
 	//
+	// 	.__id__()
+	// 	.__id__(prefix)
+	// 	.__id__(prefix, count)
+	// 		-> id
+	//
 	// Format:
 	// 	"<date>"
-	// 	"<prefix> <date>"
+	// 	"<prefix> (<count>)"
+	// 	"<prefix> (<date>)"
 	//
-	// XXX do a better id...
-	// 		Ex:
-	//			"abc"
-	// 			"abc (1)"
-	// 			"abc (2)"
 	// XXX not sure about the logic of this, should this take an item as 
 	// 		input and return an id???
 	// 		...should this check for uniqueness???
 	// 		think merging this with any of the actual ID generators would be best...
-	__id__: function(prefix){
-		// id prefix...
-		return (prefix || '') 
-			// separator...
-			+ (prefix ? ' ' : '') 
-			// date...
-			+ Date.now() },
+	__id__: function(prefix, count){
+		return prefix ?
+			// id prefix...
+			`${prefix} (${count || Date.now()})`
+			// plain id...
+			: `item${Date.now()}` },
 
 
 	// Walk the browser...
@@ -1732,6 +1760,7 @@ var BaseBrowserPrototype = {
 	// 		calls for such items...
 	//
 	// XXX revise options handling for .__list__(..)
+	// XXX see .flatIndex (preffered) / .pathIndex for alternative id generation...
 	make: function(options){
 		options = Object.assign(Object.create(this.options || {}), options || {})
 
@@ -1814,9 +1843,17 @@ var BaseBrowserPrototype = {
 				// 		to such elements in .__list__(..)...
 				// 		XXX can we go around this without requiring the user 
 				// 			to manage ids???
-				var k = key
+				// XXX might be a good idea to handle id's in a separate pass
+				// 		to avoid odd things from happening with changed ids when
+				// 		items are re-ordered on the fly (via make.nest(..) and 
+				// 		friends)
+				// 		i.e. handle id's in order of occurrence and not in order
+				// 		of make(..) calls...
+				// XXX see .flatIndex (preffered) / .pathIndex for alternative id generation...
+				var k = okey = key
+				var c = 0
 				while(k in new_index){
-					// duplicate keys disabled...
+					// duplicate keys not allowed...
 					if(options.noDuplicateValues){
 						throw new Error(`make(..): duplicate key "${key}": `
 							+`can't create multiple items with the same key.`) }
@@ -1826,9 +1863,10 @@ var BaseBrowserPrototype = {
 					new_index[key].id_changed = true
 
 					// create a new key...
-					k = this.__id__(key)
+					k = this.__id__(key, ++c)
 				}
 				key = opts.id = k
+				//*/
 
 				// build the item...
 				var item = Object.assign(
