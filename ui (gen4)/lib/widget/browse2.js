@@ -694,8 +694,9 @@ var BaseBrowserPrototype = {
 	get selected(){
 		return this.search('selected') },
 	set selected(value){
-		this.deselect('selected')
-		this.select(value) },
+		this
+			.deselect('selected')
+			.select(value) },
 
 
 	// Length...
@@ -1524,9 +1525,9 @@ var BaseBrowserPrototype = {
 				: pattern == 'last' ?
 					-1
 				: pattern == 'selected' ?
-					{selected: true}
+					function(e){ return !!e.selected }
 				: pattern == 'focused' ?
-					{focused: true}
+					function(e){ return !!e.focused }
 				: pattern)
 			: pattern
 		// normalize negative index...
