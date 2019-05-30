@@ -619,16 +619,34 @@ var BaseBrowserPrototype = {
 
 	// Clear cached data...
 	//
+	// 	Clear all cache data...
+	// 	.clearCache()
+	// 		-> this
+	//
+	// 	Clear specific cache data...
+	// 	.clearCache(title)
+	// 	.clearCache(title, ..)
+	// 	.clearCache([title, ..])
+	// 		-> this
+	//
+	//
 	// This will delete all attributes of the format:
 	// 	.__<title>_cache
 	//
-	clearCache: function(){
-		Object.keys(this)
-			.forEach(function(key){
-				if(key.startsWith('__') && key.endsWith('_cache')){
-					delete this[key]
-				}
-			}.bind(this)) 
+	clearCache: function(title){
+		if(title == null){
+			Object.keys(this)
+				.forEach(function(key){
+					if(key.startsWith('__') && key.endsWith('_cache')){
+						delete this[key]
+					}
+				}.bind(this)) 
+		} else {
+			[...arguments].flat()
+				.forEach(function(title){
+					delete this[`__${title}_cache`]
+				}.bind(this))
+		}
 		return this },
 
 
@@ -643,6 +661,10 @@ var BaseBrowserPrototype = {
 	// 	}
 	//
 	// NOTE: this will get overwritten each time .make(..) is called.
+	// NOTE: .make(..) will also set item's .id where this will add a 
+	// 		count to the path...
+	// 		This will also make re-generating the indexes and searching
+	// 		stable...
 	__item_index_cache: null,
 	get index(){
 		return (this.__item_index_cache = 
@@ -1803,13 +1825,22 @@ var BaseBrowserPrototype = {
 	// 		calls for such items...
 	//
 	// XXX revise options handling for .__list__(..)
-	// XXX might be a good idea to enable the used to merge the state 
+	// XXX might be a good idea to enable the user to merge the state 
 	// 		manually...
 	// 		one way to do:
 	// 			- get the previous item via an index, 
 	// 			- update it
 	// 			- pass it to make(..)
+	// 		Example:
+	// 			// just a rough example in .__list__(..)...
+	// 			make(value, 
+	// 				value in this.index ? 
+	// 					Object.assign(
+	// 						this.index[value], 
+	// 						opts) 
+	// 					: opts)
 	make: function(options){
+		var that = this
 		options = Object.assign(Object.create(this.options || {}), options || {})
 
 		var items = this.items = []
@@ -1919,6 +1950,10 @@ var BaseBrowserPrototype = {
 					Object.create(this.options || {}), 
 					options || {}) 
 				: null)
+		// if make was not called use the .__list__(..) return value...
+		this.items = make_called ? 
+			this.items 
+			: res
 
 		// reset the index/cache...
 		var old_index = this.__item_index_cache || {}
@@ -1930,20 +1965,18 @@ var BaseBrowserPrototype = {
 		// 		thus avoiding odd duplicate index numbering...
 		var index = this.__item_index_cache = this.index
 
-		// merge old item state...
+		// post process the items...
 		Object.entries(index)
 			.forEach(function([id, e]){
+				// update item.id of items with duplicate keys...
+				!id.endsWith(that.__key__(e))
+					&& (e.id = id.split(/[\/]/g).pop())
+				// merge old item state...
 				id in old_index
 					// XXX this is not very elegant(???), revise... 
 					&& Object.assign(e,
 						old_index[id],
 						e) })
-
-		// if make was not called use the .__list__(..) return value...
-		this.items = make_called ? 
-			this.items 
-			: res
-
 		return this
 	},
 
@@ -1958,6 +1991,9 @@ var BaseBrowserPrototype = {
 	// 	.renderGroup(items, context)
 	//
 	//
+	// NOTE: there are not to be used directly...
+	// XXX might be a good idea to move these into a separate renderer 
+	// 		object (mixin or encapsulated)...
 	renderFinalize: function(items, context){
 		return this.renderList(items, context) },
 	renderList: function(items, context){
@@ -2313,10 +2349,8 @@ var BaseBrowserPrototype = {
 			items.forEach(function(item){
 				delete item.selected }) },
 		function(){ return this.focused }),
+	// XXX use a real toggler here??? (i.e. finish makeItemEventToggler2(..))
 	toggleSelect: makeItemEventToggler('selected', 'select', 'deselect', 'focused'),
-	// XXX use a real toggler or just emulate toggler API???
-	// 		...meke these two the same and select the simpler version...
-	//toggleSelect2: makeItemEventToggler2('selected', 'select', 'deselect', 'focused'),
 
 	// NOTE: .expand(..) / .collapse(..) / .toggleCollapse(..) ignore 
 	// 		item.collapsed state....
@@ -2343,11 +2377,15 @@ var BaseBrowserPrototype = {
 		function(elem){ return elem.value && elem.children },
 		{iterateCollapsed: true}),
 
-	// XXX need to make primary/secondary item actions more obvious...
+	// primary/secondary item actions...
 	open: makeItemEventMethod('open', 
+		// XXX if no open handlers defined trigger .launch(..)...
+		// 		...the logic still needs refining...
+		// 		a different way of doing this is to trigger .launch(..)
+		// 		right away unless .preventDefault() was called...
 		function(evt, item){},
 		function(){ return this.focused }),
-	enter: makeItemEventMethod('enter', 
+	launch: makeItemEventMethod('launch', 
 		function(evt, item){},
 		function(){ return this.focused }),
 
