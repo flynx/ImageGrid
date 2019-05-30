@@ -228,6 +228,26 @@ object.makeConstructor('BrowserEvent',
 })
 
 
+// Make a method comply with the event spec...
+//
+// This is mainly for use in overloading event methods.
+//
+// Example:
+// 	someEvent: eventMethod('someEvent', function(..){
+// 		// call the original handler...
+// 		...
+//
+// 		...
+// 	})
+//
+var eventMethod = 
+module.eventMethod =
+function(event, func){
+	func.event = event
+	return func
+}
+
+
 // Generate an event method...
 //
 // 	Make and event method...
@@ -248,28 +268,26 @@ object.makeConstructor('BrowserEvent',
 //	.event(func)
 //		-> this
 //
-var makeEventMethod = function(event, handler, retrigger){
+var makeEventMethod = 
+module.makeEventMethod =
+function(event, handler, retrigger){
 	retrigger = retrigger !== false
 
-	return Object.assign(
-		function(item){
-			// register handler...
-			if(item instanceof Function){
-				return this.on(event, item) 
-			}
+	return eventMethod(event, function(item){
+		// register handler...
+		if(item instanceof Function){
+			return this.on(event, item) 
+		}
 
-			var evt = new BrowserEvent(event)
+		var evt = new BrowserEvent(event)
 
-			handler
-				&& handler.call(this, evt, ...arguments)
+		handler
+			&& handler.call(this, evt, ...arguments)
 
-			return retrigger ? 
-				this.trigger(evt, ...arguments)
-				: this
-		},
-		{
-			event: event,
-		}) }
+		return retrigger ? 
+			this.trigger(evt, ...arguments)
+			: this
+	}) }
 
 
 // Call item event handlers...
@@ -277,7 +295,8 @@ var makeEventMethod = function(event, handler, retrigger){
 // 	callItemEventHandlers(item, event_name, event_object, ...)
 // 		-> null
 //
-var callItemEventHandlers = function(item, event, evt, ...args){
+var callItemEventHandlers = 
+function(item, event, evt, ...args){
 	evt = evt || new BrowserEvent(event)
 	// get the relevant handlers...
 	;(item[event] ?
@@ -338,7 +357,9 @@ var callItemEventHandlers = function(item, event, evt, ...args){
 // NOTE: item events do not directly trigger the original caller's handlers
 // 		those will get celled recursively when the events are propagated
 // 		up the tree.
-var makeItemEventMethod = function(event, handler, default_item, filter, options){
+var makeItemEventMethod = 
+module.makeItemEventMethod =
+function(event, handler, default_item, filter, options){
 	// parse args...
 	var args = [...arguments].slice(2)
 	default_item = args[0] instanceof Function 
@@ -413,7 +434,9 @@ var makeItemEventMethod = function(event, handler, default_item, filter, options
 // 		- .toggleSelect([1, 2, 10, 20], 'next') -- toggles items on only, returns []
 // 		- .toggleSelect([1, 2, 10, 20], 'on') -- works but returns []
 // 		- .toggleSelect([1, 2, 10, 20], 'off') -- works but returns []
-var makeItemEventToggler = function(get_state, set_state, unset_state, default_item, multi, options){
+var makeItemEventToggler = 
+module.makeItemEventToggler = 
+function(get_state, set_state, unset_state, default_item, multi, options){
 	var _get_state = get_state instanceof Function ?
 		get_state
 		: function(e){ return !!e[get_state] }
@@ -548,12 +571,19 @@ var makeItemEventToggler2 = function(get_state, set_state, unset_state, default_
 var BaseBrowserClassPrototype = {
 }
 
-// XXX need a way to identify items...
-// 		...try order + text if all else fails...
+// XXX Q: should we be able to add/remove/change items outside of .__list__(..)???
+// 		...only some item updates (how .collapsed is handled) make 
+// 		sense at this time -- need to think about this more 
+// 		carefully + strictly document the result...
+// XXX can/should we make traversal simpler???
+// 		...currently to get to a nested item we'd need to:
+// 			dialog.flatIndex.B.children.index.C. ...
+// 		on the other hand we can .get('B/C/...')
 var BaseBrowserPrototype = {
 	// XXX should we mix item/list options or separate them into sub-objects???
 	options: {
-		noDuplicateValues: false,
+		// If true item keys must be unique...
+		uniqueKeys: false,
 	},
 
 	// parent widget object...
@@ -586,6 +616,22 @@ var BaseBrowserPrototype = {
 	set items(value){
 		this.__items = value },
 
+
+	// Clear cached data...
+	//
+	// This will delete all attributes of the format:
+	// 	.__<title>_cache
+	//
+	clearCache: function(){
+		Object.keys(this)
+			.forEach(function(key){
+				if(key.startsWith('__') && key.endsWith('_cache')){
+					delete this[key]
+				}
+			}.bind(this)) 
+		return this },
+
+
 	// Item index...
 	//
 	// Format:
@@ -596,24 +642,11 @@ var BaseBrowserPrototype = {
 	// 		...
 	// 	}
 	//
-	// NOTE: this will get overwritten each tume .make(..) is called.
-	//
-	// XXX need to maintain this over item add/remove/change...
-	// XXX Q: should we be able to add/remove/change items outside of .__list__(..)???
-	// 		...only some item updates (how .collapsed is handled) make 
-	// 		sense at this time -- need to think about this more 
-	// 		carefully + strictly document the result...
-	// XXX can we make the format here simpler with less level 
-	// 		of indirection??
-	// 		...currently to go down a path we need to:
-	//			this.index.A.children.index.B.children...
-	//		would be nice to be closer to:
-	//			this.A.B...
-	// XXX should this be constructed here??? (now this is done in .make(..))
-	__item_index: null,
+	// NOTE: this will get overwritten each time .make(..) is called.
+	__item_index_cache: null,
 	get index(){
-		return (this.__item_index = 
-			this.__item_index 
+		return (this.__item_index_cache = 
+			this.__item_index_cache 
 				|| this
 					.reduce(function(index, e, i, p){
 						var id = p = p.join('/')
@@ -640,24 +673,24 @@ var BaseBrowserPrototype = {
 	//
 	// XXX should this be cached???
 	get flatIndex(){
-		return this.reduce(function(index, e, i, p){
-			var id = p = this.__key__(e)
-			var c = 0
-			while(id in index){
-				id = this.__id__(p, ++c)
-			}
-			index[id] = e
-			return index
-		}.bind(this), {}, {iterateAll: true}) },
+		return this
+			.reduce(function(index, e, i, p){
+				var id = p = this.__key__(e)
+				var c = 0
+				while(id in index){
+					id = this.__id__(p, ++c)
+				}
+				index[id] = e
+				return index
+			}.bind(this), {}, {iterateAll: true}) },
 
-
-	// XXX should we cache the value here???? 
+	// Shorthands for common item queries...
+	//
+	// XXX should these be cached???
 	get focused(){
 		return this.get('focused') },
 	set focused(value){
 		this.focus(value) },
-
-	// XXX should we cache the value here???? 
 	get selected(){
 		return this.search('selected') },
 	set selected(value){
@@ -747,9 +780,9 @@ var BaseBrowserPrototype = {
 		throw new Error('.__list__(..): Not implemented.') },
 
 
-
 	// XXX need a better key/path API...
 	//
+	// Normalize value...
 	__value2key__: function(key){
 		//return JSON.stringify(key)
 		return key instanceof Array ?
@@ -757,9 +790,6 @@ var BaseBrowserPrototype = {
 			: key },
 
 	// Key getter/generator...
-	//
-	// XXX should these include the path???
-	// XXX is JSON the best key format???
 	__key__: function(item){
 		return item.id 
 			// value is a browser -> generate an unique id...
@@ -1169,6 +1199,7 @@ var BaseBrowserPrototype = {
 					return [options, context] },
 				options, context)
 			.join('\n') },
+	// XXX need to check for output key uniqueness per level...
 	_test_tree: function(options, context){
 		var toObject = function(res, e){
 			if(e == null || e[0] == null){
@@ -1201,16 +1232,15 @@ var BaseBrowserPrototype = {
 				options, context)
 			// construct the object...
    			.reduce(toObject, {}) },
-
-
-	paths: function(options, context){
+	// XXX we do not need this any more, as we got paths in the index...
+	_test_paths: function(options, context){
 		return this.walk(
 			function(n, i, p){
 				return n 
 					&& [(options || {}).joinPaths !== false ? 
 						p.join('/') 
 						: p] }, 
-			'paths',
+			'_test_paths',
 			function(_, i, path, options, context){
 				// NOTE: for paths and indexes to be consistent between
 				// 		levels we need to thread the context on, here and
@@ -1291,6 +1321,7 @@ var BaseBrowserPrototype = {
 			options, context) },
 
 
+	// Search items...
 	//
 	// 	Get list of matching elements...
 	// 	NOTE: this is similar to .filter(..)
@@ -1553,7 +1584,7 @@ var BaseBrowserPrototype = {
 			options, context) },
 
 
-	// XXX EXPERIMENTAL...
+	// Get item... 
 	//
 	// 	Get focused item...
 	// 	.get()
@@ -1641,17 +1672,14 @@ var BaseBrowserPrototype = {
 				options) ].flat()[0] },
 
 
-	// XXX BROKEN...
 	// Sublist map functions...
-	//
-	// XXX should these return a sparse array... ???
 	// XXX this does not include inlined sections, should it???
 	sublists: function(func, options){
 		return this.search({children: true}, func, options) },
 
-	// XXX should there return an array or a .constructor(..) instance??
-	// XXX should these call respective methods (.forEach(..), .filter(..), 
-	// 		.reduce(..)) on the nested browsers???
+	// XXX should these return an array or a .constructor(..) instance??
+	// XXX should this call .forEach(..) on nested stuff or just fall 
+	// 		back to .map(..)???
 	forEach: function(func, options){
 		this.map(...arguments)
 		return this },
@@ -1681,6 +1709,7 @@ var BaseBrowserPrototype = {
 		return context.result
 	},
 
+	// XXX should this return a path or a <path>:<count> ad in .index ???
 	positionOf: function(item, options){
 		return this.search(item, 
 			function(_, i, p){ 
@@ -1747,6 +1776,7 @@ var BaseBrowserPrototype = {
 				that.expand([...nodes]) }) },
 
 
+
 	// XXX do we need edit ability here? 
 	// 		i.e. .set(..), .remove(..), .sort(..), ...
 	// 		...if we are going to implement editing then we'll need to 
@@ -1772,7 +1802,12 @@ var BaseBrowserPrototype = {
 	// 		calls for such items...
 	//
 	// XXX revise options handling for .__list__(..)
-	// XXX see .flatIndex (preffered) / .pathIndex for alternative id generation...
+	// XXX might be a good idea to enable the used to merge the state 
+	// 		manually...
+	// 		one way to do:
+	// 			- get the previous item via an index, 
+	// 			- update it
+	// 			- pass it to make(..)
 	make: function(options){
 		options = Object.assign(Object.create(this.options || {}), options || {})
 
@@ -1800,7 +1835,10 @@ var BaseBrowserPrototype = {
 		// 		while the latter stores a list of items.
 		// 		...would be more logical to store the object (i.e. browser/list)
 		// 		directly as the element...
-		var keys = new Set() 
+		var keys = options.uniqueKeys ? 
+			new Set() 
+			: null
+		var ids = new Set()
 		var make_called = false
 		var make = function(value, opts){
 			make_called = true
@@ -1837,18 +1875,25 @@ var BaseBrowserPrototype = {
 				// item id...
 				var key = this.__key__(opts)
 
-				// handle duplicate ids -> err if found...
-				if(opts.id && keys.has(opts.id)){
-					throw new Error(`make(..): duplicate id "${key}": `
-						+`can't create multiple items with the same key.`) }
+				// duplicate keys (if .options.uniqueKeys is set)...
+				if(keys){
+				   	if(keys.has(key)){
+						throw new Error(`make(..): duplicate key "${key}": `
+							+`can't create multiple items with the same key `
+							+`when .options.uniqueKeys is set.`) 
+					}
+					keys.add(key)
+				}
+				// duplicate ids...
+				if(opts.id && ids.has(opts.id)){
+					throw new Error(`make(..): duplicate id "${opts.id}": `
+						+`can't create multiple items with the same id.`) }
 
 				// build the item...
 				var item = Object.assign(
 					Object.create(options || {}), 
 					opts,
-					{
-						parent: this,
-					})
+					{ parent: this })
 
 				// XXX do we need both this and the above ref???
 				item.children instanceof Browser
@@ -1857,7 +1902,7 @@ var BaseBrowserPrototype = {
 
 			// store the item...
 			items.push(item)
-			keys.add(key)
+			ids.add(key)
 
 			return make
 		}.bind(this)
@@ -1874,14 +1919,15 @@ var BaseBrowserPrototype = {
 					options || {}) 
 				: null)
 
-		// reset the index...
-		var old_index = this.__item_index || {}
-		delete this.__item_index
-		// 2'nd pass -> make id's unique...
+		// reset the index/cache...
+		var old_index = this.__item_index_cache || {}
+		this.clearCache()
+
+		// 2'nd pass -> make item index (unique id's)...
 		// NOTE: we are doing this in a separate pass as items can get 
 		// 		rearranged during the make phase (Items.nest(..) ...),
 		// 		thus avoiding odd duplicate index numbering...
-		var index = this.__item_index = this.index
+		var index = this.__item_index_cache = this.index
 
 		// merge old item state...
 		Object.entries(index)
@@ -1933,7 +1979,6 @@ var BaseBrowserPrototype = {
 		return item },
 	renderGroup: function(items, context){
 		return items },
-
 
 	// Render state...
 	//
@@ -2027,12 +2072,16 @@ var BaseBrowserPrototype = {
 	__event_handlers: null,
 
 	// List events...
-	// XXX avoid going through expensive props...
 	get events(){
 		var that = this
+		// props to skip...
+		// XXX should we just skip any prop???
+		var skip = new Set([
+			'events'
+		])
 		return Object.deepKeys(this)
 			.map(function(key){
-				return (key != 'events' 
+				return (!skip.has(key) 
 						&& that[key] instanceof Function 
 						&& that[key].event) ? 
 					that[key].event 
@@ -2221,7 +2270,6 @@ var BaseBrowserPrototype = {
 	// NOTE: this will ignore disabled items.
 	// NOTE: .focus('next') / .focus('prev') will not wrap around the 
 	// 		first last elements...
-	// 		XXX should it???
 	focus: makeItemEventMethod('focus', 
 		function(evt, items){
 			// blur .focused...
@@ -2240,19 +2288,18 @@ var BaseBrowserPrototype = {
 	blur: makeItemEventMethod('blur', function(evt, items){
 		items.forEach(function(item){
 			delete item.focused }) }),
-	toggleFocus: makeItemEventToggler(
-		'focused', 
-		'focus', 'blur', 
-		function(){ return this.focused || 0 }, 
-		false),
 	// NOTE: .next() / .prev() will wrap around the first/last elements...
-	// 		XXX should wrapping be done here or in .focus(..)???
 	next: function(){ 
 		this.focus('next').focused || this.focus('first') 
 		return this },
 	prev: function(){ 
 		this.focus('prev').focused || this.focus('last') 
 		return this },
+	toggleFocus: makeItemEventToggler(
+		'focused', 
+		'focus', 'blur', 
+		function(){ return this.focused || 0 }, 
+		false),
 
 	select: makeItemEventMethod('select', 
 		function(evt, items){
@@ -2265,10 +2312,10 @@ var BaseBrowserPrototype = {
 			items.forEach(function(item){
 				delete item.selected }) },
 		function(){ return this.focused }),
+	toggleSelect: makeItemEventToggler('selected', 'select', 'deselect', 'focused'),
 	// XXX use a real toggler or just emulate toggler API???
 	// 		...meke these two the same and select the simpler version...
-	toggleSelect: makeItemEventToggler('selected', 'select', 'deselect', 'focused'),
-	toggleSelect2: makeItemEventToggler2('selected', 'select', 'deselect', 'focused'),
+	//toggleSelect2: makeItemEventToggler2('selected', 'select', 'deselect', 'focused'),
 
 	// NOTE: .expand(..) / .collapse(..) / .toggleCollapse(..) ignore 
 	// 		item.collapsed state....
@@ -2341,12 +2388,8 @@ var BaseBrowserPrototype = {
 	__init__: function(func, options){
 		this.__list__ = func
 		this.options = Object.assign(
-			{}, 
-			this.options || {}, 
+			Object.create(this.options || {}), 
 			options || {})
-
-		// XXX should this be here or should this be optional???
-		//this.update()
 	},
 }
 
@@ -2378,6 +2421,8 @@ var BrowserPrototype = {
 	__proto__: BaseBrowser.prototype,
 
 	options: {
+		__proto__: BaseBrowser.prototype.options,
+
 		hideListHeader: false,
 
 		renderHidden: false,
