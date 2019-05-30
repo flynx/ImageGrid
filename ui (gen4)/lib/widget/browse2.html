@@ -103,7 +103,7 @@ requirejs([
 
 
 	// XXX split this into several dialogues, show each and then combine...
-	dialog_1 = browser.Browser(function(make){
+	dialog = browser.Browser(function(make){
 		make(['list', 'of', 'text'])
 		make.group(
 			make('group item 0', 
@@ -155,11 +155,11 @@ requirejs([
 		],
 	})
 
-	dialog_1.container = $('.container').first()[0]
+	dialog.container = $('.container').first()[0]
 
-	dialog_1.render()
+	dialog.update()
 
-	//$('.container').first().append(dialog_1.render())
+	//$('.container').first().append(dialog.render())
 })
 
 $(function(){

@@ -586,10 +586,13 @@ var BaseBrowserPrototype = {
 	set items(value){
 		this.__items = value },
 
+	// Item index...
 	//
 	// Format:
 	// 	{
-	// 		<key>: <item>,
+	// 		"<path>": <item>,
+	// 		// repeating path...
+	// 		"<path>:<count>": <item>,
 	// 		...
 	// 	}
 	//
@@ -606,38 +609,46 @@ var BaseBrowserPrototype = {
 	//			this.index.A.children.index.B.children...
 	//		would be nice to be closer to:
 	//			this.A.B...
+	// XXX should this be constructed here??? (now this is done in .make(..))
 	__item_index: null,
 	get index(){
-		this.__item_index
-			|| this.make()
-		return this.__item_index },
-	// XXX should this exist???
-	set index(value){
-		this.__item_index = value },
+		return (this.__item_index = 
+			this.__item_index 
+				|| this
+					.reduce(function(index, e, i, p){
+						var id = p = p.join('/')
+						var c = 0
+						// generate a unique id...
+						// NOTE: no need to check if e.id is unique as we already 
+						// 		did this in make(..)...
+						while(id in index){
+							id = this.__id__(p, ++c)
+						}
+						index[id] = e
+						return index
+					}.bind(this), {}, {iterateAll: true})) },
 
-
-	// XXX EXPERIMENTAL...
-	// 		these are two ways to create item ids...
-	get pathIndex(){
-		return this.reduce(function(index, e, i, p){
-			var id = p = p.join('/')
-			var c = 0
-			while(id in index){
-				id = p + ':' + (++c)
-			}
-			index[id] = e
-			return index
-		}, {}, {iterateAll: true}) },
+	// Flat item index...
+	//
+	// Format:
+	// 	{
+	// 		"<key>": <item>,
+	// 		// repeating keys...
+	// 		"<key>:<count>": <item>,
+	// 		...
+	// 	}
+	//
+	// XXX should this be cached???
 	get flatIndex(){
 		return this.reduce(function(index, e, i, p){
-			var id = e.value || e.id
+			var id = p = this.__key__(e)
 			var c = 0
 			while(id in index){
-				id = (e.value || e.id) + ':' + (++c)
+				id = this.__id__(p, ++c)
 			}
 			index[id] = e
 			return index
-		}, {}, {iterateAll: true}) },
+		}.bind(this), {}, {iterateAll: true}) },
 
 
 	// XXX should we cache the value here???? 
@@ -766,8 +777,8 @@ var BaseBrowserPrototype = {
 	//
 	// Format:
 	// 	"<date>"
-	// 	"<prefix> (<count>)"
-	// 	"<prefix> (<date>)"
+	// 	"<prefix>:<count>"
+	// 	"<prefix>:<date>"
 	//
 	// XXX not sure about the logic of this, should this take an item as 
 	// 		input and return an id???
@@ -776,7 +787,8 @@ var BaseBrowserPrototype = {
 	__id__: function(prefix, count){
 		return prefix ?
 			// id prefix...
-			`${prefix} (${count || Date.now()})`
+			//`${prefix} (${count || Date.now()})`
+			`${prefix}:${count || Date.now()}`
 			// plain id...
 			: `item${Date.now()}` },
 
@@ -1765,8 +1777,6 @@ var BaseBrowserPrototype = {
 		options = Object.assign(Object.create(this.options || {}), options || {})
 
 		var items = this.items = []
-		var old_index = this.__item_index || {}
-		var new_index = this.__item_index = {} 
 
 		// item constructor...
 		//
@@ -1790,6 +1800,7 @@ var BaseBrowserPrototype = {
 		// 		while the latter stores a list of items.
 		// 		...would be more logical to store the object (i.e. browser/list)
 		// 		directly as the element...
+		var keys = new Set() 
 		var make_called = false
 		var make = function(value, opts){
 			make_called = true
@@ -1825,57 +1836,15 @@ var BaseBrowserPrototype = {
 
 				// item id...
 				var key = this.__key__(opts)
-				var id_changed = (old_index[key] || {}).id_changed
 
 				// handle duplicate ids -> err if found...
-				if(opts.id && opts.id in new_index){
+				if(opts.id && keys.has(opts.id)){
 					throw new Error(`make(..): duplicate id "${key}": `
 						+`can't create multiple items with the same key.`) }
-				// handle duplicate keys...
-				// NOTE: we can't reuse an old copy when re-making the list
-				// 		because there is no way to correctly identify an 
-				// 		object when it's id is tweaked (and we can not rely
-				// 		on item order)...
-				// 		...for this reason all "persistent" state for such 
-				// 		an element will be lost when calling .make(..) again
-				// 		and re-making the list...
-				// 		a solution to this would be to manually assign an .id 
-				// 		to such elements in .__list__(..)...
-				// 		XXX can we go around this without requiring the user 
-				// 			to manage ids???
-				// XXX might be a good idea to handle id's in a separate pass
-				// 		to avoid odd things from happening with changed ids when
-				// 		items are re-ordered on the fly (via make.nest(..) and 
-				// 		friends)
-				// 		i.e. handle id's in order of occurrence and not in order
-				// 		of make(..) calls...
-				// XXX see .flatIndex (preffered) / .pathIndex for alternative id generation...
-				var k = okey = key
-				var c = 0
-				while(k in new_index){
-					// duplicate keys not allowed...
-					if(options.noDuplicateValues){
-						throw new Error(`make(..): duplicate key "${key}": `
-							+`can't create multiple items with the same key.`) }
-
-					// mark both the current and the first items as id-mutated...
-					opts.id_changed = true
-					new_index[key].id_changed = true
-
-					// create a new key...
-					k = this.__id__(key, ++c)
-				}
-				key = opts.id = k
-				//*/
 
 				// build the item...
 				var item = Object.assign(
 					Object.create(options || {}), 
-					// get the old item values (only for non duplicate items)...
-					id_changed ?
-						{}
-						: old_index[key] || {},
-					// XXX inherit from this...
 					opts,
 					{
 						parent: this,
@@ -1888,7 +1857,7 @@ var BaseBrowserPrototype = {
 
 			// store the item...
 			items.push(item)
-			new_index[key] = item
+			keys.add(key)
 
 			return make
 		}.bind(this)
@@ -1897,13 +1866,31 @@ var BaseBrowserPrototype = {
 		make.items = items
 
 		//var res = this.__list__(make)
-		// XXX not sure about this -- options handling...
+		// XXX not sure about this -- revise options handling...
 		var res = this.__list__(make, 
 			options ? 
 				Object.assign(
 					Object.create(this.options || {}), 
 					options || {}) 
 				: null)
+
+		// reset the index...
+		var old_index = this.__item_index || {}
+		delete this.__item_index
+		// 2'nd pass -> make id's unique...
+		// NOTE: we are doing this in a separate pass as items can get 
+		// 		rearranged during the make phase (Items.nest(..) ...),
+		// 		thus avoiding odd duplicate index numbering...
+		var index = this.__item_index = this.index
+
+		// merge old item state...
+		Object.entries(index)
+			.forEach(function([id, e]){
+				id in old_index
+					// XXX this is not very elegant(???), revise... 
+					&& Object.assign(e,
+						old_index[id],
+						e) })
 
 		// if make was not called use the .__list__(..) return value...
 		this.items = make_called ? 
