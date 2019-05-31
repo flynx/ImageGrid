@@ -252,7 +252,8 @@ function(event, func){
 //
 // 	Make and event method...
 // 	makeEventMethod(event_name)
-// 	makeEventMethod(event_name, handler[, options])
+// 	makeEventMethod(event_name, handler[, retrigger])
+// 	makeEventMethod(event_name, handler, action[, retrigger])
 // 		-> event_method
 //
 // This will produce an event method that supports binding handlers to the
@@ -270,8 +271,12 @@ function(event, func){
 //
 var makeEventMethod = 
 module.makeEventMethod =
-function(event, handler, retrigger){
-	retrigger = retrigger !== false
+function(event, handler, action, retrigger){
+	var args = [...arguments].slice(2)
+	action = (args[0] !== true && args[0] !== false) ? 
+		args.shift() 
+		: null
+	retrigger = args.pop() !== false
 
 	return eventMethod(event, function(item){
 		// register handler...
@@ -281,12 +286,20 @@ function(event, handler, retrigger){
 
 		var evt = new BrowserEvent(event)
 
+		// main handler...
 		handler
 			&& handler.call(this, evt, ...arguments)
 
-		return retrigger ? 
-			this.trigger(evt, ...arguments)
-			: this
+		// trigger the bound handlers...
+		retrigger
+			&& this.trigger(evt, ...arguments)
+
+		// default action...
+		action
+			&& !evt.defaultPrevented
+			&& action.call(this, evt, ...arguments)
+
+		return this
 	}) }
 
 
@@ -359,9 +372,9 @@ function(item, event, evt, ...args){
 // 		up the tree.
 var makeItemEventMethod = 
 module.makeItemEventMethod =
-function(event, handler, default_item, filter, options){
+function(event, handler, action, default_item, filter, options){
 	// parse args...
-	var args = [...arguments].slice(2)
+	var args = [...arguments].slice(3)
 	default_item = args[0] instanceof Function 
 		&& args.shift()
 	filter = args[0] instanceof Function
@@ -397,6 +410,7 @@ function(event, handler, default_item, filter, options){
 				// 		this will isolate each chain from the others in 
 				// 		state and handling propagation...
 				callItemEventHandlers(item, event, null, ...args) }) },
+		...(action ? [action] : []),
 		false) 
 	return Object.assign(
 		// the actual method we return...
@@ -1427,11 +1441,22 @@ var BaseBrowserPrototype = {
 	//		-> false
 	//
 	//
-	// XXX add support for 'next'/'prev', ... keywords... (here or in .get(..)???)
+	// NOTE: search is self-applicable, e.g. 
+	// 			x.search(x.search(..), {noQueryCheck: true})
+	// 		should yield the same result as:
+	// 			x.search(..)
+	// 		this is very fast as we shortcut by simply checking of an 
+	// 		item exists...
+	// NOTE: if .search(..) is passed a list of items (e.g. a result of 
+	// 		another .search(..)) it will return the items that are in
+	// 		.index as-is regardless of what is set in options...
+	// 		given options in this case will be applied only to list items
+	// 		that are searched i.e. the non-items in the input list...
+	//
+	// XXX can .search(..) of a non-path array as a pattern be done in 
+	// 		a single pass???
 	// XXX add support for fuzzy match search -- match substring by default 
 	// 		and exact title if using quotes...
-	// XXX do we actually need to stop this as soon as we find something, 
-	// 		i.e. options.firstOnly???
 	// XXX add diff support...
 	// XXX should this check hidden items when doing an identity check???
 	__search_test_generators__: {
@@ -1523,9 +1548,27 @@ var BaseBrowserPrototype = {
 	},
 	search: function(pattern, func, options){
 		var that = this
+		var args = [...arguments]
+
+		// non-path array...
+		// NOTE: a non-path array is one where at least one element is 
+		// 		an object...
+		// NOTE: this might get expensive as we call .search(..) per item...
+		if(pattern instanceof Array 
+				&& !pattern
+					.reduce(function(r, e){ 
+						return r && typeof(e) != typeof({})  }, true)){
+			var index = new Set(Object.values(this.index))
+			return pattern
+				.map(function(pattern){ 
+					return index.has(pattern) ? 
+						// item exists as-is...
+						pattern 
+						: that.search(pattern, ...args.slice(1)) })
+				.flat()
+				.unique() }
 
 		// parse args...
-		var args = [...arguments]
 		pattern = args.length == 0 ? 
 			true 
 			: args.shift() 
@@ -2317,6 +2360,7 @@ var BaseBrowserPrototype = {
 			item != null
 				&& (item.focused = true)
 		},
+		null,
 		function(){ return this.get(0) },
 		{ 
 			getMode: 'get', 
@@ -2342,12 +2386,14 @@ var BaseBrowserPrototype = {
 		function(evt, items){
 			items.forEach(function(item){
 				item.selected = true }) },
+		null,
 		// XXX is this a good default???
 		function(){ return this.focused }),
 	deselect: makeItemEventMethod('deselect', 
 		function(evt, items){
 			items.forEach(function(item){
 				delete item.selected }) },
+		null,
 		function(){ return this.focused }),
 	// XXX use a real toggler here??? (i.e. finish makeItemEventToggler2(..))
 	toggleSelect: makeItemEventToggler('selected', 'select', 'deselect', 'focused'),
@@ -2359,6 +2405,7 @@ var BaseBrowserPrototype = {
 			item.forEach(function(e){ e.collapsed = true }) 
 			this.update()
 		},
+		null,
 		function(){ return this.focused },
 		function(elem){ return elem.value && elem.children },
 		{iterateCollapsed: true}),
@@ -2367,6 +2414,7 @@ var BaseBrowserPrototype = {
 			item.forEach(function(e){ delete e.collapsed }) 
 			this.update()
 		},
+		null,
 		function(){ return this.focused },
 		function(elem){ return elem.value && elem.children },
 		{iterateCollapsed: true}),
@@ -2378,15 +2426,17 @@ var BaseBrowserPrototype = {
 		{iterateCollapsed: true}),
 
 	// primary/secondary item actions...
+	// XXX revise default actions...
 	open: makeItemEventMethod('open', 
-		// XXX if no open handlers defined trigger .launch(..)...
-		// 		...the logic still needs refining...
-		// 		a different way of doing this is to trigger .launch(..)
-		// 		right away unless .preventDefault() was called...
 		function(evt, item){},
+		// XXX not yet sure if this is correct...
+		function(evt, item){
+			item.length > 0
+				&& this.toggleCollapse(item) },
 		function(){ return this.focused }),
 	launch: makeItemEventMethod('launch', 
 		function(evt, item){},
+		null,
 		function(){ return this.focused }),
 
 	// Update state (make then render)...
@@ -2405,17 +2455,18 @@ var BaseBrowserPrototype = {
 	//
 	// XXX calling this on a nested browser should update the whole thing...
 	// 		...can we restore the context via .parent???
-	update: makeEventMethod('update', function(evt, full, options){
-		options = (full && full !== true && full !== false) ? 
-			full 
-			: options
-		full = full === options ? 
-			false 
-			: full
-		this
-			.run(function(){
-				full && this.make(options) })
-			.render(options) }),
+	update: makeEventMethod('update', 
+		function(evt, full, options){
+			options = (full && full !== true && full !== false) ? 
+				full 
+				: options
+			full = full === options ? 
+				false 
+				: full
+			this
+				.run(function(){
+					full && this.make(options) })
+				.render(options) }),
 	
 	// XXX target can be item or path...
 	load: makeEventMethod('load', function(evt, target){}),
