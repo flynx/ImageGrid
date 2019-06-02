@@ -2077,6 +2077,14 @@ var BaseBrowserPrototype = {
 				children,
 			])
    			: children },
+	// XXX use a real blank item...
+	renderNestedBlank(children, i, context){
+		var elem = {value: '   '}
+		return this.renderNested(
+			this.renderNestedHeader(elem, i, context),
+			children, 
+			elem, 
+			context) },
 	renderNestedHeader: function(item, i, context){
 		return this.renderItem(item, i, context) },
 	// NOTE: to skip rendering an item/list return null...
@@ -2147,21 +2155,8 @@ var BaseBrowserPrototype = {
 	// 		the .options attribute...
 	//
 	//
-	// XXX should partial render (from/to/around/count) be here or part 
+	// XXX should partial render (from/to/around/count) be here or be part 
 	// 		of .walk(..)???
-	// XXX figure out a scheme to keep nesting levels consistent when 
-	// 		doing a partial render...
-	// 		...corrently an element is rendered to the depth that is 
-	// 		explicitly visible in the range...
-	// 		ways to do this:
-	// 			- also render all the parents of the <from> element
-	// 				XXX might be nice to add '...' in place of the skipped
-	// 					items... or event better, explicitly skip them...
-	// 			- explicitly skip items, i.e. .renderSkipped(..)
-	// 			- pass depth to the .renderNested(..)/... and let it handle 
-	// 				the result -- too complicated...
-	// 		...approach #1 / #2 seems preferable -- the renderer would not need
-	// 		to know anything about what is happening...
 	render: function(options, renderer, context){
 		context = context || {}
 		renderer = renderer || this
@@ -2220,28 +2215,28 @@ var BaseBrowserPrototype = {
 
 		// XXX use this to check if an item is on the path to <from> and
 		// 		pass it to the skipped topology constructor...
-		var from_path = from != null 
-			&& this.get(from, function(e, i, p){ return p }, get_options)
+		var from_path = context.from_path =
+			context.from_path	
+				|| (from != null 
+					&& this.get(from, function(e, i, p){ return p }, get_options))
 		from_path = from_path instanceof Array
 			&& from_path
-		console.log('>>>>', from_path)
 
 		// do the walk...
 		var elems = this.walk(
 			function(elem, i, path, nested){
 				return (
-					// check range...
-					// XXX need to handle special case:
-					// 		(i == from && path.length > 0) 
-					// 			-> render skipped parents...
-					// 		the problem here is that we already lost the 
-					// 		nesting context, we need to either rebuild it 
-					// 		or start earlier...
-					// 		...the problem with starting earlier is that 
-					// 		we need to render ONLY the parents of <from>
-					// 		and it is not clear how to identify them...
-					!((from == null || i >= from) 
-							&& (to == null || i < to)) ?
+					// special case: nested <from> elem -> topology only...
+					(from_path 
+							&& i < from 
+							// only for nested...
+							&& elem && elem.children
+							// only sub-path...
+							&& path.cmp(from_path.slice(0, path.length))) ?
+						[ renderer.renderNestedBlank(nested(), i, context) ]
+					// out of range -> skip...
+					: ((from != null && i < from) 
+							|| (to != null && i >= to)) ?
 						[]
 					// inline...
 					: elem == null ?
@@ -2698,6 +2693,11 @@ var BrowserPrototype = {
 		// NOTE: currently the options in the template will override 
 		// 		anything explicitly given by item options... (XXX revise)
 		elementShorthand: {
+			'   ': {
+				'class': 'separator',
+				'html': '<div/>',
+				noniterable: true,
+			},
 			'---': {
 				'class': 'separator',
 				'html': '<hr>',
@@ -3129,13 +3129,16 @@ var TextBrowserPrototype = {
 			// expanded...
 			header && nested ?
 				[
-					'- ' + header,
+					...(header == '   ' ? 
+						// blank header...
+						[] 
+						: ['- ' + header]),
 					nested,
 				]
 			// collapsed...
 			: header ?
 				[ '+ ' + header ]
-			// headerless...
+			// nested...
 			: nested )},
 }
 
