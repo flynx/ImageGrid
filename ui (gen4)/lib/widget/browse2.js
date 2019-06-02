@@ -2153,10 +2153,6 @@ var BaseBrowserPrototype = {
 	// 		of actual rendering should lay on the renderer methods...
 	// NOTE: currently options and context are distinguished only via 
 	// 		the .options attribute...
-	//
-	//
-	// XXX should partial render (from/to/around/count) be here or be part 
-	// 		of .walk(..)???
 	render: function(options, renderer, context){
 		context = context || {}
 		renderer = renderer || this
