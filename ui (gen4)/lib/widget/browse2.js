@@ -974,6 +974,8 @@ var BaseBrowserPrototype = {
 	// NOTE: children arrays are handled internally...
 	//
 	//
+	// XXX BUG?: next(false) will not count any of the skipped elements
+	// 		thus messing up the element index...
 	// XXX which of the forms should be documented in the signature???
 	// 		NOTE: it does not matter which is used as we manually
 	// 		parse arguments...
@@ -1062,6 +1064,18 @@ var BaseBrowserPrototype = {
 				if(skipDisabled && node.disabled){
 					return state }
 
+				// XXX BUG?: doNested(false) will not count any of the 
+				// 		skipped elements thus messing up i...
+				// 		...we can't just use .length as this would 1)
+				// 		introduce a branch in the protocol + would not
+				// 		comply with the passed options in all cases but 
+				// 		the default...
+				// 		...one way to do this is to set func to a dud
+				// 		the only problem we have is the next(..) call
+				// 		below that will call the parent function and
+				// 		mess things up... we can go around this via 
+				// 		the context (context.skipping) but this feels 
+				// 		hack-ish...
 				var nested = false
 				var doNested = function(list){
 					// this can be called only once -> return cached results...
@@ -1090,8 +1104,10 @@ var BaseBrowserPrototype = {
 								: [walkable]), 
 							options, context) }
 
-					return (list === false ?
-								[]	
+					return (
+							// XXX BUG?: in this case we lose item indexing...
+							list === false || list == 'skip' ?
+								[]
 							// handle arrays internally...
 							: list instanceof Array ?
 								// NOTE: this gets the path and i from context...
