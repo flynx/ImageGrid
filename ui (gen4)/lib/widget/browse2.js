@@ -2121,9 +2121,22 @@ var BaseBrowserPrototype = {
 	// NOTE: currently options and context are distinguished only via 
 	// 		the .options attribute...
 	//
-	// XXX should partial selection be part of the render or part of .walk(..)???
+	//
+	// XXX should partial render (from/to/around/count) be here or part 
+	// 		of .walk(..)???
 	// XXX figure out a scheme to keep nesting levels consistent when 
 	// 		doing a partial render...
+	// 		...corrently an element is rendered to the depth that is 
+	// 		explicitly visible in the range...
+	// 		ways to do this:
+	// 			- also render all the parents of the <from> element
+	// 				XXX might be nice to add '...' in place of the skipped
+	// 					items... or event better, explicitly skip them...
+	// 			- explicitly skip items, i.e. .renderSkipped(..)
+	// 			- pass depth to the .renderNested(..)/... and let it handle 
+	// 				the result -- too complicated...
+	// 		...approach #1 / #2 seems preferable -- the renderer would not need
+	// 		to know anything about what is happening...
 	render: function(options, renderer, context){
 		context = context || {}
 		renderer = renderer || this
@@ -2183,6 +2196,10 @@ var BaseBrowserPrototype = {
 			function(elem, i, path, nested){
 				return (
 					// check range...
+					// XXX need to handle special case:
+					// 		(i == from && path.length > 0) 
+					// 			-> render skipped parents...
+					// 		...we can ignore groups branch here...
 					!((from == null || i >= from) 
 							&& (to == null || i < to)) ?
 						[]
