@@ -1453,6 +1453,13 @@ var BaseBrowserPrototype = {
 	// 		given options in this case will be applied only to list items
 	// 		that are searched i.e. the non-items in the input list...
 	//
+	// XXX BUG: this gets the indexes wrong....
+	// 		To reproduce:
+	// 			dialog.search('B/C/*', (_, i) => i, {iterateAll: true})
+	// 				-> [12 .. 15] // should be: [16, 17, 21, 22]
+	// 		while: 
+	// 			dialog.search(true, (_, i) => i, {iterateAll: true})
+	// 				-> [0 .. 22]
 	// XXX can .search(..) of a non-path array as a pattern be done in 
 	// 		a single pass???
 	// XXX add support for fuzzy match search -- match substring by default 
@@ -1481,9 +1488,9 @@ var BaseBrowserPrototype = {
 		},
 		// path test...
 		// NOTE: this does not go down branches that do not match the path...
+		// XXX add support for '**' ???
 		path: function(pattern){
 			if(pattern instanceof Array){
-				// XXX add support for '**' ???
 				var cmp = function(a, b){
 					return a.length == b.length
 						&& !a
@@ -1502,9 +1509,11 @@ var BaseBrowserPrototype = {
 				return function(elem, i, path, next){
 					// do not go down branches beyond pattern length or 
 					// ones that are not on path...
-					;(pattern.length == path.length
-							|| !onPath(path))
-						&& next(false)
+					// XXX BUG: this messes up i...
+					// 		...can we do this while maintaining i correctly???
+					//;(pattern.length == path.length
+					//		|| !onPath(path))
+					//	&& next(false)
 					// do the test...
 					return path.length > 0
 						&& pattern.length == path.length
@@ -2156,16 +2165,18 @@ var BaseBrowserPrototype = {
 		var normIndex = function(i){
 			return (i === undefined || typeof(i) == typeof(123)) ?
 				i
-				: this.get(i, function(e, i){ return i }, get_options) }.bind(this)
+				: this.get(i, 
+					function(_, i){ return i }, 
+					get_options) }.bind(this)
 		// NOTE: we prefer context.from / context.to as they are more 
 		// 		likely to be normalized.
 		// 		as to the rest of the values of set we look first in the 
 		// 		options as we'll need them only if from/to are not 
 		// 		normalized...
-		var from = context.from = normIndex(context.from || options.from)
-		var to = context.to = normIndex(context.to || options.to)
-		var around = normIndex(options.around || context.around)
-		var count = options.count || context.count
+		var from = context.from = normIndex('from' in context ? context.from : options.from)
+		var to = context.to = normIndex('to' in context ? context.to : options.to)
+		var around = normIndex('around' in options ? options.around : context.around)
+		var count = 'count' in options ? options.count : context.count
 		// NOTE: count < 0 is the same as no count / all...
 		count = count < 0 ? 
 			null 
@@ -2191,6 +2202,14 @@ var BaseBrowserPrototype = {
 			throw new Error(`.render(..): context.from must be less than `
 				+`or equal to context.to. (got: from=${from} and to=${to})`) }
 
+		// XXX use this to check if an item is on the path to <from> and
+		// 		pass it to the skipped topology constructor...
+		var from_path = from != null 
+			&& this.get(from, function(e, i, p){ return p }, get_options)
+		from_path = from_path instanceof Array
+			&& from_path
+		console.log('>>>>', from_path)
+
 		// do the walk...
 		var elems = this.walk(
 			function(elem, i, path, nested){
@@ -2199,7 +2218,12 @@ var BaseBrowserPrototype = {
 					// XXX need to handle special case:
 					// 		(i == from && path.length > 0) 
 					// 			-> render skipped parents...
-					// 		...we can ignore groups branch here...
+					// 		the problem here is that we already lost the 
+					// 		nesting context, we need to either rebuild it 
+					// 		or start earlier...
+					// 		...the problem with starting earlier is that 
+					// 		we need to render ONLY the parents of <from>
+					// 		and it is not clear how to identify them...
 					!((from == null || i >= from) 
 							&& (to == null || i < to)) ?
 						[]
