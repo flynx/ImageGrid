@@ -2071,6 +2071,24 @@ var BaseBrowserPrototype = {
 	// 	{
 	// 		root: <root-browser>,
 	// 		options: <options>,
+	//
+	// 		// Partial render parameters...
+	//		//
+	// 		// supported combinations:
+	// 		//	- from, to
+	// 		//	- from, count
+	// 		//	- to, count
+	// 		//	- around, count
+	// 		//
+	// 		// NOTE: the only constrain on to/from is that from must be 
+	// 		//		less or equal to to, other than that it's fair game,
+	// 		//		i.e. overflowing values (<0 or >length) are allowed.
+	// 		from: <index> | <query>,
+	// 		to: <index> | <query>,
+	// 		around: <index> | <query>,
+	// 		count: <number>,
+	//
+	// 		...
 	// 	}
 	//
 	//
@@ -2091,6 +2109,10 @@ var BaseBrowserPrototype = {
 	// 		of actual rendering should lay on the renderer methods...
 	// NOTE: currently options and context are distinguished only via 
 	// 		the .options attribute...
+	//
+	// XXX should partial selection be part of the render or part of .walk(..)???
+	// XXX figure out a scheme to keep nesting levels consistent when 
+	// 		doing a partial render...
 	render: function(options, renderer, context){
 		context = context || {}
 		renderer = renderer || this
@@ -2101,12 +2123,48 @@ var BaseBrowserPrototype = {
 				options || {})
 		context.options = context.options || options
 
+		// build range bounds...
+		var normIndex = function(i){
+			return (i === undefined || typeof(i) == typeof(123)) ?
+				i
+				: this.get(i, function(e, i){ return i }) }.bind(this)
+		var from = context.from = normIndex(context.from)
+		var to = context.to = normIndex(context.to)
+		var around = normIndex(context.around)
+		var count = context.count < 0 ? 
+			null 
+			: context.count
+		// complete to/from based on count and/or around...
+		// NOTE: we do not care about overflow here...
+		;(from == null && count != null) 
+			&& (from = context.from = 
+				to != null ? 
+					to - count
+				: around != null ?
+					around - Math.floor(count/2)
+				: from)
+		;(to == null && count != null)
+			&& (to = context.to = 
+				from != null ? 
+					from + count
+				: around != null ?
+					around + Math.ceil(count/2)
+				: to)
+		// sanity check...
+		if(from != null && to != null && to < from){
+			throw new Error(`.render(..): context.from must be less than `
+				+`or equal to context.to. (got: from=${from} and to=${to})`) }
+
 		// do the walk...
 		var elems = this.walk(
 			function(elem, i, path, nested){
 				return (
+					// check range...
+					!((from == null || i >= from) 
+							&& (to == null || i < to)) ?
+						[]
 					// inline...
-					elem == null ?
+					: elem == null ?
 						// NOTE: here we are forcing rendering of the 
 						// 		inline browser/list, i.e. ignoring 
 						// 		options.skipNested for inline stuff...
@@ -2425,7 +2483,7 @@ var BaseBrowserPrototype = {
 		function(elem){ return elem.value && elem.children },
 		{iterateCollapsed: true}),
 
-	// primary/secondary item actions...
+	// primary/secondary/ternary? item actions...
 	// XXX revise default actions...
 	open: makeItemEventMethod('open', 
 		function(evt, item){},
