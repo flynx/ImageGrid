@@ -2072,6 +2072,23 @@ var BaseBrowserPrototype = {
 	// 		root: <root-browser>,
 	// 		options: <options>,
 	//
+	//
+	// 		// These are the same as in options...
+	// 		//
+	// 		// NOTE: these will get set to the item indexes...
+	// 		from: <index> | <query>,
+	// 		to: <index> | <query>,
+	// 		// optional...
+	// 		// NOTE: in general we set these in options...
+	// 		//around: <index> | <query>,
+	// 		//count: <number>,
+	//
+	// 		...
+	// 	}
+	//
+	//
+	// options:
+	// 	{
 	// 		// Partial render parameters...
 	//		//
 	// 		// supported combinations:
@@ -2088,12 +2105,6 @@ var BaseBrowserPrototype = {
 	// 		around: <index> | <query>,
 	// 		count: <number>,
 	//
-	// 		...
-	// 	}
-	//
-	//
-	// options:
-	// 	{
 	// 		nonFinalized: <bool>,
 	//
 	//		// for more supported options see: .walk(..)
@@ -2124,16 +2135,28 @@ var BaseBrowserPrototype = {
 		context.options = context.options || options
 
 		// build range bounds...
+		// use .get(..) on full (non-partial) range...
+		var get_options = Object.assign(
+			Object.create(options),
+			{from: null, to: null, around: null})
+		// index getter...
 		var normIndex = function(i){
 			return (i === undefined || typeof(i) == typeof(123)) ?
 				i
-				: this.get(i, function(e, i){ return i }) }.bind(this)
-		var from = context.from = normIndex(context.from)
-		var to = context.to = normIndex(context.to)
-		var around = normIndex(context.around)
-		var count = context.count < 0 ? 
+				: this.get(i, function(e, i){ return i }, get_options) }.bind(this)
+		// NOTE: we prefer context.from / context.to as they are more 
+		// 		likely to be normalized.
+		// 		as to the rest of the values of set we look first in the 
+		// 		options as we'll need them only if from/to are not 
+		// 		normalized...
+		var from = context.from = normIndex(context.from || options.from)
+		var to = context.to = normIndex(context.to || options.to)
+		var around = normIndex(options.around || context.around)
+		var count = options.count || context.count
+		// NOTE: count < 0 is the same as no count / all...
+		count = count < 0 ? 
 			null 
-			: context.count
+			: count
 		// complete to/from based on count and/or around...
 		// NOTE: we do not care about overflow here...
 		;(from == null && count != null) 
