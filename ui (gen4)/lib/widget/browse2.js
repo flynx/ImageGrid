@@ -2410,16 +2410,29 @@ var BaseBrowserPrototype = {
 	// 		-> this
 	//
 	//
-	// Passing an <event-name> will do the following:
-	// 	- if an <event-name> handler is available call it and return
-	// 		- the handler should:
-	// 			- do any specifics that it needs
-	// 			- create an <event-object>
-	// 			- call trigger with <event-object>
-	//  - if <event-name> has no handler:
-	//  	- create an <event-object>
-	//  	- call the event handlers passing them <event-object> and args
-	//  	- call parent's .trigger(<event-name>, ..)
+	// Optional event extension methods:
+	// 	Event shorthand 
+	// 	.<event-name>(..)
+	// 		called by .trigger(<event-name>, ..)
+	// 		...
+	// 		create <event-object>
+	// 		call .trigger(<event-object>, ..)
+	//
+	// 		Used for:
+	// 			- shorthand to .trigger(<event-name>, ..)
+	// 			- shorthand to .on(<event-name>, ..) 
+	// 			- base event functionality
+	//
+	// 		See: makeEventMethod(..) and makeItemEventMethod(..) for docs.
+	//
+	//
+	// 	Base event handler
+	// 	.__<event-name>__(event, ..)
+	// 		called by .trigger(<event-object>, ..) as the first handler
+	//
+	// 		Used as system event handler that can not be removed via 
+	// 		.off(..)
+	//
 	//
 	// for docs on <event-object> see BrowserEvent(..)
 	trigger: function(evt, ...args){
@@ -2451,6 +2464,9 @@ var BaseBrowserPrototype = {
 		;((this.__event_handlers || {})[evt.name] || [])
 			// prevent .off(..) from affecting the call loop...
 			.slice()
+			// add the static .__<event>__(..) handler if present...
+			.concat([this[`__${evt.name}__`] || []].flat())
+			// call handlers...
 			.forEach(function(handler){
 				handler.call(that, evt, ...args) })
 
@@ -2707,6 +2723,45 @@ var BrowserPrototype = {
 		},
 	},
 
+	__keyboard_config: {
+		General: {
+			pattern: '*',
+
+			// XXX should pause on overflow...
+			// XXX use up/down
+			Up: 'prev',
+			Down: 'next',
+
+			// XXX use left/right...
+			Left: 'collapse',
+			Right: 'expand',
+
+			Enter: 'open',
+		},
+	},
+
+	//__keyboard_config: null,
+	get keybindings(){
+		return this.__keyboard_config },
+
+	__keyboard_object: null,
+	get keyboard(){
+		var that = this
+		// XXX should this be here on in start event???
+		var kb = this.__keyboard_object = 
+			this.__keyboard_object 
+				|| keyboard.KeyboardWithCSSModes(
+					function(data){ 
+						if(data){
+							that.__keyboard_config = data
+						} else {
+							return that.__keyboard_config
+						}
+					},
+					function(){ return that.dom })
+		return kb },
+
+
 	// parent element (optional)...
 	// XXX rename???
 	// 		... should this be .containerDom or .parentDom???
@@ -2758,6 +2813,14 @@ var BrowserPrototype = {
 				c.appendChild(e) })
 			d = c
 		}
+
+		d.setAttribute('tabindex', '0')
+
+		// XXX
+		d.addEventListener('keydown', 
+			keyboard.makeKeyboardHandler(this.keyboard, 
+				function(){ console.log('KEY:', ...arguments) },//null,
+	 			this))
 
 		this.dom = d
 		return this.dom
@@ -3043,13 +3106,18 @@ var BrowserPrototype = {
 	// 		....another idea is to force the user to use the provided API
 	// 		by not implementing ANY direct functionality in DOM -- I do
 	// 		not like this idea at this point as it violates POLS...
-	//open: function(func){},
-
-	//filter: function(){},
-
-	//select: function(){},
-	//get: function(){},
-	//focus: function(){},
+	__focus__: function(evt, elem){
+		elem.dom.classList.contains('list') ? 
+			elem.dom.querySelector('.item').focus() 
+			: elem.dom.focus() },
+	__select__: function(){},
+	__deselect__: function(){},
+	__expand__: function(){
+		this.focused
+			&& this.focus(this.focused) },
+	__collapse__: function(){
+		this.focused
+			&& this.focus(this.focused) },
 
 	// Navigation...
 	//
@@ -3063,7 +3131,6 @@ var BrowserPrototype = {
 
 	//collapse: function(){},
 	// XXX scroll...
-
 
 }
 
