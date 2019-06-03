@@ -23,6 +23,7 @@ var collections = require('features/collections')
 
 /*********************************************************************/
 
+// XXX might be a good idea to normalize key spec values here...
 var GLOBAL_KEYBOARD =
 module.GLOBAL_KEYBOARD = {
 	// NOTE: the order of sections is important, it determines in what 
@@ -417,6 +418,7 @@ module.GLOBAL_KEYBOARD = {
 
 		// marking...
 		M: 'toggleMark',
+		Ins: 'toggleMark',
 		ctrl_A: 'markRibbon!',
 		ctrl_shift_A: 'markLoaded!',
 		ctrl_D: 'unmarkRibbon!',

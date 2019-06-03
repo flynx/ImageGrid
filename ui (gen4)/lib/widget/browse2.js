@@ -1689,6 +1689,11 @@ var BaseBrowserPrototype = {
 	// 		-> item
 	// 		-> undefined
 	//
+	// 	Get parent element relative to focused...
+	// 	.get('parent'[, func][, options])
+	// 		-> item
+	// 		-> undefined
+	//
 	// 	Get first item matching pattern...
 	// 	.get(pattern[, func][, options])
 	// 		-> item
@@ -1756,12 +1761,57 @@ var BaseBrowserPrototype = {
 						b.length > offset
 							&& b.shift() },
 					options)
+			// get parent element...
+			: pattern == 'parent' ?
+				this.parentOf()
 			// base case -> get first match...
 			: this.search(pattern, 
 				function(elem, i, path, stop){
 					stop([func(elem, i, path)]) }, 
 				options) ].flat()[0] },
 
+	// 	
+	// 	Get parent of .focused
+	// 	.parentOf()
+	// 	.parentOf('focused'[, ..])
+	// 		-> parent
+	// 		-> this
+	// 		-> undefined
+	//
+	// 	Get parent of elem
+	// 	.parentOf(elem[, ..])
+	// 		-> parent
+	// 		-> this
+	// 		-> undefined
+	//
+	//
+	// Return values:
+	// 	- element		- actual parent element
+	// 	- this			- input element is at root of browser
+	// 	- undefined		- element not found
+	//
+	//
+	// NOTE: this is signature compatible with .get(..) see that for more
+	// 		docs...
+	//
+	// XXX should this be a part of .get(..)???
+	parentOf: function(item, options){
+		var that = this
+		item = item || this.focused
+
+		var fargs = [...arguments].slice(1)
+		var args = fargs[0] instanceof Function ?
+			fargs.slice(1)
+			: fargs
+
+		return item ?
+			this.get(item, 
+				function(e, i, p){ 
+					return p.length > 1 ?
+						that.get(p.slice(0, -1), ...fargs)
+			   			: that }, 
+				...args) 
+			: undefined },
 
 	// Sublist map functions...
 	// XXX this does not include inlined sections, should it???
@@ -2153,6 +2203,8 @@ var BaseBrowserPrototype = {
 	// 		of actual rendering should lay on the renderer methods...
 	// NOTE: currently options and context are distinguished only via 
 	// 		the .options attribute...
+	//
+	// XXX use partial render for things like search....
 	render: function(options, renderer, context){
 		context = context || {}
 		renderer = renderer || this
@@ -2723,6 +2775,7 @@ var BrowserPrototype = {
 		},
 	},
 
+	// XXX STUB...
 	__keyboard_config: {
 		General: {
 			pattern: '*',
@@ -2733,12 +2786,13 @@ var BrowserPrototype = {
 			Down: 'next',
 
 			// XXX use left/right...
-			Left: 'collapse',
-			Right: 'expand',
+			Left: 'left',
+			Right: 'right',
 
 			Enter: 'open',
 		},
 	},
+
 
 	//__keyboard_config: null,
 	get keybindings(){
@@ -2790,9 +2844,11 @@ var BrowserPrototype = {
 
 	// Element renderers...
 	//
-	// This does tow additional things:
+	// This also does:
 	// 	- save the rendered state to .dom 
 	// 	- wrap a list of nodes (nested list) in a div
+	// 	- setup event handling
+	// 	- init state...
 	//
 	// Format:
 	// 	if list of items passed:
@@ -2813,16 +2869,26 @@ var BrowserPrototype = {
 				c.appendChild(e) })
 			d = c
 		}
-
 		d.setAttribute('tabindex', '0')
 
 		// XXX
 		d.addEventListener('keydown', 
-			keyboard.makeKeyboardHandler(this.keyboard, 
+			keyboard.makePausableKeyboardHandler(this.keyboard,
 				function(){ console.log('KEY:', ...arguments) },//null,
 	 			this))
 
 		this.dom = d
+
+		// keep focus where it is...
+		var focused = this.focused
+		focused
+			&& (focused.dom.classList.contains('list') ? 
+					focused.dom.querySelector('.item')
+					: focused.dom)
+				// XXX this will trigger the focus event...
+				// 		...can we do this without triggering new events???
+				.focus()
+
 		return this.dom
 	},
 	//
@@ -3057,7 +3123,11 @@ var BrowserPrototype = {
 		//elem.addEventListener('tap', 
 		//	function(){ $(elem).trigger('open', [text, item, elem]) })
 		elem.addEventListener('focus', 
-			function(){ that.focus(item) })
+			function(){ 
+				// do not retrigger focus on an item if it's already focused...
+				// XXX do we handle focus after blur???
+				that.focused !== item
+					&& that.focus(item) })
 		// user events...
 		Object.entries(item.events || {})
 			// shorthand events...
@@ -3099,38 +3169,101 @@ var BrowserPrototype = {
 	},
 
 
-	// Custom events...
-	// XXX do we use jQuery event handling or vanilla?
-	// 		...feels like jQuery here wins as it provides a far simpler
-	// 		API + it's a not time critical area...
-	// 		....another idea is to force the user to use the provided API
-	// 		by not implementing ANY direct functionality in DOM -- I do
-	// 		not like this idea at this point as it violates POLS...
+	// Custom events handlers...
+	//
 	__focus__: function(evt, elem){
-		elem.dom.classList.contains('list') ? 
-			elem.dom.querySelector('.item').focus() 
-			: elem.dom.focus() },
-	__select__: function(){},
-	__deselect__: function(){},
-	__expand__: function(){
-		this.focused
-			&& this.focus(this.focused) },
-	__collapse__: function(){
-		this.focused
-			&& this.focus(this.focused) },
+		;(elem.dom.classList.contains('list') ? 
+				elem.dom.querySelector('.item')
+				: elem.dom)
+			.focus() },
+
+	// XXX add support for pixel offset...
+	// XXX
+	get: function(pattern){
+		var p = pattern
+		pattern = arguments[0] = 
+			// DOM element...
+			// XXX should we also check for content???
+			pattern instanceof HTMLElement ?
+				function(e){ return e.dom === p }
+			// jQuery object...
+			// XXX should we also check for content???
+			: (typeof(jQuery) != 'undefined' && pattern instanceof jQuery) ?
+				function(e){ return p.is(e.dom) }
+			: pattern
+		return pattern == 'pagetop' ?
+				// XXX
+				false
+			: pattern == 'pagebottom' ?
+				// XXX
+				false
+			// call parent...
+			: object.parent(BrowserPrototype.get, this).call(this, ...arguments) },
 
 	// Navigation...
 	//
+	// hold key repeat on first/last elements...
+	next: function(){
+		object.parent(BrowserPrototype.next, this).call(this, ...arguments)
+		// hold repeat at last element...
+		this.focused === this.get('last')
+			&& this.keyboard.pauseRepeat
+			&& this.keyboard.pauseRepeat() },
+	prev: function(){
+		object.parent(BrowserPrototype.prev, this).call(this, ...arguments)
+		// hold repeat at first element...
+		this.focused === this.get('first')
+			&& this.keyboard.pauseRepeat
+			&& this.keyboard.pauseRepeat() },
+
+	// XXX focus element above/below...
 	up: function(){},
 	down: function(){},
-	left: function(){},
-	right: function(){},
+	// XXX check if there are elements to the left...
+	left: function(){
+		var focused = this.focused
+		var p
+		if(!focused){
+			return this.prev() }
+		// collapsable -> collapse...
+		;(focused.children && !focused.collapsed) ?
+			this.collapse()
+		// on a nested level -> go up one level... 
+		: (p = this.parentOf()) && p !== this ?
+			this.focus(p)
+		// prev...
+		: this.prev() 
+	},
+	// XXX check if there are elements to the right...
+	right: function(){
+		var focused = this.focused
+		if(!focused){
+			return this.next() }
+		focused.collapsed ?
+			this
+				.expand()
+				.next()
+			: this.next() },
 
-	//next: function(){},
-	//prev: function(){},
+	// navigation relative to page...
+	pageTop: function(){
+		this.focus(this.get('pagetop')) },
+	pageBottom: function(){
+		this.focus(this.get('pagebottom')) },
+	// XXX
+	pageUp: function(){
+		var ref = this.get('pagetop')
+		// XXX get element closest to pageHeight above top...
+		var target = null
+		this.scrollTo(target)
+	},
+	// XXX should we scroll to the bottom elem (current behavior) or to the one after it???
+	pageDown: function(){
+		this.scrollTo(this.get('pagebottom')) },
 
-	//collapse: function(){},
 	// XXX scroll...
+	scrollTo: function(elem){
+	},
 
 }
 

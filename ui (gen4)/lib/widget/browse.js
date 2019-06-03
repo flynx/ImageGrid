@@ -3451,6 +3451,11 @@ var BrowserPrototype = {
 	// 		NOTE: when no element is selected, 'next' will select the 
 	// 				first, while 'prev' the last element's
 	//
+	// 	Navigate to element above/below current element...
+	// 	.navigate('up')
+	// 	.navigate('down')
+	// 		-> elem
+	//
 	// 	Deselect element...
 	// 	.navigate('none')
 	// 		-> elem

@@ -511,6 +511,8 @@ var KeyboardPrototype = {
 		return this.__keyboard instanceof Function ? 
 			this.__keyboard() 
 			: this.__keyboard },
+	// XXX might be a good idea to normalize the value here...
+	// 		...i.e. normalize key specs as they are input by humans...
 	set keyboard(value){
 		if(this.__keyboard instanceof Function){
 			this.__keyboard(value) 
@@ -898,6 +900,8 @@ var KeyboardPrototype = {
 		// 		- shifted keys first
 		// 		- modifiers are skipped in order, left to right
 		// XXX carefully revise key search order...
+		// XXX should we normalize what's in the bindings????
+		// 		...currently we will match 'Ins' but not 'insert'
 		var keyCombinations = function(key, shift_key, remove_single_keys){
 			if(key.length <= 1){
 				//return shift_key ? [key, shift_key] : [key]
