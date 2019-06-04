@@ -2547,6 +2547,8 @@ var BaseBrowserPrototype = {
 	// NOTE: this will ignore disabled items.
 	// NOTE: .focus('next') / .focus('prev') will not wrap around the 
 	// 		first last elements...
+	//
+	// XXX BUG: .focused = null for some reason selects the first element...
 	focus: makeItemEventMethod('focus', 
 		function(evt, items){
 			// blur .focused...
@@ -2579,6 +2581,7 @@ var BaseBrowserPrototype = {
 		function(){ return this.focused || 0 }, 
 		false),
 
+	// XXX BUG: .selected = null for some reason adds .focused to selection...
 	select: makeItemEventMethod('select', 
 		function(evt, items){
 			items.forEach(function(item){
@@ -2627,6 +2630,8 @@ var BaseBrowserPrototype = {
 	open: makeItemEventMethod('open', 
 		function(evt, item){},
 		// XXX not yet sure if this is correct...
+		// XXX BUG: evt.preventDefault() does not affect this for some reason...
+		// 		...i.e. evt here and in the user cycle are not the same...
 		function(evt, item){
 			item.length > 0
 				&& this.toggleCollapse(item) },
@@ -2690,6 +2695,15 @@ object.makeConstructor('BaseBrowser',
 
 
 //---------------------------------------------------------------------
+
+var getElem = function(elem){
+	elem = elem.dom || elem
+	return elem.classList.contains('list') ? 
+			elem.querySelector('.item')
+			: elem }
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
 var BrowserClassPrototype = {
 	__proto__: BaseBrowser,
@@ -2889,33 +2903,42 @@ var BrowserPrototype = {
 	// 	or same as .renderList(..)
 	//
 	// XXX revise...
-	// XXX highlight focused element in css...
 	renderFinalize: function(items, context){
+		var that = this
 		var d = this.renderList(items, context)
 
 		// wrap the list (nested list) of nodes in a div...
 		if(d instanceof Array){
 			var c = document.createElement('div')
+			d.classList.add('focusable')
 			d.forEach(function(e){
 				c.appendChild(e) })
 			d = c
 		}
 		d.setAttribute('tabindex', '0')
-
-		// XXX
+		// Setup basic event handlers...
+		// keyboard...
 		d.addEventListener('keydown', 
 			keyboard.makePausableKeyboardHandler(this.keyboard,
 				function(){ console.log('KEY:', ...arguments) },//null,
 	 			this))
+		// focus...
+		d.addEventListener('click', 
+			function(e){ 
+				e.stopPropagation()
+				d.focus() 
+			})
+		d.addEventListener('focus',
+		   function(){
+			   that.focused
+					&& getElem(that.focused).focus() })
 
 		this.dom = d
 
 		// keep focus where it is...
 		var focused = this.focused
 		focused
-			&& (focused.dom.classList.contains('list') ? 
-					focused.dom.querySelector('.item')
-					: focused.dom)
+			&& getElem(focused)
 				// XXX this will trigger the focus event...
 				// 		...can we do this without triggering new events???
 				.focus()
@@ -3150,7 +3173,9 @@ var BrowserPrototype = {
 		elem.addEventListener('click', 
 			// XXX revise signature...
 			// XXX should we trigger the DOM event or the browser event???
-			function(){ $(elem).trigger('open', [text, item, elem]) })
+			function(){ 
+				that.open(item, text, elem) })
+				//$(elem).trigger('open', [text, item, elem]) })
 		//elem.addEventListener('tap', 
 		//	function(){ $(elem).trigger('open', [text, item, elem]) })
 		elem.addEventListener('focus', 
@@ -3212,10 +3237,36 @@ var BrowserPrototype = {
 	//
 	// XXX keep element on screen if it's off or out of bounds....
 	__focus__: function(evt, elem){
-		;(elem.dom.classList.contains('list') ? 
-				elem.dom.querySelector('.item')
-				: elem.dom)
-			.focus() },
+		var that = this
+		elem
+			&& getElem(elem)
+				// update the focused CSS class...
+				// NOTE: we will not remove this class on blur as it keeps
+				// 		the selected element indicated...
+				.run(function(){
+					// XXX scroll to element if it's out of bounds...
+					// XXX
+
+					that.dom
+						&& that.dom.querySelectorAll('.focused')
+							.forEach(function(e){
+								e.classList.remove('focused') })
+					this.classList.add('focused') })
+				// set focus...
+				.focus() },
+	// NOTE: this simply update the state...
+	__select__: function(){
+		var selected  = new Set(this.selected.map(getElem))
+		this.dom
+			&& this.dom.querySelectorAll('.selected')
+				.forEach(function(e){
+					selected.has(e)
+						|| e.classList.remove('selected') })
+		selected
+			.forEach(function(e){
+				e.classList.add('selected') }) },
+	__deselect__: function(evt, elem){
+		this.__select__() },
 
 	// Custom events...
 	//

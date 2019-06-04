@@ -22,6 +22,16 @@ body {
     content: "/" !important;
 }
 
+/* selection... */
+.browse-widget:not(.flat) .list .selected {
+	color: yellow;
+	background: none;
+}
+.browse-widget:not(.flat) .list .focused {
+	background: rgba(0, 0, 0, 0.08);
+}
+
+
 
 /* XXX stub...
 .browse-widget:not(.flat) .list .text:first-child:before {
@@ -173,7 +183,11 @@ requirejs([
 				//collapsed: true,
 				// XXX this does not appear to survive attaching an item 
 				//		to the document...
-				click: function(){ console.log('!!!!!!!!!!!!') },
+				open: function(e){ 
+					// XXX this does not work, likely because we are 
+					//		losing this event object at some point...
+					e.preventDefault()
+					console.log('!!!!!!!!!!!!') },
 				//cls: ['heading'],
 			})
 	}, {
