@@ -13,6 +13,34 @@ body {
 }
 
 
+/* XXX move these to the main CSS */
+.browse-widget:not(.flat) .list div:not(.not-traversable) .text:after {
+    content: "";
+}
+/* XXX this needs to be the last .text item only */
+.browse-widget:not(.flat) .list .traversable .text:after {
+    content: "/" !important;
+}
+
+
+/* XXX stub...
+.browse-widget:not(.flat) .list .text:first-child:before {
+	display: inline-block;
+	width: 5pt;
+	padding-right: 3pt;
+	content: " ";
+}
+.browse-widget:not(.flat) .list .traversable .text:first-child:before {
+}
+.browse-widget:not(.flat) .list .traversable:not(.collapsed) .text:first-child:before {
+    content: "-";
+}
+.browse-widget:not(.flat) .list .traversable.collapsed .text:first-child:before {
+    content: "+";
+}
+*/
+
+
 </style>
 
 <script src="../../ext-lib/jquery.js"></script>
