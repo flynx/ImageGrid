@@ -2889,6 +2889,7 @@ var BrowserPrototype = {
 	// 	or same as .renderList(..)
 	//
 	// XXX revise...
+	// XXX highlight focused element in css...
 	renderFinalize: function(items, context){
 		var d = this.renderList(items, context)
 
@@ -3244,6 +3245,9 @@ var BrowserPrototype = {
 	up: function(){},
 	down: function(){},
 	// XXX check if there are elements to the left...
+	// XXX which is better?
+	// 		- on top level left goes to first element (as on all other levels)
+	// 		- on top level left is like prev (less uniform but somehow feels more logical)
 	left: function(){
 		var focused = this.focused
 		var p
@@ -3256,6 +3260,7 @@ var BrowserPrototype = {
 		: (p = this.parentOf()) && p !== this ?
 			this.focus(p)
 		// prev...
+		//: this.focus('first') 
 		: this.prev() 
 	},
 	// XXX check if there are elements to the right...
