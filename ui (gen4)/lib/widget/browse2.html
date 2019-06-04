@@ -157,7 +157,9 @@ requirejs([
 
 	dialog.container = $('.container').first()[0]
 
-	dialog.update()
+	dialog
+		.update()
+		.focus()
 
 	//$('.container').first().append(dialog.render())
 })

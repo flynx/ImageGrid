@@ -2841,6 +2841,36 @@ var BrowserPrototype = {
 				: this.container.appendChild(value))
 		this.__dom = value },
 
+	// Extended .get(..) to support:
+	// 	- 'pagetop'
+	// 	- 'pagebottom'
+	// 	- searching for items via DOM / jQuery objects
+	// 		XXX currently direct match only...
+	// 			...should we add containment search -- match closest item containing obj...
+	// 
+	// XXX add support for pixel offset...
+	// XXX
+	get: function(pattern){
+		var p = pattern
+		pattern = arguments[0] = 
+			// DOM element...
+			// XXX should we also check for content???
+			pattern instanceof HTMLElement ?
+				function(e){ return e.dom === p }
+			// jQuery object...
+			// XXX should we also check for content???
+			: (typeof(jQuery) != 'undefined' && pattern instanceof jQuery) ?
+				function(e){ return p.is(e.dom) }
+			: pattern
+		return pattern == 'pagetop' ?
+				// XXX
+				false
+			: pattern == 'pagebottom' ?
+				// XXX
+				false
+			// call parent...
+			: object.parent(BrowserPrototype.get, this).call(this, ...arguments) },
+
 
 	// Element renderers...
 	//
@@ -3169,36 +3199,30 @@ var BrowserPrototype = {
 	},
 
 
+	// XXX scroll...
+	// XXX add target posotion (top/bottom/center) -- where to place the item...
+	scrollTo: function(pattern){
+	},
+	center: function(pattern){
+		return this.scrollTo(pattern, 'center', ...[...arguments].slice(1)) },
+
+
 	// Custom events handlers...
 	//
+	// XXX keep element on screen if it's off or out of bounds....
 	__focus__: function(evt, elem){
 		;(elem.dom.classList.contains('list') ? 
 				elem.dom.querySelector('.item')
 				: elem.dom)
 			.focus() },
 
-	// XXX add support for pixel offset...
-	// XXX
-	get: function(pattern){
-		var p = pattern
-		pattern = arguments[0] = 
-			// DOM element...
-			// XXX should we also check for content???
-			pattern instanceof HTMLElement ?
-				function(e){ return e.dom === p }
-			// jQuery object...
-			// XXX should we also check for content???
-			: (typeof(jQuery) != 'undefined' && pattern instanceof jQuery) ?
-				function(e){ return p.is(e.dom) }
-			: pattern
-		return pattern == 'pagetop' ?
-				// XXX
-				false
-			: pattern == 'pagebottom' ?
-				// XXX
-				false
-			// call parent...
-			: object.parent(BrowserPrototype.get, this).call(this, ...arguments) },
+	// Custom events...
+	//
+	// XXX make this different from html event...
+	// XXX trigger this from kb handler...
+	keyhandled: makeEventMethod('keyhandled', function(){
+	}),
+
 
 	// Navigation...
 	//
@@ -3252,18 +3276,10 @@ var BrowserPrototype = {
 		this.focus(this.get('pagebottom')) },
 	// XXX
 	pageUp: function(){
-		var ref = this.get('pagetop')
-		// XXX get element closest to pageHeight above top...
-		var target = null
-		this.scrollTo(target)
-	},
+		this.scrollTo(this.get('pagetop'), 'bottom') },
 	// XXX should we scroll to the bottom elem (current behavior) or to the one after it???
 	pageDown: function(){
-		this.scrollTo(this.get('pagebottom')) },
-
-	// XXX scroll...
-	scrollTo: function(elem){
-	},
+		this.scrollTo(this.get('pagebottom'), 'top') },
 
 }
 
