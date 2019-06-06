@@ -184,10 +184,8 @@ requirejs([
 				// XXX this does not appear to survive attaching an item 
 				//		to the document...
 				open: function(e){ 
-					// XXX this does not work, likely because we are 
-					//		losing this event object at some point...
 					e.preventDefault()
-					console.log('!!!!!!!!!!!!') },
+					console.log('test: open: default prevented...') },
 				//cls: ['heading'],
 			})
 	}, {

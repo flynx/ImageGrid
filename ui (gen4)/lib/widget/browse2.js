@@ -409,7 +409,7 @@ function(event, handler, action, default_item, filter, options){
 				// 		item chain to create it's own new event object...
 				// 		this will isolate each chain from the others in 
 				// 		state and handling propagation...
-				callItemEventHandlers(item, event, null, ...args) }) },
+				callItemEventHandlers(item, event, evt, ...args) }) },
 		...(action ? [action] : []),
 		false) 
 	return Object.assign(
@@ -2630,8 +2630,6 @@ var BaseBrowserPrototype = {
 	open: makeItemEventMethod('open', 
 		function(evt, item){},
 		// XXX not yet sure if this is correct...
-		// XXX BUG: evt.preventDefault() does not affect this for some reason...
-		// 		...i.e. evt here and in the user cycle are not the same...
 		function(evt, item){
 			item.length > 0
 				&& this.toggleCollapse(item) },
