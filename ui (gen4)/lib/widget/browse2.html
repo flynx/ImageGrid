@@ -13,6 +13,11 @@ body {
 }
 
 
+.browse-widget:not(.flat) .list :focus {
+	outline: none; 
+}
+
+
 /* XXX move these to the main CSS */
 .browse-widget:not(.flat) .list div:not(.not-traversable) .text:after {
     content: "";
@@ -30,7 +35,6 @@ body {
 .browse-widget:not(.flat) .list .focused {
 	background: rgba(0, 0, 0, 0.08);
 }
-
 
 
 /* XXX stub...
