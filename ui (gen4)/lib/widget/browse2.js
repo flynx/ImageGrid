@@ -2582,6 +2582,7 @@ var BaseBrowserPrototype = {
 		false),
 
 	// XXX BUG: .selected = null for some reason adds .focused to selection...
+	// 		...smake problem with .focus(..) / .focused ...
 	select: makeItemEventMethod('select', 
 		function(evt, items){
 			items.forEach(function(item){
