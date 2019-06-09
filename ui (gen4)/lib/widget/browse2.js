@@ -2802,6 +2802,10 @@ var BrowserPrototype = {
 			Right: 'right',
 
 			Enter: 'open',
+
+			// NOTE: do not bind this key, it is used to jump to buttons
+			// 		via tabindex...
+			Tab: 'NEXT',
 		},
 	},
 
