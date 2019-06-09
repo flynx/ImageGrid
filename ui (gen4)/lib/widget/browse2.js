@@ -2599,8 +2599,7 @@ var BaseBrowserPrototype = {
 	// XXX use a real toggler here??? (i.e. finish makeItemEventToggler2(..))
 	toggleSelect: makeItemEventToggler('selected', 'select', 'deselect', 'focused'),
 
-	// NOTE: .expand(..) / .collapse(..) / .toggleCollapse(..) ignore 
-	// 		item.collapsed state....
+	// NOTE: .expand(..) / .collapse(..) ignore item.collapsed state...
 	collapse: makeItemEventMethod('collapse', 
 		function(evt, item){
 			item.forEach(function(e){ e.collapsed = true }) 
