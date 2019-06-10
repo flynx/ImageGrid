@@ -346,6 +346,11 @@ function(item, event, evt, ...args){
 // 	.event([item, ..], ..)
 // 		-> this
 //
+// 	Trigger event on empty list of items...
+// 	.event(null, ..)
+// 	.event([], ..)
+// 		-> this
+//
 //
 // 	Handle event action...
 // 	handler(event_object, items, ...)
@@ -430,9 +435,10 @@ function(event, handler, action, default_item, filter, options){
 				// explicit item or query...
 				: item != null ? 
 					filterItems(this[getter](item, options))
-				// item is null or undefined -- get default...
-				: default_item instanceof Function ?
+				// item is undefined -- get default...
+				: item !== null && default_item instanceof Function ?
 					[default_item.call(that) || []].flat()
+				// item is null (explicitly) or other...
 				: [],
 				...args) },
 			// get base method attributes -- keep the event method format...
@@ -499,10 +505,12 @@ function(get_state, set_state, unset_state, default_item, multi, options){
 		state = item in states ?
 			item 
 			: state
-		item = (state === item ? 
-				null 
-				: item) 
-			|| _default_item.call(this)
+		item = state === item ? 
+				undefined 
+				: item 
+		item = item === undefined ?
+			_default_item.call(this)
+			: item
 		state = state in states ? 
 			states[state] 
 			: 'next'
@@ -2547,8 +2555,6 @@ var BaseBrowserPrototype = {
 	// NOTE: this will ignore disabled items.
 	// NOTE: .focus('next') / .focus('prev') will not wrap around the 
 	// 		first last elements...
-	//
-	// XXX BUG: .focused = null for some reason selects the first element...
 	focus: makeItemEventMethod('focus', 
 		function(evt, items){
 			// blur .focused...
@@ -2584,8 +2590,6 @@ var BaseBrowserPrototype = {
 		function(){ return this.focused || 0 }, 
 		false),
 
-	// XXX BUG: .selected = null for some reason adds .focused to selection...
-	// 		...smake problem with .focus(..) / .focused ...
 	select: makeItemEventMethod('select', 
 		function(evt, items){
 			items.forEach(function(item){
@@ -2654,6 +2658,11 @@ var BaseBrowserPrototype = {
 			change
 				&& this.update() },
 		null,
+		{ skipDisabled: false }),
+	toggleDisabled: makeItemEventToggler(
+		'disabled', 
+		'disable', 'enable', 
+		'focused',
 		{ skipDisabled: false }),
 
 	// primary/secondary/ternary? item actions...
