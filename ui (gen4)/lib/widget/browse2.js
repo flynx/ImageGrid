@@ -2590,6 +2590,7 @@ var BaseBrowserPrototype = {
 		function(){ return this.focused || 0 }, 
 		false),
 
+	// XXX these should skip disabled...
 	select: makeItemEventMethod('select', 
 		function(evt, items){
 			items.forEach(function(item){
@@ -2842,6 +2843,11 @@ var BrowserPrototype = {
 			Right: 'right',
 
 			Enter: 'open',
+
+			Space: 'toggleSelect',
+			ctrl_A: 'select!: "*"',
+			ctrl_D: 'deselect!: "*"',
+			ctrl_I: 'toggleSelect!: "*"',
 
 			// NOTE: do not bind this key, it is used to jump to buttons
 			// 		via tabindex...
