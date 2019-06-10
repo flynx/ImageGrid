@@ -2565,9 +2565,12 @@ var BaseBrowserPrototype = {
 			getMode: 'get', 
 			skipDisabled: true,
 		}),
-	blur: makeItemEventMethod('blur', function(evt, items){
-		items.forEach(function(item){
-			delete item.focused }) }),
+	blur: makeItemEventMethod('blur', 
+		function(evt, items){
+			items.forEach(function(item){
+				delete item.focused }) },
+		null,
+		function(){ return this.focused }),
 	// NOTE: .next() / .prev() will wrap around the first/last elements...
 	next: function(){ 
 		this.focus('next').focused || this.focus('first') 
@@ -2624,6 +2627,34 @@ var BaseBrowserPrototype = {
 		'focused',
 		function(elem){ return elem.value && elem.children },
 		{iterateCollapsed: true}),
+
+	// XXX not sure about these... 
+	disable: makeItemEventMethod('disable', 
+		function(evt, items){
+			var that = this
+			var change = false
+			items.forEach(function(item){
+				change = item.disabled = true 
+				item.focused
+					&& that.blur(item)
+			}) 
+			// need to update for changes to show up...
+			change
+				&& this.update() },
+		null,
+		// XXX is this a good default???
+		function(){ return this.focused }),
+	enable: makeItemEventMethod('enable', 
+		function(evt, items){
+			var change = false
+			items.forEach(function(item){
+				change = change || item.disabled
+				delete item.disabled }) 
+			// need to update for changes to show up...
+			change
+				&& this.update() },
+		null,
+		{ skipDisabled: false }),
 
 	// primary/secondary/ternary? item actions...
 	// XXX revise default actions...
@@ -3108,11 +3139,8 @@ var BrowserPrototype = {
 	// 		...
 	// 	</div>
 	//
-	// XXX add custom events:
-	// 		- open
-	// 		- select
-	// 		- update
 	// XXX should we trigger the DOM event or the browser event???
+	// XXX should buttoms be active in disabled state???
 	renderItem: function(item, i, context){
 		var that = this
 		var options = context.options || this.options
@@ -3210,13 +3238,30 @@ var BrowserPrototype = {
 				var button = document.createElement('div')
 				button.classList.add('button')
 				button.innerHTML = html
+				// XXX should buttons be active in disabled state???
 				if(!item.disabled){
 					button.setAttribute('tabindex', '0')
+					// events to keep in buttons...
 					;(options.buttonLocalEvents || options.localEvents || [])
 						.forEach(function(evt){
 							button.addEventListener(evt, stopPropagation) })
-					handler
-						&& button.addEventListener('click', handler)
+					// keep focus on the item containing the button -- i.e. if
+					// we tab out of the item focus the item we get to...
+					button.addEventListener('focus', function(){
+						item.focused 
+							|| that.focus(item) 
+								&& button.focus() })
+					// main button action (click/enter)...
+					// XXX should there be a secondary action (i.e. shift-enter)???
+					if(handler){
+						button.addEventListener('click', handler)
+						button.addEventListener('keydown', 
+							function(evt){
+								var k = keyboard.event2key(evt)
+								if(k.includes('Enter')){
+									event.stopPropagation()
+									handler.call(this, evt)
+								} }) } 
 				}
 				elem.appendChild(button)
 			})
@@ -3256,7 +3301,17 @@ var BrowserPrototype = {
 					this.classList.add('focused') })
 				// set focus...
 				.focus() },
-	// NOTE: this simply update the state...
+	__blur__: function(evt, elem){
+		var that = this
+		elem
+			&& getElem(elem)
+				.run(function(){
+					this.classList.remove('focused')
+					//this.blur()
+					that.dom
+						&& that.dom.focus() }) },
+
+	// NOTE: these simply update the state...
 	__select__: function(){
 		var selected  = new Set(this.selected.map(getElem))
 		this.dom

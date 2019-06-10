@@ -195,7 +195,7 @@ requirejs([
 	}, {
 		itemButtons: [
 			['&ndash;'],
-			['&square;'],
+			['&square;', function(){ console.log('BUTTON:', ...arguments) }],
 		],
 	})
 
