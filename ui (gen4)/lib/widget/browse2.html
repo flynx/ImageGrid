@@ -13,6 +13,9 @@ body {
 }
 
 
+.browse-widget {
+	user-select: none;
+}
 .browse-widget:not(.flat) .list :focus {
 	outline: none; 
 }
@@ -36,6 +39,10 @@ body {
 	background: rgba(0, 0, 0, 0.08);
 }
 
+/* XXX not sure about this... */
+.browse-widget .list .list {
+	overflow: visible;
+}
 
 /* XXX stub...
 .browse-widget:not(.flat) .list .text:first-child:before {
@@ -53,6 +60,36 @@ body {
     content: "+";
 }
 */
+
+
+/* scrollbar setup...  */
+.browse-widget ::-webkit-scrollbar {
+	width: 10px;
+	height: 10px;
+}
+.browse-widget ::-webkit-scrollbar-button {
+	display: none;
+}
+.browse-widget ::-webkit-scrollbar-track {
+}
+.browse-widget ::-webkit-scrollbar-track-piece {
+	background: transparent;
+}
+.browse-widget ::-webkit-scrollbar-track-piece {
+	background: rgba(0, 0, 0, 0.05);
+}
+.browse-widget ::-webkit-scrollbar-thumb {
+	background: rgba(0, 0, 0, 0.15);
+}
+.browse-widget ::-webkit-scrollbar-thumb:hover {
+	background: rgba(0, 0, 0, 0.3);
+}
+.browse-widget ::-webkit-scrollbar-corner {
+}
+.browse-widget ::-webkit-resizer {
+}
+
+
 
 
 </style>
@@ -195,10 +232,12 @@ requirejs([
 
 		make.Separator()
 
-		;(new Array(100))
-			.fill(1)
-			.forEach(function(_, i){
-				make(i) })
+		make.nest(
+			'scroll testing',
+			(new Array(100))
+				.fill(1)
+				.map(function(_, i){
+					return make(i) }))
 
 	}, {
 		itemButtons: [

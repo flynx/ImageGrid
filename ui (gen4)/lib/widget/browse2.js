@@ -3025,6 +3025,14 @@ var BrowserPrototype = {
 	//
 	// XXX instrument interactions...
 	// XXX register event handlers...
+	// XXX BUG: scrollbar in list can get focus and intercept key events...
+	// 			- document.querySelector(':focus') returns null
+	//			- does not reproduce in the ImageGrid.Viewer
+	//			- scrollbar styling does not seem to affect this...
+	//		to reproduce:
+	//			- load a scrolled dialog...
+	//			- click on the scrollbar
+	//				- now the browser does not get key events
 	renderList: function(items, context){
 		var that = this
 		var options = context.options || this.options
@@ -3335,7 +3343,13 @@ var BrowserPrototype = {
 						&& that.dom.querySelectorAll('.focused')
 							.forEach(function(e){
 								e.classList.remove('focused') })
-					this.classList.add('focused') })
+					this.classList.add('focused') 
+
+					this.scrollIntoView({
+						behavior: 'auto',
+						block: 'nearest',
+					})
+				})
 				// set focus...
 				.focus() },
 	__blur__: function(evt, elem){
