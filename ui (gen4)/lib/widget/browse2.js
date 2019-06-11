@@ -1232,7 +1232,10 @@ var BaseBrowserPrototype = {
 					return node ? 
 						path.slice(1)
 							.map(e => '  ')
-							.join('') + (node.value || node)
+							.join('') 
+								+ (node.value != null 
+									? node.value 
+									: node)
 						: [] },
 				'_test_texttree',
 				function(func, i, path, options, context){
@@ -1250,7 +1253,10 @@ var BaseBrowserPrototype = {
 						// make a node...
 						: [path.slice(1)
 							.map(e => '  ')
-							.join('') + (node.value || node)]
+							.join('')
+								+ (node.value != null 
+									? node.value 
+									: node)]
 							// append child nodes if present...
 			   				.concat(node.children ?
 								next()
@@ -1282,7 +1288,9 @@ var BaseBrowserPrototype = {
 					return node == null ? 
 							[]
 						// make a node...
-						: [[(node.value || node)]
+						: [[(node.value != null ? 
+								node.value 
+								: node)]
 							// append child nodes if present...
 			   				.concat(node.children ?
 								next()
@@ -1907,7 +1915,9 @@ var BaseBrowserPrototype = {
 								var e = cur
 									.filter(function(e){ 
 										// XXX need a universal item name test...
-										return n == (e.value || e.id) })
+										return n == (e.value != null ? 
+											e.value 
+											: e.id) })
 									.pop()
 								nodes.add(e)
 								cur = e.children
@@ -2835,12 +2845,19 @@ var BrowserPrototype = {
 
 			// XXX should pause on overflow...
 			// XXX use up/down
-			Up: 'prev',
-			Down: 'next',
+			Up: 'prev!',
+			Down: 'next!',
 
 			// XXX use left/right...
 			Left: 'left',
 			Right: 'right',
+
+			Home: 'focus: "first"',
+			End: 'focus: "last"',
+
+			// XXX screen navigation...
+			PgUp: 'pageUp',
+			PgDown: 'pageDown',
 
 			Enter: 'open',
 
@@ -3181,7 +3198,10 @@ var BrowserPrototype = {
 
 		// Base DOM...
 		var elem = document.createElement('div')
-		var text = this.__value2key__(item.value || item)
+		var text = this.__value2key__(
+			item.value != null ? 
+				item.value 
+				: item)
 
 		// classes...
 		elem.classList.add(...['item']
@@ -3204,13 +3224,15 @@ var BrowserPrototype = {
 		elem.setAttribute('value', text)
 
 		// values...
-		text
+		text != null
 			&& (item.value instanceof Array ? item.value : [item.value])
 				// XXX handle $keys and other stuff...
 				.map(function(v){
 					var value = document.createElement('span')
 					value.classList.add('text')
-					value.innerHTML = v || item || ''
+					value.innerHTML = v != null ? 
+						v 
+						: (item || '')
 					elem.appendChild(value)
 				})
 
@@ -3443,7 +3465,9 @@ var TextBrowserPrototype = {
 		return this.renderNested(null, items, null, null, options)
 			.join('\n') },
 	renderItem: function(item, i, options){
-		var value = item.value || item
+		var value = item.value != null ? 
+			item.value 
+			: item
 		value = value instanceof Array ? 
 			value.join(this.options.valueSeparator || ' ')
 			: value

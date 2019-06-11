@@ -192,6 +192,14 @@ requirejs([
 					console.log('test: open: default prevented...') },
 				//cls: ['heading'],
 			})
+
+		make.Separator()
+
+		;(new Array(100))
+			.fill(1)
+			.forEach(function(_, i){
+				make(i) })
+
 	}, {
 		itemButtons: [
 			['&ndash;'],
@@ -210,9 +218,8 @@ requirejs([
 
 $(function(){
 
-	$('.container').draggable({ 
-		cancel: ".path .dir, .list div" 
-	})
+	$('.container')
+		.draggable({ cancel: ".path .dir, .list div" })
 })
 
 
