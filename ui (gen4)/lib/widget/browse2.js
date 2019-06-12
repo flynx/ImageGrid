@@ -1152,13 +1152,13 @@ var BaseBrowserPrototype = {
 				var [inline, p, children] = 
 					// inline...
 					isWalkable(node) ?
-						[true, path, node]
+						[true, path.slice(), node]
 					// nested...
 					: (!skipNested && isWalkable(node.children)) ?
 						[false, 
 							// update context for nested items...
 							path.push(id) 
-								&& path, 
+								&& path.slice(), 
 							node.children]
 					// leaf...
 					: [false, path.concat([id]), undefined]
@@ -1486,13 +1486,6 @@ var BaseBrowserPrototype = {
 	// 		given options in this case will be applied only to list items
 	// 		that are searched i.e. the non-items in the input list...
 	//
-	// XXX BUG: this gets the indexes wrong....
-	// 		To reproduce:
-	// 			dialog.search('B/C/*', (_, i) => i, {iterateAll: true})
-	// 				-> [12 .. 15] // should be: [16, 17, 21, 22]
-	// 		while: 
-	// 			dialog.search(true, (_, i) => i, {iterateAll: true})
-	// 				-> [0 .. 22]
 	// XXX can .search(..) of a non-path array as a pattern be done in 
 	// 		a single pass???
 	// XXX add support for fuzzy match search -- match substring by default 
@@ -1592,24 +1585,6 @@ var BaseBrowserPrototype = {
 		var that = this
 		var args = [...arguments]
 
-		// non-path array...
-		// NOTE: a non-path array is one where at least one element is 
-		// 		an object...
-		// NOTE: this might get expensive as we call .search(..) per item...
-		if(pattern instanceof Array 
-				&& !pattern
-					.reduce(function(r, e){ 
-						return r && typeof(e) != typeof({})  }, true)){
-			var index = new Set(Object.values(this.index))
-			return pattern
-				.map(function(pattern){ 
-					return index.has(pattern) ? 
-						// item exists as-is...
-						pattern 
-						: that.search(pattern, ...args.slice(1)) })
-				.flat()
-				.unique() }
-
 		// parse args...
 		pattern = args.length == 0 ? 
 			true 
@@ -1620,6 +1595,55 @@ var BaseBrowserPrototype = {
 			: undefined
 		options = args.shift() || {}
 		var context = args.shift()
+
+		// non-path array or item as-is...
+		//
+		// here we'll do one of the following for pattern / each element of pattern:
+		// 	- pattern is an explicitly given item
+		// 		-> pass to func(..) if given, else return as-is
+		// 	- call .search(pattern, ..)
+		//
+		// NOTE: a non-path array is one where at least one element is 
+		// 		an object...
+		// NOTE: this might get expensive as we call .search(..) per item...
+		// XXX needs refactoring...
+		var index = new Set(Object.values(this.index))
+		if(index.has(pattern) 
+				|| (pattern instanceof Array
+					&& !pattern
+						.reduce(function(r, e){ 
+							return r && typeof(e) != typeof({})  }, true))){
+			// reverse index...
+			index = this
+				.reduce(function(res, e, i, p){
+					res.set(e, [i, p])
+					return res
+				}, new Map(), {iterateCollapsed: true})
+			var res
+			var Stop = new Error('Stop iteration')
+			try {
+				return (pattern instanceof Array ? 
+						pattern 
+						: [pattern])
+					.map(function(pattern){ 
+						return index.has(pattern) ? 
+							// pattern is an explicit item...
+							[ func ?
+								func.call(this, pattern, 
+									...index.get(pattern), 
+									function(v){
+										res = v
+										throw Stop })
+								: pattern ]
+							// search...
+							: that.search(pattern, ...args.slice(1)) })
+					.flat()
+					.unique() 
+			} catch(e){
+				if(e === Stop){
+					return res
+				}
+				throw e } }
 
 		// pattern -- normalize and do pattern keywords...
 		pattern = options.ignoreKeywords ?
@@ -1724,7 +1748,6 @@ var BaseBrowserPrototype = {
 	// 		first result only.
 	//
 	// XXX should we be able to get offset values relative to any match?
-	// XXX should next/prev wrap around??? ...option???
 	get: function(pattern, options){
 		var args = [...arguments]
 		pattern = args.shift()
@@ -1740,6 +1763,20 @@ var BaseBrowserPrototype = {
 			// XXX return format...
 			: function(e, i, p){ return e }
 		options = args.pop() || {}
+
+		// special case: path pattern -> include collapsed elements... 
+		// XXX use something like .isPath(..)
+		if(((typeof(pattern) == typeof('str') 
+						&& pattern.split(/[\\\/]/g).length > 1)
+					// array path...
+					|| (pattern instanceof Array 
+						&& !pattern
+							.reduce(function(r, e){ 
+								return r || typeof(e) != typeof('str') }, false)))
+				&& !('iterateCollapsed' in options)){
+			options = Object.assign(
+				Object.create(options), 
+				{iterateCollapsed: true}) }
 
 		// sanity checks...
 		if(offset <= 0){
@@ -1886,10 +1923,8 @@ var BaseBrowserPrototype = {
 	// Like .select(.., {iterateCollapsed: true}) but will expand all the 
 	// path items to reveal the target...
 	// XXX should this return the matched item(s), expanded item(s) or this???
-	// XXX need a universal item name/value comparison / getter...
 	reveal: function(key, options){
 		var that = this
-		var seen = new Set()
 		var nodes = new Set()
 		return this.search(key, 
 				function(e, i, path){
@@ -1899,41 +1934,18 @@ var BaseBrowserPrototype = {
 					options || {}))
 			// NOTE: we expand individual items so the order here is not relevant...
 			.map(function([path, e]){
-				// skip paths we have already seen...
-				// XXX do we actually need this???
-				if(seen.has(e.id)){
-					return e
-				}
-				seen.add(e.id)
-
-				var cur = that
-				path.length > 1
-					&& path
-						.slice(0, -1)
-						.forEach(function(n){
-							// array children...
-							if(cur instanceof Array){
-								var e = cur
-									.filter(function(e){ 
-										// XXX need a universal item name test...
-										return n == (e.value != null ? 
-											e.value 
-											: e.id) })
-									.pop()
-								nodes.add(e)
-								cur = e.children
-
-							// browser children...
-							} else {
-								nodes.add(cur.index[n])
-								cur = cur.index[n].children
-							}
-						})
+				// get all collapsed items in path...
+				path
+					.slice(0, -1)
+					.forEach(function(_, i){
+						var p = that.index[path.slice(0, i+1).join('/')]
+						p.collapsed
+							&& nodes.add(p) })
 				return e })
 			// do the actual expansion...
 			.run(function(){
-				//return that.expand([...nodes]) }) },
-				that.expand([...nodes]) }) },
+				nodes.size > 0
+					&& that.expand([...nodes]) }) },
 
 
 
@@ -2568,6 +2580,7 @@ var BaseBrowserPrototype = {
 	// NOTE: this will ignore disabled items.
 	// NOTE: .focus('next') / .focus('prev') will not wrap around the 
 	// 		first last elements...
+	// NOTE: this will reveal the focused item...
 	focus: makeItemEventMethod('focus', 
 		function(evt, items){
 			// blur .focused...
@@ -2576,8 +2589,8 @@ var BaseBrowserPrototype = {
 			// NOTE: if we got multiple matches we care only about the first one...
 			var item = items.shift()
 			item != null
-				&& (item.focused = true)
-		},
+				&& this.reveal(item)
+				&& (item.focused = true) },
 		null,
 		function(){ return this.get(0) },
 		{ 
@@ -2722,8 +2735,25 @@ var BaseBrowserPrototype = {
 					full && this.make(options) })
 				.render(options) }),
 	
-	// XXX target can be item or path...
-	load: makeEventMethod('load', function(evt, target){}),
+	// XXX load longest existing sub-path...
+	load: makeEventMethod('load', 
+		function(evt, target){},
+		function(evt, target){
+			// XXX use .normalizePath(..)
+			target = typeof(target) == typeof('str') ?
+				(target.trim().endsWith('/') ? 
+					target.trim() + '*'
+					: target.trim()).split(/[\\\/]/g)
+				: target
+
+			var elem
+			do{
+				elem = this.get(target)
+			} while(elem === undefined && target.pop())
+
+
+			elem
+				&& this.focus(elem) }),
 
 	close: makeEventMethod('close', function(evt, reason){}),
 	
