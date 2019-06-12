@@ -2224,6 +2224,8 @@ var BaseBrowserPrototype = {
 	// 		the .options attribute...
 	//
 	// XXX use partial render for things like search....
+	// XXX make partial render be lazy -- i.e. add/remove elements and 
+	// 		do not reconstruct the ones already present...
 	render: function(options, renderer, context){
 		context = context || {}
 		renderer = renderer || this
@@ -2746,6 +2748,7 @@ object.makeConstructor('BaseBrowser',
 
 //---------------------------------------------------------------------
 
+// Get actual .item DOM element...
 var getElem = function(elem){
 	elem = elem.dom || elem
 	return elem.classList.contains('list') ? 
@@ -2753,6 +2756,9 @@ var getElem = function(elem){
 			: elem }
 
 
+// Make page navigation method... 
+//
+// XXX this behaves in an odd way with .options.scrollBehavior = 'smooth'
 var focusPage = function(direction){
 	var d = direction == 'up' ?
 			'pagetop'
@@ -2769,6 +2775,45 @@ var focusPage = function(direction){
 			this.focus(this.get(d, 1))
 			// focus top of current page...
 			: this.focus(target) } }
+
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+var KEYBOARD_CONFIG =
+module.KEYBOARD_CONFIG = {
+	// XXX
+	Filter: {
+	},
+
+	General: {
+		pattern: '*',
+
+		// XXX use up/down
+		Up: 'prev!',
+		Down: 'next!',
+		Left: 'left',
+		Right: 'right',
+
+		PgUp: 'pageUp!',
+		PgDown: 'pageDown!',
+
+		Home: 'focus: "first"',
+		End: 'focus: "last"',
+
+
+		Enter: 'open',
+
+		Space: 'toggleSelect',
+		ctrl_A: 'select!: "*"',
+		ctrl_D: 'deselect!: "*"',
+		ctrl_I: 'toggleSelect!: "*"',
+
+		// NOTE: do not bind this key, it is used to jump to buttons
+		// 		via tabindex...
+		Tab: 'NEXT',
+	},
+}
 
 
 
@@ -2864,42 +2909,8 @@ var BrowserPrototype = {
 		},
 	},
 
-	// XXX STUB...
-	__keyboard_config: {
-		General: {
-			pattern: '*',
 
-			// XXX should pause on overflow...
-			// XXX use up/down
-			Up: 'prev!',
-			Down: 'next!',
-
-			// XXX use left/right...
-			Left: 'left',
-			Right: 'right',
-
-			Home: 'focus: "first"',
-			End: 'focus: "last"',
-
-			// XXX screen navigation...
-			PgUp: 'pageUp!',
-			PgDown: 'pageDown!',
-
-			Enter: 'open',
-
-			Space: 'toggleSelect',
-			ctrl_A: 'select!: "*"',
-			ctrl_D: 'deselect!: "*"',
-			ctrl_I: 'toggleSelect!: "*"',
-
-			// NOTE: do not bind this key, it is used to jump to buttons
-			// 		via tabindex...
-			Tab: 'NEXT',
-		},
-	},
-
-
-	//__keyboard_config: null,
+	__keyboard_config: KEYBOARD_CONFIG,
 	get keybindings(){
 		return this.__keyboard_config },
 
@@ -3398,7 +3409,7 @@ var BrowserPrototype = {
 
 	// Custom events handlers...
 	//
-	// XXX keep element on screen if it's off or out of bounds....
+	// NOTE: element alignment is done via the browser focus mechanics...
 	__focus__: function(evt, elem){
 		var that = this
 		elem
@@ -3500,7 +3511,7 @@ var BrowserPrototype = {
 				.expand()
 			: this.next() },
 
-	// XXX should these focus the top/bottom element or and element at 
+	// XXX should these focus the top/bottom element or an element at 
 	// 		offset from top/bottom???
 	pageUp: focusPage('up'),
 	pageDown: focusPage('down'),
