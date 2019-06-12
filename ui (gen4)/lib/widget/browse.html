@@ -160,9 +160,24 @@ TREE.dir_c.dir_b.tree = TREE
 var use_disabled = true
 var show_files = false
 
+requirejs.config({
+	paths: {
+		'lib/object': '../../node_modules/ig-object/object',
+		'lib/actions': '../../node_modules/ig-actions/actions',
+		'lib/features': '../../node_modules/ig-features/features',
+		//'lib/keyboard': '../../node_modules/ig-keyboard/keyboard',
+	},	
+	map: {
+		'*': {
+			'../object': 'lib/object',
+		},
+	},
+})
+
+
 requirejs([
 			'../keyboard', 
-			'../object', 
+			'lib/object', 
 			'../toggler', 
 			'./browse'
 		], function(k, o, t, br){

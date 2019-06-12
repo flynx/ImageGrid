@@ -11,10 +11,7 @@ var toggler = require('../toggler')
 var keyboard = require('../keyboard')
 var object = require('../object')
 var widget = require('./widget')
-
-// XXX
-//var walk = require('lib/walk')
-var walk = require('../../node_modules/generic-walk/walk').walk
+var walk = require('lib/walk').walk
 
 
 
@@ -2984,9 +2981,10 @@ var BrowserPrototype = {
 		// Setup basic event handlers...
 		// keyboard...
 		d.addEventListener('keydown', 
-			keyboard.makePausableKeyboardHandler(this.keyboard,
-				function(){ console.log('KEY:', ...arguments) },//null,
-	 			this))
+			this.__keyboard_handler = this.__keyboard_handler 
+				|| keyboard.makePausableKeyboardHandler(this.keyboard,
+					function(){ console.log('KEY:', ...arguments) },//null,
+					this))
 		// focus...
 		d.addEventListener('click', 
 			function(e){ 
@@ -3025,14 +3023,9 @@ var BrowserPrototype = {
 	//
 	// XXX instrument interactions...
 	// XXX register event handlers...
-	// XXX BUG: scrollbar in list can get focus and intercept key events...
-	// 			- document.querySelector(':focus') returns null
-	//			- does not reproduce in the ImageGrid.Viewer
-	//			- scrollbar styling does not seem to affect this...
-	//		to reproduce:
-	//			- load a scrolled dialog...
-	//			- click on the scrollbar
-	//				- now the browser does not get key events
+	// XXX HANCK: preventing scrollbar from grabbing focus -- there is 
+	// 		definitely a better solution implemented in browse.js + ImageGrid
+	// 		(the effect seems to be originating out of ImageGrid...)
 	renderList: function(items, context){
 		var that = this
 		var options = context.options || this.options
@@ -3049,6 +3042,13 @@ var BrowserPrototype = {
 		// list...
 		var list = document.createElement('div')
 		list.classList.add('list', 'v-block')
+		// XXX HACK: prevent scrollbar from grabbing focus...
+		list.addEventListener('mousedown', 
+			function(){
+				setTimeout(function(){
+					that.focused 
+						&& !list.querySelector(':focus')
+						&& that.focused.dom.focus() }, 0) })
 		items
 			.forEach(function(item){
 				list.appendChild(item instanceof Array ? 
