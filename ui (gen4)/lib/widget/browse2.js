@@ -684,6 +684,10 @@ var BaseBrowserPrototype = {
 	// 		count to the path...
 	// 		This will also make re-generating the indexes and searching
 	// 		stable...
+	//
+	// XXX for some odd reason this is sorted wrong...
+	// 		...keys that are numbers for some reason are first and sorted 
+	// 		by value and not by position...
 	__item_index_cache: null,
 	get index(){
 		return (this.__item_index_cache = 
@@ -2749,6 +2753,25 @@ var getElem = function(elem){
 			: elem }
 
 
+var focusPage = function(direction){
+	var d = direction == 'up' ?
+			'pagetop'
+		: direction == 'down' ?
+			'pagebottom'
+		: null
+	if(d == null){
+		throw new Error('focusPage(..): unknown direction: '+ direction)
+	}
+	return function(){
+		var target = this.get(d)
+		return this.focused === target ?
+			// scroll one page up and focus page top...
+			this.focus(this.get(d, 1))
+			// focus top of current page...
+			: this.focus(target) } }
+
+
+
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
 var BrowserClassPrototype = {
@@ -2769,6 +2792,12 @@ var BrowserPrototype = {
 
 	options: {
 		__proto__: BaseBrowser.prototype.options,
+
+		// for more docs see:
+		//	https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView
+		//
+		// XXX 'smooth' value yields odd results...
+		//scrollBehavior: 'auto',
 
 		hideListHeader: false,
 
@@ -2853,8 +2882,8 @@ var BrowserPrototype = {
 			End: 'focus: "last"',
 
 			// XXX screen navigation...
-			PgUp: 'pageUp',
-			PgDown: 'pageDown',
+			PgUp: 'pageUp!',
+			PgDown: 'pageDown!',
 
 			Enter: 'open',
 
@@ -2924,28 +2953,70 @@ var BrowserPrototype = {
 	// 		XXX currently direct match only...
 	// 			...should we add containment search -- match closest item containing obj...
 	// 
+	//
+	//	.get('pagetop'[, offset] ..)
+	//
+	//	.get('pagebottom'[, offset] ..)
+	//
+	//
 	// XXX add support for pixel offset...
 	// XXX
 	get: function(pattern){
+		var args = [...arguments].slice(1)
 		var p = pattern
+
+		// XXX skip detached elements...
+		var getAtPagePosition = function(pos, offset){
+			pos = pos || 'top'
+			var lst = this.dom.querySelector('.list')
+			offset = lst.offsetHeight * (offset || 0)
+			var st = lst.scrollTop
+			var H = pos == 'bottom' ? 
+				lst.offsetHeight 
+				: 0
+			return this.search(true,
+					function(e, i, p, stop){
+						var edom = getElem(e)
+						// first below upper border...
+						pos == 'top' 
+							&& Math.round(edom.offsetTop 
+								- Math.max(0, st - offset)) >= 0
+							&& stop(e)
+						// last above lower border...
+						pos == 'bottom'
+							&& Math.round(edom.offsetTop + edom.offsetHeight)
+								- Math.max(0, st + H + offset) <= 0
+							&& stop(e) },
+					{ reverse: pos == 'bottom' ? 
+						'flat' 
+						: false })
+				.run(function(){
+					return this instanceof Array ?
+						undefined
+						: this }) }.bind(this)
+
 		pattern = arguments[0] = 
 			// DOM element...
-			// XXX should we also check for content???
 			pattern instanceof HTMLElement ?
-				function(e){ return e.dom === p }
+				function(e){ return e.dom === p || getElem(e) === p }
 			// jQuery object...
-			// XXX should we also check for content???
 			: (typeof(jQuery) != 'undefined' && pattern instanceof jQuery) ?
-				function(e){ return p.is(e.dom) }
-			: pattern
-		return pattern == 'pagetop' ?
-				// XXX
-				false
+				function(e){ return p.is(e.dom) || p.is(getElem(e)) }
+			// pagetop + offset...
+			: pattern == 'pagetop' ?
+				getAtPagePosition('top', 
+					// page offset...
+					typeof(args[0]) == typeof(123) ? args.shift() : 0)
+			// pagebottom + offset...
 			: pattern == 'pagebottom' ?
-				// XXX
-				false
-			// call parent...
-			: object.parent(BrowserPrototype.get, this).call(this, ...arguments) },
+				getAtPagePosition('bottom', 
+					// page offset...
+					typeof(args[0]) == typeof(123) ? args.shift() : 0)
+			// other...
+			: pattern
+
+		// call parent...
+		return object.parent(BrowserPrototype.get, this).call(this, pattern, ...args) },
 
 
 	// Element renderers...
@@ -2991,10 +3062,12 @@ var BrowserPrototype = {
 				e.stopPropagation()
 				d.focus() 
 			})
+		/* XXX this messes up scrollbar...
 		d.addEventListener('focus',
 		   function(){
 			   that.focused
 					&& getElem(that.focused).focus() })
+		//*/
 
 		this.dom = d
 
@@ -3021,11 +3094,7 @@ var BrowserPrototype = {
 	// 		</div>
 	// 	</div>
 	//
-	// XXX instrument interactions...
-	// XXX register event handlers...
-	// XXX HANCK: preventing scrollbar from grabbing focus -- there is 
-	// 		definitely a better solution implemented in browse.js + ImageGrid
-	// 		(the effect seems to be originating out of ImageGrid...)
+	// XXX the way focus management is done here feels hack-ish...
 	renderList: function(items, context){
 		var that = this
 		var options = context.options || this.options
@@ -3034,6 +3103,9 @@ var BrowserPrototype = {
 		var dialog = document.createElement('div')
 		dialog.classList.add('browse-widget')
 		dialog.setAttribute('tabindex', '0')
+		// HACK?: prevent dialog from grabbing focus from item...
+		dialog.addEventListener('mousedown', 
+			function(evt){ evt.stopPropagation() })
 
 		// header...
 		options.hideListHeader
@@ -3042,13 +3114,9 @@ var BrowserPrototype = {
 		// list...
 		var list = document.createElement('div')
 		list.classList.add('list', 'v-block')
-		// XXX HACK: prevent scrollbar from grabbing focus...
+		// HACK?: prevent scrollbar from grabbing focus...
 		list.addEventListener('mousedown', 
-			function(){
-				setTimeout(function(){
-					that.focused 
-						&& !list.querySelector(':focus')
-						&& that.focused.dom.focus() }, 0) })
+			function(evt){ evt.stopPropagation() })
 		items
 			.forEach(function(item){
 				list.appendChild(item instanceof Array ? 
@@ -3318,11 +3386,14 @@ var BrowserPrototype = {
 
 
 	// scroll...
-	// XXX add target posotion (top/bottom/center) -- where to place the item...
-	scrollTo: function(pattern){
-	},
-	center: function(pattern){
-		return this.scrollTo(pattern, 'center', ...[...arguments].slice(1)) },
+	// XXX do we need this???
+	scrollTo: function(pattern, position){
+		var target = this.get(pattern)
+		target 
+			&& getElem(target).scrollIntoView({
+				behavior: (this.options || {}).scrollBehavior || 'auto',
+				block: position || 'center',
+			}) },
 
 
 	// Custom events handlers...
@@ -3346,7 +3417,7 @@ var BrowserPrototype = {
 					this.classList.add('focused') 
 
 					this.scrollIntoView({
-						behavior: 'auto',
+						behavior: (that.options || {}).scrollBehavior || 'auto',
 						block: 'nearest',
 					})
 				})
@@ -3429,17 +3500,10 @@ var BrowserPrototype = {
 				.expand()
 			: this.next() },
 
-	// navigation relative to page...
-	pageTop: function(){
-		this.focus(this.get('pagetop')) },
-	pageBottom: function(){
-		this.focus(this.get('pagebottom')) },
-	// XXX
-	pageUp: function(){
-		this.scrollTo(this.get('pagetop'), 'bottom') },
-	// XXX should we scroll to the bottom elem (current behavior) or to the one after it???
-	pageDown: function(){
-		this.scrollTo(this.get('pagebottom'), 'top') },
+	// XXX should these focus the top/bottom element or and element at 
+	// 		offset from top/bottom???
+	pageUp: focusPage('up'),
+	pageDown: focusPage('down'),
 
 }
 
