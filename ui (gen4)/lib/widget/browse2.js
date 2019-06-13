@@ -1606,7 +1606,7 @@ var BaseBrowserPrototype = {
 		// NOTE: a non-path array is one where at least one element is 
 		// 		an object...
 		// NOTE: this might get expensive as we call .search(..) per item...
-		// XXX needs refactoring...
+		// XXX needs refactoring -- feels overcomplicated...
 		var index = new Set(Object.values(this.index))
 		if(index.has(pattern) 
 				|| (pattern instanceof Array
@@ -1631,7 +1631,8 @@ var BaseBrowserPrototype = {
 							[ func ?
 								func.call(this, pattern, 
 									...index.get(pattern), 
-									function(v){
+									// stop(..)
+									function stop(v){
 										res = v
 										throw Stop })
 								: pattern ]
@@ -2693,7 +2694,6 @@ var BaseBrowserPrototype = {
 		{ skipDisabled: false }),
 
 	// primary/secondary/ternary? item actions...
-	// XXX revise default actions...
 	open: makeItemEventMethod('open', 
 		function(evt, item){},
 		// XXX not yet sure if this is correct...
@@ -2735,7 +2735,8 @@ var BaseBrowserPrototype = {
 					full && this.make(options) })
 				.render(options) }),
 	
-	// XXX load longest existing sub-path...
+	// NOTE: if given a path that does not exist this will try and load 
+	// 		the longest existing sub-path...
 	load: makeEventMethod('load', 
 		function(evt, target){},
 		function(evt, target){
@@ -2745,13 +2746,11 @@ var BaseBrowserPrototype = {
 					target.trim() + '*'
 					: target.trim()).split(/[\\\/]/g)
 				: target
-
+			// search for longest existing path...
 			var elem
 			do{
 				elem = this.get(target)
 			} while(elem === undefined && target.pop())
-
-
 			elem
 				&& this.focus(elem) }),
 
