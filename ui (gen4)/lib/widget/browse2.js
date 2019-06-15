@@ -2644,9 +2644,9 @@ var BaseBrowserPrototype = {
 				&& (item.focused = true) },
 		default_item: function(){ return this.get(0) },
 		options: { 
-			getter: 'get', 
 			skipDisabled: true,
-		} }),
+		},
+		getter: 'get' }),
 	blur: makeItemEventMethod('blur', {
 		handler: function(evt, items){
 			items.forEach(function(item){
