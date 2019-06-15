@@ -372,6 +372,7 @@ function(item, event, evt, ...args){
 // NOTE: item events do not directly trigger the original caller's handlers
 // 		those will get celled recursively when the events are propagated
 // 		up the tree.
+// XXX use destructuring (a-la makeItemOptionOnEventMethod(..) / makeItemOptionOffEventMethod(..))...
 var makeItemEventMethod = 
 module.makeItemEventMethod =
 function(event, handler, action, default_item, filter, options){
@@ -440,6 +441,49 @@ function(event, handler, action, default_item, filter, options){
 				...args) },
 			// get base method attributes -- keep the event method format...
    			base) }
+
+
+// XXX should these .update()
+var makeItemOptionOnEventMethod =
+module.makeItemOptionOnEventMethod =
+function(event, option, {handler, default_item, filter, options, update=true}={}){
+	return makeItemEventMethod(event, 
+		function(evt, items){
+			var that = this
+			var change = false
+			items.forEach(function(item){
+				change = item[option] = true 
+				handler
+					&& handler.call(that, item) }) 
+			// need to update for changes to show up...
+			change
+				&& update
+				&& this.update() },
+		null,
+		default_item 
+			|| function(){ return this.focused },
+		filter,
+		options) }
+var makeItemOptionOffEventMethod =
+module.makeItemOptionOffEventMethod =
+function(event, option, {handler, default_item, filter, options, update=true}={}){
+	return makeItemEventMethod(event, 
+		function(evt, items){
+			var change = false
+			items.forEach(function(item){
+				change = change || item[option]
+				delete item[option] 
+				handler
+					&& handler.call(that, item) })
+			// need to update for changes to show up...
+			change
+				&& update
+				&& this.update() },
+		null,
+		default_item 
+			|| function(){ return this.focused },
+		filter,
+		options) }
 
 
 // Generate item event/state toggler...
@@ -742,6 +786,20 @@ var BaseBrowserPrototype = {
 		this
 			.deselect('selected')
 			.select(value) },
+
+
+	// XXX should this be cached???
+	// XXX should this set .options???
+	// XXX need to normalizePath(..)
+	// 		...array .value is not compliant with POLS
+	get path(){
+		return this.__items != null ?
+			this.get('focused', 
+				function(e, i, p){ return p.join('/') }) 
+			// XXX do we use .options.path???
+			: (this.options || {}).path },
+	set path(value){
+		this.load(value) },
 
 
 	// Length...
@@ -2616,8 +2674,8 @@ var BaseBrowserPrototype = {
 		'focus', 'blur', 
 		function(){ return this.focused || 0 }, 
 		false),
-
-	// XXX these should skip disabled...
+	// selection...
+	// XXX these should skip disabled... option???
 	select: makeItemEventMethod('select', 
 		function(evt, items){
 			items.forEach(function(item){
@@ -2631,67 +2689,40 @@ var BaseBrowserPrototype = {
 				delete item.selected }) },
 		null,
 		function(){ return this.focused }),
-	// XXX use a real toggler here??? (i.e. finish makeItemEventToggler2(..))
-	toggleSelect: makeItemEventToggler('selected', 'select', 'deselect', 'focused'),
-
-	// NOTE: .expand(..) / .collapse(..) ignore item.collapsed state...
-	collapse: makeItemEventMethod('collapse', 
-		function(evt, item){
-			item.forEach(function(e){ e.collapsed = true }) 
-			this.update()
-		},
-		null,
-		function(){ return this.focused },
-		function(elem){ return elem.value && elem.children },
-		{iterateCollapsed: true}),
-	expand: makeItemEventMethod('expand', 
-		function(evt, item){
-			item.forEach(function(e){ delete e.collapsed }) 
-			this.update()
-		},
-		null,
-		function(){ return this.focused },
-		function(elem){ return elem.value && elem.children },
-		{iterateCollapsed: true}),
+	toggleSelect: makeItemEventToggler(
+		'selected', 
+		'select', 'deselect', 
+		'focused'),
+	// topology...
+	collapse: makeItemOptionOnEventMethod('expand', 'collapsed', {
+		filter: function(elem){ return elem.value && elem.children },
+		options: {iterateCollapsed: true}, }),
+	expand: makeItemOptionOffEventMethod('expand', 'collapsed', {
+		filter: function(elem){ return elem.value && elem.children },
+		options: {iterateCollapsed: true}, }),
 	toggleCollapse: makeItemEventToggler(
 		'collapsed', 
 		'collapse', 'expand', 
 		'focused',
 		function(elem){ return elem.value && elem.children },
 		{iterateCollapsed: true}),
-
-	// XXX not sure about these... 
-	disable: makeItemEventMethod('disable', 
-		function(evt, items){
-			var that = this
-			var change = false
-			items.forEach(function(item){
-				change = item.disabled = true 
-				item.focused
-					&& that.blur(item)
-			}) 
-			// need to update for changes to show up...
-			change
-				&& this.update() },
-		null,
-		// XXX is this a good default???
-		function(){ return this.focused }),
-	enable: makeItemEventMethod('enable', 
-		function(evt, items){
-			var change = false
-			items.forEach(function(item){
-				change = change || item.disabled
-				delete item.disabled }) 
-			// need to update for changes to show up...
-			change
-				&& this.update() },
-		null,
-		{ skipDisabled: false }),
+	// item state events...
+	disable: makeItemOptionOnEventMethod('disable', 'disabled', 
+		{ handler: function(item){ this.blur(item) }, }),
+	enable: makeItemOptionOffEventMethod('enable', 'disabled', 
+		{ options: {skipDisabled: false}, }),
 	toggleDisabled: makeItemEventToggler(
 		'disabled', 
 		'disable', 'enable', 
 		'focused',
 		{ skipDisabled: false }),
+	// visibility...
+	hide: makeItemOptionOnEventMethod('hide', 'hidden'),
+	show: makeItemOptionOffEventMethod('show', 'hidden'),
+	toggleHidden: makeItemEventToggler(
+		'hidden', 
+		'hide', 'show', 
+		'focused'),
 
 	// primary/secondary/ternary? item actions...
 	open: makeItemEventMethod('open', 
@@ -2737,6 +2768,11 @@ var BaseBrowserPrototype = {
 	
 	// NOTE: if given a path that does not exist this will try and load 
 	// 		the longest existing sub-path...
+	// XXX should level drawing be a feature of the browser or the 
+	// 		client (as-is in browser.js)???
+	// XXX would also need to pass the path to .make(..) and friends for 
+	// 		compatibility...
+	// 		...or set .options.path (and keep it up to date in the API)...
 	load: makeEventMethod('load', 
 		function(evt, target){},
 		function(evt, target){
@@ -2833,7 +2869,7 @@ module.KEYBOARD_CONFIG = {
 
 		Enter: 'open',
 
-		Space: 'toggleSelect',
+		Space: 'toggleSelect!',
 		ctrl_A: 'select!: "*"',
 		ctrl_D: 'deselect!: "*"',
 		ctrl_I: 'toggleSelect!: "*"',
@@ -3327,6 +3363,7 @@ var BrowserPrototype = {
 			.concat(item['class'] || item.cls || [])
 			// special classes...
 			.concat([
+				'focused',
 				'selected',
 				'disabled',
 				'hidden',
