@@ -328,9 +328,7 @@ function(item, event, evt, ...args){
 // Generate item event method...
 //
 // 	makeItemEventMethod(event_name)
-// 	makeItemEventMethod(event_name, handler[, options])
-// 	makeItemEventMethod(event_name, handler, default_getter[, options])
-// 	makeItemEventMethod(event_name, handler, default_getter, filter[, options])
+// 	makeItemEventMethod(event_name, {handler, default_getter, filter, options, get_mode})
 // 		-> event_method
 //
 //
@@ -372,16 +370,10 @@ function(item, event, evt, ...args){
 // NOTE: item events do not directly trigger the original caller's handlers
 // 		those will get celled recursively when the events are propagated
 // 		up the tree.
-// XXX use destructuring (a-la makeItemOptionOnEventMethod(..) / makeItemOptionOffEventMethod(..))...
+// XXX destructuring: move the defaults to the arguments...
 var makeItemEventMethod = 
 module.makeItemEventMethod =
-function(event, handler, action, default_item, filter, options){
-	// parse args...
-	var args = [...arguments].slice(3)
-	default_item = args[0] instanceof Function 
-		&& args.shift()
-	filter = args[0] instanceof Function
-		&& args.shift()
+function(event, {handler, action, default_item, filter, options, get_mode}={}){
 	var filterItems = function(items){
 		items = items instanceof Array ? 
 				items 
@@ -391,14 +383,14 @@ function(event, handler, action, default_item, filter, options){
 		return filter ? 
 			items.filter(filter) 
 			: items }
-	options = args.shift()
+	//options = args.shift()
 	options = Object.assign(
 		// NOTE: we need to be able to pass item objects, so we can not
 		// 		use queries at the same time as there is not way to 
 		// 		distinguish one from the other...
 		{ noQueryCheck: true },
 		options || {})
-	var getter = options.getMode || 'search' 
+	var getter = get_mode || 'search' 
 	// base event method...
 	// NOTE: this is not returned directly as we need to query the items
 	// 		and pass those on to the handlers rather than the arguments 
@@ -443,47 +435,50 @@ function(event, handler, action, default_item, filter, options){
    			base) }
 
 
-// XXX should these .update()
-var makeItemOptionOnEventMethod =
-module.makeItemOptionOnEventMethod =
-function(event, option, {handler, default_item, filter, options, update=true}={}){
-	return makeItemEventMethod(event, 
-		function(evt, items){
+// Make event method edit item...
+//
+// XXX should this .update()
+// XXX destructuring: move the defaults to the arguments...
+var makeItemOptionEventMethod =
+module.makeItemOptionEventMethod =
+function(event, action, {handler, default_item, filter, options, update=true}={}){
+	return makeItemEventMethod(event, {
+		handler: function(evt, items){
 			var that = this
 			var change = false
 			items.forEach(function(item){
-				change = item[option] = true 
+				change = action(item)
 				handler
 					&& handler.call(that, item) }) 
 			// need to update for changes to show up...
 			change
 				&& update
 				&& this.update() },
-		null,
-		default_item 
-			|| function(){ return this.focused },
+		default_item: 
+			default_item 
+				|| function(){ return this.focused },
 		filter,
-		options) }
+		options, }) }
+
+// Make event method to toggle item attr on/off...
+//
+// XXX destructuring: move the defaults to the arguments...
+var makeItemOptionOnEventMethod =
+module.makeItemOptionOnEventMethod =
+function(event, attr, {handler, default_item, filter, options, update=true}={}){
+	return makeItemOptionEventMethod(event,
+		function(item){
+			return item[attr] = true },
+		{ handler, default_item, filter, options, update }) }
 var makeItemOptionOffEventMethod =
 module.makeItemOptionOffEventMethod =
-function(event, option, {handler, default_item, filter, options, update=true}={}){
-	return makeItemEventMethod(event, 
-		function(evt, items){
-			var change = false
-			items.forEach(function(item){
-				change = change || item[option]
-				delete item[option] 
-				handler
-					&& handler.call(that, item) })
-			// need to update for changes to show up...
-			change
-				&& update
-				&& this.update() },
-		null,
-		default_item 
-			|| function(){ return this.focused },
-		filter,
-		options) }
+function(event, attr, {handler, default_item, filter, options, update=true}={}){
+	return makeItemOptionEventMethod(event,
+		function(item){
+			change = !!item[attr]
+			delete item[attr]
+			return change },
+		{ handler, default_item, filter, options, update }) }
 
 
 // Generate item event/state toggler...
@@ -2639,9 +2634,10 @@ var BaseBrowserPrototype = {
 	// NOTE: this will ignore disabled items.
 	// NOTE: .focus('next') / .focus('prev') will not wrap around the 
 	// 		first last elements...
+	// NOTE: if focus does not change this will trigger any handlers...
 	// NOTE: this will reveal the focused item...
-	focus: makeItemEventMethod('focus', 
-		function(evt, items){
+	focus: makeItemEventMethod('focus', {
+		handler: function(evt, items){
 			// blur .focused...
 			this.focused
 				&& this.blur(this.focused)
@@ -2650,18 +2646,16 @@ var BaseBrowserPrototype = {
 			item != null
 				&& this.reveal(item)
 				&& (item.focused = true) },
-		null,
-		function(){ return this.get(0) },
-		{ 
-			getMode: 'get', 
+		default_item: function(){ return this.get(0) },
+		options: { 
+			get_mode: 'get', 
 			skipDisabled: true,
-		}),
-	blur: makeItemEventMethod('blur', 
-		function(evt, items){
+		} }),
+	blur: makeItemEventMethod('blur', {
+		handler: function(evt, items){
 			items.forEach(function(item){
 				delete item.focused }) },
-		null,
-		function(){ return this.focused }),
+		default_item: function(){ return this.focused } }),
 	// NOTE: .next() / .prev() will wrap around the first/last elements...
 	next: function(){ 
 		this.focus('next').focused || this.focus('first') 
@@ -2676,19 +2670,17 @@ var BaseBrowserPrototype = {
 		false),
 	// selection...
 	// XXX these should skip disabled... option???
-	select: makeItemEventMethod('select', 
-		function(evt, items){
+	select: makeItemEventMethod('select', {
+		handler: function(evt, items){
 			items.forEach(function(item){
 				item.selected = true }) },
-		null,
 		// XXX is this a good default???
-		function(){ return this.focused }),
-	deselect: makeItemEventMethod('deselect', 
-		function(evt, items){
+		default_item: function(){ return this.focused } }),
+	deselect: makeItemEventMethod('deselect', { 
+		handler: function(evt, items){
 			items.forEach(function(item){
 				delete item.selected }) },
-		null,
-		function(){ return this.focused }),
+		default_item: function(){ return this.focused } }),
 	toggleSelect: makeItemEventToggler(
 		'selected', 
 		'select', 'deselect', 
@@ -2725,17 +2717,14 @@ var BaseBrowserPrototype = {
 		'focused'),
 
 	// primary/secondary/ternary? item actions...
-	open: makeItemEventMethod('open', 
-		function(evt, item){},
+	open: makeItemEventMethod('open', {
 		// XXX not yet sure if this is correct...
-		function(evt, item){
+		action: function(evt, item){
 			item.length > 0
 				&& this.toggleCollapse(item) },
-		function(){ return this.focused }),
-	launch: makeItemEventMethod('launch', 
-		function(evt, item){},
-		null,
-		function(){ return this.focused }),
+		default_item: function(){ return this.focused } }),
+	launch: makeItemEventMethod('launch', {
+		default_item: function(){ return this.focused } }),
 
 	// Update state (make then render)...
 	//
