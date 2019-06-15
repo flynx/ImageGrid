@@ -328,7 +328,7 @@ function(item, event, evt, ...args){
 // Generate item event method...
 //
 // 	makeItemEventMethod(event_name)
-// 	makeItemEventMethod(event_name, {handler, default_getter, filter, options, get_mode})
+// 	makeItemEventMethod(event_name, {handler, default_getter, filter, options, getter})
 // 		-> event_method
 //
 //
@@ -370,10 +370,10 @@ function(item, event, evt, ...args){
 // NOTE: item events do not directly trigger the original caller's handlers
 // 		those will get celled recursively when the events are propagated
 // 		up the tree.
-// XXX destructuring: move the defaults to the arguments...
+// XXX destructuring: should default_item get .focused??? 
 var makeItemEventMethod = 
 module.makeItemEventMethod =
-function(event, {handler, action, default_item, filter, options, get_mode}={}){
+function(event, {handler, action, default_item, filter, options={}, getter='search'}={}){
 	var filterItems = function(items){
 		items = items instanceof Array ? 
 				items 
@@ -383,14 +383,12 @@ function(event, {handler, action, default_item, filter, options, get_mode}={}){
 		return filter ? 
 			items.filter(filter) 
 			: items }
-	//options = args.shift()
 	options = Object.assign(
 		// NOTE: we need to be able to pass item objects, so we can not
 		// 		use queries at the same time as there is not way to 
 		// 		distinguish one from the other...
 		{ noQueryCheck: true },
-		options || {})
-	var getter = get_mode || 'search' 
+		options)
 	// base event method...
 	// NOTE: this is not returned directly as we need to query the items
 	// 		and pass those on to the handlers rather than the arguments 
@@ -438,7 +436,6 @@ function(event, {handler, action, default_item, filter, options, get_mode}={}){
 // Make event method edit item...
 //
 // XXX should this .update()
-// XXX destructuring: move the defaults to the arguments...
 var makeItemOptionEventMethod =
 module.makeItemOptionEventMethod =
 function(event, action, {handler, default_item, filter, options, update=true}={}){
@@ -462,7 +459,6 @@ function(event, action, {handler, default_item, filter, options, update=true}={}
 
 // Make event method to toggle item attr on/off...
 //
-// XXX destructuring: move the defaults to the arguments...
 var makeItemOptionOnEventMethod =
 module.makeItemOptionOnEventMethod =
 function(event, attr, {handler, default_item, filter, options, update=true}={}){
@@ -2648,7 +2644,7 @@ var BaseBrowserPrototype = {
 				&& (item.focused = true) },
 		default_item: function(){ return this.get(0) },
 		options: { 
-			get_mode: 'get', 
+			getter: 'get', 
 			skipDisabled: true,
 		} }),
 	blur: makeItemEventMethod('blur', {
