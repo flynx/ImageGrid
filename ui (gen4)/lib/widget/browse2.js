@@ -444,12 +444,12 @@ function(event, action, {handler, default_item, filter, options, update=true}={}
 			var that = this
 			var change = false
 			items.forEach(function(item){
-				change = action(item)
+				change = action(item) !== false
 				handler
 					&& handler.call(that, item) }) 
 			// need to update for changes to show up...
-			change
-				&& update
+			update
+				&& change
 				&& this.update() },
 		default_item: 
 			default_item 
