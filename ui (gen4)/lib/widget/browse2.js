@@ -436,21 +436,16 @@ function(event, {handler, action, default_item, filter, options={}, getter='sear
 // Make event method edit item...
 //
 // XXX should this .update()
-var makeItemOptionEventMethod =
-module.makeItemOptionEventMethod =
-function(event, action, {handler, default_item, filter, options, update=true}={}){
+var makeItemEditEventMethod =
+module.makeItemEditEventMethod =
+function(event, edit, {handler, default_item, filter, options}={}){
 	return makeItemEventMethod(event, {
 		handler: function(evt, items){
 			var that = this
-			var change = false
 			items.forEach(function(item){
-				change = action(item) !== false
+				edit(item)
 				handler
-					&& handler.call(that, item) }) 
-			// need to update for changes to show up...
-			update
-				&& change
-				&& this.update() },
+					&& handler.call(that, item) }) },
 		default_item: 
 			default_item 
 				|| function(){ return this.focused },
@@ -461,20 +456,20 @@ function(event, action, {handler, default_item, filter, options, update=true}={}
 //
 var makeItemOptionOnEventMethod =
 module.makeItemOptionOnEventMethod =
-function(event, attr, {handler, default_item, filter, options, update=true}={}){
-	return makeItemOptionEventMethod(event,
+function(event, attr, {handler, default_item, filter, options}={}){
+	return makeItemEditEventMethod(event,
 		function(item){
 			return item[attr] = true },
-		{ handler, default_item, filter, options, update }) }
+		{ handler, default_item, filter, options }) }
 var makeItemOptionOffEventMethod =
 module.makeItemOptionOffEventMethod =
-function(event, attr, {handler, default_item, filter, options, update=true}={}){
-	return makeItemOptionEventMethod(event,
+function(event, attr, {handler, default_item, filter, options}={}){
+	return makeItemEditEventMethod(event,
 		function(item){
 			change = !!item[attr]
 			delete item[attr]
 			return change },
-		{ handler, default_item, filter, options, update }) }
+		{ handler, default_item, filter, options }) }
 
 
 // Generate item event/state toggler...
@@ -638,6 +633,8 @@ var BaseBrowserPrototype = {
 	options: {
 		// If true item keys must be unique...
 		uniqueKeys: false,
+
+		//skipDisabledMode: 'node',
 	},
 
 	// parent widget object...
@@ -779,6 +776,7 @@ var BaseBrowserPrototype = {
 			.select(value) },
 
 
+	// XXX should this return a list or a string???
 	// XXX should this be cached???
 	// XXX should this set .options???
 	// XXX need to normalizePath(..)
@@ -998,7 +996,8 @@ var BaseBrowserPrototype = {
 	// 		// XXX not yet supported...
 	// 		skipInlined: <bool>,
 	//
-	// 		skipDisabled: <bool>,
+	// 		skipDisabledMode: 'node' | 'branch',
+	// 		skipDisabled: <bool> | 'node' | 'branch',
 	//
 	// 		// Reverse iteration order...
 	//		//
@@ -1079,7 +1078,9 @@ var BaseBrowserPrototype = {
 					|| args[0] == null)) ?
 			args.shift() 
 			: null 
-		options = args.shift() || {} 
+		options = Object.assign(
+			Object.create(this.options || {}),
+			args.shift() || {})
 
 		// get/build context...
 		var context = args.shift()
@@ -1094,7 +1095,12 @@ var BaseBrowserPrototype = {
 		var iterateCollapsed = options.iterateAll || options.iterateCollapsed
 		var skipNested = !options.iterateAll && options.skipNested
 		var skipInlined = !options.iterateAll && options.skipInlined
+
 		var skipDisabled = !options.iterateAll && options.skipDisabled
+		skipDisabled = skipDisabled === true ? 
+			(options.skipDisabledMode || 'node')
+			: skipDisabled
+
 		var reverse = options.reverse === true ?
 			(options.defaultReverse || 'tree')
 			: options.reverse
@@ -1118,8 +1124,8 @@ var BaseBrowserPrototype = {
 				// skip non-iterable items...
 				if(!iterateNonIterable && node.noniterable){
 					return state }
-				// skip disabled...
-				if(skipDisabled && node.disabled){
+				// skip disabled branch...
+				if(skipDisabled == 'branch' && node.disabled){
 					return state }
 
 				// XXX BUG?: doNested(false) will not count any of the 
@@ -1224,19 +1230,22 @@ var BaseBrowserPrototype = {
 							&& doNested() 
 							|| [],
 						// do element...
-						func ? 
-							(func.call(that, 
-								...(inline ? 
-									[null, context.index] 
-									: [node, context.index++]),
-								p, 
-								// NOTE: when calling this it is the 
-								// 		responsibility of the caller to return
-								// 		the result to be added to state...
-								doNested, 
-								stop,
-								children) || []) 
-							: [node],
+						!(skipDisabled && node.disabled) ?
+							(func ? 
+								(func.call(that, 
+									...(inline ? 
+										[null, context.index] 
+										: [node, context.index++]),
+									p, 
+									// NOTE: when calling this it is the 
+									// 		responsibility of the caller to return
+									// 		the result to be added to state...
+									doNested, 
+									stop,
+									children) || []) 
+								: [node])
+							// element is disabled -> handle children...
+							: [],
 						// normal order -> do children...
 						children
 							&& nested === false
@@ -1417,6 +1426,8 @@ var BaseBrowserPrototype = {
 				|| args[0] === undefined) ? 
 			args.shift() 
 			: undefined
+		// NOTE: we do not inherit options from this.options here is it 
+		// 		will be done in .walk(..)
 		options = args.shift() || {}
 		options = !options.defaultReverse ?
 			Object.assign({},
@@ -1642,6 +1653,8 @@ var BaseBrowserPrototype = {
 				|| args[0] === undefined) ? 
 			args.shift() 
 			: undefined
+		// NOTE: we do not inherit options from this.options here is it 
+		// 		will be done in .walk(..)
 		options = args.shift() || {}
 		var context = args.shift()
 
@@ -1812,6 +1825,8 @@ var BaseBrowserPrototype = {
 			args.shift() 
 			// XXX return format...
 			: function(e, i, p){ return e }
+		// NOTE: we do not inherit options from this.options here is it 
+		// 		will be done in .walk(..)
 		options = args.pop() || {}
 
 		// special case: path pattern -> include collapsed elements... 
@@ -2006,6 +2021,9 @@ var BaseBrowserPrototype = {
 
 
 
+	//__make__: function(item){
+	//},
+
 	// Make .items and .index...
 	//
 	// 	.make()
@@ -2040,7 +2058,9 @@ var BaseBrowserPrototype = {
 	// 					: opts)
 	make: function(options){
 		var that = this
-		options = Object.assign(Object.create(this.options || {}), options || {})
+		options = Object.assign(
+			Object.create(this.options || {}), 
+			options || {})
 
 		var items = this.items = []
 
@@ -2131,6 +2151,10 @@ var BaseBrowserPrototype = {
 					&& (item.children.parent = this)
 			}
 
+			// user extended make...
+			this.__make__
+				&& this.__make__(item)
+
 			// store the item...
 			items.push(item)
 			ids.add(key)
@@ -2176,6 +2200,7 @@ var BaseBrowserPrototype = {
 					&& Object.assign(e,
 						old_index[id],
 						e) })
+
 		return this
 	},
 
@@ -2264,6 +2289,7 @@ var BaseBrowserPrototype = {
 	// 		// NOTE: the only constrain on to/from is that from must be 
 	// 		//		less or equal to to, other than that it's fair game,
 	// 		//		i.e. overflowing values (<0 or >length) are allowed.
+	// 		// NOTE: these are not inherited from .options...
 	// 		from: <index> | <query>,
 	// 		to: <index> | <query>,
 	// 		around: <index> | <query>,
@@ -2665,24 +2691,14 @@ var BaseBrowserPrototype = {
 		function(){ return this.focused || 0 }, 
 		false),
 	// selection...
-	// XXX these should skip disabled... option???
-	select: makeItemEventMethod('select', {
-		handler: function(evt, items){
-			items.forEach(function(item){
-				item.selected = true }) },
-		// XXX is this a good default???
-		default_item: function(){ return this.focused } }),
-	deselect: makeItemEventMethod('deselect', { 
-		handler: function(evt, items){
-			items.forEach(function(item){
-				delete item.selected }) },
-		default_item: function(){ return this.focused } }),
+	select: makeItemOptionOnEventMethod('select', 'selected'),
+	deselect: makeItemOptionOffEventMethod('deselect', 'selected'),
 	toggleSelect: makeItemEventToggler(
 		'selected', 
 		'select', 'deselect', 
 		'focused'),
 	// topology...
-	collapse: makeItemOptionOnEventMethod('expand', 'collapsed', {
+	collapse: makeItemOptionOnEventMethod('collapse', 'collapsed', {
 		filter: function(elem){ return elem.value && elem.children },
 		options: {iterateCollapsed: true}, }),
 	expand: makeItemOptionOffEventMethod('expand', 'collapsed', {
@@ -2748,9 +2764,15 @@ var BaseBrowserPrototype = {
 				: full
 			this
 				.run(function(){
-					full && this.make(options) })
+					full 
+						&& this.make(options) 
+					this.preRender()
+				})
 				.render(options) }),
-	
+	// this is triggered by .update() just before render...
+	preRender: makeEventMethod('preRender'),
+
+
 	// NOTE: if given a path that does not exist this will try and load 
 	// 		the longest existing sub-path...
 	// XXX should level drawing be a feature of the browser or the 
@@ -2799,12 +2821,13 @@ object.makeConstructor('BaseBrowser',
 //---------------------------------------------------------------------
 
 // Get actual .item DOM element...
+//
+// XXX should this be a prop in the element???
 var getElem = function(elem){
 	elem = elem.dom || elem
 	return elem.classList.contains('list') ? 
 			elem.querySelector('.item')
 			: elem }
-
 
 // Make page navigation method... 
 //
@@ -2826,14 +2849,38 @@ var focusPage = function(direction){
 			// focus top of current page...
 			: this.focus(target) } }
 
+// Update element class...
+//
+// XXX should we use .renderItem(...) for this???
+var updateElemClass = function(action, cls, handler){
+	return function(evt, elem, ...args){
+		elem 
+			&& getElem(elem).classList[action](cls) 
+		return handler 
+			&& handler.call(this, evt, elem, ...args)} }
+
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
 var KEYBOARD_CONFIG =
 module.KEYBOARD_CONFIG = {
-	// XXX
+	ItemEdit: {
+		pattern: '.list .text[contenteditable]',
+
+		// XXX
+	},
+
+	PathEdit: {
+		pattern: '.path[contenteditable]',
+
+		// XXX
+	},
+
 	Filter: {
+		pattern: '.path div.cur[contenteditable]',
+
+		// XXX
 	},
 
 	General: {
@@ -2851,6 +2898,17 @@ module.KEYBOARD_CONFIG = {
 		Home: 'focus: "first"',
 		End: 'focus: "last"',
 
+		'#1': 'focus: 0',
+		'#2': 'focus: 1',
+		'#3': 'focus: 2',
+		'#4': 'focus: 3',
+		'#5': 'focus: 4',
+		'#6': 'focus: 5',
+		'#7': 'focus: 6',
+		'#8': 'focus: 7',
+		'#9': 'focus: 8',
+		'#0': 'focus: 9',
+
 
 		Enter: 'open',
 
@@ -2861,7 +2919,15 @@ module.KEYBOARD_CONFIG = {
 
 		// NOTE: do not bind this key, it is used to jump to buttons
 		// 		via tabindex...
-		Tab: 'NEXT',
+		Tab: 'NEXT!',
+	},
+
+	// XXX need to keep this local to each dialog instance...
+	ItemShortcuts: {
+		doc: 'Item shortcuts',
+		pattern: '*',
+
+		// this is where item-specific shortcuts will be set...
 	},
 }
 
@@ -2962,10 +3028,10 @@ var BrowserPrototype = {
 	},
 
 
-	__keyboard_config: KEYBOARD_CONFIG,
+	// Keyboard...
+	__keyboard_config: Object.assign({}, KEYBOARD_CONFIG),
 	get keybindings(){
 		return this.__keyboard_config },
-
 	__keyboard_object: null,
 	get keyboard(){
 		var that = this
@@ -3009,7 +3075,7 @@ var BrowserPrototype = {
 				: this.container.appendChild(value))
 		this.__dom = value },
 
-	// Extended .get(..) to support:
+	// Extended .search(..) to support:
 	// 	- 'pagetop'
 	// 	- 'pagebottom'
 	// 	- searching for items via DOM / jQuery objects
@@ -3017,14 +3083,14 @@ var BrowserPrototype = {
 	// 			...should we add containment search -- match closest item containing obj...
 	// 
 	//
-	//	.get('pagetop'[, offset] ..)
+	//	.search('pagetop'[, offset] ..)
 	//
-	//	.get('pagebottom'[, offset] ..)
+	//	.search('pagebottom'[, offset] ..)
 	//
 	//
 	// XXX add support for pixel offset...
 	// XXX
-	get: function(pattern){
+	search: function(pattern){
 		var args = [...arguments].slice(1)
 		var p = pattern
 
@@ -3050,9 +3116,12 @@ var BrowserPrototype = {
 							&& Math.round(edom.offsetTop + edom.offsetHeight)
 								- Math.max(0, st + H + offset) <= 0
 							&& stop(e) },
-					{ reverse: pos == 'bottom' ? 
-						'flat' 
-						: false })
+					{ 
+						reverse: pos == 'bottom' ? 
+							'flat' 
+							: false,
+						skipDisabled: true, 
+					})
 				.run(function(){
 					return this instanceof Array ?
 						undefined
@@ -3079,7 +3148,7 @@ var BrowserPrototype = {
 			: pattern
 
 		// call parent...
-		return object.parent(BrowserPrototype.get, this).call(this, pattern, ...args) },
+		return object.parent(BrowserPrototype.search, this).call(this, pattern, ...args) },
 
 
 	// Element renderers...
@@ -3312,6 +3381,7 @@ var BrowserPrototype = {
 	//
 	// XXX should we trigger the DOM event or the browser event???
 	// XXX should buttoms be active in disabled state???
+	// XXX replace $X with <u>X</u> but only where the X is in item.keys
 	renderItem: function(item, i, context){
 		var that = this
 		var options = context.options || this.options
@@ -3320,7 +3390,7 @@ var BrowserPrototype = {
 		}
 
 		// special-case: item shorthands...
-		if(item.value in options.elementShorthand){
+		if(item.value in (options.elementShorthand || {})){
 			// XXX need to merge and not overwrite -- revise...
 			Object.assign(item, options.elementShorthand[item.value])
 
@@ -3368,6 +3438,17 @@ var BrowserPrototype = {
 			&& (item.value instanceof Array ? item.value : [item.value])
 				// XXX handle $keys and other stuff...
 				.map(function(v){
+					// handle key-shortcuts $K...
+					v = typeof(v) == typeof('str') ?
+						v.replace(/\$\w/g, 
+							function(k){
+								k = k[1] 
+								return (item.keys || [])
+										.includes(that.keyboard.normalizeKey(k)) ?
+									`<u class="key-hint">${k}</u>`
+									: k })
+						: v
+
 					var value = document.createElement('span')
 					value.classList.add('text')
 					value.innerHTML = v != null ? 
@@ -3462,6 +3543,51 @@ var BrowserPrototype = {
 
 	// Custom events handlers...
 	//
+	// NOTE: this will also kill any user-set keys for disabled/hidden items...
+	__preRender__: function(){
+		var that = this
+		// reset item shortcuts...
+		var shortcuts = 
+			this.keybindings.ItemShortcuts = 
+				Object.assign({}, KEYBOARD_CONFIG.ItemShortcuts)
+
+		var i = 0
+		this.map(function(e){
+			// shortcut number hint...
+			// NOTE: these are just hints, the actual keys are handled 
+			// 		in .keybindings...
+			if(i < 10 && !e.disabled && !e.hidden){
+				var attrs = e.attrs = e.attrs || {}
+				attrs['shortcut-number'] = (++i) % 10
+			// cleanup...
+			} else {
+				delete (e.attrs || {})['shortcut-number']
+			}
+			
+			// handle item keys...
+			if(!e.disabled && !e.hidden){
+				;((e.value instanceof Array ? 
+						e.value 
+						: [e.value])
+					.join(' ')
+					// XXX this does not include non-English chars...
+					.match(/\$\w/g) || [])
+						.map(function(k){
+							k = that.keyboard.normalizeKey(k[1])
+							if(!shortcuts[k]){
+								shortcuts[k] = function(){ that.focus(e) } 
+								var keys = e.keys = e.keys || []
+								keys.push(k)
+							} })
+
+			// cleanup...
+			// NOTE: this will also kill any user-set keys for disabled/hidden items...
+			} else {
+				delete e.keys
+			}
+		}, {skipDisabled: false})
+	},
+
 	// NOTE: element alignment is done via the browser focus mechanics...
 	__focus__: function(evt, elem){
 		var that = this
@@ -3471,15 +3597,8 @@ var BrowserPrototype = {
 				// NOTE: we will not remove this class on blur as it keeps
 				// 		the selected element indicated...
 				.run(function(){
-					// XXX scroll to element if it's out of bounds...
-					// XXX
-
-					that.dom
-						&& that.dom.querySelectorAll('.focused')
-							.forEach(function(e){
-								e.classList.remove('focused') })
 					this.classList.add('focused') 
-
+					// take care of visibility...
 					this.scrollIntoView({
 						behavior: (that.options || {}).scrollBehavior || 'auto',
 						block: 'nearest',
@@ -3493,29 +3612,36 @@ var BrowserPrototype = {
 			&& getElem(elem)
 				.run(function(){
 					this.classList.remove('focused')
-					//this.blur()
+					// refocus the dialog...
 					that.dom
 						&& that.dom.focus() }) },
 
-	// NOTE: these simply update the state...
-	__select__: function(){
-		var selected  = new Set(this.selected.map(getElem))
-		this.dom
-			&& this.dom.querySelectorAll('.selected')
-				.forEach(function(e){
-					selected.has(e)
-						|| e.classList.remove('selected') })
-		selected
-			.forEach(function(e){
-				e.classList.add('selected') }) },
-	__deselect__: function(evt, elem){
-		this.__select__() },
+	// XXX should we only update the current elem???
+	__expand__: function(){ this.update() },
+	__collapse__: function(){ this.update() },
+
+	__select__: updateElemClass('add', 'selected'),
+	__deselect__: updateElemClass('remove', 'selected'),
+	__disable__: updateElemClass('add', 'disabled'),
+	__enable__: updateElemClass('remove', 'disabled'),
+	__hide__: updateElemClass('add', 'hidden'),
+	__show__: updateElemClass('remove', 'hidden'),
+
 
 	// Custom events...
 	//
-	// XXX make this different from html event...
+	// XXX make this different from html event???
 	// XXX trigger this from kb handler...
-	keyhandled: makeEventMethod('keyhandled', function(){
+	keyPress: makeEventMethod('keypress', function(){
+	}),
+	// XXX
+	menu: makeEventMethod('menu', function(){
+	}),
+	// XXX
+	copy: makeEventMethod('copy', function(){
+	}),
+	// XXX
+	paste: makeEventMethod('paste', function(){
 	}),
 
 

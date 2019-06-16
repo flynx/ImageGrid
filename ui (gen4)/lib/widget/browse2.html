@@ -44,6 +44,12 @@ body {
 	overflow: visible;
 }
 
+
+.browse-widget .list .text .key-hint {
+	text-decoration-skip-ink: none;
+}
+
+
 /* XXX stub...
 .browse-widget:not(.flat) .list .text:first-child:before {
 	display: inline-block;
@@ -186,7 +192,7 @@ requirejs([
 	dialog = browser.Browser(function(make){
 		make(['list', 'of', 'text'])
 		make.group(
-			make('group item 0', 
+			make('$group item 0', 
 				function(){ console.log('###', ...arguments) }),
 			'group item 1 (bare)')
 		// XXX Q: should we show only one if multiple lines are in sequence???
@@ -198,11 +204,11 @@ requirejs([
 			make(2)
 		}))
 		// basic nested list...
-		make.nest('nested', [
+		make.nest('$nested', [
 			make('moo', {disabled: true}),
 			2,
 			// XXX this is not supported by .map(..)...
-			make.nest('nested', browser.Browser(function(make){
+			make.nest('$ne$sted', browser.Browser(function(make){
 				make('ab')
 			})),
 		])
