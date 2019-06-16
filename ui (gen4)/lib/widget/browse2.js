@@ -2949,11 +2949,6 @@ var BrowserClassPrototype = {
 	__proto__: BaseBrowser,
 }
 
-// XXX TODO:
-// 		- need a way to update some stuff on .update() / .make() -- a way 
-// 			to selectively merge the old state with the new...
-// 		- event handler signature -- pass the item + optionally render...
-// 		- keyboard handling...
 // XXX render of nested lists does not affect the parent list(s)...
 // 		...need to render lists and items both as a whole or independently...
 // XXX need a strategy to update the DOM -- i.e. add/remove nodes for 
@@ -2971,6 +2966,11 @@ var BrowserPrototype = {
 		//
 		// XXX 'smooth' value yields odd results...
 		//scrollBehavior: 'auto',
+
+		// XXX can we make this relative???
+		// XXX use this for page up/down...
+		// XXX needs more tweaking...
+		//edgeOffsetWhileScrolling: 50,
 
 		hideListHeader: false,
 
@@ -3681,17 +3681,58 @@ var BrowserPrototype = {
 
 	// Navigation...
 	//
-	// hold key repeat on first/last elements...
+	// hold key repeat on first/last elements + reveal disabled items at
+	// start/end of list...
 	next: function(){
 		object.parent(BrowserPrototype.next, this).call(this, ...arguments)
+		var focused = this.focused
+		var first = this.get('first', {skipDisabled: true})
+		var last = this.get('last', {skipDisabled: true})
+		var threashold = this.options.edgeOffsetWhileScrolling || 0
+
+		// keep scrolled item at threashold from list edge...
+		if(threashold > 0){
+			var elem = getElem(focused)
+			var lst = this.dom.querySelector('.list')
+			var h = elem.offsetHeight
+			var H = lst.offsetHeight
+			var offset = H - (elem.offsetTop - lst.scrollTop + h)
+
+			offset < threashold
+				&& lst.scrollBy(0, threashold - offset)
+
+		// center the first/last elements to reveal hidden items before/after...
+		} else if(focused === last || focused === first){
+			this.scrollTo(this.focused, 'center')
+		}
+
 		// hold repeat at last element...
-		this.focused === this.get('last')
+		focused === last
 			&& this.keyboard.pauseRepeat
 			&& this.keyboard.pauseRepeat() },
 	prev: function(){
 		object.parent(BrowserPrototype.prev, this).call(this, ...arguments)
+		var focused = this.focused
+		var first = this.get('first', {skipDisabled: true})
+		var last = this.get('last', {skipDisabled: true})
+		var threashold = this.options.edgeOffsetWhileScrolling || 0
+
+		// keep scrolled item at threashold from list edge...
+		if(threashold > 0){
+			var elem = getElem(focused)
+			var lst = this.dom.querySelector('.list')
+			var offset = elem.offsetTop - lst.scrollTop
+
+			offset < threashold
+				&& lst.scrollBy(0, offset - threashold)
+
+		// center the first/last elements to reveal hidden items before/after...
+		} else if(focused === last || focused === first){
+			this.scrollTo(this.focused, 'center')
+		}
+
 		// hold repeat at first element...
-		this.focused === this.get('first')
+		focused === first
 			&& this.keyboard.pauseRepeat
 			&& this.keyboard.pauseRepeat() },
 
