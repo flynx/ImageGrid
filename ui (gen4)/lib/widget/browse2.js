@@ -384,10 +384,13 @@ function(event, {handler, action, default_item, filter, options={}, getter='sear
 			items.filter(filter) 
 			: items }
 	options = Object.assign(
-		// NOTE: we need to be able to pass item objects, so we can not
-		// 		use queries at the same time as there is not way to 
-		// 		distinguish one from the other...
-		{ noQueryCheck: true },
+		{ 
+			// NOTE: we need to be able to pass item objects, so we can not
+			// 		use queries at the same time as there is not way to 
+			// 		distinguish one from the other...
+			noQueryCheck: true, 
+			skipDisabled: true,
+		},
 		options)
 	// base event method...
 	// NOTE: this is not returned directly as we need to query the items
@@ -2815,49 +2818,6 @@ object.makeConstructor('BaseBrowser',
 
 //---------------------------------------------------------------------
 
-// Get actual .item DOM element...
-//
-// XXX should this be a prop in the element???
-var getElem = function(elem){
-	elem = elem.dom || elem
-	return elem.classList.contains('list') ? 
-			elem.querySelector('.item')
-			: elem }
-
-// Make page navigation method... 
-//
-// XXX this behaves in an odd way with .options.scrollBehavior = 'smooth'
-var focusPage = function(direction){
-	var d = direction == 'up' ?
-			'pagetop'
-		: direction == 'down' ?
-			'pagebottom'
-		: null
-	if(d == null){
-		throw new Error('focusPage(..): unknown direction: '+ direction)
-	}
-	return function(){
-		var target = this.get(d)
-		return this.focused === target ?
-			// scroll one page up and focus page top...
-			this.focus(this.get(d, 1))
-			// focus top of current page...
-			: this.focus(target) } }
-
-// Update element class...
-//
-// XXX should we use .renderItem(...) for this???
-var updateElemClass = function(action, cls, handler){
-	return function(evt, elem, ...args){
-		elem 
-			&& getElem(elem).classList[action](cls) 
-		return handler 
-			&& handler.call(this, evt, elem, ...args)} }
-
-
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-
 var KEYBOARD_CONFIG =
 module.KEYBOARD_CONFIG = {
 	ItemEdit: {
@@ -2925,6 +2885,61 @@ module.KEYBOARD_CONFIG = {
 		// this is where item-specific shortcuts will be set...
 	},
 }
+
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+// Get actual .item DOM element...
+//
+// XXX should this be a prop in the element???
+var getElem = function(elem){
+	elem = elem.dom || elem
+	return elem.classList.contains('list') ? 
+			elem.querySelector('.item')
+			: elem }
+
+// Make page navigation method... 
+//
+// XXX this behaves in an odd way with .options.scrollBehavior = 'smooth'
+var focusPage = function(direction){
+	var d = direction == 'up' ?
+			'pagetop'
+		: direction == 'down' ?
+			'pagebottom'
+		: null
+	var t = direction == 'up' ?
+			'first'
+		: direction == 'down' ?
+			'last'
+		: null
+
+	// sanity check...
+	if(d == null){
+		throw new Error('focusPage(..): unknown direction: '+ direction) }
+
+	return function(){
+		var target = this.get(d)
+		var focused = this.focused
+		return (
+			// reveal diabled elements above the top focusable...
+			target === this.get(t, {skipDisabled: true}) && target === focused ?
+				this.scrollTo(target, 'center')
+			// scroll one page and focus...
+			: target === focused ?
+				this.focus(this.get(d, 1))
+			// focus top/bottom of current page...
+			: this.focus(target) ) } }
+
+// Update element class...
+//
+// XXX should we use .renderItem(...) for this???
+var updateElemClass = function(action, cls, handler){
+	return function(evt, elem, ...args){
+		elem 
+			&& getElem(elem).classList[action](cls) 
+		return handler 
+			&& handler.call(this, evt, elem, ...args)} }
 
 
 
@@ -3077,14 +3092,11 @@ var BrowserPrototype = {
 	// 		XXX currently direct match only...
 	// 			...should we add containment search -- match closest item containing obj...
 	// 
-	//
 	//	.search('pagetop'[, offset] ..)
-	//
 	//	.search('pagebottom'[, offset] ..)
 	//
 	//
 	// XXX add support for pixel offset...
-	// XXX
 	search: function(pattern){
 		var args = [...arguments].slice(1)
 		var p = pattern
@@ -3144,6 +3156,33 @@ var BrowserPrototype = {
 
 		// call parent...
 		return object.parent(BrowserPrototype.search, this).call(this, pattern, ...args) },
+
+	// Extended .get(..) to support:
+	// 	- 'pagetop'/'pagebottom' + offset...
+	//
+	//	.get('pagetop'[, offset] ..)
+	//	.get('pagebottom'[, offset] ..)
+	//
+	// NOTE: this short-circuits .get(..) directly to .search(..) when 
+	// 		passed 'pagetop'/'pagebottom' + offset, this may become an 
+	// 		issue if .get(..) starts doing something extra, currently 
+	// 		this is a non-issue...
+	get: function(pattern){
+		var args = [...arguments].slice(1)
+		var offset = typeof(args[0]) == typeof(123) ?
+			args.shift()
+			: false
+		var func = args[0] instanceof Function ?
+			args.shift()
+			: null
+		return (pattern == 'pagetop' || pattern == 'pagebottom') && offset ?
+			// special case: pagetop/pagebottom + offset -> do search...
+			this.search(pattern, offset, 
+				function(e, i, p, stop){
+					stop(func ? 
+						func.call(this, e, i, p)
+						: e) }, ...args)
+			: object.parent(BrowserPrototype.get, this).call(this, pattern, ...args) },
 
 
 	// Element renderers...
