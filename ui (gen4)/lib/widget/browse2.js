@@ -2678,7 +2678,8 @@ var BaseBrowserPrototype = {
 			items.forEach(function(item){
 				delete item.focused }) },
 		default_item: function(){ return this.focused } }),
-	// NOTE: .next() / .prev() will wrap around the first/last elements...
+	// NOTE: .next() / .prev() will wrap around the first/last elements,
+	// 		this is different from .focus('next') / .focus('prev')...
 	next: function(){ 
 		this.focus('next').focused || this.focus('first') 
 		return this },
@@ -2693,10 +2694,7 @@ var BaseBrowserPrototype = {
 	// selection...
 	select: makeItemOptionOnEventMethod('select', 'selected'),
 	deselect: makeItemOptionOffEventMethod('deselect', 'selected'),
-	toggleSelect: makeItemEventToggler(
-		'selected', 
-		'select', 'deselect', 
-		'focused'),
+	toggleSelect: makeItemEventToggler('selected', 'select', 'deselect', 'focused'),
 	// topology...
 	collapse: makeItemOptionOnEventMethod('collapse', 'collapsed', {
 		filter: function(elem){ return elem.value && elem.children },
@@ -2723,10 +2721,7 @@ var BaseBrowserPrototype = {
 	// visibility...
 	hide: makeItemOptionOnEventMethod('hide', 'hidden'),
 	show: makeItemOptionOffEventMethod('show', 'hidden'),
-	toggleHidden: makeItemEventToggler(
-		'hidden', 
-		'hide', 'show', 
-		'focused'),
+	toggleHidden: makeItemEventToggler('hidden', 'hide', 'show', 'focused'),
 
 	// primary/secondary/ternary? item actions...
 	open: makeItemEventMethod('open', {
@@ -2750,7 +2745,7 @@ var BaseBrowserPrototype = {
 	// 		-> state
 	//
 	//
-	// NOTE: .update() is the same as .render()
+	// NOTE: .update() without arguments is the same as .render()
 	//
 	// XXX calling this on a nested browser should update the whole thing...
 	// 		...can we restore the context via .parent???
