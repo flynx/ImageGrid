@@ -2899,8 +2899,60 @@ var getElem = function(elem){
 			elem.querySelector('.item')
 			: elem }
 
-// Make page navigation method... 
+// helpers...
+var scrollOffset = function(browser, direction, elem){
+	var elem = getElem(elem || browser.focused)
+	var lst = browser.dom.querySelector('.list')
+	return direction == 'top' ?
+		elem.offsetTop - lst.scrollTop
+		: lst.offsetHeight 
+			- (elem.offsetTop - lst.scrollTop 
+				+ elem.offsetHeight) }
+var nudgeElement = function(browser, direction, elem){
+	var threashold = browser.options.focusOffsetWhileScrolling || 0
+
+	// keep scrolled item at threashold from list edge...
+	var offset = scrollOffset(browser, 
+		direction == 'up' ? 
+			'top' 
+			: 'bottom', 
+		elem)
+	var lst = browser.dom.querySelector('.list')
+
+	offset < threashold
+		&& lst.scrollBy(0, 
+			direction == 'up' ?
+				offset - threashold
+				: Math.floor(threashold - offset)) } 
+
+// Make item/page navigation methods...
 //
+var focusItem = function(direction){
+	// sanity check...
+	if(direction != 'up' && direction != 'down'){
+		throw new Error('focusItem(..): unknown direction: '+ direction) }
+
+	return function(){
+		var name = direction == 'up' ? 'prev' : 'next'
+		object.parent(BrowserPrototype[name], name, this).call(this, ...arguments)
+
+		var threashold = this.options.focusOffsetWhileScrolling || 0
+
+		var focused = this.focused
+		var first = this.get('first', {skipDisabled: true})
+		var last = this.get('last', {skipDisabled: true})
+
+		// center the first/last elements to reveal hidden items before/after...
+		;(focused === last || focused === first) ?
+			this.scrollTo(this.focused, 'center')
+		// keep scrolled item at threashold from list edge...
+		: threashold > 0
+			&& nudgeElement(this, direction, this.focused)
+
+		// hold repeat at last element...
+		focused === (direction == 'up' ? first : last)
+			&& this.keyboard.pauseRepeat
+			&& this.keyboard.pauseRepeat() } }
 // XXX this behaves in an odd way with .options.scrollBehavior = 'smooth'
 var focusPage = function(direction){
 	var d = direction == 'up' ?
@@ -2921,15 +2973,21 @@ var focusPage = function(direction){
 	return function(){
 		var target = this.get(d)
 		var focused = this.focused
-		return (
-			// reveal diabled elements above the top focusable...
-			target === this.get(t, {skipDisabled: true}) && target === focused ?
-				this.scrollTo(target, 'center')
-			// scroll one page and focus...
-			: target === focused ?
-				this.focus(this.get(d, 1))
-			// focus top/bottom of current page...
-			: this.focus(target) ) } }
+
+		// reveal diabled elements above the top focusable...
+		target === this.get(t, {skipDisabled: true}) && target === focused ?
+			this.scrollTo(target, 'center')
+		// scroll one page and focus...
+		: target === focused ?
+			this.focus(this.get(d, 1))
+		// focus top/bottom of current page...
+		: this.focus(target)
+
+		;(this.options.focusOffsetWhileScrolling || 0) > 0
+			&& nudgeElement(this, direction, this.focused)
+
+		return this
+	} }
 
 // Update element class...
 //
@@ -2967,10 +3025,14 @@ var BrowserPrototype = {
 		// XXX 'smooth' value yields odd results...
 		//scrollBehavior: 'auto',
 
+		// Sets the distance between the focused element and top/bottom
+		// border while moving through elements...
+		//
 		// XXX can we make this relative???
-		// XXX use this for page up/down...
+		// 		...i.e. about half of the average element height...
+		// XXX use this for page up/down???
 		// XXX needs more tweaking...
-		//edgeOffsetWhileScrolling: 50,
+		focusOffsetWhileScrolling: 15,
 
 		hideListHeader: false,
 
@@ -3683,58 +3745,10 @@ var BrowserPrototype = {
 	//
 	// hold key repeat on first/last elements + reveal disabled items at
 	// start/end of list...
-	next: function(){
-		object.parent(BrowserPrototype.next, this).call(this, ...arguments)
-		var focused = this.focused
-		var first = this.get('first', {skipDisabled: true})
-		var last = this.get('last', {skipDisabled: true})
-		var threashold = this.options.edgeOffsetWhileScrolling || 0
-
-		// keep scrolled item at threashold from list edge...
-		if(threashold > 0){
-			var elem = getElem(focused)
-			var lst = this.dom.querySelector('.list')
-			var h = elem.offsetHeight
-			var H = lst.offsetHeight
-			var offset = H - (elem.offsetTop - lst.scrollTop + h)
-
-			offset < threashold
-				&& lst.scrollBy(0, threashold - offset)
-
-		// center the first/last elements to reveal hidden items before/after...
-		} else if(focused === last || focused === first){
-			this.scrollTo(this.focused, 'center')
-		}
-
-		// hold repeat at last element...
-		focused === last
-			&& this.keyboard.pauseRepeat
-			&& this.keyboard.pauseRepeat() },
-	prev: function(){
-		object.parent(BrowserPrototype.prev, this).call(this, ...arguments)
-		var focused = this.focused
-		var first = this.get('first', {skipDisabled: true})
-		var last = this.get('last', {skipDisabled: true})
-		var threashold = this.options.edgeOffsetWhileScrolling || 0
-
-		// keep scrolled item at threashold from list edge...
-		if(threashold > 0){
-			var elem = getElem(focused)
-			var lst = this.dom.querySelector('.list')
-			var offset = elem.offsetTop - lst.scrollTop
-
-			offset < threashold
-				&& lst.scrollBy(0, offset - threashold)
-
-		// center the first/last elements to reveal hidden items before/after...
-		} else if(focused === last || focused === first){
-			this.scrollTo(this.focused, 'center')
-		}
-
-		// hold repeat at first element...
-		focused === first
-			&& this.keyboard.pauseRepeat
-			&& this.keyboard.pauseRepeat() },
+	prev: focusItem('up'),
+	next: focusItem('down'), 
+	pageUp: focusPage('up'),
+	pageDown: focusPage('down'),
 
 	// XXX focus element above/below...
 	up: function(){},
@@ -3764,11 +3778,6 @@ var BrowserPrototype = {
 			this
 				.expand()
 			: this.next() },
-
-	// XXX should these focus the top/bottom element or an element at 
-	// 		offset from top/bottom???
-	pageUp: focusPage('up'),
-	pageDown: focusPage('down'),
 
 }
 
