@@ -1892,49 +1892,6 @@ var BaseBrowserPrototype = {
 					stop([func(elem, i, path)]) }, 
 				options) ].flat()[0] },
 
-	// 	
-	// 	Get parent of .focused
-	// 	.parentOf()
-	// 	.parentOf('focused'[, ..])
-	// 		-> parent
-	// 		-> this
-	// 		-> undefined
-	//
-	// 	Get parent of elem
-	// 	.parentOf(elem[, ..])
-	// 		-> parent
-	// 		-> this
-	// 		-> undefined
-	//
-	//
-	// Return values:
-	// 	- element		- actual parent element
-	// 	- this			- input element is at root of browser
-	// 	- undefined		- element not found
-	//
-	//
-	// NOTE: this is signature compatible with .get(..) see that for more
-	// 		docs...
-	//
-	// XXX should this be a part of .get(..)???
-	parentOf: function(item, options){
-		var that = this
-		item = item || this.focused
-
-		var fargs = [...arguments].slice(1)
-		var args = fargs[0] instanceof Function ?
-			fargs.slice(1)
-			: fargs
-
-		return item ?
-			this.get(item, 
-				function(e, i, p){ 
-					return p.length > 1 ?
-						that.get(p.slice(0, -1), ...fargs)
-			   			: that }, 
-				...args) 
-			: undefined },
-
 	// Sublist map functions...
 	// XXX this does not include inlined sections, should it???
 	sublists: function(func, options){
@@ -1972,9 +1929,39 @@ var BaseBrowserPrototype = {
 		return context.result
 	},
 
-	// XXX should this return a path or a <path>:<count> ad in .index ???
+	// 	
+	// 	Get parent of .focused
+	// 	.parentOf()
+	// 	.parentOf('focused'[, ..])
+	// 		-> parent
+	// 		-> this
+	// 		-> undefined
+	//
+	// 	Get parent of elem
+	// 	.parentOf(elem[, ..])
+	// 		-> parent
+	// 		-> this
+	// 		-> undefined
+	//
+	//
+	// Return values:
+	// 	- element		- actual parent element
+	// 	- this			- input element is at root of browser
+	// 	- undefined		- element not found
+	//
+	//
+	// NOTE: this is signature compatible with .get(..) see that for more
+	// 		docs...
+	parentOf: function(item, options){
+		item = item == null ? this.focused : item
+		if(item == null){
+			return undefined }
+		var path = this.pathOf(item)
+		return path.length == 1 ?
+			this
+			: this.get(path.slice(0, -1), options) },
 	positionOf: function(item, options){
-		return this.search(item, 
+		return this.search(item == null ? this.focused : item, 
 			function(_, i, p){ 
 				return [i, p] }, 
 			Object.assign(
@@ -1987,6 +1974,7 @@ var BaseBrowserPrototype = {
 		return this.positionOf(item, options)[0] },
 	pathOf: function(item, options){
 		return this.positionOf(item, options)[1] },
+
 
 	// Like .select(.., {iterateCollapsed: true}) but will expand all the 
 	// path items to reveal the target...
@@ -3030,9 +3018,7 @@ var BrowserPrototype = {
 		//
 		// XXX can we make this relative???
 		// 		...i.e. about half of the average element height...
-		// XXX use this for page up/down???
-		// XXX needs more tweaking...
-		focusOffsetWhileScrolling: 15,
+		focusOffsetWhileScrolling: 18,
 
 		hideListHeader: false,
 
