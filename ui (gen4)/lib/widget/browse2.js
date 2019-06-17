@@ -638,6 +638,8 @@ var BaseBrowserPrototype = {
 		uniqueKeys: false,
 
 		//skipDisabledMode: 'node',
+
+		updateTimeout: 30,
 	},
 
 	// parent widget object...
@@ -2308,18 +2310,21 @@ var BaseBrowserPrototype = {
 	render: function(options, renderer, context){
 		context = context || {}
 		renderer = renderer || this
-		options = context.options 
+		options = context.options = context.options 
 			|| Object.assign(
 				Object.create(this.options || {}),
 				{ iterateNonIterable: true }, 
 				options || {})
-		context.options = context.options || options
 
 		// build range bounds...
 		// use .get(..) on full (non-partial) range...
 		var get_options = Object.assign(
 			Object.create(options),
-			{from: null, to: null, around: null})
+			// XXX for some magical reason if we do not explicitly include 
+			// 		.iterateNonIterable here it is not seen down the line...
+			{from: null, to: null, around: null,
+				iterateNonIterable: options.iterateNonIterable})
+			//{from: null, to: null, around: null, count: null})
 		// index getter...
 		var normIndex = function(i){
 			return (i === undefined || typeof(i) == typeof(123)) ?
@@ -2366,7 +2371,9 @@ var BaseBrowserPrototype = {
 		var from_path = context.from_path =
 			context.from_path	
 				|| (from != null 
-					&& this.get(from, function(e, i, p){ return p }, get_options))
+					&& this.get(from, 
+						function(e, i, p){ return p }, 
+						get_options))
 		from_path = from_path instanceof Array
 			&& from_path
 
@@ -2411,8 +2418,7 @@ var BaseBrowserPrototype = {
 			// root context -> render list and return this...
 			renderer.renderFinalize(elems, context)
 			// nested context -> return item list...
-			: elems
-	},
+			: elems },
 	
 
 	// Events...
@@ -2737,9 +2743,11 @@ var BaseBrowserPrototype = {
 	//
 	//
 	// NOTE: .update() without arguments is the same as .render()
+	// NOTE: if called too often this will delay subsequent calls...
 	//
 	// XXX calling this on a nested browser should update the whole thing...
 	// 		...can we restore the context via .parent???
+	__update_timeout: null,
 	update: makeEventMethod('update', 
 		function(evt, full, options){
 			options = (full && full !== true && full !== false) ? 
@@ -2748,13 +2756,38 @@ var BaseBrowserPrototype = {
 			full = full === options ? 
 				false 
 				: full
-			this
-				.run(function(){
-					full 
-						&& this.make(options) 
-					this.preRender()
-				})
-				.render(options) }),
+			var timeout = (options || {}).updateTimeout
+				|| this.options.updateTimeout
+
+			var _update = function(){
+				delete this.__update_timeout
+				this
+					.run(function(){
+						full 
+							&& this.make(options) 
+						this.preRender() })
+					.render(options) 
+				this.trigger(evt, full, options) }.bind(this)
+
+			// no timeout...
+			if(!timeout){
+				_update()
+
+			// first call -> call sync then delay...
+			} else if(this.__update_timeout == null){
+				_update()
+				this.__update_timeout = setTimeout(function(){
+					delete this.__update_timeout
+				}.bind(this), timeout) 
+
+			// fast subsequent calls -> delay... 
+			} else {
+				clearTimeout(this.__update_timeout)
+				this.__update_timeout = setTimeout(_update, timeout) 
+			}
+		}, 
+		// we'll retrigger manually...
+		false),
 	// this is triggered by .update() just before render...
 	preRender: makeEventMethod('preRender'),
 
@@ -3230,7 +3263,7 @@ var BrowserPrototype = {
 					stop(func ? 
 						func.call(this, e, i, p)
 						: e) }, ...args)
-			: object.parent(BrowserPrototype.get, this).call(this, pattern, ...args) },
+			: object.parent(BrowserPrototype.get, this).call(this, pattern, func, ...args) },
 
 
 	// Element renderers...
@@ -3656,14 +3689,21 @@ var BrowserPrototype = {
 					.match(/\$\w/g) || [])
 						.map(function(k){
 							k = that.keyboard.normalizeKey(k[1])
+
 							if(!shortcuts[k]){
 								shortcuts[k] = function(){ that.focus(e) } 
+
 								var keys = e.keys = e.keys || []
-								keys.push(k)
+								keys.includes(k)
+									|| keys.push(k)
+
+							// cleanup...
+							} else {
+								var keys = e.keys || []
+								keys.splice(keys.indexOf(k), 1)
 							} })
 
 			// cleanup...
-			// NOTE: this will also kill any user-set keys for disabled/hidden items...
 			} else {
 				delete e.keys
 			}
@@ -3704,8 +3744,8 @@ var BrowserPrototype = {
 
 	__select__: updateElemClass('add', 'selected'),
 	__deselect__: updateElemClass('remove', 'selected'),
-	__disable__: updateElemClass('add', 'disabled'),
-	__enable__: updateElemClass('remove', 'disabled'),
+	__disable__: updateElemClass('add', 'disabled', function(){ this.update() }),
+	__enable__: updateElemClass('remove', 'disabled', function(){ this.update() }),
 	__hide__: updateElemClass('add', 'hidden'),
 	__show__: updateElemClass('remove', 'hidden'),
 

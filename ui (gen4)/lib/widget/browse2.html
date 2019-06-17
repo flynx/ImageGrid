@@ -205,14 +205,14 @@ requirejs([
 		}))
 		// basic nested list...
 		make.nest('$nested', [
-			make('moo', {disabled: true}),
+			make('mo$o', {disabled: true}),
 			2,
 			// XXX this is not supported by .map(..)...
 			make.nest('$ne$sted', browser.Browser(function(make){
 				make('ab')
 			})),
 		])
-		make('in between two subtrees...')
+		make('in between two $subtrees...')
 		// nested browser...
 		make.nest('B', 
 			browser.Browser(function(make){
