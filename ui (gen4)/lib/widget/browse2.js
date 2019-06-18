@@ -3338,12 +3338,11 @@ var BrowserPrototype = {
 				: this.load(str) 
 		}.bind(this), 5)
 	},
+	// NOTE: FF does not support permission querying so we are not asking,
+	// 		yes this may result in things breaking, but all the shards 
+	// 		should be contained within the handler...
 	__copy: function(text){
-		navigator.permissions.query({name: 'clipboard-write'})
-			.then(function({state}){
-				;(state == 'granted' || state == 'prompt' ) ?
-					navigator.clipboard.writeText(text || this.path) 
-					: console.warn('.__copy(..): clipboard-write not allowed.') }) },
+		navigator.clipboard.writeText(text || this.path) },
 
 
 	// Element renderers...
