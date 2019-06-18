@@ -642,6 +642,9 @@ var BaseBrowserPrototype = {
 		updateTimeout: 30,
 	},
 
+
+	// Props and introspection...
+
 	// parent widget object...
 	//
 	// NOTE: this may or may not be a Browser object.
@@ -809,6 +812,53 @@ var BaseBrowserPrototype = {
 		return this.map({iterateAll: true}).length },
 
 
+	// Configuration / Extension...
+	
+	// XXX need a better key/path API...
+	//
+	// Normalize value...
+	__value2key__: function(key){
+		//return JSON.stringify(key)
+		return key instanceof Array ?
+			key.join(' ')
+			: key },
+
+	// Key getter/generator...
+	__key__: function(item){
+		return item.id 
+			// value is a browser -> generate an unique id...
+			// XXX identify via structure...
+			|| (item.value instanceof Browser 
+				&& this.__id__())
+			|| this.__value2key__(item.value) },
+
+	// ID generator...
+	//
+	// 	.__id__()
+	// 	.__id__(prefix)
+	// 	.__id__(prefix, count)
+	// 		-> id
+	//
+	// Format:
+	// 	"<date>"
+	// 	"<prefix>:<count>"
+	// 	"<prefix>:<date>"
+	//
+	// XXX not sure about the logic of this, should this take an item as 
+	// 		input and return an id???
+	// 		...should this check for uniqueness???
+	// 		think merging this with any of the actual ID generators would be best...
+	__id__: function(prefix, count){
+		return prefix ?
+			// id prefix...
+			//`${prefix} (${count || Date.now()})`
+			`${prefix}:${count || Date.now()}`
+			// plain id...
+			: `item${Date.now()}` },
+
+
+	// Data generation (make)...
+	
 	// Item list constructor...
 	//
 	// 	.__list__(make, options)
@@ -880,48 +930,197 @@ var BaseBrowserPrototype = {
 		throw new Error('.__list__(..): Not implemented.') },
 
 
-	// XXX need a better key/path API...
+	// Make extension...
 	//
-	// Normalize value...
-	__value2key__: function(key){
-		//return JSON.stringify(key)
-		return key instanceof Array ?
-			key.join(' ')
-			: key },
+	// This is called per item created by make(..) in .__list__(..)
+	//
+	// NOTE: this can update/modify the item but it can not replace it.
+	//__make__: function(item){
+	//},
 
-	// Key getter/generator...
-	__key__: function(item){
-		return item.id 
-			// value is a browser -> generate an unique id...
-			// XXX identify via structure...
-			|| (item.value instanceof Browser 
-				&& this.__id__())
-			|| this.__value2key__(item.value) },
 
-	// ID generator...
+	// Make .items and .index...
 	//
-	// 	.__id__()
-	// 	.__id__(prefix)
-	// 	.__id__(prefix, count)
-	// 		-> id
+	// 	.make()
+	// 	.make(options)
+	// 		-> this
 	//
-	// Format:
-	// 	"<date>"
-	// 	"<prefix>:<count>"
-	// 	"<prefix>:<date>"
+	// The items are constructed by passing a make function to .__list__(..)
+	// which in turn will call this make(..) per item created.
 	//
-	// XXX not sure about the logic of this, should this take an item as 
-	// 		input and return an id???
-	// 		...should this check for uniqueness???
-	// 		think merging this with any of the actual ID generators would be best...
-	__id__: function(prefix, count){
-		return prefix ?
-			// id prefix...
-			//`${prefix} (${count || Date.now()})`
-			`${prefix}:${count || Date.now()}`
-			// plain id...
-			: `item${Date.now()}` },
+	// For more doc on item construction see: .__init__(..)
+	//
+	//
+	// NOTE: each call to this will reset both .items and .index
+	// NOTE: for items with repeating values there is no way to correctly 
+	// 		identify an item thus no state is maintained between .make(..)
+	// 		calls for such items...
+	//
+	// XXX revise options handling for .__list__(..)
+	// XXX might be a good idea to enable the user to merge the state 
+	// 		manually...
+	// 		one way to do:
+	// 			- get the previous item via an index, 
+	// 			- update it
+	// 			- pass it to make(..)
+	// 		Example:
+	// 			// just a rough example in .__list__(..)...
+	// 			make(value, 
+	// 				value in this.index ? 
+	// 					Object.assign(
+	// 						this.index[value], 
+	// 						opts) 
+	// 					: opts)
+	make: function(options){
+		var that = this
+		options = Object.assign(
+			Object.create(this.options || {}), 
+			options || {})
 
+		var items = this.items = []
+
+		// item constructor...
+		//
+		// 	Make an item...
+		// 	make(value[, options])
+		// 	make(value, func[, options])
+		// 		-> make
+		//
+		// 	Inline a browser instance...
+		// 	make(browser)
+		// 		-> make
+		//
+		//
+		// NOTE: when inlining a browser, options are ignored.
+		// NOTE: when inlining a browser it's .parent will be set this 
+		// 		reusing the inlined object browser may mess up this 
+		// 		property...
+		//
+		// XXX problem: make(Browser(..), ..) and make.group(...) produce 
+		// 		different formats -- the first stores {value: browser, ...}
+		// 		while the latter stores a list of items.
+		// 		...would be more logical to store the object (i.e. browser/list)
+		// 		directly as the element...
+		var keys = options.uniqueKeys ? 
+			new Set() 
+			: null
+		var ids = new Set()
+		var make_called = false
+		var make = function(value, opts){
+			make_called = true
+
+			// special-case: inlined browser...
+			//
+			// NOTE: we ignore opts here...
+			// XXX not sure if this is the right way to go...
+			// 		...for removal just remove the if statement and its
+			// 		first branch...
+			if(value instanceof Browser){
+				var item = value
+				item.parent = this
+
+			// normal item...
+			} else {
+				var args = [...arguments]
+				opts = opts || {}
+				// handle: make(.., func, ..)
+				opts = opts instanceof Function ?
+					{open: opts}
+					: opts
+				// handle trailing options...
+				opts = args.length > 2 ?
+					Object.assign({},
+						args.pop(),
+						opts)
+					: opts
+				opts = Object.assign(
+					{},
+					opts, 
+					{value: value})
+
+				// item id...
+				var key = this.__key__(opts)
+
+				// duplicate keys (if .options.uniqueKeys is set)...
+				if(keys){
+				   	if(keys.has(key)){
+						throw new Error(`make(..): duplicate key "${key}": `
+							+`can't create multiple items with the same key `
+							+`when .options.uniqueKeys is set.`) 
+					}
+					keys.add(key)
+				}
+				// duplicate ids...
+				if(opts.id && ids.has(opts.id)){
+					throw new Error(`make(..): duplicate id "${opts.id}": `
+						+`can't create multiple items with the same id.`) }
+
+				// build the item...
+				var item = Object.assign(
+					Object.create(options || {}), 
+					opts,
+					{ parent: this })
+
+				// XXX do we need both this and the above ref???
+				item.children instanceof Browser
+					&& (item.children.parent = this)
+			}
+
+			// user extended make...
+			this.__make__
+				&& this.__make__(item)
+
+			// store the item...
+			items.push(item)
+			ids.add(key)
+
+			return make
+		}.bind(this)
+		make.__proto__ = Items
+		make.dialog = this
+		make.items = items
+
+		//var res = this.__list__(make)
+		// XXX not sure about this -- revise options handling...
+		var res = this.__list__(make, 
+			options ? 
+				Object.assign(
+					Object.create(this.options || {}), 
+					options || {}) 
+				: null)
+		// if make was not called use the .__list__(..) return value...
+		this.items = make_called ? 
+			this.items 
+			: res
+
+		// reset the index/cache...
+		var old_index = this.__item_index_cache || {}
+		this.clearCache()
+
+		// 2'nd pass -> make item index (unique id's)...
+		// NOTE: we are doing this in a separate pass as items can get 
+		// 		rearranged during the make phase (Items.nest(..) ...),
+		// 		thus avoiding odd duplicate index numbering...
+		var index = this.__item_index_cache = this.index
+
+		// post process the items...
+		Object.entries(index)
+			.forEach(function([id, e]){
+				// update item.id of items with duplicate keys...
+				!id.endsWith(that.__key__(e))
+					&& (e.id = id.split(/[\/]/g).pop())
+				// merge old item state...
+				id in old_index
+					// XXX this is not very elegant(???), revise... 
+					&& Object.assign(e,
+						old_index[id],
+						e) })
+
+		return this
+	},
+
+
+	// Data access and iteration...
 
 	// Walk the browser...
 	//
@@ -2008,196 +2207,10 @@ var BaseBrowserPrototype = {
 					&& that.expand([...nodes]) }) },
 
 
-
 	// XXX do we need edit ability here? 
 	// 		i.e. .set(..), .remove(..), .sort(..), ...
 	// 		...if we are going to implement editing then we'll need to 
 	// 		callback the user code or update the user state...
-
-
-
-	//__make__: function(item){
-	//},
-
-	// Make .items and .index...
-	//
-	// 	.make()
-	// 	.make(options)
-	// 		-> this
-	//
-	// The items are constructed by passing a make function to .__list__(..)
-	// which in turn will call this make(..) per item created.
-	//
-	// For more doc on item construction see: .__init__(..)
-	//
-	//
-	// NOTE: each call to this will reset both .items and .index
-	// NOTE: for items with repeating values there is no way to correctly 
-	// 		identify an item thus no state is maintained between .make(..)
-	// 		calls for such items...
-	//
-	// XXX revise options handling for .__list__(..)
-	// XXX might be a good idea to enable the user to merge the state 
-	// 		manually...
-	// 		one way to do:
-	// 			- get the previous item via an index, 
-	// 			- update it
-	// 			- pass it to make(..)
-	// 		Example:
-	// 			// just a rough example in .__list__(..)...
-	// 			make(value, 
-	// 				value in this.index ? 
-	// 					Object.assign(
-	// 						this.index[value], 
-	// 						opts) 
-	// 					: opts)
-	make: function(options){
-		var that = this
-		options = Object.assign(
-			Object.create(this.options || {}), 
-			options || {})
-
-		var items = this.items = []
-
-		// item constructor...
-		//
-		// 	Make an item...
-		// 	make(value[, options])
-		// 	make(value, func[, options])
-		// 		-> make
-		//
-		// 	Inline a browser instance...
-		// 	make(browser)
-		// 		-> make
-		//
-		//
-		// NOTE: when inlining a browser, options are ignored.
-		// NOTE: when inlining a browser it's .parent will be set this 
-		// 		reusing the inlined object browser may mess up this 
-		// 		property...
-		//
-		// XXX problem: make(Browser(..), ..) and make.group(...) produce 
-		// 		different formats -- the first stores {value: browser, ...}
-		// 		while the latter stores a list of items.
-		// 		...would be more logical to store the object (i.e. browser/list)
-		// 		directly as the element...
-		var keys = options.uniqueKeys ? 
-			new Set() 
-			: null
-		var ids = new Set()
-		var make_called = false
-		var make = function(value, opts){
-			make_called = true
-
-			// special-case: inlined browser...
-			//
-			// NOTE: we ignore opts here...
-			// XXX not sure if this is the right way to go...
-			// 		...for removal just remove the if statement and its
-			// 		first branch...
-			if(value instanceof Browser){
-				var item = value
-				item.parent = this
-
-			// normal item...
-			} else {
-				var args = [...arguments]
-				opts = opts || {}
-				// handle: make(.., func, ..)
-				opts = opts instanceof Function ?
-					{open: opts}
-					: opts
-				// handle trailing options...
-				opts = args.length > 2 ?
-					Object.assign({},
-						args.pop(),
-						opts)
-					: opts
-				opts = Object.assign(
-					{},
-					opts, 
-					{value: value})
-
-				// item id...
-				var key = this.__key__(opts)
-
-				// duplicate keys (if .options.uniqueKeys is set)...
-				if(keys){
-				   	if(keys.has(key)){
-						throw new Error(`make(..): duplicate key "${key}": `
-							+`can't create multiple items with the same key `
-							+`when .options.uniqueKeys is set.`) 
-					}
-					keys.add(key)
-				}
-				// duplicate ids...
-				if(opts.id && ids.has(opts.id)){
-					throw new Error(`make(..): duplicate id "${opts.id}": `
-						+`can't create multiple items with the same id.`) }
-
-				// build the item...
-				var item = Object.assign(
-					Object.create(options || {}), 
-					opts,
-					{ parent: this })
-
-				// XXX do we need both this and the above ref???
-				item.children instanceof Browser
-					&& (item.children.parent = this)
-			}
-
-			// user extended make...
-			this.__make__
-				&& this.__make__(item)
-
-			// store the item...
-			items.push(item)
-			ids.add(key)
-
-			return make
-		}.bind(this)
-		make.__proto__ = Items
-		make.dialog = this
-		make.items = items
-
-		//var res = this.__list__(make)
-		// XXX not sure about this -- revise options handling...
-		var res = this.__list__(make, 
-			options ? 
-				Object.assign(
-					Object.create(this.options || {}), 
-					options || {}) 
-				: null)
-		// if make was not called use the .__list__(..) return value...
-		this.items = make_called ? 
-			this.items 
-			: res
-
-		// reset the index/cache...
-		var old_index = this.__item_index_cache || {}
-		this.clearCache()
-
-		// 2'nd pass -> make item index (unique id's)...
-		// NOTE: we are doing this in a separate pass as items can get 
-		// 		rearranged during the make phase (Items.nest(..) ...),
-		// 		thus avoiding odd duplicate index numbering...
-		var index = this.__item_index_cache = this.index
-
-		// post process the items...
-		Object.entries(index)
-			.forEach(function([id, e]){
-				// update item.id of items with duplicate keys...
-				!id.endsWith(that.__key__(e))
-					&& (e.id = id.split(/[\/]/g).pop())
-				// merge old item state...
-				id in old_index
-					// XXX this is not very elegant(???), revise... 
-					&& Object.assign(e,
-						old_index[id],
-						e) })
-
-		return this
-	},
 
 
 	// Renderers...
@@ -3154,6 +3167,7 @@ var BrowserPrototype = {
 
 
 	// Keyboard...
+	//
 	__keyboard_config: Object.assign({}, KEYBOARD_CONFIG),
 	get keybindings(){
 		return this.__keyboard_config },
@@ -3185,6 +3199,8 @@ var BrowserPrototype = {
 				this)) },
 
 
+	// DOM props..
+	//
 	// parent element (optional)...
 	// XXX rename???
 	// 		... should this be .containerDom or .parentDom???
@@ -3210,6 +3226,9 @@ var BrowserPrototype = {
 				: this.container.appendChild(value))
 		this.__dom = value },
 
+
+	// Extending query...
+	//	
 	// Extended .search(..) to support:
 	// 	- 'pagetop'
 	// 	- 'pagebottom'
@@ -3280,7 +3299,7 @@ var BrowserPrototype = {
 
 		// call parent...
 		return object.parent(BrowserPrototype.search, this).call(this, pattern, ...args) },
-
+	//
 	// Extended .get(..) to support:
 	// 	- 'pagetop'/'pagebottom' + offset...
 	//
@@ -3309,7 +3328,7 @@ var BrowserPrototype = {
 			: object.parent(BrowserPrototype.get, this).call(this, pattern, func, ...args) },
 
 
-	// DOM/UI Helpers...
+	// Copy/Paste support...
 	//
 	// NOTE: not for direct use...
 	// NOTE: both of these feel hackish...
@@ -3728,17 +3747,6 @@ var BrowserPrototype = {
 	},
 
 
-	// scroll...
-	//
-	scrollTo: function(pattern, position){
-		var target = this.get(pattern)
-		target 
-			&& getElem(target).scrollIntoView({
-				behavior: (this.options || {}).scrollBehavior || 'auto',
-				block: position || 'center',
-			}) },
-
-
 	// Custom events handlers...
 	//
 	// NOTE: this will also kill any user-set keys for disabled/hidden items...
@@ -3836,6 +3844,17 @@ var BrowserPrototype = {
 		function(evt, key){
 			this.__keyboard_handler(key) }),
 	menu: makeItemEventMethod('menu'),
+
+
+	// Scroll...
+	//
+	scrollTo: function(pattern, position){
+		var target = this.get(pattern)
+		target 
+			&& getElem(target).scrollIntoView({
+				behavior: (this.options || {}).scrollBehavior || 'auto',
+				block: position || 'center',
+			}) },
 
 
 	// Navigation...
