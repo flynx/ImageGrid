@@ -3116,6 +3116,9 @@ var BrowserPrototype = {
 				noniterable: true,
 			},
 		},
+
+		// debug and testing options...
+		//keyboardReportUnhandled: false,
 	},
 
 
@@ -3139,6 +3142,17 @@ var BrowserPrototype = {
 					},
 					function(){ return that.dom })
 		return kb },
+
+	// NOTE: this is not designed for direct use...
+	get __keyboard_handler(){
+		var options = this.options || {}
+		return (this.____keyboard_handler = this.____keyboard_handler 
+			|| keyboard.makePausableKeyboardHandler(
+				this.keyboard,
+				function(){ 
+					options.keyboardReportUnhandled
+						&& console.log('KEY:', ...arguments) }, 
+				this)) },
 
 
 	// parent element (optional)...
@@ -3286,6 +3300,7 @@ var BrowserPrototype = {
 	renderFinalize: function(items, context){
 		var that = this
 		var d = this.renderList(items, context)
+		var options = context.options || this.options || {}
 
 		// wrap the list (nested list) of nodes in a div...
 		if(d instanceof Array){
@@ -3296,19 +3311,20 @@ var BrowserPrototype = {
 			d = c
 		}
 		d.setAttribute('tabindex', '0')
+
 		// Setup basic event handlers...
 		// keyboard...
-		d.addEventListener('keydown', 
-			this.__keyboard_handler = this.__keyboard_handler 
-				|| keyboard.makePausableKeyboardHandler(this.keyboard,
-					function(){ console.log('KEY:', ...arguments) },//null,
-					this))
+		// NOTE: we are not doing: 
+		// 			d.addEventListener('keydown', this.keyPress.bind(this))
+		// 		because we are abstracting the user from DOM events and 
+		// 		directly passing them parsed keys...
+		d.addEventListener('keydown', function(evt){
+			that.keyPress(that.keyboard.event2key(evt)) })
 		// focus...
 		d.addEventListener('click', 
 			function(e){ 
 				e.stopPropagation()
-				d.focus() 
-			})
+				d.focus() })
 		/* XXX this messes up scrollbar...
 		d.addEventListener('focus',
 		   function(){
@@ -3344,7 +3360,7 @@ var BrowserPrototype = {
 	// XXX the way focus management is done here feels hack-ish...
 	renderList: function(items, context){
 		var that = this
-		var options = context.options || this.options
+		var options = context.options || this.options || {}
 
 		// dialog (container)...
 		var dialog = document.createElement('div')
@@ -3411,7 +3427,7 @@ var BrowserPrototype = {
 	// XXX register event handlers...
 	renderNested: function(header, children, item, context){
 		var that = this
-		var options = context.options || this.options
+		var options = context.options || this.options || {}
 
 		// container...
 		var e = document.createElement('div')
@@ -3499,7 +3515,7 @@ var BrowserPrototype = {
 	// XXX replace $X with <u>X</u> but only where the X is in item.keys
 	renderItem: function(item, i, context){
 		var that = this
-		var options = context.options || this.options
+		var options = context.options || this.options || {}
 		if(options.hidden && !options.renderHidden){
 			return null
 		}
@@ -3573,10 +3589,10 @@ var BrowserPrototype = {
 				})
 
 		// system events...
+		// XXX disable double click to make this faster...
 		elem.addEventListener('click', 
-			// XXX revise signature...
-			// XXX should we trigger the DOM event or the browser event???
-			function(){ 
+			function(evt){
+				evt.stopPropagation()
 				that.open(item, text, elem) })
 				//$(elem).trigger('open', [text, item, elem]) })
 		//elem.addEventListener('tap', 
@@ -3646,6 +3662,7 @@ var BrowserPrototype = {
 
 
 	// scroll...
+	//
 	// XXX do we need this???
 	scrollTo: function(pattern, position){
 		var target = this.get(pattern)
@@ -3752,10 +3769,10 @@ var BrowserPrototype = {
 
 	// Custom events...
 	//
-	// XXX make this different from html event???
-	// XXX trigger this from kb handler...
-	keyPress: makeEventMethod('keypress', function(){
-	}),
+	// NOTE: this is not directly connected to DOM key events...
+	keyPress: makeEventMethod('keypress', 
+		function(evt, key){
+			this.__keyboard_handler(key) }),
 	// XXX
 	menu: makeEventMethod('menu', function(){
 	}),

@@ -292,8 +292,7 @@ function isKey(key){
 	// key is either a key code or a valid key name...
 	return (!!parseInt(k) || key2code(k) != null)
 		// mod must be a subset of modifiers...
-		&& mod.filter(function(m){ return modifiers.indexOf(m) < 0 }).length == 0
-}
+		&& mod.filter(function(m){ return modifiers.indexOf(m) < 0 }).length == 0 }
 
 
 // Split key...
@@ -1188,7 +1187,7 @@ function makeKeyboardHandler(keyboard, unhandled, actions){
 		var res
 
 		//if(key instanceof Event || key instanceof $.Event){
-		if(typeof(key) != typeof('str')){
+		if(typeof(key) != typeof('str') && !(key instanceof Array)){
 			evt = key
 			key = kb.event2key(evt)
 
@@ -1303,9 +1302,8 @@ var stoppableKeyboardRepeat =
 module.stoppableKeyboardRepeat = 
 function(handler, check){
 	return function(evt){
-		return check() && handler(evt)
-	}
-}
+		return check() 
+			&& handler(evt) } }
 
 
 // Event handler wrapper that will drop identical keys repeating at rate
