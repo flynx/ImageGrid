@@ -3310,7 +3310,10 @@ var BrowserPrototype = {
 			: object.parent(BrowserPrototype.get, this).call(this, pattern, func, ...args) },
 
 
-	// A hack to get user pasted text...
+	// DOM/UI Helpers...
+	//
+	// NOTE: not for direct use...
+	// NOTE: both of these feel hackish...
 	__paste: function(callback){
 		var focus = this.dom.querySelector(':focus') || this.dom
 
@@ -3336,9 +3339,12 @@ var BrowserPrototype = {
 				: this.load(str) 
 		}.bind(this), 5)
 	},
-	// XXX should we query navigator.permissions???
 	__copy: function(text){
-		navigator.clipboard.writeText(text || this.path) },
+		navigator.permissions.query({name: 'clipboard-write'})
+			.then(function({state}){
+				;(state == 'granted' || state == 'prompt' ) ?
+					navigator.clipboard.writeText(text || this.path) 
+					: console.warn('.__copy(..): clipboard-write not allowed.') }) },
 
 	// Element renderers...
 	//
@@ -3356,7 +3362,6 @@ var BrowserPrototype = {
 	// 		</div>
 	// 	or same as .renderList(..)
 	//
-	// XXX revise...
 	renderFinalize: function(items, context){
 		var that = this
 		var d = this.renderList(items, context)
@@ -3660,17 +3665,20 @@ var BrowserPrototype = {
 				// 		already focused...
 				that.focused !== item
 					&& that.focus(item) })
+		elem.addEventListener('contextmenu', 
+			function(evt){ 
+				evt.preventDefault()
+				that.menu(item) })
 		// user events...
 		Object.entries(item.events || {})
-			// shorthand events...
+			// shorthand DOM events...
 			.concat([
-					'click',
 				].map(function(evt){ 
 					return [evt, item[evt]] }))
 			// setup the handlers...
 			.forEach(function([evt, handler]){
 				handler
-					&& elem.addEventListener(evt, handler) })
+					&& elem.addEventListener(evt, handler.bind(that)) })
 
 		// buttons...
 		// XXX migrate the default buttons functionality and button inheritance...
@@ -3847,15 +3855,7 @@ var BrowserPrototype = {
 	keyPress: makeEventMethod('keypress', 
 		function(evt, key){
 			this.__keyboard_handler(key) }),
-	// XXX
-	menu: makeEventMethod('menu', function(){
-	}),
-	// XXX
-	copy: makeEventMethod('copy', function(){
-	}),
-	// XXX
-	paste: makeEventMethod('paste', function(){
-	}),
+	menu: makeItemEventMethod('menu'),
 
 
 	// Navigation...
