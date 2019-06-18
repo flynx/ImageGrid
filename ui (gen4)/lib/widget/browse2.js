@@ -863,6 +863,8 @@ var BaseBrowserPrototype = {
 	// 		parent: <browser>,
 	// 		// XXX move this to the appropriate object...
 	// 		dom: <dom>,
+	//
+	//		...
 	// 	}
 	//
 	//
@@ -2893,6 +2895,14 @@ module.KEYBOARD_CONFIG = {
 		ctrl_D: 'deselect!: "*"',
 		ctrl_I: 'toggleSelect!: "*"',
 
+		// paste...
+		ctrl_V: '__paste',
+		meta_V: 'ctrl_V',
+		// copy...
+		ctrl_C: '__copy',
+		ctrl_X: 'ctrl_C',
+		meta_C: 'ctrl_C',
+
 		// NOTE: do not bind this key, it is used to jump to buttons
 		// 		via tabindex...
 		Tab: 'NEXT!',
@@ -3072,7 +3082,27 @@ var BrowserPrototype = {
 
 		// Format:
 		// 	[
-		// 		['html', <handler>],
+		// 		// basic button handler...
+		// 		['html', 
+		// 			<handler>],
+		//
+		// 		// action button handler...
+		// 		//
+		// 		//	<arg> can be:
+		// 		//		- item			- item containing the button
+		// 		//		- focused		- currently focused item
+		// 		//							NOTE: if we are not focusing 
+		// 		//								on button click this may 
+		// 		//								be different from item...
+		// 		//		- event			- event object
+		// 		//		- button		- text on button
+		// 		//		- number/string/list/object
+		// 		//						- any values...
+		// 		//
+		// 		// NOTE: for more doc see keyboard.Keyboard.parseStringHandler(..)
+		// 		['html', 
+		// 			'<action>: <arg> .. -- comment'],
+		//
 		// 		...
 		// 	]
 		itemButtons: [
@@ -3279,6 +3309,36 @@ var BrowserPrototype = {
 						: e) }, ...args)
 			: object.parent(BrowserPrototype.get, this).call(this, pattern, func, ...args) },
 
+
+	// A hack to get user pasted text...
+	__paste: function(callback){
+		var focus = this.dom.querySelector(':focus') || this.dom
+
+		var text = document.createElement('textarea')
+		text.style.position = 'absolute'
+		text.style.opacity = '0'
+		text.style.width = '10px'
+		text.style.height = '10px'
+		text.style.left = '-1000px'
+		this.dom.appendChild(text)
+		text.focus()
+		
+		setTimeout(function(){
+			var str = text.value
+			text.remove()
+
+			// restore focus...
+			focus
+				&& focus.focus()
+
+			callback ?
+				callback(str)
+				: this.load(str) 
+		}.bind(this), 5)
+	},
+	// XXX should we query navigator.permissions???
+	__copy: function(text){
+		navigator.clipboard.writeText(text || this.path) },
 
 	// Element renderers...
 	//
@@ -3510,9 +3570,10 @@ var BrowserPrototype = {
 	// 		...
 	// 	</div>
 	//
-	// XXX should we trigger the DOM event or the browser event???
-	// XXX should buttoms be active in disabled state???
-	// XXX replace $X with <u>X</u> but only where the X is in item.keys
+	// NOTE: DOM events trigger Browser events but not the other way 
+	// 		around. It is not recommended to use DOM events directly.
+	//
+	// XXX should buttons be active in disabled state???
 	renderItem: function(item, i, context){
 		var that = this
 		var options = context.options || this.options || {}
@@ -3589,18 +3650,14 @@ var BrowserPrototype = {
 				})
 
 		// system events...
-		// XXX disable double click to make this faster...
 		elem.addEventListener('click', 
 			function(evt){
 				evt.stopPropagation()
 				that.open(item, text, elem) })
-				//$(elem).trigger('open', [text, item, elem]) })
-		//elem.addEventListener('tap', 
-		//	function(){ $(elem).trigger('open', [text, item, elem]) })
 		elem.addEventListener('focus', 
 			function(){ 
-				// do not retrigger focus on an item if it's already focused...
-				// XXX do we handle focus after blur???
+				// NOTE: we do not retrigger focus on an item if it's 
+				// 		already focused...
 				that.focused !== item
 					&& that.focus(item) })
 		// user events...
@@ -3643,14 +3700,34 @@ var BrowserPrototype = {
 					// main button action (click/enter)...
 					// XXX should there be a secondary action (i.e. shift-enter)???
 					if(handler){
-						button.addEventListener('click', handler)
+						var func = handler instanceof Function ?
+							handler
+							// string handler -> that.<handler>(item)
+							: function(evt, ...args){
+								var a = that.keyboard.parseStringHandler(
+									handler, 
+									// button handler arg namespace...
+									{
+										event: evt,
+										item: item,
+										// NOTE: if we are not focusing 
+										// 		on button click this may 
+										// 		be different from item...
+										focused: that.focused,
+										button: html,
+									})
+								that[a.action](...a.arguments) }
+
+						// handle clicks and keyboard...
+						button.addEventListener('click', func)
+						// NOTE: we only trigger buttons on Enter and do 
+						// 		not care about other keys...
 						button.addEventListener('keydown', 
 							function(evt){
 								var k = keyboard.event2key(evt)
 								if(k.includes('Enter')){
 									event.stopPropagation()
-									handler.call(this, evt)
-								} }) } 
+									func.call(that, evt) } }) } 
 				}
 				elem.appendChild(button)
 			})
@@ -3726,7 +3803,6 @@ var BrowserPrototype = {
 			}
 		}, {skipDisabled: false})
 	},
-
 	// NOTE: element alignment is done via the browser focus mechanics...
 	__focus__: function(evt, elem){
 		var that = this
@@ -3754,11 +3830,9 @@ var BrowserPrototype = {
 					// refocus the dialog...
 					that.dom
 						&& that.dom.focus() }) },
-
 	// XXX should we only update the current elem???
 	__expand__: function(){ this.update() },
 	__collapse__: function(){ this.update() },
-
 	__select__: updateElemClass('add', 'selected'),
 	__deselect__: updateElemClass('remove', 'selected'),
 	__disable__: updateElemClass('add', 'disabled', function(){ this.update() }),

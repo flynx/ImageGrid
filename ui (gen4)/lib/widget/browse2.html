@@ -227,7 +227,9 @@ requirejs([
 						make('---')
 						make('b')
 					}))
-					make('bbb')
+					make('bbb', {buttons: [
+						['test', 'focus: "parent"'],
+					]})
 					make('bbb')
 				}))
 			}), {
@@ -251,12 +253,18 @@ requirejs([
 
 	}, {
 		itemButtons: [
-			['&ndash;'],
-			['&square;', function(){ console.log('BUTTON:', ...arguments) }],
+			['&ndash;', 
+				'buttonAction: item button focused -- example button action...'],
+			['&square;', 
+				function(){ console.log('BUTTON:', ...arguments) }],
 		],
 	})
 
 	dialog.container = $('.container').first()[0]
+
+	// button handler...
+	dialog.buttonAction = function(item, button, focused){
+		console.log(`BUTTON "${button}":`, item, '-- focus at:', focused) }
 
 	dialog
 		.update()
