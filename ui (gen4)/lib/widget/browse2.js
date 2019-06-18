@@ -3047,6 +3047,7 @@ var BrowserClassPrototype = {
 var BrowserPrototype = {
 	__proto__: BaseBrowser.prototype,
 
+
 	options: {
 		__proto__: BaseBrowser.prototype.options,
 
@@ -3172,7 +3173,6 @@ var BrowserPrototype = {
 					},
 					function(){ return that.dom })
 		return kb },
-
 	// NOTE: this is not designed for direct use...
 	get __keyboard_handler(){
 		var options = this.options || {}
@@ -3220,8 +3220,7 @@ var BrowserPrototype = {
 	//	.search('pagetop'[, offset] ..)
 	//	.search('pagebottom'[, offset] ..)
 	//
-	//
-	// XXX add support for pixel offset...
+	// XXX add support for pixel offset???
 	search: function(pattern){
 		var args = [...arguments].slice(1)
 		var p = pattern
@@ -3346,6 +3345,7 @@ var BrowserPrototype = {
 					navigator.clipboard.writeText(text || this.path) 
 					: console.warn('.__copy(..): clipboard-write not allowed.') }) },
 
+
 	// Element renderers...
 	//
 	// This also does:
@@ -3422,7 +3422,6 @@ var BrowserPrototype = {
 	// 		</div>
 	// 	</div>
 	//
-	// XXX the way focus management is done here feels hack-ish...
 	renderList: function(items, context){
 		var that = this
 		var options = context.options || this.options || {}
@@ -3442,7 +3441,7 @@ var BrowserPrototype = {
 		// list...
 		var list = document.createElement('div')
 		list.classList.add('list', 'v-block')
-		// HACK?: prevent scrollbar from grabbing focus...
+		// prevent scrollbar from grabbing focus...
 		list.addEventListener('mousedown', 
 			function(evt){ evt.stopPropagation() })
 		items
@@ -3451,9 +3450,6 @@ var BrowserPrototype = {
 					that.renderGroup(item) 
 					: item) })
 		dialog.appendChild(list)
-
-		// XXX event handlers...
-		// XXX
 
 		return dialog 
 	},
@@ -3489,7 +3485,6 @@ var BrowserPrototype = {
 	// 		...
 	// 	</div>
 	//
-	// XXX register event handlers...
 	renderNested: function(header, children, item, context){
 		var that = this
 		var options = context.options || this.options || {}
@@ -3511,47 +3506,33 @@ var BrowserPrototype = {
 		// items...
 		children instanceof Node ?
 			e.appendChild(children)
-		// XXX should this add the items to a container???
 		: children instanceof Array ?
 			children
 				.forEach(function(item){
 					e.appendChild(item) })
 		: null
 
-		// XXX event handlers... (???)
-		// XXX
-
 		item.dom = e
 
 		return e
 	},
 	// NOTE: this is the similar to .renderItem(..)
-	// XXX make collapse action overloadable....
-	// XXX use item.events...
 	renderNestedHeader: function(item, i, context){
 		var that = this
 		return this.renderItem(item, i, context)
 			// update dom...
 			.run(function(){
-				// class...
-				// XXX should be done here or in the config???
 				this.classList.add('sub-list-header', 'traversable')
 				item.collapsed
 					&& this.classList.add('collapsed')
-
-				// collapse action handler...
-				// XXX make this overloadable...
-				// XXX use item.events...
-				$(this).on('open', function(evt){
-					that.toggleCollapse(item) })
 			}) },
 	//
 	// Format:
 	// 	<div class="group">
-	// 		..
+	// 		<!-- items -->
+	// 		...
 	// 	</div>
 	//
-	// XXX this does not seem to get called by .render(..)...
 	renderGroup: function(items, context){
 		var e = document.createElement('div')
 		e.classList.add('group')
@@ -3579,6 +3560,8 @@ var BrowserPrototype = {
 	// 		around. It is not recommended to use DOM events directly.
 	//
 	// XXX should buttons be active in disabled state???
+	// 		...for enable/disable button seems logical, not so much for 
+	// 		the rest...
 	renderItem: function(item, i, context){
 		var that = this
 		var options = context.options || this.options || {}
@@ -3748,7 +3731,6 @@ var BrowserPrototype = {
 
 	// scroll...
 	//
-	// XXX do we need this???
 	scrollTo: function(pattern, position){
 		var target = this.get(pattern)
 		target 
@@ -3838,7 +3820,6 @@ var BrowserPrototype = {
 					// refocus the dialog...
 					that.dom
 						&& that.dom.focus() }) },
-	// XXX should we only update the current elem???
 	__expand__: function(){ this.update() },
 	__collapse__: function(){ this.update() },
 	__select__: updateElemClass('add', 'selected'),
@@ -3896,6 +3877,9 @@ var BrowserPrototype = {
 				.expand()
 			: this.next() },
 
+
+	// filtering/search mode...
+	// XXX
 }
 
 

@@ -195,14 +195,14 @@ requirejs([
 	dialog = browser.Browser(function(make){
 		make(['list', 'of', 'text'])
 		make.group(
-			make('$group item 0', 
+			make('$group item 0 (open event)', 
 				function(){ console.log('##', ...arguments) }),
 			'group item 1 (bare)')
 		// XXX Q: should we show only one if multiple lines are in sequence???
 		make('---')
 		// embeded browser...
 		make(browser.Browser(function(make){
-			make('inlined browser item 0', {
+			make('inlined browser item 0 (open/menu events)', {
 				open: function(){ console.log('!!! OPEN', ...arguments) },
 				menu: function(){ console.log('!!! MENU', ...arguments) },
 			})
