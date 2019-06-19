@@ -3169,6 +3169,7 @@ var BrowserPrototype = {
 
 	// Keyboard...
 	//
+	// XXX these should get the root handler if not defined explicitly...
 	__keyboard_config: Object.assign({}, KEYBOARD_CONFIG),
 	get keybindings(){
 		return this.__keyboard_config },
@@ -3202,6 +3203,12 @@ var BrowserPrototype = {
 
 	// DOM props..
 	//
+	// XXX the problem with nested browser elements .update(..) not 
+	// 		updating unless called with correct context is that .dom / .container
+	// 		are not maintained in children...
+	// 		...if done correctly this should fix the issue automatically...
+	// XXX might be a good idea to make dom support arrays of items...
+	//
 	// parent element (optional)...
 	// XXX rename???
 	// 		... should this be .containerDom or .parentDom???
@@ -3214,8 +3221,8 @@ var BrowserPrototype = {
 		var dom = this.dom
 		this.__container = value
 		// transfer the dom to the new parent...
-		dom && (this.dom = dom)
-	},
+		dom 
+			&& (this.dom = dom) },
 
 	// browser dom...
 	get dom(){
@@ -3365,7 +3372,7 @@ var BrowserPrototype = {
 		navigator.clipboard.writeText(text || this.path) },
 
 
-	// Element renderers...
+	// Renderers (DOM)...
 	//
 	// This also does:
 	// 	- save the rendered state to .dom 
@@ -3416,6 +3423,7 @@ var BrowserPrototype = {
 					&& getElem(that.focused).focus() })
 		//*/
 
+		// XXX should this be done here or in .render(..)???
 		this.dom = d
 
 		// keep focus where it is...
@@ -3749,6 +3757,18 @@ var BrowserPrototype = {
 		return elem 
 	},
 
+	/* XXX sort out .dom updates...
+	render: function(...args){
+		var res = object.parent(BrowserPrototype.render, this).call(this, ...args)
+
+		// XXX set .dom...
+		// 		...need support for item lists...
+		//this.dom = res
+
+		return res
+	},
+	//*/
+
 
 	// Custom events handlers...
 	//
@@ -3851,6 +3871,7 @@ var BrowserPrototype = {
 
 	// Scroll...
 	//
+	// XXX use .options.focusOffsetWhileScrolling
 	scrollTo: function(pattern, position){
 		var target = this.get(pattern)
 		target 
