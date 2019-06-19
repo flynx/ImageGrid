@@ -2933,6 +2933,7 @@ module.KEYBOARD_CONFIG = {
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+// Helpers...
 
 // Get actual .item DOM element...
 //
@@ -2943,7 +2944,8 @@ var getElem = function(elem){
 			elem.querySelector('.item')
 			: elem }
 
-// helpers...
+// Scrolling / offset...
+//
 var scrollOffset = function(browser, direction, elem){
 	var elem = getElem(elem || browser.focused)
 	var lst = browser.dom.querySelector('.list')
@@ -3055,7 +3057,6 @@ var BrowserClassPrototype = {
 // 		...need to render lists and items both as a whole or independently...
 // XXX need a strategy to update the DOM -- i.e. add/remove nodes for 
 // 		partial rendering instead of full DOM replacement...
-// XXX should this use vanilla DOM or jQuery???
 // XXX add a left button type/option -- expand/collapse and friends...
 var BrowserPrototype = {
 	__proto__: BaseBrowser.prototype,
@@ -3594,7 +3595,9 @@ var BrowserPrototype = {
 
 			// NOTE: this is a bit of a cheat, but it saves us from either 
 			// 		parsing or restricting the format...
-			var elem = item.dom = $(item.html)[0]
+			var tmp = document.createElement('div')
+			tmp.innerHTML = item.html
+			var elem = item.dom = tmp.firstElementChild 
 			elem.classList.add(
 				...(item['class'] instanceof Array ?
 					item['class']
@@ -3896,7 +3899,7 @@ var BrowserPrototype = {
 			: this.next() },
 
 
-	// filtering/search mode...
+	// Filtering/search mode...
 	// XXX
 }
 
