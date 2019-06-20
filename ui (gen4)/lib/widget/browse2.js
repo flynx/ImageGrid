@@ -3875,10 +3875,11 @@ var BrowserPrototype = {
 	scrollTo: function(pattern, position){
 		var target = this.get(pattern)
 		target 
-			&& getElem(target).scrollIntoView({
-				behavior: (this.options || {}).scrollBehavior || 'auto',
-				block: position || 'center',
-			}) },
+			&& getElem(target)
+				.scrollIntoView({
+					behavior: (this.options || {}).scrollBehavior || 'auto',
+					block: position || 'center',
+				}) },
 
 
 	// Navigation...
