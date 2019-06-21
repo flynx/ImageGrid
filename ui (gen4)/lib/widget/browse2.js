@@ -3871,7 +3871,15 @@ var BrowserPrototype = {
 
 	// Scroll...
 	//
-	// XXX use .options.focusOffsetWhileScrolling
+	// position can be:
+	// 	'start'
+	// 	'center'
+	// 	'end'
+	//
+	// XXX use .options.focusOffsetWhileScrolling / nudgeElement(..)
+	// 		...only need to determine direction...
+	// 			'start' -> nudgeElement(this, 'up', elem)
+	// 			'end' -> nudgeElement(this, 'down', elem)
 	scrollTo: function(pattern, position){
 		var target = this.get(pattern)
 		target 
