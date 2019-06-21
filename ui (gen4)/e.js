@@ -107,6 +107,9 @@ function createWindow(){
 	// disable default menu...
 	win.setMenu(null)
 
+	win.openDevTools()
+
+
 	// and load the index.html of the app.
 	win.loadURL(url.format({
 		// XXX unify this with index.html
@@ -131,6 +134,7 @@ function createWindow(){
 		// when you should delete the corresponding element.
 		win = null
 	})
+
 
 	return win
 }
