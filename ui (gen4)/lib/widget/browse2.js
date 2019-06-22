@@ -164,12 +164,18 @@ Items.nest = function(item, list, options){
 // Buttons...
 var buttons = Items.buttons = {}
 
-// XXX make this combinable by user...
+//
+// 	Checkbox('attr')
+// 	Checkbox('!attr')
+//
+// XXX rename -- distinguish from actual button...
 var Checkbox = 
 buttons.Checkbox = 
 function(attr){
 	return function(item){
-		return item[attr] ? 
+		return (attr[0] == '!' 
+					&& !item[attr.slice(1)]) 
+				|| item[attr] ? 
 			'&#9744;' 
 			: '&#9745;' } }
 
@@ -185,14 +191,14 @@ function(attr){
 // 		- protocol to pass data from button to button
 // 		- protocol to fill data gradually...
 buttons.ToggleDisabled = [
-	Checkbox('disabled'),
+	'Checkbox: "disabled"',
 	'toggleDisabled: item',
 	true]
 buttons.ToggleHidden = [
-	Checkbox('hidden'),
+	'Checkbox: "hidden"',
 	'toggleHidden: item']
 buttons.ToggleSelected = [
-	Checkbox('selected'),
+	'Checkbox: "selected"',
 	'toggleSelect: item']
 
 
@@ -3742,6 +3748,7 @@ var BrowserPrototype = {
 			.map(function(button){
 				return button instanceof Array ?
 					button
+					// XXX reference the actual make(..) and not Items...
 					: Items.buttons[button] || button })
 			.slice()
 			// NOTE: keep the order unsurprising...
@@ -3754,8 +3761,17 @@ var BrowserPrototype = {
 				var button = document.createElement('div')
 				button.classList.add('button')
 
+				var htmlhandler = typeof(html) == typeof('str') ?
+					that.keyboard.parseStringHandler(html, {item})
+					: null
 				button.innerHTML = html instanceof Function ?
-					html.call(that, item)
+						html.call(that, item)
+					// XXX reference the actual make(..) and not Items...
+					: htmlhandler && htmlhandler.action in Items.buttons ?
+						Items.buttons[htmlhandler.action]
+							.call(that, ...htmlhandler.arguments)
+							// XXX is this the right format???
+							.call(that, item)
 					: html
 
 				if(force || !item.disabled){
