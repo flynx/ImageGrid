@@ -165,13 +165,14 @@ Items.nest = function(item, list, options){
 var buttons = Items.buttons = {}
 
 //
+// 	Draw checked checkboz is <attr> is true...
 // 	Checkbox('attr')
+//
+// 	Draw checked checkboz is <attr> is false...
 // 	Checkbox('!attr')
 //
 // XXX rename -- distinguish from actual button...
-var Checkbox = 
-buttons.Checkbox = 
-function(attr){
+buttons.Checkbox = function(attr){
 	return function(item){
 		return (attr[0] == '!' 
 					&& !item[attr.slice(1)]) 
@@ -180,16 +181,7 @@ function(attr){
 			: '&#9745;' } }
 
 
-// XXX can we make these:
-// 		- different -- not use the same icon...
-// 		- configurable / combinable...
-// 			something like:
-// 				toggleDisabled: checkbox -- need checkbox to know the state...
-//				toggleHidden: "&times;"
-//				...
-// XXX button combination/chaining would require:
-// 		- protocol to pass data from button to button
-// 		- protocol to fill data gradually...
+// XXX can we make these not use the same icon...
 buttons.ToggleDisabled = [
 	'Checkbox: "disabled"',
 	'toggleDisabled: item',
@@ -200,6 +192,19 @@ buttons.ToggleHidden = [
 buttons.ToggleSelected = [
 	'Checkbox: "selected"',
 	'toggleSelect: item']
+// NOTE: this button is disabled for all items but the ones with .children...
+buttons.ToggleCollapse = [
+	function(item){
+		return !item.children ?
+				// placeholder...
+				'&nbsp;'
+			: item.collapsed ?
+				'+'
+			: '-' },
+	'toggleCollapse: item',
+	// disable button for all items that do not have children...
+	function(item){ 
+		return 'children' in item }]
 
 
 
@@ -3719,7 +3724,10 @@ var BrowserPrototype = {
 		elem.addEventListener('click', 
 			function(evt){
 				evt.stopPropagation()
-				that.open(item, text, elem) })
+				// XXX revise...
+				item.disabled ?
+					that.toggleCollapse(item)
+					: that.open(item, text, elem) })
 		elem.addEventListener('focus', 
 			function(){ 
 				// NOTE: we do not retrigger focus on an item if it's 
@@ -3747,17 +3755,18 @@ var BrowserPrototype = {
 			// resolve buttons from library...
 			.map(function(button){
 				return button instanceof Array ?
-					button
+						button
 					// XXX reference the actual make(..) and not Items...
+					: Items.buttons[button] instanceof Function ?
+						Items.buttons[button].call(that, item)
 					: Items.buttons[button] || button })
-			.slice()
 			// NOTE: keep the order unsurprising...
 			.reverse()
 		var stopPropagation = function(evt){ evt.stopPropagation() }
 		buttons
 			// XXX add option to use a shortcut key...
 			// XXX use keyword to inherit buttons...
-			.forEach(function([html, handler, force, keyword]){
+			.forEach(function([html, handler, force]){
 				var button = document.createElement('div')
 				button.classList.add('button')
 
@@ -3770,11 +3779,12 @@ var BrowserPrototype = {
 					: htmlhandler && htmlhandler.action in Items.buttons ?
 						Items.buttons[htmlhandler.action]
 							.call(that, ...htmlhandler.arguments)
-							// XXX is this the right format???
 							.call(that, item)
 					: html
 
-				if(force || !item.disabled){
+				if(force instanceof Function ? 
+						force.call(that, item) 
+						: (force || !item.disabled) ){
 					button.setAttribute('tabindex', '0')
 					// events to keep in buttons...
 					;(options.buttonLocalEvents || options.localEvents || [])
