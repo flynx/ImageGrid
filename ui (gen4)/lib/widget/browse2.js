@@ -164,28 +164,37 @@ Items.nest = function(item, list, options){
 // Buttons...
 var buttons = Items.buttons = {}
 
-
-buttons.ToggleDisabled = [
-	function(item){
-		return item.disabled ? 
+// XXX make this combinable by user...
+var Checkbox = 
+buttons.Checkbox = 
+function(attr){
+	return function(item){
+		return item[attr] ? 
 			'&#9744;' 
-			: '&#9745;' },
+			: '&#9745;' } }
+
+
+// XXX can we make these:
+// 		- different -- not use the same icon...
+// 		- configurable / combinable...
+// 			something like:
+// 				toggleDisabled: checkbox -- need checkbox to know the state...
+//				toggleHidden: "&times;"
+//				...
+// XXX button combination/chaining would require:
+// 		- protocol to pass data from button to button
+// 		- protocol to fill data gradually...
+buttons.ToggleDisabled = [
+	Checkbox('disabled'),
 	'toggleDisabled: item',
 	true]
-
 buttons.ToggleHidden = [
-	function(item){
-		return item.hidden ? 
-			'&#9744;' 
-			: '&#9745;' },
+	Checkbox('hidden'),
 	'toggleHidden: item']
-
 buttons.ToggleSelected = [
-	function(item){
-		return item.selected ? 
-			'&#9744;' 
-			: '&#9745;' },
+	Checkbox('selected'),
 	'toggleSelect: item']
+
 
 
 
@@ -197,12 +206,12 @@ Items.Item = function(value, options){ return this(...arguments) }
 
 Items.Separator = function(){ return this('---') }
 Items.Spinner = function(){ return this('...') }
-Items.Action = function(value, options){}
 Items.Heading = function(value, options){}
 Items.Empty = function(value){}
 Items.Selected = function(value){}
-Items.Editable = function(value){}
+Items.Action = function(value, options){}
 Items.ConfirmAction = function(value){}
+Items.Editable = function(value){}
 
 // lists...
 Items.List = function(values){}
