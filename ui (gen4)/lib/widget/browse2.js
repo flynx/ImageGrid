@@ -161,6 +161,35 @@ Items.nest = function(item, list, options){
 
 
 //---------------------------------------------------------------------
+// Buttons...
+var buttons = Items.buttons = {}
+
+
+buttons.ToggleDisabled = [
+	function(item){
+		return item.disabled ? 
+			'&#9744;' 
+			: '&#9745;' },
+	'toggleDisabled: item',
+	true]
+
+buttons.ToggleHidden = [
+	function(item){
+		return item.hidden ? 
+			'&#9744;' 
+			: '&#9745;' },
+	'toggleHidden: item']
+
+buttons.ToggleSelected = [
+	function(item){
+		return item.selected ? 
+			'&#9744;' 
+			: '&#9745;' },
+	'toggleSelect: item']
+
+
+
+//---------------------------------------------------------------------
 // wrappers...
 
 // this is here for uniformity...
@@ -2682,6 +2711,7 @@ var BaseBrowserPrototype = {
 				&& (item.focused = true) },
 		default_item: function(){ return this.get(0) },
 		options: { 
+			// XXX get this from options...
 			skipDisabled: true,
 		},
 		getter: 'get' }),
@@ -3114,9 +3144,13 @@ var BrowserPrototype = {
 		// 		//		- number/string/list/object
 		// 		//						- any values...
 		// 		//
+		// 		//	<force>	(optional, bool), of true the button will 
+		// 		//	be active while the item is disabled...
+		// 		//
 		// 		// NOTE: for more doc see keyboard.Keyboard.parseStringHandler(..)
 		// 		['html', 
-		// 			'<action>: <arg> .. -- comment'],
+		// 			'<action>: <arg> .. -- comment',
+		// 			<force>],
 		//
 		// 		...
 		// 	]
@@ -3695,17 +3729,27 @@ var BrowserPrototype = {
 		// buttons...
 		// XXX migrate the default buttons functionality and button inheritance...
 		var buttons = (item.buttons || options.itemButtons || [])
+			// resolve buttons from library...
+			.map(function(button){
+				return button instanceof Array ?
+					button
+					: Items.buttons[button] || button })
 			.slice()
 			// NOTE: keep the order unsurprising...
 			.reverse()
 		var stopPropagation = function(evt){ evt.stopPropagation() }
 		buttons
-			.forEach(function([html, handler]){
+			// XXX add option to use a shortcut key...
+			// XXX use keyword to inherit buttons...
+			.forEach(function([html, handler, force, keyword]){
 				var button = document.createElement('div')
 				button.classList.add('button')
-				button.innerHTML = html
-				// XXX should buttons be active in disabled state???
-				if(!item.disabled){
+
+				button.innerHTML = html instanceof Function ?
+					html.call(that, item)
+					: html
+
+				if(force || !item.disabled){
 					button.setAttribute('tabindex', '0')
 					// events to keep in buttons...
 					;(options.buttonLocalEvents || options.localEvents || [])
@@ -3747,7 +3791,7 @@ var BrowserPrototype = {
 								var k = keyboard.event2key(evt)
 								if(k.includes('Enter')){
 									event.stopPropagation()
-									func.call(that, evt) } }) } 
+									func.call(that, evt, item) } }) } 
 				}
 				elem.appendChild(button)
 			})
