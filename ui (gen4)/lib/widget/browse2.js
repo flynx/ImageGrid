@@ -299,6 +299,16 @@ var BaseItemPrototype = {
 	get text(){
 		return this.constructor.text(this) },
 
+	get pathArray(){
+		var p = this.parent
+		while(p.parent instanceof BaseBrowser){
+			p = p.parent }
+		return p ? 
+			p.pathOf(this)
+			: undefined },
+	get path(){
+		return this.pathArray.join('/') },
+
 	__init__(...state){
 		Object.assign(this, ...state) },
 }
@@ -752,10 +762,6 @@ var BaseBrowserClassPrototype = {
 // 		...only some item updates (how .collapsed is handled) make 
 // 		sense at this time -- need to think about this more 
 // 		carefully + strictly document the result...
-// XXX can/should we make traversal simpler???
-// 		...currently to get to a nested item we'd need to:
-// 			dialog.flatIndex.B.children.index.C. ...
-// 		on the other hand we can .get('B/C/...')
 var BaseBrowserPrototype = {
 	// XXX should we mix item/list options or separate them into sub-objects???
 	options: {
@@ -817,8 +823,15 @@ var BaseBrowserPrototype = {
 	// This will delete all attributes of the format:
 	// 	.__<title>_cache
 	//
+	//
+	// 	Clear all cache data including generated items...
+	// 	.clearCache(true)
+	// 		-> this
+	//
+	// NOTE: .clearCache(true) will yield a state that would require at 
+	// 		least a .update() call to be usable...
 	clearCache: function(title){
-		if(title == null){
+		if(title == null || title === true){
 			Object.keys(this)
 				.forEach(function(key){
 					if(key.startsWith('__') && key.endsWith('_cache')){
@@ -830,6 +843,9 @@ var BaseBrowserPrototype = {
 				.forEach(function(title){
 					delete this[`__${title}_cache`]
 				}.bind(this))
+		}
+		if(title === true){
+			delete this.__items
 		}
 		return this },
 
@@ -3058,7 +3074,6 @@ var HTMLItemClassPrototype = {
 		return elem.classList.contains('list') ? 
 				elem.querySelector('.item')
 				: elem },
-
 }
 
 var HTMLItemPrototype = {
@@ -3192,7 +3207,6 @@ var HTMLBrowserClassPrototype = {
 // 		...need to render lists and items both as a whole or independently...
 // XXX need a strategy to update the DOM -- i.e. add/remove nodes for 
 // 		partial rendering instead of full DOM replacement...
-// XXX add a left button type/option -- expand/collapse and friends...
 var HTMLBrowserPrototype = {
 	__proto__: BaseBrowser.prototype,
 	__item__: HTMLItem,
@@ -4118,6 +4132,8 @@ var HTMLBrowserPrototype = {
 	keyPress: makeEventMethod('keypress', 
 		function(evt, key){
 			this.__keyboard_handler(key) }),
+	// XXX do we need a default behavior here???
+	// 		...something like .expand(..)
 	menu: makeItemEventMethod('menu'),
 
 
