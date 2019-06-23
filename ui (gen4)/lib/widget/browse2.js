@@ -265,7 +265,17 @@ Items.EditablePinnedList = function(values){}
 //---------------------------------------------------------------------
 // Item...
 
-var ItemPrototype = {
+var BaseItemClassPrototype = {
+	text: function(elem){
+		var txt = elem.value instanceof Array ?
+				elem.value.join(' ')	
+			: elem.value == null || elem.value instanceof Object ?
+				elem.alt || elem.__id 
+			: elem.value
+		return txt },
+}
+
+var BaseItemPrototype = {
 	parent: null,
 	
 	// children: null,
@@ -273,6 +283,8 @@ var ItemPrototype = {
 	// id: null,
 	// value: null,
 	// alt: null,
+	//
+	// dom: null,
 	//
 	// focused: null,
 	// disabled: null,
@@ -284,28 +296,18 @@ var ItemPrototype = {
 	set id(value){
 		this.__id = value },
 
-	// XXX can value be a function or as a list contain a function???
-	// 		...if so, to resolve it we'll need a context other than the item...
-	// XXX should we remove '$' here or in an extension???
 	get text(){
-		var txt = this.value instanceof Array ?
-				this.value.join(' ')	
-			: this.value == null || this.value instanceof Object ?
-				this.alt || this.__id 
-			: this.value
-		return txt != null ?
-			(txt + '')
-				.replace(/\$(.)/g, '$1') 
-			: txt },
+		return this.constructor.text(this) },
 
 	__init__(...state){
 		Object.assign(this, ...state) },
 }
 
-
-var Item = 
-module.Item = 
-object.makeConstructor('Item', ItemPrototype)
+var BaseItem = 
+module.BaseItem = 
+object.makeConstructor('BaseItem', 
+	BaseItemClassPrototype,
+	BaseItemPrototype)
 
 
 
@@ -1040,6 +1042,7 @@ var BaseBrowserPrototype = {
 	__list__: function(make, options){
 		throw new Error('.__list__(..): Not implemented.') },
 
+	__item__: BaseItem,
 
 	// Make extension...
 	//
@@ -1126,7 +1129,7 @@ var BaseBrowserPrototype = {
 			// XXX not sure if this is the right way to go...
 			// 		...for removal just remove the if statement and its
 			// 		first branch...
-			if(value instanceof Browser){
+			if(value instanceof BaseBrowser){
 				var item = value
 				item.parent = this
 
@@ -1167,14 +1170,14 @@ var BaseBrowserPrototype = {
 						+`can't create multiple items with the same id.`) }
 
 				// build the item...
-				var item = new Item(
+				var item = new this.__item__(
 					// XXX do we need this???
 					//options || {}, 
 					opts,
 					{ parent: this })
 
 				// XXX do we need both this and the above ref???
-				item.children instanceof Browser
+				item.children instanceof BaseBrowser
 					&& (item.children.parent = this)
 			}
 
@@ -3038,23 +3041,48 @@ module.KEYBOARD_CONFIG = {
 }
 
 
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+// Item...
+
+var HTMLItemClassPrototype = {
+	__proto__: BaseItem,
+
+	text: function(elem){
+		var txt = object.parent(HTMLItem.text, this).call(this, elem)
+		return txt != null ?
+			(txt + '')
+				.replace(/\$(.)/g, '$1') 
+			: txt },
+	elem: function(elem){
+		elem = elem.dom || elem
+		return elem.classList.contains('list') ? 
+				elem.querySelector('.item')
+				: elem },
+
+}
+
+var HTMLItemPrototype = {
+	__proto__: BaseItem.prototype,
+
+	get elem(){
+		return this.constructor.elem(this) },
+}
+
+var HTMLItem = 
+module.HTMLItem = 
+object.makeConstructor('HTMLItem', 
+	HTMLItemClassPrototype,
+	HTMLItemPrototype)
+
+
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 // Helpers...
 
-// Get actual .item DOM element...
-//
-// XXX should this be a prop in the element???
-var getElem = function(elem){
-	elem = elem.dom || elem
-	return elem.classList.contains('list') ? 
-			elem.querySelector('.item')
-			: elem }
-
 // Scrolling / offset...
 //
 var scrollOffset = function(browser, direction, elem){
-	var elem = getElem(elem || browser.focused)
+	var elem = (elem || browser.focused).elem
 	var lst = browser.dom.querySelector('.list')
 	return direction == 'top' ?
 		elem.offsetTop - lst.scrollTop
@@ -3087,7 +3115,7 @@ var focusItem = function(direction){
 
 	return function(){
 		var name = direction == 'up' ? 'prev' : 'next'
-		object.parent(BrowserPrototype[name], name, this).call(this, ...arguments)
+		object.parent(HTMLBrowserPrototype[name], name, this).call(this, ...arguments)
 
 		var threashold = this.options.focusOffsetWhileScrolling || 0
 
@@ -3148,7 +3176,7 @@ var focusPage = function(direction){
 var updateElemClass = function(action, cls, handler){
 	return function(evt, elem, ...args){
 		elem 
-			&& getElem(elem).classList[action](cls) 
+			&& elem.elem.classList[action](cls) 
 		return handler 
 			&& handler.call(this, evt, elem, ...args)} }
 
@@ -3156,7 +3184,7 @@ var updateElemClass = function(action, cls, handler){
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
-var BrowserClassPrototype = {
+var HTMLBrowserClassPrototype = {
 	__proto__: BaseBrowser,
 }
 
@@ -3165,8 +3193,9 @@ var BrowserClassPrototype = {
 // XXX need a strategy to update the DOM -- i.e. add/remove nodes for 
 // 		partial rendering instead of full DOM replacement...
 // XXX add a left button type/option -- expand/collapse and friends...
-var BrowserPrototype = {
+var HTMLBrowserPrototype = {
 	__proto__: BaseBrowser.prototype,
+	__item__: HTMLItem,
 
 
 	options: {
@@ -3396,7 +3425,7 @@ var BrowserPrototype = {
 				: 0
 			return this.search(true,
 					function(e, i, p, stop){
-						var edom = getElem(e)
+						var edom = e.elem
 						// first below upper border...
 						pos == 'top' 
 							&& Math.round(edom.offsetTop 
@@ -3421,10 +3450,10 @@ var BrowserPrototype = {
 		pattern = arguments[0] = 
 			// DOM element...
 			pattern instanceof HTMLElement ?
-				function(e){ return e.dom === p || getElem(e) === p }
+				function(e){ return e.elem === p || e.elem === p }
 			// jQuery object...
 			: (typeof(jQuery) != 'undefined' && pattern instanceof jQuery) ?
-				function(e){ return p.is(e.dom) || p.is(getElem(e)) }
+				function(e){ return p.is(e.dom) || p.is(e.elem) }
 			// pagetop + offset...
 			: pattern == 'pagetop' ?
 				getAtPagePosition('top', 
@@ -3439,7 +3468,7 @@ var BrowserPrototype = {
 			: pattern
 
 		// call parent...
-		return object.parent(BrowserPrototype.search, this).call(this, pattern, ...args) },
+		return object.parent(HTMLBrowserPrototype.search, this).call(this, pattern, ...args) },
 	//
 	// Extended .get(..) to support:
 	// 	- 'pagetop'/'pagebottom' + offset...
@@ -3466,7 +3495,7 @@ var BrowserPrototype = {
 					stop(func ? 
 						func.call(this, e, i, p)
 						: e) }, ...args)
-			: object.parent(BrowserPrototype.get, this).call(this, pattern, func, ...args) },
+			: object.parent(HTMLBrowserPrototype.get, this).call(this, pattern, func, ...args) },
 
 
 	// Copy/Paste support...
@@ -3553,7 +3582,7 @@ var BrowserPrototype = {
 		d.addEventListener('focus',
 		   function(){
 			   that.focused
-					&& getElem(that.focused).focus() })
+					&& that.focused.elem.focus() })
 		//*/
 
 		// XXX should this be done here or in .render(..)???
@@ -3562,7 +3591,7 @@ var BrowserPrototype = {
 		// keep focus where it is...
 		var focused = this.focused
 		focused
-			&& getElem(focused)
+			&& focused.elem
 				// XXX this will trigger the focus event...
 				// 		...can we do this without triggering new events???
 				.focus()
@@ -3982,7 +4011,7 @@ var BrowserPrototype = {
 
 	/* XXX sort out .dom updates...
 	render: function(...args){
-		var res = object.parent(BrowserPrototype.render, this).call(this, ...args)
+		var res = object.parent(HTMLBrowserPrototype.render, this).call(this, ...args)
 
 		// XXX set .dom...
 		// 		...need support for item lists...
@@ -4050,7 +4079,7 @@ var BrowserPrototype = {
 	__focus__: function(evt, elem){
 		var that = this
 		elem
-			&& getElem(elem)
+			&& elem.elem
 				// update the focused CSS class...
 				// NOTE: we will not remove this class on blur as it keeps
 				// 		the selected element indicated...
@@ -4067,7 +4096,7 @@ var BrowserPrototype = {
 	__blur__: function(evt, elem){
 		var that = this
 		elem
-			&& getElem(elem)
+			&& elem.elem
 				.run(function(){
 					this.classList.remove('focused')
 					// refocus the dialog...
@@ -4106,7 +4135,7 @@ var BrowserPrototype = {
 	scrollTo: function(pattern, position){
 		var target = this.get(pattern)
 		target 
-			&& getElem(target)
+			&& target.elem
 				.scrollIntoView({
 					behavior: (this.options || {}).scrollBehavior || 'auto',
 					block: position || 'center',
@@ -4157,11 +4186,18 @@ var BrowserPrototype = {
 
 
 // XXX should this be a Widget too???
-var Browser = 
-module.Browser = 
-object.makeConstructor('Browser', 
-		BrowserClassPrototype, 
-		BrowserPrototype)
+var HTMLBrowser = 
+module.HTMLBrowser = 
+object.makeConstructor('HTMLBrowser', 
+		HTMLBrowserClassPrototype, 
+		HTMLBrowserPrototype)
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+// shorthans...
+
+module.Item = HTMLItem
+module.Browser = HTMLBrowser
 
 
 
