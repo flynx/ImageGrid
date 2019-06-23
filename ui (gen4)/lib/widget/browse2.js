@@ -265,13 +265,9 @@ Items.EditablePinnedList = function(values){}
 //---------------------------------------------------------------------
 // Item...
 
-var ItemClassPrototype = {
-}
-
-
 var ItemPrototype = {
-	// parent: null,
-	//
+	parent: null,
+	
 	// children: null,
 	//
 	// id: null,
@@ -282,20 +278,25 @@ var ItemPrototype = {
 	// disabled: null,
 	// selected: null,
 	// collapsed: null,
-
+	
+	get id(){
+		return this.__id || this.text },
+	set id(value){
+		this.__id = value },
 
 	// XXX can value be a function or as a list contain a function???
 	// 		...if so, to resolve it we'll need a context other than the item...
 	// XXX should we remove '$' here or in an extension???
 	get text(){
-		return (
-				(this.value instanceof Array ?
-					this.value.join(' ')	
-				: this.value == null || this.value instanceof Object ?
-					this.alt || this.id 
-				: this.value) + '')
-			.replace(/\$(.)/g, '$1') },
-
+		var txt = this.value instanceof Array ?
+				this.value.join(' ')	
+			: this.value == null || this.value instanceof Object ?
+				this.alt || this.__id 
+			: this.value
+		return txt != null ?
+			(txt + '')
+				.replace(/\$(.)/g, '$1') 
+			: txt },
 
 	__init__(...state){
 		Object.assign(this, ...state) },
@@ -304,9 +305,7 @@ var ItemPrototype = {
 
 var Item = 
 module.Item = 
-object.makeConstructor('Item', 
-		ItemClassPrototype,
-		ItemPrototype)
+object.makeConstructor('Item', ItemPrototype)
 
 
 
@@ -938,23 +937,11 @@ var BaseBrowserPrototype = {
 
 	// Configuration / Extension...
 	
-	// XXX need a better key/path API...
-	//
-	// Normalize value...
-	__value2key__: function(key){
-		//return JSON.stringify(key)
-		return key instanceof Array ?
-			key.join(' ')
-			: key },
-
 	// Key getter/generator...
 	__key__: function(item){
 		return item.id 
-			// value is a browser -> generate an unique id...
-			// XXX identify via structure...
-			|| (item.value instanceof Browser 
-				&& this.__id__())
-			|| this.__value2key__(item.value) },
+			|| item.text 
+			|| this.__id__() },
 
 	// ID generator...
 	//
@@ -1533,7 +1520,7 @@ var BaseBrowserPrototype = {
 								: [this]) }) }
 
 				// prepare context...
-				var id = node.id || node.text
+				var id = node.id
 				var path = context.path = context.path || []
 				var [inline, p, children] = 
 					// inline...
@@ -3781,10 +3768,7 @@ var BrowserPrototype = {
 
 		// Base DOM...
 		var elem = document.createElement('div')
-		var text = this.__value2key__(
-			item.value != null ? 
-				item.value 
-				: item)
+		var text = item.text
 
 		// classes...
 		elem.classList.add(...['item']
@@ -4206,10 +4190,9 @@ var TextBrowserPrototype = {
 		return this.renderNested(null, items, null, null, options)
 			.join('\n') },
 	renderItem: function(item, i, options){
-		var value = item.text
 		return item.current ?
-			`[ ${value} ]`
-   			: value },
+			`[ ${ item.text } ]`
+   			: item.text },
 	renderNested: function(header, children, context, item, options){
 		var that = this
 		var nested = children 
