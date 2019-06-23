@@ -172,26 +172,37 @@ var buttons = Items.buttons = {}
 // 	Checkbox('!attr')
 //
 // XXX rename -- distinguish from actual button...
-buttons.Checkbox = function(attr){
-	return function(item){
-		return (attr[0] == '!' 
-					&& !item[attr.slice(1)]) 
-				|| item[attr] ? 
-			'&#9744;' 
-			: '&#9745;' } }
+buttons.Checkbox = function(item, attr){
+	return (attr[0] == '!' 
+				&& !item[attr.slice(1)]) 
+			|| item[attr] ? 
+		'&#9744;' 
+		: '&#9745;' } 
 
 
 // XXX can we make these not use the same icon...
 buttons.ToggleDisabled = [
 	'Checkbox: "disabled"',
 	'toggleDisabled: item',
-	true]
+	true,
+	{
+		alt: 'Disable/enable item',
+		cls: 'toggle-disabled',
+	}]
 buttons.ToggleHidden = [
 	'Checkbox: "hidden"',
-	'toggleHidden: item']
+	'toggleHidden: item',
+	{
+		alt: 'Show/hide item',
+		cls: 'toggle-hidden',
+	}]
 buttons.ToggleSelected = [
 	'Checkbox: "selected"',
-	'toggleSelect: item']
+	'toggleSelect: item',
+	{
+		alt: 'Select/deselect item',
+		cls: 'toggle-select',
+	}]
 // NOTE: this button is disabled for all items but the ones with .children...
 buttons.ToggleCollapse = [
 	function(item){
@@ -204,8 +215,24 @@ buttons.ToggleCollapse = [
 	'toggleCollapse: item',
 	// disable button for all items that do not have children...
 	function(item){ 
-		return 'children' in item }]
+		return 'children' in item },
+	{
+		alt: 'Collapse/expand item',
+		cls: function(item){ 
+			return 'children' in item ? 
+				'toggle-collapse' 
+				: ['toggle-collapse', 'blank'] },
+	}]
 
+// XXX delete button -- requires .markDelete(..) action...
+buttons.Delete = [
+	'&times;',
+	'markDelete: item',
+	{
+		alt: 'Mark item for deletion',
+		cls: 'toggle-delete',
+		//keys: ['Delete', 'd'],
+	}]
 
 
 
@@ -3151,7 +3178,7 @@ var BrowserPrototype = {
 		// 		['html', 
 		// 			<handler>],
 		//
-		// 		// action button handler...
+		// 		// full button handler...
 		// 		//
 		// 		//	<arg> can be:
 		// 		//		- item			- item containing the button
@@ -3164,13 +3191,28 @@ var BrowserPrototype = {
 		// 		//		- number/string/list/object
 		// 		//						- any values...
 		// 		//
-		// 		//	<force>	(optional, bool), of true the button will 
+		// 		//	<force>	(optional, bool or function), of true the button will 
 		// 		//	be active while the item is disabled...
 		// 		//
 		// 		// NOTE: for more doc see keyboard.Keyboard.parseStringHandler(..)
-		// 		['html', 
-		// 			'<action>: <arg> .. -- comment',
-		// 			<force>],
+		// 		[
+		// 			// button view...
+		// 			'text or html' 
+		// 				| '<button-generator>: <arg> .. -- comment' 
+		// 				| <function>
+		// 				| <HTMLElement>, 
+		//
+		// 			// button action...
+		// 			'<action>: <arg> .. -- comment' 
+		// 				| <function>,
+		//
+		// 			// force active (optional)...
+		// 			bool 
+		// 				| <function>,
+		//
+		// 			// button metadata (optional)...
+		// 			<metadata>,
+		// 		],
 		//
 		// 		...
 		// 	]
@@ -3216,6 +3258,9 @@ var BrowserPrototype = {
 			},
 		},
 
+		// If true will disable button shortcut key handling...
+		//disableButtonSortcuts: false,
+
 		// debug and testing options...
 		//keyboardReportUnhandled: false,
 	},
@@ -3253,6 +3298,10 @@ var BrowserPrototype = {
 					options.keyboardReportUnhandled
 						&& console.log('KEY:', ...arguments) }, 
 				this)) },
+	
+	// Proxy to .keyboard.parseStringHandler(..)
+	parseStringHandler: function(code, context){
+		return this.keyboard.parseStringHandler(code, context || this) },
 
 
 	// DOM props..
@@ -3650,6 +3699,25 @@ var BrowserPrototype = {
 			return null
 		}
 
+		// helpers...
+		var resolveValue = function(value, context, exec_context){
+			var htmlhandler = typeof(value) == typeof('str') ?
+				that.parseStringHandler(value, exec_context)
+				: null
+			return value instanceof Function ?
+					value.call(that, item)
+				: htmlhandler && htmlhandler.action in context ?
+					context[htmlhandler.action]
+						.call(that, item, ...htmlhandler.arguments)
+				: value }
+		var setDOMValue = function(target, value){
+			value instanceof HTMLElement ?
+				target.appendChild(value)
+			: (typeof(jQuery) != 'undefined' && value instanceof jQuery) ?
+				value.appendTo(target)
+			: (target.innerHTML = value)
+			return target }
+
 		// special-case: item shorthands...
 		if(item.value in (options.elementShorthand || {})){
 			// XXX need to merge and not overwrite -- revise...
@@ -3699,24 +3767,26 @@ var BrowserPrototype = {
 		// values...
 		text != null
 			&& (item.value instanceof Array ? item.value : [item.value])
-				// XXX handle $keys and other stuff...
+				// handle $keys and other stuff...
 				.map(function(v){
 					// handle key-shortcuts $K...
 					v = typeof(v) == typeof('str') ?
-						v.replace(/\$\w/g, 
-							function(k){
-								k = k[1] 
-								return (item.keys || [])
-										.includes(that.keyboard.normalizeKey(k)) ?
-									`<u class="key-hint">${k}</u>`
-									: k })
+							v.replace(/\$\w/g, 
+								function(k){
+									k = k[1] 
+									return (item.keys || [])
+											.includes(that.keyboard.normalizeKey(k)) ?
+										`<u class="key-hint">${k}</u>`
+										: k })
 						: v
 
 					var value = document.createElement('span')
 					value.classList.add('text')
-					value.innerHTML = v != null ? 
-						v 
-						: (item || '')
+
+					// set the value...
+					setDOMValue(value, 
+						resolveValue(v, that))
+
 					elem.appendChild(value)
 				})
 
@@ -3724,6 +3794,8 @@ var BrowserPrototype = {
 		elem.addEventListener('click', 
 			function(evt){
 				evt.stopPropagation()
+				// NOTE: if an item is disabled we retain its expand/collapse
+				// 		functionality...
 				// XXX revise...
 				item.disabled ?
 					that.toggleCollapse(item)
@@ -3750,6 +3822,7 @@ var BrowserPrototype = {
 					&& elem.addEventListener(evt, handler.bind(that)) })
 
 		// buttons...
+		var button_keys = {}
 		// XXX migrate the default buttons functionality and button inheritance...
 		var buttons = (item.buttons || options.itemButtons || [])
 			// resolve buttons from library...
@@ -3760,28 +3833,43 @@ var BrowserPrototype = {
 					: Items.buttons[button] instanceof Function ?
 						Items.buttons[button].call(that, item)
 					: Items.buttons[button] || button })
-			// NOTE: keep the order unsurprising...
+			// NOTE: keep the order unsurprising -- first defined, first from left...
 			.reverse()
 		var stopPropagation = function(evt){ evt.stopPropagation() }
 		buttons
-			// XXX add option to use a shortcut key...
 			// XXX use keyword to inherit buttons...
-			.forEach(function([html, handler, force]){
+			.forEach(function([html, handler, ...rest]){
+				var force = (rest[0] === true 
+						|| rest[0] === false 
+						|| rest[0] instanceof Function) ? 
+					rest.shift() 
+					: undefined
+				var metadata = rest.shift() || {}
+
+				// resolve metadata...
+				var cls = metadata.cls || []
+				cls = cls instanceof Function ?
+					cls.call(that, item)
+					: cls
+				cls = cls instanceof Array ? 
+					cls 
+					: cls.split(/\s+/g)
+				var alt = metadata.alt
+				alt = alt instanceof Function ?
+						alt.call(that, item)
+					: alt
+				var keys = metadata.keys
+
 				var button = document.createElement('div')
-				button.classList.add('button')
+				button.classList.add('button', ...cls)
+				alt
+					&& button.setAttribute('alt', alt)
 
-				var htmlhandler = typeof(html) == typeof('str') ?
-					that.keyboard.parseStringHandler(html, {item})
-					: null
-				button.innerHTML = html instanceof Function ?
-						html.call(that, item)
-					// XXX reference the actual make(..) and not Items...
-					: htmlhandler && htmlhandler.action in Items.buttons ?
-						Items.buttons[htmlhandler.action]
-							.call(that, ...htmlhandler.arguments)
-							.call(that, item)
-					: html
+				// button content...
+				setDOMValue(button,
+					resolveValue(html, Items.buttons, {item}))
 
+				// active button...
 				if(force instanceof Function ? 
 						force.call(that, item) 
 						: (force || !item.disabled) ){
@@ -3790,6 +3878,14 @@ var BrowserPrototype = {
 					;(options.buttonLocalEvents || options.localEvents || [])
 						.forEach(function(evt){
 							button.addEventListener(evt, stopPropagation) })
+					// button keys...
+					keys && !options.disableButtonSortcuts
+						&& (keys instanceof Array ? keys : [keys])
+							.forEach(function(key){
+								// XXX should we break or warn???
+								if(key in button_keys){
+									throw new Error(`renderItem(..): button key already used: ${key}`) }
+								button_keys[keyboard.joinKey(keyboard.normalizeKey(key))] = button })
 					// keep focus on the item containing the button -- i.e. if
 					// we tab out of the item focus the item we get to...
 					button.addEventListener('focus', function(){
@@ -3803,7 +3899,7 @@ var BrowserPrototype = {
 							handler
 							// string handler -> that.<handler>(item)
 							: function(evt, ...args){
-								var a = that.keyboard.parseStringHandler(
+								var a = that.parseStringHandler(
 									handler, 
 									// button handler arg namespace...
 									{
@@ -3828,8 +3924,19 @@ var BrowserPrototype = {
 									event.stopPropagation()
 									func.call(that, evt, item) } }) } 
 				}
+
 				elem.appendChild(button)
 			})
+
+		// button shortcut keys...
+		Object.keys(button_keys).length > 0
+			&& elem.addEventListener('keydown', 
+				function(evt){ 
+				var k = keyboard.joinKey(keyboard.event2key(evt))
+				if(k in button_keys){
+					evt.preventDefault()
+					evt.stopPropagation()
+					button_keys[k].click() } })
 		
 		item.dom = elem
 

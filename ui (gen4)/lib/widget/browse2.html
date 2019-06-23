@@ -52,6 +52,12 @@ body {
 	text-decoration-skip-ink: none;
 }
 
+/*
+.browse-widget .list .item .button.toggle-collapse {
+	float: left;
+}
+*/
+
 
 /* XXX stub...
 .browse-widget:not(.flat) .list .text:first-child:before {
@@ -216,6 +222,9 @@ requirejs([
 			// XXX this is not supported by .map(..)...
 			make.nest('$ne$sted', browser.Browser(function(make){
 				make('ab')
+				make($('<img src="../../experiments/grayscale.jpg">'))
+				//make($('<img src="../../experiments/grayscale.jpg">')[0])
+				//make('<img src="../../experiments/grayscale.jpg">')
 			})),
 		])
 		make('in between two $subtrees...')
@@ -259,7 +268,8 @@ requirejs([
 			['&ndash;', 
 				'buttonAction: item button focused -- example button action...'],
 			['&square;', 
-				function(){ console.log('BUTTON:', ...arguments) }],
+				function(){ console.log('BUTTON:', ...arguments) },
+				{ keys: 'r' }],
 			'ToggleCollapse',
 			'ToggleDisabled',
 		],
