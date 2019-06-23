@@ -222,9 +222,12 @@ requirejs([
 			// XXX this is not supported by .map(..)...
 			make.nest('$ne$sted', browser.Browser(function(make){
 				make('ab')
-				make($('<img src="../../experiments/grayscale.jpg">'))
-				//make($('<img src="../../experiments/grayscale.jpg">')[0])
-				//make('<img src="../../experiments/grayscale.jpg">')
+				//make('<img src="../../experiments/grayscale.jpg">',
+				//make($('<img src="../../experiments/grayscale.jpg">')[0],
+				make($('<img src="../../experiments/grayscale.jpg">'), 
+					{
+						alt: 'image item example'
+					})
 			})),
 		])
 		make('in between two $subtrees...')

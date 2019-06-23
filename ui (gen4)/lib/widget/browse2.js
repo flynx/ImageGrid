@@ -3760,9 +3760,19 @@ var BrowserPrototype = {
 		item.disabled
 			|| elem.setAttribute('tabindex', '0')
 		Object.entries(item.attrs || {})
+			// shorthand attrs...
+			.concat([
+				'alt'
+			].map(function(key){ 
+				return [key, item[key]] }))
 			.forEach(function([key, value]){
-				elem.setAttribute(key, value) })
-		elem.setAttribute('value', text)
+				value !== undefined
+					&& elem.setAttribute(key, value) })
+		elem.setAttribute('value', 
+			// XXX should text handling be done here only or globally above???
+			typeof(text) == typeof('str') ? 
+				text 
+				: item.alt || item.id)
 
 		// values...
 		text != null
@@ -3823,7 +3833,7 @@ var BrowserPrototype = {
 
 		// buttons...
 		var button_keys = {}
-		// XXX migrate the default buttons functionality and button inheritance...
+		// XXX migrate button inheritance...
 		var buttons = (item.buttons || options.itemButtons || [])
 			// resolve buttons from library...
 			.map(function(button){
@@ -3837,7 +3847,6 @@ var BrowserPrototype = {
 			.reverse()
 		var stopPropagation = function(evt){ evt.stopPropagation() }
 		buttons
-			// XXX use keyword to inherit buttons...
 			.forEach(function([html, handler, ...rest]){
 				var force = (rest[0] === true 
 						|| rest[0] === false 
@@ -3846,7 +3855,7 @@ var BrowserPrototype = {
 					: undefined
 				var metadata = rest.shift() || {}
 
-				// resolve metadata...
+				// metadata...
 				var cls = metadata.cls || []
 				cls = cls instanceof Function ?
 					cls.call(that, item)
@@ -3869,7 +3878,7 @@ var BrowserPrototype = {
 				setDOMValue(button,
 					resolveValue(html, Items.buttons, {item}))
 
-				// active button...
+				// non-disabled button...
 				if(force instanceof Function ? 
 						force.call(that, item) 
 						: (force || !item.disabled) ){
@@ -3914,7 +3923,7 @@ var BrowserPrototype = {
 								that[a.action](...a.arguments) }
 
 						// handle clicks and keyboard...
-						button.addEventListener('click', func)
+						button.addEventListener('click', func.bind(that))
 						// NOTE: we only trigger buttons on Enter and do 
 						// 		not care about other keys...
 						button.addEventListener('keydown', 
