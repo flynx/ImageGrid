@@ -263,6 +263,54 @@ Items.EditablePinnedList = function(values){}
 
 
 //---------------------------------------------------------------------
+// Item...
+
+var ItemClassPrototype = {
+}
+
+
+var ItemPrototype = {
+	// parent: null,
+	//
+	// children: null,
+	//
+	// id: null,
+	// value: null,
+	// alt: null,
+	//
+	// focused: null,
+	// disabled: null,
+	// selected: null,
+	// collapsed: null,
+
+
+	// XXX can value be a function or as a list contain a function???
+	// 		...if so, to resolve it we'll need a context other than the item...
+	// XXX should we remove '$' here or in an extension???
+	get text(){
+		return (
+				(this.value instanceof Array ?
+					this.value.join(' ')	
+				: this.value == null || this.value instanceof Object ?
+					this.alt || this.id 
+				: this.value) + '')
+			.replace(/\$(.)/g, '$1') },
+
+
+	__init__(...state){
+		Object.assign(this, ...state) },
+}
+
+
+var Item = 
+module.Item = 
+object.makeConstructor('Item', 
+		ItemClassPrototype,
+		ItemPrototype)
+
+
+
+//---------------------------------------------------------------------
 // Event system parts and helpers...
 //
 // XXX might be a good idea to make this a generic module...
@@ -1132,8 +1180,9 @@ var BaseBrowserPrototype = {
 						+`can't create multiple items with the same id.`) }
 
 				// build the item...
-				var item = Object.assign(
-					Object.create(options || {}), 
+				var item = new Item(
+					// XXX do we need this???
+					//options || {}, 
 					opts,
 					{ parent: this })
 
@@ -1484,7 +1533,7 @@ var BaseBrowserPrototype = {
 								: [this]) }) }
 
 				// prepare context...
-				var id = node.id || node.value
+				var id = node.id || node.text
 				var path = context.path = context.path || []
 				var [inline, p, children] = 
 					// inline...
@@ -1574,9 +1623,7 @@ var BaseBrowserPrototype = {
 						path.slice(1)
 							.map(e => '  ')
 							.join('') 
-								+ (node.value != null 
-									? node.value 
-									: node)
+								+ node.text
 						: [] },
 				'_test_texttree',
 				function(func, i, path, options, context){
@@ -1595,9 +1642,7 @@ var BaseBrowserPrototype = {
 						: [path.slice(1)
 							.map(e => '  ')
 							.join('')
-								+ (node.value != null 
-									? node.value 
-									: node)]
+								+ node.text]
 							// append child nodes if present...
 			   				.concat(node.children ?
 								next()
@@ -1629,9 +1674,7 @@ var BaseBrowserPrototype = {
 					return node == null ? 
 							[]
 						// make a node...
-						: [[(node.value != null ? 
-								node.value 
-								: node)]
+						: [[node.text]
 							// append child nodes if present...
 			   				.concat(node.children ?
 								next()
@@ -1839,7 +1882,7 @@ var BaseBrowserPrototype = {
 		regexp: function(pattern){
 			return pattern instanceof RegExp
 				&& function(elem, i, path){
-					return pattern.test(elem.value)
+					return pattern.test(elem.text)
 						|| pattern.test('/'+ path.join('/')) } },
 		// string path test...
 		// XXX should 'B' be equivalent to '/B' or should it be more like '**/B'?
@@ -3762,17 +3805,18 @@ var BrowserPrototype = {
 		Object.entries(item.attrs || {})
 			// shorthand attrs...
 			.concat([
-				'alt'
 			].map(function(key){ 
 				return [key, item[key]] }))
 			.forEach(function([key, value]){
 				value !== undefined
 					&& elem.setAttribute(key, value) })
-		elem.setAttribute('value', 
-			// XXX should text handling be done here only or globally above???
-			typeof(text) == typeof('str') ? 
-				text 
-				: item.alt || item.id)
+		;(item.value == null 
+				|| item.value instanceof Object)
+			|| elem.setAttribute('value', item.text)
+		;(item.value == null 
+				|| item.value instanceof Object 
+				|| item.alt != item.text)
+			&& elem.setAttribute('alt', item.alt)
 
 		// values...
 		text != null
@@ -3965,7 +4009,7 @@ var BrowserPrototype = {
 	//*/
 
 
-	// Custom events handlers...
+	// Events extensions...
 	//
 	// NOTE: this will also kill any user-set keys for disabled/hidden items...
 	__preRender__: function(){
@@ -4152,7 +4196,6 @@ var TextBrowserPrototype = {
 	__proto__: BaseBrowser.prototype,
 
 	options: {
-		valueSeparator: ' ',
 		renderIndent: '\t',
 	},
 	
@@ -4163,12 +4206,7 @@ var TextBrowserPrototype = {
 		return this.renderNested(null, items, null, null, options)
 			.join('\n') },
 	renderItem: function(item, i, options){
-		var value = item.value != null ? 
-			item.value 
-			: item
-		value = value instanceof Array ? 
-			value.join(this.options.valueSeparator || ' ')
-			: value
+		var value = item.text
 		return item.current ?
 			`[ ${value} ]`
    			: value },
