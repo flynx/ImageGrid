@@ -771,6 +771,21 @@ var BaseBrowserPrototype = {
 		//skipDisabledMode: 'node',
 
 		updateTimeout: 30,
+
+		// Element templates...
+		//
+		// Format:
+		// 	{
+		// 		<key>: <item>,
+		// 		...
+		// 	}
+		//
+		// If make(..) gets passed <key> it will construct the base element
+		// via <item> and merge the item options into that.
+		//
+		// <item> format is the same as the format passed to make(..)
+		elementTemplate: {
+		},
 	},
 
 
@@ -1187,8 +1202,10 @@ var BaseBrowserPrototype = {
 
 				// build the item...
 				var item = new this.__item__(
-					// XXX do we need this???
-					//options || {}, 
+					// populate the element from template, if present...
+					opts.value in (options.elementTemplate || {}) ?
+						options.elementTemplate[opts.value]
+						: {},	
 					opts,
 					{ parent: this })
 
@@ -3295,25 +3312,7 @@ var HTMLBrowserPrototype = {
 		headerItemButtons: [
 		],
 
-		// Shorthand elements...
-		//
-		// Format:
-		// 	{
-		// 		<key>: {
-		// 			class: <element-class-str>,
-		// 			html: <element-html-str>,
-		// 		},
-		// 		...
-		// 	}
-		//
-		// If make(..) gets passed <key> it will construct and element
-		// via <element-html-str> with an optional <element-class-str>
-		//
-		// NOTE: .class is optional...
-		// NOTE: set this to null to disable shorthands...
-		// NOTE: currently the options in the template will override 
-		// 		anything explicitly given by item options... (XXX revise)
-		elementShorthand: {
+		elementTemplate: {
 			'   ': {
 				'class': 'separator',
 				'html': '<div/>',
@@ -3791,11 +3790,8 @@ var HTMLBrowserPrototype = {
 			: (target.innerHTML = value)
 			return target }
 
-		// special-case: item shorthands...
-		if(item.value in (options.elementShorthand || {})){
-			// XXX need to merge and not overwrite -- revise...
-			Object.assign(item, options.elementShorthand[item.value])
-
+		// special-case: item.html...
+		if(item.html){
 			// NOTE: this is a bit of a cheat, but it saves us from either 
 			// 		parsing or restricting the format...
 			var tmp = document.createElement('div')
@@ -3805,7 +3801,6 @@ var HTMLBrowserPrototype = {
 				...(item['class'] instanceof Array ?
 					item['class']
 					: item['class'].split(/\s+/g)))
-
 			return elem 
 		}
 
@@ -3847,7 +3842,9 @@ var HTMLBrowserPrototype = {
 
 		// values...
 		text != null
-			&& (item.value instanceof Array ? item.value : [item.value])
+			&& (item.value instanceof Array ? 
+					item.value 
+					: [item.value])
 				// handle $keys and other stuff...
 				.map(function(v){
 					// handle key-shortcuts $K...
