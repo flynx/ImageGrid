@@ -776,10 +776,17 @@ var BaseBrowserPrototype = {
 
 		updateTimeout: 30,
 
-		// Element templates...
+		// Item templates...
 		//
 		// Format:
 		// 	{
+		// 		// Default item template...
+		// 		//
+		// 		// This will be added to all items, including ones that
+		// 		// directly match a template...
+		// 		'*': <item>,
+		//
+		// 		// Normal item template...
 		// 		<key>: <item>,
 		// 		...
 		// 	}
@@ -788,8 +795,12 @@ var BaseBrowserPrototype = {
 		// via <item> and merge the item options into that.
 		//
 		// <item> format is the same as the format passed to make(..)
-		elementTemplate: {
-		},
+		//
+		// XXX should we have an ability to "blank-out" some items?
+		// 		...i.e. do not create an item matching a template in 
+		// 		certain context...
+		// 		No, currently this is not needed.
+		itemTemplate: {},
 	},
 
 
@@ -1205,11 +1216,15 @@ var BaseBrowserPrototype = {
 						+`can't create multiple items with the same id.`) }
 
 				// build the item...
+				// NOTE: we intentionally isolate the item object from 
+				// 		the input opts here, yes, having a ref to a mutable
+				// 		object may be convenient in some cases but in this
+				// 		case it would promote going around the main API...
 				var item = new this.__item__(
-					// populate the element from template, if present...
-					opts.value in (options.elementTemplate || {}) ?
-						options.elementTemplate[opts.value]
-						: {},	
+					// default item template...
+					(options.itemTemplate || {})['*'] || {},
+					// item template...
+					(options.itemTemplate || {})[opts.value] || {},
 					opts,
 					{ parent: this })
 
@@ -3316,8 +3331,8 @@ var HTMLBrowserPrototype = {
 		headerItemButtons: [
 		],
 
-		elementTemplate: {
-			__proto__: (BaseBrowser.prototype.options || {}).elementTemplate || {},
+		itemTemplate: {
+			__proto__: (BaseBrowser.prototype.options || {}).itemTemplate || {},
 
 			'   ': {
 				'class': 'separator',
