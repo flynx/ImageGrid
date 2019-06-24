@@ -299,6 +299,9 @@ var BaseItemPrototype = {
 	get text(){
 		return this.constructor.text(this) },
 
+	// NOTE: we are intentionally not including .index here as there are 
+	// 		multiple ways to get and index...
+
 	get pathArray(){
 		var p = this.parent
 		while(p.parent instanceof BaseBrowser){
@@ -505,6 +508,7 @@ function(item, event, evt, ...args){
 // NOTE: item events do not directly trigger the original caller's handlers
 // 		those will get celled recursively when the events are propagated
 // 		up the tree.
+//
 // XXX destructuring: should default_item get .focused??? 
 var makeItemEventMethod = 
 module.makeItemEventMethod =
@@ -1003,6 +1007,8 @@ var BaseBrowserPrototype = {
 
 	// Data generation (make)...
 	
+	__item__: BaseItem,
+
 	// Item list constructor...
 	//
 	// 	.__list__(make, options)
@@ -1072,8 +1078,6 @@ var BaseBrowserPrototype = {
 	// NOTE: this is not designed to be called directly...
 	__list__: function(make, options){
 		throw new Error('.__list__(..): Not implemented.') },
-
-	__item__: BaseItem,
 
 	// Make extension...
 	//
@@ -3313,6 +3317,8 @@ var HTMLBrowserPrototype = {
 		],
 
 		elementTemplate: {
+			__proto__: (BaseBrowser.prototype.options || {}).elementTemplate || {},
+
 			'   ': {
 				'class': 'separator',
 				'html': '<div/>',
@@ -3761,9 +3767,11 @@ var HTMLBrowserPrototype = {
 	// NOTE: DOM events trigger Browser events but not the other way 
 	// 		around. It is not recommended to use DOM events directly.
 	//
-	// XXX should buttons be active in disabled state???
-	// 		...for enable/disable button seems logical, not so much for 
-	// 		the rest...
+	// XXX need to figure out an intuitive behavior of focus + disable/enable...
+	// 		...do we skip disabled elements?
+	// 		...can a disabled item be focused?
+	// 		...how do we collapse/expand a disabled root?
+	// 		...what do we focus when toggleing disabled?
 	renderItem: function(item, i, context){
 		var that = this
 		var options = context.options || this.options || {}
@@ -3826,9 +3834,9 @@ var HTMLBrowserPrototype = {
 			|| elem.setAttribute('tabindex', '0')
 		Object.entries(item.attrs || {})
 			// shorthand attrs...
-			.concat([
-			].map(function(key){ 
-				return [key, item[key]] }))
+			//.concat([
+			//].map(function(key){ 
+			//	return [key, item[key]] }))
 			.forEach(function([key, value]){
 				value !== undefined
 					&& elem.setAttribute(key, value) })
