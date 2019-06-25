@@ -2483,6 +2483,7 @@ var BaseBrowserPrototype = {
 	// XXX use partial render for things like search....
 	// XXX make partial render be lazy -- i.e. add/remove elements and 
 	// 		do not reconstruct the ones already present...
+	// XXX should from/to/around/count be a feature of this or of .walk(..)???
 	render: function(options, renderer, context){
 		context = context || {}
 		renderer = renderer || this
@@ -4042,6 +4043,7 @@ var HTMLBrowserPrototype = {
 
 		return elem 
 	},
+
 
 	/* XXX sort out .dom updates...
 	render: function(...args){
