@@ -3808,8 +3808,8 @@ var HTMLBrowserPrototype = {
 	// 		...how do we collapse/expand a disabled root?
 	// 		...what do we focus when toggleing disabled?
 	// XXX handle .options.focusDisabled correctly...
-	// 		- tabindex
-	// 		- ...
+	// 		- tabindex -- DONE
+	// 		- ???
 	renderItem: function(item, i, context){
 		var that = this
 		var options = context.options || this.options || {}
@@ -3868,7 +3868,7 @@ var HTMLBrowserPrototype = {
 				return !!item[cls] })))
 
 		// attrs...
-		item.disabled
+		;(item.disabled && !options.focusDisabled)
 			|| elem.setAttribute('tabindex', '0')
 		Object.entries(item.attrs || {})
 			// shorthand attrs...
