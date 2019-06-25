@@ -522,15 +522,19 @@ function(event, {handler, action, default_item, filter, options={}, getter='sear
 		return filter ? 
 			items.filter(filter) 
 			: items }
-	options = Object.assign(
-		{ 
-			// NOTE: we need to be able to pass item objects, so we can not
-			// 		use queries at the same time as there is not way to 
-			// 		distinguish one from the other...
-			noQueryCheck: true, 
-			skipDisabled: true,
-		},
-		options)
+	// options constructor...
+	var makeOptions = function(){
+		return Object.assign(
+			{ 
+				// NOTE: we need to be able to pass item objects, so we can not
+				// 		use queries at the same time as there is not way to 
+				// 		distinguish one from the other...
+				noQueryCheck: true, 
+				skipDisabled: true,
+			},
+			options instanceof Function ? 
+				options.call(this) 
+				: options) }
 	// base event method...
 	// NOTE: this is not returned directly as we need to query the items
 	// 		and pass those on to the handlers rather than the arguments 
@@ -547,10 +551,20 @@ function(event, {handler, action, default_item, filter, options={}, getter='sear
 				callItemEventHandlers(item, event, evt, ...args) }) },
 		...(action ? [action] : []),
 		false) 
+
+	// build the options statically if we can...
+	options = options instanceof Function ?
+		options
+		: makeOptions()
+
 	return Object.assign(
 		// the actual method we return...
 		function(item, ...args){
 			var that = this
+			// build the options dynamically if needed...
+			var opts = options instanceof Function ?
+				makeOptions.call(this)
+				: options
 			return base.call(this, 
 				// event handler...
 				item instanceof Function ?
@@ -559,12 +573,12 @@ function(event, {handler, action, default_item, filter, options={}, getter='sear
 				: item instanceof Array ?
 					filterItems(item
 						.map(function(e){
-							return that.search(e, options) })
+							return that.search(e, opts) })
 						.flat()
 						.unique())
 				// explicit item or query...
 				: item != null ? 
-					filterItems(this[getter](item, options))
+					filterItems(this[getter](item, opts))
 				// item is undefined -- get default...
 				: item !== null && default_item instanceof Function ?
 					[default_item.call(that) || []].flat()
@@ -769,6 +783,8 @@ var BaseBrowserClassPrototype = {
 var BaseBrowserPrototype = {
 	// XXX should we mix item/list options or separate them into sub-objects???
 	options: {
+		focusDisabled: false,
+
 		// If true item keys must be unique...
 		uniqueKeys: false,
 
@@ -2843,10 +2859,10 @@ var BaseBrowserPrototype = {
 				&& this.reveal(item)
 				&& (item.focused = true) },
 		default_item: function(){ return this.get(0) },
-		options: { 
-			// XXX get this from options...
-			skipDisabled: true,
-		},
+		options: function(){
+			return {
+				skipDisabled: !(this.options || {}).focusDisabled,
+			} },
 		getter: 'get' }),
 	blur: makeItemEventMethod('blur', {
 		handler: function(evt, items){
@@ -2885,7 +2901,9 @@ var BaseBrowserPrototype = {
 		{iterateCollapsed: true}),
 	// item state events...
 	disable: makeItemOptionOnEventMethod('disable', 'disabled', 
-		{ handler: function(item){ this.blur(item) }, }),
+		{ handler: function(item){ 
+			(this.options || {}).focusDisabled 
+				|| this.blur(item) }, }),
 	enable: makeItemOptionOffEventMethod('enable', 'disabled', 
 		{ options: {skipDisabled: false}, }),
 	toggleDisabled: makeItemEventToggler(
@@ -3172,8 +3190,8 @@ var focusItem = function(direction){
 		var threashold = this.options.focusOffsetWhileScrolling || 0
 
 		var focused = this.focused
-		var first = this.get('first', {skipDisabled: true})
-		var last = this.get('last', {skipDisabled: true})
+		var first = this.get('first', {skipDisabled: !(this.options || {}).focusDisabled})
+		var last = this.get('last', {skipDisabled: !(this.options || {}).focusDisabled})
 
 		// center the first/last elements to reveal hidden items before/after...
 		;(focused === last || focused === first) ?
@@ -3208,11 +3226,12 @@ var focusPage = function(direction){
 		var focused = this.focused
 
 		// reveal diabled elements above the top focusable...
-		target === this.get(t, {skipDisabled: true}) && target === focused ?
+		;(target === this.get(t, {skipDisabled: !(this.options || {}).focusDisabled}) 
+				&& target === focused) ?
 			this.scrollTo(target, 'center')
 		// scroll one page and focus...
 		: target === focused ?
-			this.focus(this.get(d, 1))
+			this.focus(this.get(d, 1, {skipDisabled: !(this.options || {}).focusDisabled}))
 		// focus top/bottom of current page...
 		: this.focus(target)
 
@@ -3475,7 +3494,7 @@ var HTMLBrowserPrototype = {
 						reverse: pos == 'bottom' ? 
 							'flat' 
 							: false,
-						skipDisabled: true, 
+						skipDisabled: !(this.options || {}).focusDisabled, 
 					})
 				.run(function(){
 					return this instanceof Array ?
@@ -3788,6 +3807,9 @@ var HTMLBrowserPrototype = {
 	// 		...can a disabled item be focused?
 	// 		...how do we collapse/expand a disabled root?
 	// 		...what do we focus when toggleing disabled?
+	// XXX handle .options.focusDisabled correctly...
+	// 		- tabindex
+	// 		- ...
 	renderItem: function(item, i, context){
 		var that = this
 		var options = context.options || this.options || {}
