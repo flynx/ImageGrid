@@ -2883,8 +2883,13 @@ var BaseBrowserPrototype = {
 		function(){ return this.focused || 0 }, 
 		false),
 	// selection...
-	select: makeItemOptionOnEventMethod('select', 'selected'),
-	deselect: makeItemOptionOffEventMethod('deselect', 'selected'),
+	select: makeItemOptionOnEventMethod('select', 'selected', {
+		options: function(){
+			return {
+				skipDisabled: !(this.options || {}).focusDisabled,
+			} }, }),
+	deselect: makeItemOptionOffEventMethod('deselect', 'selected', {
+		options: { skipDisabled: false }, }),
 	toggleSelect: makeItemEventToggler('selected', 'select', 'deselect', 'focused'),
 	// topology...
 	collapse: makeItemOptionOnEventMethod('collapse', 'collapsed', {
@@ -3134,8 +3139,37 @@ var HTMLItemClassPrototype = {
 var HTMLItemPrototype = {
 	__proto__: BaseItem.prototype,
 
+	__dom: undefined,
+	get dom(){
+		return this.__dom },
+	set dom(value){
+		this.__dom
+			// NOTE: a node can't be attached to two places, so in this 
+			// 		case (i.e. when replacing item with list containing 
+			// 		item) we do not need to do anything as attaching to
+			// 		the tree is done by the code that created the parent
+			// 		and called us...
+			&& !value.contains(this.__dom)
+			&& this.__dom.replaceWith(value)
+		this.__dom = value },
+
 	get elem(){
 		return this.constructor.elem(this) },
+	// XXX for this to be practical we need to slightly update rendering...
+	// 		...currently the following are not equivalent:
+	//
+	// 			dialog.get(0).elem = dialog.renderItem(dialog.get(0), 0, {})
+	// 		
+	// 			dialog.get(0).elem.replaceWith(dialog.renderItem(dialog.get(0), 0, {}))
+	//
+	// 		#2 works as expected while #1 seems not to change anything, this
+	// 		is because in #1 .renderItem(..) actually sets new .dom BEFORE
+	// 		calling .elem.replaceWith(..)... 
+	// 		the new .dom value is replaced correctly but it is detached, 
+	// 		thus we see no change...
+	set elem(value){
+		this.dom 
+			&& this.elem.replaceWith(value) },
 }
 
 var HTMLItem = 
@@ -3446,7 +3480,7 @@ var HTMLBrowserPrototype = {
 	set dom(value){
 		this.container 
 			&& (this.__dom ?
-				this.container.replaceChild(value, this.__dom) 
+				this.dom.replaceWith(value) 
 				: this.container.appendChild(value))
 		this.__dom = value },
 
@@ -3812,19 +3846,22 @@ var HTMLBrowserPrototype = {
 	// 		- ???
 	renderItem: function(item, i, context){
 		var that = this
-		var options = context.options || this.options || {}
+		var options = (context || {}).options || this.options || {}
 		if(options.hidden && !options.renderHidden){
 			return null
 		}
 
 		// helpers...
+		// XXX we need to more carefully test the value to avoid name clashes...
 		var resolveValue = function(value, context, exec_context){
 			var htmlhandler = typeof(value) == typeof('str') ?
 				that.parseStringHandler(value, exec_context)
 				: null
 			return value instanceof Function ?
 					value.call(that, item)
-				: htmlhandler && htmlhandler.action in context ?
+				: htmlhandler 
+						&& htmlhandler.action in context 
+						&& context[htmlhandler.action] instanceof Function ?
 					context[htmlhandler.action]
 						.call(that, item, ...htmlhandler.arguments)
 				: value }

@@ -51,6 +51,13 @@ body {
 	text-decoration-skip-ink: none;
 }
 
+/* XXX foe some reason the shadows here are BELLOW the content... */
+.browse-widget>.list {
+	box-shadow: 
+		0 50px 10px -50px gray inset, 
+		0 -50px 10px -50px gray inset;
+}
+
 /*
 .browse-widget .list .item .button.toggle-collapse {
 	float: left;
@@ -121,52 +128,6 @@ body {
 
 <script>
 
-var TREE = {
-	dir_a: {},
-	'dir b': {
-		file1: 'this is a file',
-		file2: 'this is a file',
-		file3: 'this is a file',
-	},
-	dir_c: {
-		file1: 'this is a file',
-		dir_b: {
-			file1: 'this is a file',
-		},
-		dir_c: {},
-		dir_d: {},
-		dir_e: {},
-		dir_f: {},
-		dir_g: {},
-		dir_h: {},
-		dir_i: {},
-		dir_j: {},
-		dir_k: {},
-		dir_l: {},
-		dir_m: {},
-		dir_o: {},
-		dir_p: {},
-		dir_q: {},
-		dir_r: {},
-		dir_s: {},
-		dir_t: {},
-		dir_u: {},
-	},
-	file: 'this is a file',
-}
-// add some recursion for testing...
-TREE.dir_d = TREE.dir_c.dir_b
-TREE.dir_a.tree = TREE
-TREE.dir_c.tree = TREE
-TREE.dir_c.dir_b.tree = TREE
-
-
-
-//---
-
-var use_disabled = true
-var show_files = false
-
 requirejs.config({
 	paths: {
 		'lib/object': '../../node_modules/ig-object/object',
@@ -198,6 +159,9 @@ requirejs([
 
 	// XXX split this into several dialogues, show each and then combine...
 	dialog = browser.Browser(function(make){
+		make('path', {id:'selected_path'})
+		make.Separator()
+
 		make(['list', 'of', 'text'])
 		make.group(
 			make('$group item 0 (open event)', 
@@ -276,6 +240,11 @@ requirejs([
 			'ToggleDisabled',
 		],
 	})
+		// XXX EXPEREMENT -- need to wrap this into partial .update(..)
+		.focus(function(){
+			var e = this.get({id: 'selected_path'})
+			e.value = this.path 
+			this.renderItem(e) })
 
 	dialog.container = $('.container').first()[0]
 
