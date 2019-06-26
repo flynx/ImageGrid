@@ -980,7 +980,7 @@ var BaseBrowserPrototype = {
 		return (this.pathArray || []).join('/') },
 	set path(value){
 		this.load(value) },
-	// XXX
+	// XXX do we make this writable???
 	get pathArray(){
 		return this.__items != null ?
 			this.get('focused', 
@@ -3170,6 +3170,8 @@ var HTMLItemPrototype = {
 	// 		calling .elem.replaceWith(..)... 
 	// 		the new .dom value is replaced correctly but it is detached, 
 	// 		thus we see no change...
+	// XXX THIS IS WRONG...
+	// 		...this can detach elements, see above for more info...
 	set elem(value){
 		this.dom ?
 			this.elem.replaceWith(value)
