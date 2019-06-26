@@ -58,6 +58,11 @@ body {
 		0 -50px 10px -50px gray inset;
 }
 
+.item.path .text:before {
+	content: "/";
+}
+
+
 /*
 .browse-widget .list .item .button.toggle-collapse {
 	float: left;
@@ -159,7 +164,10 @@ requirejs([
 
 	// XXX split this into several dialogues, show each and then combine...
 	dialog = browser.Browser(function(make){
-		make('path', {id:'selected_path'})
+		make('path', {
+			id:'selected_path',
+			cls: 'path',
+		})
 		make.Separator()
 
 		make(['list', 'of', 'text'])
@@ -243,7 +251,7 @@ requirejs([
 		// XXX EXPEREMENT -- need to wrap this into partial .update(..)
 		.focus(function(){
 			var e = this.get({id: 'selected_path'})
-			e.value = this.path 
+			e.value = this.pathArray
 			this.renderItem(e) })
 
 	dialog.container = $('.container').first()[0]

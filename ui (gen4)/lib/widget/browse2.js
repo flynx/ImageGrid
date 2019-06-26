@@ -977,14 +977,17 @@ var BaseBrowserPrototype = {
 	// XXX need to normalizePath(..)
 	// 		...array .value is not compliant with POLS
 	get path(){
-		return this.__items != null ?
-			this.get('focused', 
-				function(e, i, p){ return p.join('/') }) 
-			// XXX do we use .options.path???
-			: (this.options || {}).path },
+		return (this.pathArray || []).join('/') },
 	set path(value){
 		this.load(value) },
-
+	// XXX
+	get pathArray(){
+		return this.__items != null ?
+			this.get('focused', 
+				function(e, i, p){ return p }) 
+			// XXX do we use .options.path???
+			// XXX is this an array???
+			: (this.options || {}).path },
 
 	// Length...
 	//
@@ -3168,8 +3171,9 @@ var HTMLItemPrototype = {
 	// 		the new .dom value is replaced correctly but it is detached, 
 	// 		thus we see no change...
 	set elem(value){
-		this.dom 
-			&& this.elem.replaceWith(value) },
+		this.dom ?
+			this.elem.replaceWith(value)
+			: (this.dom = value)},
 }
 
 var HTMLItem = 
@@ -4099,6 +4103,7 @@ var HTMLBrowserPrototype = {
 					button_keys[k].click() } })
 		
 		item.dom = elem
+		//item.elem = elem
 
 		return elem 
 	},
