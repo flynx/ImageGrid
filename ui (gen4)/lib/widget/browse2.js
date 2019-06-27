@@ -1129,6 +1129,10 @@ var BaseBrowserPrototype = {
 	__list__: function(make, options){
 		throw new Error('.__list__(..): Not implemented.') },
 
+	// XXX header constructor, same as .__list__(..) but optional...
+	__header__: null,
+
+
 	// Make extension...
 	//
 	// This is called per item created by make(..) in .__list__(..)
@@ -1284,9 +1288,31 @@ var BaseBrowserPrototype = {
 		}.bind(this)
 		make.__proto__ = Items
 		make.dialog = this
-		make.items = items
 
-		//var res = this.__list__(make)
+		// XXX call .__header__(..) if defined...
+		// 		...considering that this is exactly the same as .__list__(..)
+		// 		might be a good idea to loop through:
+		// 			[['__header__', header],
+		// 				['__items__', items]]
+		// 		...might also be good to add some logic to avoid header 
+		// 		rendering every time we call make...
+		/*/ XXX
+		var header this.header = this.__header__ ? 
+			[] 
+			: null
+		;[...(this.__header__ ? 
+					['__header__', header]
+					: []),
+				['__items__', items]]
+			.forEach(function([method, list]){
+				// XXX check that this is enough...
+				make.items = list
+				var res = this[method](make, ..)
+				...
+			})
+		//*/
+
+		make.items = items
 		// XXX not sure about this -- revise options handling...
 		var res = this.__list__(make, 
 			options ? 
@@ -3045,10 +3071,15 @@ var BaseBrowserPrototype = {
 
 	// XXX should we update on init....
 	__init__: function(func, options){
-		this.__list__ = func
+		var args = [...arguments]
+		this.__list__ = args.shift()
+		if(args[0] instanceof Function){
+			this.__header__ = this.__list__
+			this.__list__ = args.shift()
+		}
 		this.options = Object.assign(
 			Object.create(this.options || {}), 
-			options || {})
+			args[0] || {})
 	},
 }
 
@@ -3921,6 +3952,7 @@ var HTMLBrowserPrototype = {
 		elem.classList.add(...['item']
 			// user classes...
 			.concat((item['class'] || item.cls || [])
+				// parse space-separated class strings...
 				.run(function(){
 					return this instanceof Array ?
 						this
