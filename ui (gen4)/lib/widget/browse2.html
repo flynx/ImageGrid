@@ -62,6 +62,14 @@ body {
 	content: "/";
 }
 
+/* XXX experimental... */
+.item.sticky {
+	position: -webkit-sticky;
+	position: sticky;
+	top: 0px;
+	background: gray;
+}
+
 
 /*
 .browse-widget .list .item .button.toggle-collapse {
@@ -164,10 +172,23 @@ requirejs([
 
 	// XXX split this into several dialogues, show each and then combine...
 	dialog = browser.Browser(function(make){
+		// XXX put this in the header...
+		//		ways to do this:
+		//			- a different handler
+		//				.__header__(..) is like .__list__(..) but can be 
+		//				called less often...
+		//			- a group like thing/constructor...
+		//				make.Header(
+		//					make(..),
+		//					..
+		//				)
+		//			- both???
 		make('path', {
 			id:'selected_path',
+			//cls: 'path sticky',
 			cls: 'path',
 		})
+
 		make.Separator()
 
 		make(['list', 'of', 'text'])

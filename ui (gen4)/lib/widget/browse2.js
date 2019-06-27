@@ -144,6 +144,17 @@ Items.group = function(...items){
 	return this
 }
 
+// XXX
+Items.Header = function(...items){
+	var that = this
+	items = items.length == 1 && items[0] instanceof Array ?
+		items[0]
+		: items
+	// replace the items with the group...
+	// XXX
+	//this.items.splice(this.items.length, 0, collectItems(this, items))
+	return this
+}
 
 // Place list in a sub-list of item...
 //
@@ -242,10 +253,10 @@ buttons.Delete = [
 // this is here for uniformity...
 Items.Item = function(value, options){ return this(...arguments) }
 
+Items.Empty = function(value){}
 Items.Separator = function(){ return this('---') }
 Items.Spinner = function(){ return this('...') }
 Items.Heading = function(value, options){}
-Items.Empty = function(value){}
 Items.Selected = function(value){}
 Items.Action = function(value, options){}
 Items.ConfirmAction = function(value){}
@@ -844,6 +855,15 @@ var BaseBrowserPrototype = {
 	// NOTE: this can't be a map/dict as we need both order manipulation 
 	// 		and nested structures which would overcomplicate things, as 
 	// 		a compromise we use .index below for item identification.
+	// XXX should the header be restricted to being separate???
+	__header: null,
+	get header(){
+		this.__header
+			// XXX should this be .makeHeader(..) ???
+			|| this.make()
+		return this.__header },
+	set header(value){
+		this.__header = value },
 	__items: null,
 	get items(){
 		this.__items
@@ -3900,7 +3920,11 @@ var HTMLBrowserPrototype = {
 		// classes...
 		elem.classList.add(...['item']
 			// user classes...
-			.concat(item['class'] || item.cls || [])
+			.concat((item['class'] || item.cls || [])
+				.run(function(){
+					return this instanceof Array ?
+						this
+						: this.split(/\s+/g) }))
 			// special classes...
 			.concat([
 				'focused',
