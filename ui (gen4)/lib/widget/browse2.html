@@ -171,109 +171,118 @@ requirejs([
 
 
 	// XXX split this into several dialogues, show each and then combine...
-	dialog = browser.Browser(function(make){
-		// XXX put this in the header...
-		//		ways to do this:
-		//			- a different handler
-		//				.__header__(..) is like .__list__(..) but can be 
-		//				called less often...
-		//			- a group like thing/constructor...
-		//				make.Header(
-		//					make(..),
-		//					..
-		//				)
-		//			- both???
-		make('path', {
-			id:'selected_path',
-			//cls: 'path sticky',
-			cls: 'path',
-		})
-
-		make.Separator()
-
-		make(['list', 'of', 'text'])
-		make.group(
-			make('$group item 0 (open event)', 
-				function(){ console.log('##', ...arguments) }),
-			'group item 1 (bare)')
-		// XXX Q: should we show only one if multiple lines are in sequence???
-		make('---')
-		// embeded browser...
-		make(browser.Browser(function(make){
-			make('inlined browser item 0 (open/menu events)', {
-				open: function(){ console.log('!!! OPEN', ...arguments) },
-				menu: function(){ console.log('!!! MENU', ...arguments) },
+	dialog = browser.Browser(
+		function(make, options){
+			make('CURRENT_PATH', {
+				id: 'current_path',
+				cls: 'path',
+				buttons: (options || {}).headerButtons 
+					|| (this.options || {}).headerButtons 
+					|| [],
+			}) },
+		function(make){
+			// XXX put this in the header...
+			//		ways to do this:
+			//			- a different handler
+			//				.__header__(..) is like .__list__(..) but can be 
+			//				called less often...
+			//			- a group like thing/constructor...
+			//				make.Header(
+			//					make(..),
+			//					..
+			//				)
+			//			- both???
+			make('path', {
+				id:'selected_path',
+				//cls: 'path sticky',
+				cls: 'path',
 			})
-			make(1)
-			make(2)
-		}))
-		// basic nested list...
-		make.nest('$nested', [
-			make('mo$o', {disabled: true}),
-			2,
-			// XXX this is not supported by .map(..)...
-			make.nest('$ne$sted', browser.Browser(function(make){
-				make('ab')
-				//make('<img src="../../experiments/grayscale.jpg">',
-				//make($('<img src="../../experiments/grayscale.jpg">')[0],
-				make($('<img src="../../experiments/grayscale.jpg">'), 
-					{
-						alt: 'image item example'
-					})
-			})),
-		])
-		make('in between two $subtrees...')
-		// nested browser...
-		make.nest('B', 
-			browser.Browser(function(make){
-				make('xx')
-				make.nest('C', browser.Browser(function(make){
-					make('aaa')
-					make.nest('D', browser.Browser(function(make){
-						make('a')
-						make('---')
-						make('b')
+
+			make.Separator()
+
+			make(['list', 'of', 'text'])
+			make.group(
+				make('$group item 0 (open event)', 
+					function(){ console.log('##', ...arguments) }),
+				'group item 1 (bare)')
+			// XXX Q: should we show only one if multiple lines are in sequence???
+			make('---')
+			// embeded browser...
+			make(browser.Browser(function(make){
+				make('inlined browser item 0 (open/menu events)', {
+					open: function(){ console.log('!!! OPEN', ...arguments) },
+					menu: function(){ console.log('!!! MENU', ...arguments) },
+				})
+				make(1)
+				make(2)
+			}))
+			// basic nested list...
+			make.nest('$nested', [
+				make('mo$o', {disabled: true}),
+				2,
+				// XXX this is not supported by .map(..)...
+				make.nest('$ne$sted', browser.Browser(function(make){
+					make('ab')
+					//make('<img src="../../experiments/grayscale.jpg">',
+					//make($('<img src="../../experiments/grayscale.jpg">')[0],
+					make($('<img src="../../experiments/grayscale.jpg">'), 
+						{
+							alt: 'image item example'
+						})
+				})),
+			])
+			make('in between two $subtrees...')
+			// nested browser...
+			make.nest('B', 
+				browser.Browser(function(make){
+					make('xx')
+					make.nest('C', browser.Browser(function(make){
+						make('aaa')
+						make.nest('D', browser.Browser(function(make){
+							make('a')
+							make('---')
+							make('b')
+						}))
+						make('bbb', {buttons: [
+							['test', 'focus: "parent"'],
+						]})
+						make('bbb')
 					}))
-					make('bbb', {buttons: [
-						['test', 'focus: "parent"'],
-					]})
-					make('bbb')
-				}))
-			}), {
-				//collapsed: true,
-				// XXX this does not appear to survive attaching an item 
-				//		to the document...
-				open: function(e){ 
-					e.preventDefault()
-					console.log('test: open: default prevented...') },
-				//cls: ['heading'],
-			})
+				}), {
+					//collapsed: true,
+					// XXX this does not appear to survive attaching an item 
+					//		to the document...
+					open: function(e){ 
+						e.preventDefault()
+						console.log('test: open: default prevented...') },
+					//cls: ['heading'],
+				})
 
-		make.Separator()
+			make.Separator()
 
-		make.nest(
-			'scroll testing',
-			(new Array(100))
-				.fill(1)
-				.map(function(_, i){
-					return make(i) }))
+			make.nest(
+				'scroll testing',
+				(new Array(100))
+					.fill(1)
+					.map(function(_, i){
+						return make(i) }))
 
-	}, {
-		itemButtons: [
-			['&ndash;', 
-				'buttonAction: item button focused -- example button action...'],
-			['&square;', 
-				function(){ console.log('BUTTON:', ...arguments) },
-				{ keys: 'r' }],
-			'ToggleCollapse',
-			'ToggleDisabled',
-		],
-	})
-		// XXX EXPEREMENT -- need to wrap this into partial .update(..)
-		.focus(function(){
-			var e = this.get({id: 'selected_path'})
-			e.value = this.pathArray
-			this.renderItem(e) })
+		}, {
+			itemButtons: [
+				['&ndash;', 
+					'buttonAction: item button focused -- example button action...'],
+				['&square;', 
+					function(){ console.log('BUTTON:', ...arguments) },
+					{ keys: 'r' }],
+				'ToggleCollapse',
+				'ToggleDisabled',
+			],
+		})
+			// XXX EXPEREMENT -- need to wrap this into partial .update(..)
+			.focus(function(){
+				var e = this.get({id: 'selected_path'})
+				e.value = this.pathArray
+				this.renderItem(e) })
 
 	dialog.container = $('.container').first()[0]
 

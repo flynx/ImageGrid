@@ -787,13 +787,20 @@ var makeItemEventToggler2 = function(get_state, set_state, unset_state, default_
 var BaseBrowserClassPrototype = {
 }
 
-// XXX Q: should we be able to add/remove/change items outside of .__list__(..)???
+// XXX Q: should we be able to add/remove/change items outside of .__items__(..)???
 // 		...only some item updates (how .collapsed is handled) make 
 // 		sense at this time -- need to think about this more 
 // 		carefully + strictly document the result...
 var BaseBrowserPrototype = {
 	// XXX should we mix item/list options or separate them into sub-objects???
 	options: {
+		sections: [
+			'header',
+			'items',
+			// XXX do we need this?
+			//'footer',
+		],
+
 		focusDisabled: false,
 
 		// If true item keys must be unique...
@@ -838,6 +845,7 @@ var BaseBrowserPrototype = {
 	// NOTE: this may or may not be a Browser object.
 	parent: null,
 
+	// Section containers...
 	//
 	// Format:
 	// 	[
@@ -855,13 +863,12 @@ var BaseBrowserPrototype = {
 	// NOTE: this can't be a map/dict as we need both order manipulation 
 	// 		and nested structures which would overcomplicate things, as 
 	// 		a compromise we use .index below for item identification.
-	// XXX should the header be restricted to being separate???
 	__header: null,
 	get header(){
 		this.__header
-			// XXX should this be .makeHeader(..) ???
-			|| this.make()
-		return this.__header },
+			|| (this.__header__ 
+				&& this.make({section: 'header'}))
+		return this.__header || [] },
 	set header(value){
 		this.__header = value },
 	__items: null,
@@ -871,6 +878,14 @@ var BaseBrowserPrototype = {
 		return this.__items },
 	set items(value){
 		this.__items = value },
+	__footer: null,
+	get footer(){
+		this.__footer
+			|| (this.__footer__ 
+				&& this.make({section: 'footer'}))
+		return this.__footer || [] },
+	set footer(value){
+		this.__footer = value },
 
 
 	// Clear cached data...
@@ -1059,9 +1074,11 @@ var BaseBrowserPrototype = {
 	
 	__item__: BaseItem,
 
-	// Item list constructor...
+	// Section item list constructor...
 	//
-	// 	.__list__(make, options)
+	// 	.__header__(make, options)
+	// 	.__items__(make, options)
+	// 	.__footer__(make, options)
 	// 		-> undefined
 	// 		-> list
 	//
@@ -1085,14 +1102,14 @@ var BaseBrowserPrototype = {
 	// When calling make(..) (mode #1) the item is built by combining 
 	// the following in order:
 	// 	- original item (.items[key]) if present,
-	// 	- options passed to .make(<options>) method calling .__list__(..),
+	// 	- options passed to .make(<options>) method calling .__items__(..),
 	// 	- options passed to make(.., <options>) constructing the item,
 	// 	- {value: <value>} where <value> passed to make(<value>, ..)
 	//
 	// Each of the above will override values of the previous sections.
 	//
 	// The resulting item is stored in:
-	// 	.items
+	// 	.header, .items or .footer
 	// 	.index (keyed via .id or JSONified .value)
 	//
 	// Each of the above structures is reset on each call to .make(..)
@@ -1126,19 +1143,19 @@ var BaseBrowserPrototype = {
 	//
 	//
 	// NOTE: this is not designed to be called directly...
-	__list__: function(make, options){
-		throw new Error('.__list__(..): Not implemented.') },
-
-	// XXX header constructor, same as .__list__(..) but optional...
 	__header__: null,
+	__items__: function(make, options){
+		throw new Error('.__items__(..): Not implemented.') },
+	__footer__: null,
+
 
 
 	// Make extension...
 	//
-	// This is called per item created by make(..) in .__list__(..)
+	// This is called per item created by make(..) in .__items__(..)
 	//
 	// NOTE: this can update/modify the item but it can not replace it.
-	//__make__: function(item){
+	//__make__: function(section, item){
 	//},
 
 
@@ -1148,7 +1165,7 @@ var BaseBrowserPrototype = {
 	// 	.make(options)
 	// 		-> this
 	//
-	// The items are constructed by passing a make function to .__list__(..)
+	// The items are constructed by passing a make function to .__items__(..)
 	// which in turn will call this make(..) per item created.
 	//
 	// For more doc on item construction see: .__init__(..)
@@ -1159,7 +1176,7 @@ var BaseBrowserPrototype = {
 	// 		identify an item thus no state is maintained between .make(..)
 	// 		calls for such items...
 	//
-	// XXX revise options handling for .__list__(..)
+	// XXX revise options handling for .__items__(..)
 	// XXX might be a good idea to enable the user to merge the state 
 	// 		manually...
 	// 		one way to do:
@@ -1167,19 +1184,30 @@ var BaseBrowserPrototype = {
 	// 			- update it
 	// 			- pass it to make(..)
 	// 		Example:
-	// 			// just a rough example in .__list__(..)...
+	// 			// just a rough example in .__items__(..)...
 	// 			make(value, 
 	// 				value in this.index ? 
 	// 					Object.assign(
 	// 						this.index[value], 
 	// 						opts) 
 	// 					: opts)
+	// XXX revise if stage 2 is applicable to sections other than .items
 	make: function(options){
 		var that = this
 		options = Object.assign(
 			Object.create(this.options || {}), 
 			options || {})
 
+		// sections to make...
+		var sections = options.section == '*' ?
+			(options.sections || ['header', 'items', 'footer'])
+			: (options.section || 'items')
+		sections = (sections instanceof Array ? 
+				sections 
+				: [sections])
+			// keep only sections we know how to make...
+			.filter(function(name){
+				return that[`__${name}__`] instanceof Function })
 
 		// item constructor...
 		//
@@ -1203,9 +1231,10 @@ var BaseBrowserPrototype = {
 		// 		while the latter stores a list of items.
 		// 		...would be more logical to store the object (i.e. browser/list)
 		// 		directly as the element...
+		var section
 		var make_called = false
-		var list = []
 		var ids = new Set()
+		var list = []
 		var keys = options.uniqueKeys ? 
 			new Set() 
 			: null
@@ -1278,8 +1307,8 @@ var BaseBrowserPrototype = {
 
 			// user extended make...
 			// XXX differentiate this for header and list...
-			//this.__make__
-			//	&& this.__make__(item)
+			this.__make__
+				&& this.__make__(section, item)
 
 			// store the item...
 			list.push(item)
@@ -1290,22 +1319,17 @@ var BaseBrowserPrototype = {
 		make.__proto__ = Items
 		make.dialog = this
 
-		// build the lists...
-		//* XXX
-		;[...(this.__header__ ? 
-					[['__header__', 'header']]
-					: []),
-				['__list__', 'items']]
-			.forEach(function([method, name]){
+		// build the sections...
+		sections
+			.forEach(function(name){
 				// setup closure for make(..)...
+				section = name
 				make_called = false
 				ids = new Set()
 				list = make.items = that[name] = []
 
 				// build list...
-				// XXX check that this is enough...
-				// 		...do we index header items???
-				var res = that[method](make,
+				var res = that[`__${name}__`](make,
 					// XXX not sure about this -- revise options handling...
 					options ? 
 						Object.assign(
@@ -1313,50 +1337,36 @@ var BaseBrowserPrototype = {
 							options || {}) 
 						: null)
 
-				// if make was not called use the .__list__(..) return value...
+				// if make was not called use the .__items__(..) return value...
 				that[name] = make_called ? 
 					that[name]
 					: res })
 
-		/*/
-		// setup closure for make(..)...
-		list = make.items = this.items = []
-		// XXX not sure about this -- revise options handling...
-		var res = this.__list__(make, 
-			options ? 
-				Object.assign(
-					Object.create(this.options || {}), 
-					options || {}) 
-				: null)
-		// if make was not called use the .__list__(..) return value...
-		this.items = make_called ? 
-			this.items 
-			: res
-		//*/
-
 		// reset the index/cache...
-		var old_index = this.__item_index_cache || {}
-		this.clearCache()
+		// XXX should this be only for .items???
+		// 		...should this be global (all items?)
+		if(sections.includes('items')){
+			var old_index = this.__item_index_cache || {}
+			this.clearCache()
 
-		// 2'nd pass -> make item index (unique id's)...
-		// NOTE: we are doing this in a separate pass as items can get 
-		// 		rearranged during the make phase (Items.nest(..) ...),
-		// 		thus avoiding odd duplicate index numbering...
-		// XXX should we also index header???
-		var index = this.__item_index_cache = this.index
+			// 2'nd pass -> make item index (unique id's)...
+			// NOTE: we are doing this in a separate pass as items can get 
+			// 		rearranged during the make phase (Items.nest(..) ...),
+			// 		thus avoiding odd duplicate index numbering...
+			var index = this.__item_index_cache = this.index
 
-		// post process the items...
-		Object.entries(index)
-			.forEach(function([id, e]){
-				// update item.id of items with duplicate keys...
-				!id.endsWith(that.__key__(e))
-					&& (e.id = id.split(/[\/]/g).pop())
-				// merge old item state...
-				id in old_index
-					// XXX this is not very elegant(???), revise... 
-					&& Object.assign(e,
-						old_index[id],
-						e) })
+			// post process the items...
+			Object.entries(index)
+				.forEach(function([id, e]){
+					// update item.id of items with duplicate keys...
+					!id.endsWith(that.__key__(e))
+						&& (e.id = id.split(/[\/]/g).pop())
+					// merge old item state...
+					id in old_index
+						// XXX this is not very elegant(???), revise... 
+						&& Object.assign(e,
+							old_index[id],
+							e) }) }
 
 		return this
 	},
@@ -1539,7 +1549,16 @@ var BaseBrowserPrototype = {
 		context.index = context.index || 0
 
 		// options specifics...
-		var source = options.source || 'items'
+		// NOTE: we include header/footer only for the root context...
+		var sections = context.root === this ?
+				'items'
+			: options.section == '*' ?
+				(options.sections || 'items')
+			: (options.section || 'items')
+		sections = sections instanceof Array ? 
+			sections 
+			: [sections]
+
 		var iterateNonIterable = options.iterateAll || options.iterateNonIterable
 		var iterateCollapsed = options.iterateAll || options.iterateCollapsed
 		var skipNested = !options.iterateAll && options.skipNested
@@ -1710,11 +1729,14 @@ var BaseBrowserPrototype = {
 			}, 
 			[], 
 			// input items...
-			...(reverse ? 
-				this[source]
-					.slice()
-					.reverse() 
-				: this[source])) },
+			...(sections
+				.map(function(name){
+					return that[name] || [] })
+				.flat()
+				.run(function(){
+					return reverse ?
+						this.reverse()
+						: this }))) },
 
 
 	// Test/Example Text renders...
@@ -3083,10 +3105,10 @@ var BaseBrowserPrototype = {
 	// XXX should we update on init....
 	__init__: function(func, options){
 		var args = [...arguments]
-		this.__list__ = args.shift()
+		this.__items__ = args.shift()
 		if(args[0] instanceof Function){
-			this.__header__ = this.__list__
-			this.__list__ = args.shift()
+			this.__header__ = this.__items__
+			this.__items__ = args.shift()
 		}
 		this.options = Object.assign(
 			Object.create(this.options || {}), 
@@ -3553,18 +3575,6 @@ var HTMLBrowserPrototype = {
 				this.dom.replaceWith(value) 
 				: this.container.appendChild(value))
 		this.__dom = value },
-
-
-	// XXX header...
-	// XXX might be a good idea to make this expandable -- show/hide options...
-	__header__: function(make, options){
-		make('CURRENT_PATH', {
-			id: 'current_path',
-			cls: 'path',
-			buttons: (options || {}).headerButtons 
-				|| (this.options || {}).headerButtons 
-				|| [],
-		}) },
 
 
 	// Extending query...
