@@ -1539,6 +1539,7 @@ var BaseBrowserPrototype = {
 		context.index = context.index || 0
 
 		// options specifics...
+		var source = options.source || 'items'
 		var iterateNonIterable = options.iterateAll || options.iterateNonIterable
 		var iterateCollapsed = options.iterateAll || options.iterateCollapsed
 		var skipNested = !options.iterateAll && options.skipNested
@@ -1710,10 +1711,10 @@ var BaseBrowserPrototype = {
 			[], 
 			// input items...
 			...(reverse ? 
-				this.items
+				this[source]
 					.slice()
 					.reverse() 
-				: this.items)) },
+				: this[source])) },
 
 
 	// Test/Example Text renders...
