@@ -1180,7 +1180,6 @@ var BaseBrowserPrototype = {
 			Object.create(this.options || {}), 
 			options || {})
 
-		var items = this.items = []
 
 		// item constructor...
 		//
@@ -1204,11 +1203,12 @@ var BaseBrowserPrototype = {
 		// 		while the latter stores a list of items.
 		// 		...would be more logical to store the object (i.e. browser/list)
 		// 		directly as the element...
+		var make_called = false
+		var list = []
+		var ids = new Set()
 		var keys = options.uniqueKeys ? 
 			new Set() 
 			: null
-		var ids = new Set()
-		var make_called = false
 		var make = function(value, opts){
 			make_called = true
 
@@ -1277,11 +1277,12 @@ var BaseBrowserPrototype = {
 			}
 
 			// user extended make...
-			this.__make__
-				&& this.__make__(item)
+			// XXX differentiate this for header and list...
+			//this.__make__
+			//	&& this.__make__(item)
 
 			// store the item...
-			items.push(item)
+			list.push(item)
 			ids.add(key)
 
 			return make
@@ -1289,30 +1290,37 @@ var BaseBrowserPrototype = {
 		make.__proto__ = Items
 		make.dialog = this
 
-		// XXX call .__header__(..) if defined...
-		// 		...considering that this is exactly the same as .__list__(..)
-		// 		might be a good idea to loop through:
-		// 			[['__header__', header],
-		// 				['__items__', items]]
-		// 		...might also be good to add some logic to avoid header 
-		// 		rendering every time we call make...
-		/*/ XXX
-		var header this.header = this.__header__ ? 
-			[] 
-			: null
+		// build the lists...
+		//* XXX
 		;[...(this.__header__ ? 
-					['__header__', header]
+					[['__header__', 'header']]
 					: []),
-				['__items__', items]]
-			.forEach(function([method, list]){
-				// XXX check that this is enough...
-				make.items = list
-				var res = this[method](make, ..)
-				...
-			})
-		//*/
+				['__list__', 'items']]
+			.forEach(function([method, name]){
+				// setup closure for make(..)...
+				make_called = false
+				ids = new Set()
+				list = make.items = that[name] = []
 
-		make.items = items
+				// build list...
+				// XXX check that this is enough...
+				// 		...do we index header items???
+				var res = that[method](make,
+					// XXX not sure about this -- revise options handling...
+					options ? 
+						Object.assign(
+							Object.create(that.options || {}), 
+							options || {}) 
+						: null)
+
+				// if make was not called use the .__list__(..) return value...
+				that[name] = make_called ? 
+					that[name]
+					: res })
+
+		/*/
+		// setup closure for make(..)...
+		list = make.items = this.items = []
 		// XXX not sure about this -- revise options handling...
 		var res = this.__list__(make, 
 			options ? 
@@ -1324,6 +1332,7 @@ var BaseBrowserPrototype = {
 		this.items = make_called ? 
 			this.items 
 			: res
+		//*/
 
 		// reset the index/cache...
 		var old_index = this.__item_index_cache || {}
@@ -1333,6 +1342,7 @@ var BaseBrowserPrototype = {
 		// NOTE: we are doing this in a separate pass as items can get 
 		// 		rearranged during the make phase (Items.nest(..) ...),
 		// 		thus avoiding odd duplicate index numbering...
+		// XXX should we also index header???
 		var index = this.__item_index_cache = this.index
 
 		// post process the items...
@@ -3438,8 +3448,10 @@ var HTMLBrowserPrototype = {
 		// 	]
 		itemButtons: [
 		],
-		// XXX need to mix these into the header only...
-		headerItemButtons: [
+		// XXX TEST...
+		headerButtons: [
+			['c', 'collapse: "*"'],
+			['e', 'expand: "*"'],
 		],
 
 		itemTemplate: {
@@ -3540,6 +3552,18 @@ var HTMLBrowserPrototype = {
 				this.dom.replaceWith(value) 
 				: this.container.appendChild(value))
 		this.__dom = value },
+
+
+	// XXX header...
+	// XXX might be a good idea to make this expandable -- show/hide options...
+	__header__: function(make, options){
+		make('CURRENT_PATH', {
+			id: 'current_path',
+			cls: 'path',
+			buttons: (options || {}).headerButtons 
+				|| (this.options || {}).headerButtons 
+				|| [],
+		}) },
 
 
 	// Extending query...
