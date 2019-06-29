@@ -75,6 +75,8 @@ var collectItems = function(make, items){
 
 
 //---------------------------------------------------------------------
+// Items...
+//
 // XXX general design:
 // 		- each of these can take either a value or a function (constructor)
 //		- the function has access to Items.* and context
@@ -144,17 +146,6 @@ Items.group = function(...items){
 	return this
 }
 
-// XXX
-Items.Header = function(...items){
-	var that = this
-	items = items.length == 1 && items[0] instanceof Array ?
-		items[0]
-		: items
-	// replace the items with the group...
-	// XXX
-	//this.items.splice(this.items.length, 0, collectItems(this, items))
-	return this
-}
 
 // Place list in a sub-list of item...
 //
@@ -171,7 +162,7 @@ Items.nest = function(item, list, options){
 
 
 
-//---------------------------------------------------------------------
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 // Buttons...
 var buttons = Items.buttons = {}
 
@@ -247,8 +238,8 @@ buttons.Delete = [
 
 
 
-//---------------------------------------------------------------------
-// wrappers...
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+// Wrappers...
 
 // this is here for uniformity...
 Items.Item = function(value, options){ return this(...arguments) }
@@ -270,6 +261,93 @@ Items.EditablePinnedList = function(values){}
 // Special list components...
 //Items.ListPath = function(){}
 //Items.ListTitle = function(){}
+
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+// Generators...
+//
+// A generator is a function that creates 1 or more elements and sets up
+// the appropriate interactions...
+//
+// NOTE: these can work both as item generators called from inside 
+// 		.make(..), i.e. as methods of the make constructor, or as
+// 		generators assigned to .__header__ / .__items__ / .__footer__
+// 		attributes...
+// NOTE: when re-using these options.id needs to be set so as not to 
+// 		overwrite existing instances data and handlers...
+
+// Focused item path...
+//
+// XXX add search/filter field...
+// XXX add path navigation...
+Items.DisplayFocusedPath = function(make, options){
+	options = make instanceof Function ?
+		options
+		: make
+	options = options || {}
+	make = make instanceof Function ?
+		make
+		: this
+	var dialog = this.dialog || this
+	var tag = options.id || 'item_path_display'
+	// indicator...
+	var e = make('CURRENT_PATH', {
+			id: tag,
+			cls: 'path',
+			buttons: options.headerButtons 
+				|| (dialog.options || {}).headerButtons 
+				|| [], }) 
+		.last()
+	// event handlers...
+	dialog 
+		.off('*', tag)
+		.on('focus', 
+			function(){
+				e.value = this.pathArray
+				this.renderItem(e) },
+			tag) }
+
+// Item info...
+//
+// Show item .info or .alt text.
+//
+// This will show info for items that are:
+// 	- focused
+// 	- hovered (not yet implemented)
+//
+// XXX use focused elements and not just item...
+// XXX add on mouse over...
+Items.DisplayItemInfo = function(make, options){
+	options = make instanceof Function ?
+		options
+		: make
+	options = options || {}
+	make = make instanceof Function ?
+		make
+		: this
+	var dialog = this.dialog || this
+	var tag = options.id || 'item_info_display'
+
+	// indicator...
+	var e = make('INFO', {
+			id: tag,
+			cls: 'info',
+			buttons: options.footerButtons 
+				|| (dialog.options || {}).footerButtons 
+				|| [], })
+		.last()
+	// event handlers...
+	dialog
+		.off('*', tag)
+		.on('focus',
+			function(){
+				var focused = this.focused
+				e.value = focused.info 
+					|| focused.alt
+					|| '&nbsp;'
+				this.renderItem(e) },
+		tag) }
 
 
 
@@ -792,7 +870,6 @@ var BaseBrowserClassPrototype = {
 // 		sense at this time -- need to think about this more 
 // 		carefully + strictly document the result...
 var BaseBrowserPrototype = {
-	// XXX should we mix item/list options or separate them into sub-objects???
 	options: {
 		sections: [
 			'header',
@@ -834,6 +911,12 @@ var BaseBrowserPrototype = {
 		// 		certain context...
 		// 		No, currently this is not needed.
 		itemTemplate: {},
+
+		// If not null these indicate the name of the generator to use, 
+		// when  the client does not supply the corresponding function 
+		// (i.e. Items[name])
+		defaultHeader: null,
+		defaultFooter: null,
 	},
 
 
@@ -865,7 +948,8 @@ var BaseBrowserPrototype = {
 	__header: null,
 	get header(){
 		this.__header
-			|| (this.__header__ 
+			|| ((this.__header__ 
+					|| Items[this.options.defaultHeader])
 				&& this.make({section: 'header'}))
 		return this.__header || [] },
 	set header(value){
@@ -880,7 +964,8 @@ var BaseBrowserPrototype = {
 	__footer: null,
 	get footer(){
 		this.__footer
-			|| (this.__footer__ 
+			|| ((this.__footer__ 
+					|| Items[this.options.defaultFooter])
 				&& this.make({section: 'footer'}))
 		return this.__footer || [] },
 	set footer(value){
@@ -1204,9 +1289,15 @@ var BaseBrowserPrototype = {
 		sections = (sections instanceof Array ? 
 				sections 
 				: [sections])
+			.map(function(name){
+				return [
+					name,
+					that[`__${name}__`] 
+						|| Items[options[`default${name.capitalize()}`]],
+				] })
 			// keep only sections we know how to make...
-			.filter(function(name){
-				return that[`__${name}__`] instanceof Function })
+			.filter(function([_, handler]){
+				return !!handler })
 
 		// item constructor...
 		//
@@ -1320,7 +1411,7 @@ var BaseBrowserPrototype = {
 
 		// build the sections...
 		sections
-			.forEach(function(name){
+			.forEach(function([name, handler]){
 				// setup closure for make(..)...
 				section = name
 				make_called = false
@@ -1328,7 +1419,8 @@ var BaseBrowserPrototype = {
 				list = make.items = that[name] = []
 
 				// build list...
-				var res = that[`__${name}__`](make,
+				var res = handler.call(that, 
+					make,
 					// XXX not sure about this -- revise options handling...
 					options ? 
 						Object.assign(
@@ -2474,12 +2566,6 @@ var BaseBrowserPrototype = {
 					&& that.expand([...nodes]) }) },
 
 
-	// XXX do we need edit ability here? 
-	// 		i.e. .set(..), .remove(..), .sort(..), ...
-	// 		...if we are going to implement editing then we'll need to 
-	// 		callback the user code or update the user state...
-
-
 	// Renderers...
 	//
 	// 	.renderFinalize(header, items, footer, context)
@@ -3140,17 +3226,51 @@ var BaseBrowserPrototype = {
 	close: makeEventMethod('close', function(evt, reason){}),
 	
 
-	// XXX should we update on init....
+	// Constructor...
+	//
+	// 	BaseBrowser(items(make, options)[, options])
+	// 		-> browser
+	//
+	// 	Set header and items generators...
+	// 	BaseBrowser(
+	// 			header(make, options) | null, 
+	// 			items(make, options)[, options])
+	// 		-> browser
+	//
+	// 	Set both header and footer...
+	// 	BaseBrowser(
+	// 			header(make, options) | null, 
+	// 			items(make, options), 
+	// 			footer(make, options) | null[, options])
+	// 		-> browser
+	//
+	//
+	// NOTE: of either header or footer are set to null and 
+	// 		options.defaultHeader / options.defaultFooter are set then 
+	// 		they will be used. To disable header footer completely set 
+	// 		the corresponding default option to null too.
+	// NOTE: for options.defaultHeader / options.defaultFooter the docs
+	// 		are in the options section.
+	//
+	// XXX should we .update(..) on init....
 	__init__: function(func, options){
 		var args = [...arguments]
+
 		// header (optional)...
-		args[1] instanceof Function
-			&& (this.__header__ = args.shift())
+		args[1] instanceof Function ?
+			(this.__header__ = args.shift())
+		: args[0] == null
+			&& args.shift()
+
 		// items...
 		this.__items__ = args.shift()
+
 		// footer (optional)..
-		args[0] instanceof Function
-			&& (this.__footer__ = args.shift())
+		args[0] instanceof Function ?
+			(this.__footer__ = args.shift())
+		: args[0] == null
+			&& args.shift()
+
 		// options (optional)...
 		this.options = Object.assign(
 			Object.create(this.options || {}), 
@@ -3422,55 +3542,6 @@ var updateElemClass = function(action, cls, handler){
 
 var HTMLBrowserClassPrototype = {
 	__proto__: BaseBrowser,
-
-	// Headers...
-	//
-	// Item path...
-	// XXX add search/filter field...
-	// XXX add path navigation...
-	PATH_DISPLAY: function(make, options){
-		// indicator...
-		var e = make('CURRENT_PATH', {
-				id: 'item_path_display',
-				cls: 'path',
-				buttons: (options || {}).headerButtons 
-					|| (this.options || {}).headerButtons 
-					|| [], }) 
-			.last()
-		// event handlers...
-		this
-			.off('*', 'item_path_display')
-			.on('focus', 
-				function(){
-					e.value = this.pathArray
-					this.renderItem(e) },
-				'item_path_display') },
-
-	// Footers...
-	//
-	// Item info...
-	// XXX use focused element...
-	// XXX add on mouse over...
-	INFO_DISPLAY: function(make, options){
-		// indicator...
-		var e = make('INFO', {
-				id: 'item_info_display',
-				cls: 'info',
-				buttons: (options || {}).footerButtons 
-					|| (this.options || {}).footerButtons 
-					|| [], })
-			.last()
-		// event handlers...
-		this
-			.off('*', 'item_info_display')
-			.on('focus',
-				function(){
-					var focused = this.focused
-					e.value = focused.info 
-						|| focused.alt
-						|| '&nbsp;'
-					this.renderItem(e) },
-			'item_info_display') },
 }
 
 // XXX render of nested lists does not affect the parent list(s)...
@@ -3485,9 +3556,8 @@ var HTMLBrowserPrototype = {
 	options: {
 		__proto__: BaseBrowser.prototype.options,
 
-		// XXX not used yet...
-		//defaultHeader: 'PATH_DISPLAY',
-		//defaultFooter: 'INFO_DISPLAY',
+		defaultHeader: 'DisplayFocusedPath',
+		//defaultFooter: 'DisplayItemInfo',
 
 		// for more docs see:
 		//	https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView
@@ -4483,18 +4553,6 @@ var HTMLBrowserPrototype = {
 
 	// Filtering/search mode...
 	// XXX
-
-	/*/ XXX this should only work on root...
-	__init__: function(func, options){
-		var args = [...arguments]
-		options = args[args.length-1] instanceof Function ?
-			{}
-			: args[args.length-1]
-		;(args[1] instanceof Function)
-			&& this.constructor[options.defaultHeader]
-			&& args.unshift(this.constructor[options.defaultHeader])
-		return object.parent(HTMLBrowserPrototype.__init__, this).call(this, ...args) },
-	//*/
 }
 
 
