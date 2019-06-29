@@ -3056,6 +3056,7 @@ var BaseBrowserPrototype = {
 	// 		first last elements...
 	// NOTE: if focus does not change this will trigger any handlers...
 	// NOTE: this will reveal the focused item...
+	// XXX SECTION_FOCUS
 	focus: makeItemEventMethod('focus', {
 		handler: function(evt, items){
 			var item = items.shift()
@@ -4454,6 +4455,7 @@ var HTMLBrowserPrototype = {
 		}, {skipDisabled: false})
 	},
 	// NOTE: element alignment is done via the browser focus mechanics...
+	// XXX SECTION_FOCUS
 	__focus__: function(evt, elem){
 		var that = this
 		elem

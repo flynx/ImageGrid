@@ -47,6 +47,11 @@ body {
 	overflow: visible;
 }
 
+.browse-widget .list.items .text + .text:before {
+	content: " ";
+	white-space: pre;
+}
+
 .browse-widget .list .text .key-hint {
 	text-decoration-skip-ink: none;
 }
@@ -60,6 +65,9 @@ body {
 
 .item.path .text:before {
 	content: "/";
+	margin-left: 0.1em;
+	margin-right: 0.1em;
+	opacity: 0.5;
 }
 
 /* XXX experimental... */
@@ -273,7 +281,10 @@ requirejs([
 $(function(){
 
 	$('.container')
-		.draggable({ cancel: ".path .dir, .list div" })
+		.draggable({ 
+			//handle: '.list.header',
+			cancel: '.list.items',
+		})
 })
 
 
