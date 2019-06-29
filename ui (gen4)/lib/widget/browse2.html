@@ -241,7 +241,9 @@ requirejs([
 					.map(function(_, i){
 						return make(i) }))
 
-		}, {
+		}, 
+		browser.Browser.INFO_FOOTER,
+		{
 			itemButtons: [
 				['&ndash;', 
 					'buttonAction: item button focused -- example button action...'],

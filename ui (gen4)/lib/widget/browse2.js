@@ -797,8 +797,7 @@ var BaseBrowserPrototype = {
 		sections: [
 			'header',
 			'items',
-			// XXX do we need this?
-			//'footer',
+			'footer',
 		],
 
 		focusDisabled: false,
@@ -3144,15 +3143,18 @@ var BaseBrowserPrototype = {
 	// XXX should we update on init....
 	__init__: function(func, options){
 		var args = [...arguments]
+		// header (optional)...
+		args[1] instanceof Function
+			&& (this.__header__ = args.shift())
+		// items...
 		this.__items__ = args.shift()
-		if(args[0] instanceof Function){
-			this.__header__ = this.__items__
-			this.__items__ = args.shift()
-		}
+		// footer (optional)..
+		args[0] instanceof Function
+			&& (this.__footer__ = args.shift())
+		// options (optional)...
 		this.options = Object.assign(
 			Object.create(this.options || {}), 
-			args[0] || {})
-	},
+			args[0] || {}) },
 }
 
 
@@ -3428,15 +3430,30 @@ var HTMLBrowserClassPrototype = {
 		// XXX add
 	PATH_HEADER: function(make, options){
 		make('CURRENT_PATH', {
-			id: 'current_path',
+			id: 'header_current_path',
 			cls: 'path',
 			buttons: (options || {}).headerButtons 
 				|| (this.options || {}).headerButtons 
-				|| [],
-		}) 
+				|| [], }) 
 		this.focus(function(){
-			var e = this.get({id: 'current_path'}, {section: 'header'})
+			var e = this.get({id: 'header_current_path'}, {section: 'header'})
 			e.value = this.pathArray
+			this.renderItem(e) }) },
+	// XXX use focused element...
+	// XXX add on mouse over...
+	INFO_FOOTER: function(make, options){
+		make('INFO', {
+			id: 'footer_info',
+			cls: 'info',
+			buttons: (options || {}).footerButtons 
+				|| (this.options || {}).footerButtons 
+				|| [], })
+		this.focus(function(){
+			var focused = this.focused
+			var e = this.get({id: 'footer_info'}, {section: 'footer'})
+			e.value = focused.info 
+				|| focused.alt
+				|| '&nbsp;'
 			this.renderItem(e) })
 	},
 }
@@ -3536,6 +3553,8 @@ var HTMLBrowserPrototype = {
 		headerButtons: [
 			['c', 'collapse: "*"'],
 			['e', 'expand: "*"'],
+		],
+		footerButtons: [
 		],
 
 		itemTemplate: {
