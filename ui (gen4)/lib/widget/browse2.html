@@ -172,34 +172,8 @@ requirejs([
 
 	// XXX split this into several dialogues, show each and then combine...
 	dialog = browser.Browser(
-		function(make, options){
-			make('CURRENT_PATH', {
-				id: 'current_path',
-				cls: 'path',
-				buttons: (options || {}).headerButtons 
-					|| (this.options || {}).headerButtons 
-					|| [],
-			}) },
+		//browser.Browser.PATH_HEADER,
 		function(make){
-			// XXX put this in the header...
-			//		ways to do this:
-			//			- a different handler
-			//				.__header__(..) is like .__list__(..) but can be 
-			//				called less often...
-			//			- a group like thing/constructor...
-			//				make.Header(
-			//					make(..),
-			//					..
-			//				)
-			//			- both???
-			make('path', {
-				id:'selected_path',
-				//cls: 'path sticky',
-				cls: 'path',
-			})
-
-			make.Separator()
-
 			make(['list', 'of', 'text'])
 			make.group(
 				make('$group item 0 (open event)', 
@@ -278,11 +252,6 @@ requirejs([
 				'ToggleDisabled',
 			],
 		})
-			// XXX EXPEREMENT -- need to wrap this into partial .update(..)
-			.focus(function(){
-				var e = this.get({id: 'selected_path'})
-				e.value = this.pathArray
-				this.renderItem(e) })
 
 	dialog.container = $('.container').first()[0]
 

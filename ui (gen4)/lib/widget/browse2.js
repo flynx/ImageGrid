@@ -1549,12 +1549,16 @@ var BaseBrowserPrototype = {
 		context.index = context.index || 0
 
 		// options specifics...
-		// NOTE: we include header/footer only for the root context...
-		var sections = context.root === this ?
-				'items'
-			: options.section == '*' ?
-				(options.sections || 'items')
-			: (options.section || 'items')
+		var sections = options.section == '*' ?
+			(options.sections 
+				|| ['header', 'items', 'footer'])
+			: options.section 
+		// NOTE: we include sections other than 'items' only for the root context...
+		sections = (sections instanceof Array 
+				&& context.root !== this)
+				&& sections.includes('items') ?
+			'items'
+			: (sections || 'items')
 		sections = sections instanceof Array ? 
 			sections 
 			: [sections]
@@ -2474,8 +2478,8 @@ var BaseBrowserPrototype = {
 
 	// Renderers...
 	//
-	// 	.renderFinalize(items, context)
-	// 	.renderList(items, context)
+	// 	.renderFinalize(header, items, footer, context)
+	// 	.renderList(header, items, footer, context)
 	// 	.renderNested(header, children, item, context)
 	// 	.renderNestedHeader(item, i, context)
 	// 	.renderItem(item, i, context)
@@ -2485,9 +2489,9 @@ var BaseBrowserPrototype = {
 	// NOTE: there are not to be used directly...
 	// XXX might be a good idea to move these into a separate renderer 
 	// 		object (mixin or encapsulated)...
-	renderFinalize: function(items, context){
-		return this.renderList(items, context) },
-	renderList: function(items, context){
+	renderFinalize: function(header, items, footer, context){
+		return this.renderList(header, items, footer, context) },
+	renderList: function(header, items, footer, context){
 		return items },
 	// NOTE: to skip rendering an item/list return null...
 	// XXX should this take an empty children???
@@ -2582,6 +2586,7 @@ var BaseBrowserPrototype = {
 	// XXX make partial render be lazy -- i.e. add/remove elements and 
 	// 		do not reconstruct the ones already present...
 	// XXX should from/to/around/count be a feature of this or of .walk(..)???
+	// XXX render all the sections at root... (???)
 	render: function(options, renderer, context){
 		context = context || {}
 		renderer = renderer || this
@@ -2590,6 +2595,14 @@ var BaseBrowserPrototype = {
 				Object.create(this.options || {}),
 				{ iterateNonIterable: true }, 
 				options || {})
+
+		var section = options.section || '*'
+		section = section == '*' ?
+			options.sections
+			: section
+		section = section instanceof Array && section.length == 1 ?
+			section[0]
+			: section
 
 		// build range bounds...
 		// use .get(..) on full (non-partial) range...
@@ -2652,48 +2665,69 @@ var BaseBrowserPrototype = {
 		from_path = from_path instanceof Array
 			&& from_path
 
-		// do the walk...
-		var elems = this.walk(
-			function(elem, i, path, nested){
-				return (
-					// special case: nested <from> elem -> topology only...
-					(from_path 
-							&& i < from 
-							// only for nested...
-							&& elem && elem.children
-							// only sub-path...
-							&& path.cmp(from_path.slice(0, path.length))) ?
-						[ renderer.renderNestedBlank(nested(), i, context) ]
-					// out of range -> skip...
-					: ((from != null && i < from) 
-							|| (to != null && i >= to)) ?
-						[]
-					// inline...
-					: elem == null ?
-						// NOTE: here we are forcing rendering of the 
-						// 		inline browser/list, i.e. ignoring 
-						// 		options.skipNested for inline stuff...
-						[ renderer.renderGroup(nested(true), context) ]
-					// nested...
-					: elem.children ?
-						[ renderer.renderNested(
-							renderer.renderNestedHeader(elem, i, context),
-							nested(),
-							elem, 
-							context) ]
-					// normal elem...
-					: [ renderer.renderItem(elem, i, context) ] ) },
-			'render',
-			function(_, i, p, options, context){
-				return [options, renderer, context] },
-			options, context)
+		// root call -> build sections (calling .render(..) per section)...
+		if(context.root == null && section instanceof Array){
+			context.root = this
+			var s= {}
+			section
+				.forEach(function(name){
+					s[name] = this.render(
+						Object.assign(
+							Object.create(options),
+							{
+								section: name,
+								nonFinalized: true,
+							}), 
+						renderer) }.bind(this))
 
-		// finalize depending on render mode...
-		return (!options.nonFinalized && context.root === this) ?
-			// root context -> render list and return this...
-			renderer.renderFinalize(elems, context)
-			// nested context -> return item list...
-			: elems },
+			return (!options.nonFinalized && context.root === this) ?
+				renderer.renderFinalize(s.header, s.items, s.footer, context)
+				: s
+
+		// build specific sections...
+		} else {
+			// do the walk...
+			var items = this.walk(
+				function(elem, i, path, nested){
+					return (
+						// special case: nested <from> elem -> topology only...
+						(from_path 
+								&& i < from 
+								// only for nested...
+								&& elem && elem.children
+								// only sub-path...
+								&& path.cmp(from_path.slice(0, path.length))) ?
+							[ renderer.renderNestedBlank(nested(), i, context) ]
+						// out of range -> skip...
+						: ((from != null && i < from) 
+								|| (to != null && i >= to)) ?
+							[]
+						// inline...
+						: elem == null ?
+							// NOTE: here we are forcing rendering of the 
+							// 		inline browser/list, i.e. ignoring 
+							// 		options.skipNested for inline stuff...
+							[ renderer.renderGroup(nested(true), context) ]
+						// nested...
+						: elem.children ?
+							[ renderer.renderNested(
+								renderer.renderNestedHeader(elem, i, context),
+								nested(),
+								elem, 
+								context) ]
+						// normal elem...
+						: [ renderer.renderItem(elem, i, context) ] ) },
+				'render',
+				function(_, i, p, options, context){
+					return [options, renderer, context] },
+				options, context) 
+
+			// finalize depending on render mode...
+			return (!options.nonFinalized && context.root === this) ?
+				// root context -> render list and return this...
+				renderer.renderFinalize(null, items, null, context)
+				// nested context -> return item list...
+				: items } },
 	
 
 	// Events...
@@ -3381,6 +3415,25 @@ var updateElemClass = function(action, cls, handler){
 
 var HTMLBrowserClassPrototype = {
 	__proto__: BaseBrowser,
+
+		// XXX move this into the browser2.js
+		//		-> .options.defaultHeader
+		//		-> Browser.PATH_HEADER
+		// XXX add search/filter field...
+		// XXX add
+	PATH_HEADER: function(make, options){
+		make('CURRENT_PATH', {
+			id: 'current_path',
+			cls: 'path',
+			buttons: (options || {}).headerButtons 
+				|| (this.options || {}).headerButtons 
+				|| [],
+		}) 
+		this.focus(function(){
+			var e = this.get({id: 'current_path'}, {section: 'header'})
+			e.value = this.pathArray
+			this.renderItem(e) })
+	},
 }
 
 // XXX render of nested lists does not affect the parent list(s)...
@@ -3394,6 +3447,9 @@ var HTMLBrowserPrototype = {
 
 	options: {
 		__proto__: BaseBrowser.prototype.options,
+
+		// XXX not used...
+		defaultHeader: 'PATH_HEADER',
 
 		// for more docs see:
 		//	https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView
@@ -3730,9 +3786,9 @@ var HTMLBrowserPrototype = {
 	// 		</div>
 	// 	or same as .renderList(..)
 	//
-	renderFinalize: function(items, context){
+	renderFinalize: function(header, items, footer, context){
 		var that = this
-		var d = this.renderList(items, context)
+		var d = this.renderList(header, items, footer, context)
 		var options = context.options || this.options || {}
 
 		// wrap the list (nested list) of nodes in a div...
@@ -3789,9 +3845,12 @@ var HTMLBrowserPrototype = {
 	// 			<!-- items -->
 	// 			...
 	// 		</div>
+	//
+	// 		<!-- footer -->
+	// 		...
 	// 	</div>
 	//
-	renderList: function(items, context){
+	renderList: function(header, items, footer, context){
 		var that = this
 		var options = context.options || this.options || {}
 
@@ -3804,8 +3863,9 @@ var HTMLBrowserPrototype = {
 			function(evt){ evt.stopPropagation() })
 
 		// header...
-		options.hideListHeader
-			|| dialog.appendChild(this.renderListHeader(context))
+		header 
+			&& !options.hideListHeader
+			&& dialog.appendChild(this.renderListHeader(header, context))
 
 		// list...
 		var list = document.createElement('div')
@@ -3820,30 +3880,35 @@ var HTMLBrowserPrototype = {
 					: item) })
 		dialog.appendChild(list)
 
+		// footer...
+		footer 
+			&& !options.hideListFooter
+			&& dialog.appendChild(this.renderListFooter(footer, context))
+
 		return dialog 
 	},
 	//
 	// Foramt:
 	//	<div class="path v-block">
-	//		<div class="dir" tabindex="0">dir</div>
-	//		...
-	//		<div class="dir cur" tabindex="0">dir</div>
+	// 		<!-- list -->
+	// 		<div class="list v-block header">
+	// 			<!-- items -->
+	// 			...
+	// 		</div>
 	//	</div>
 	// 	
 	// XXX populate this...
 	// XXX make this an item???
-	renderListHeader: function(context){
-		var header = document.createElement('div')
-		header.classList.add('path', 'v-block')
-
-		// XXX path/search...
-		var dir = document.createElement('div')
-		dir.classList.add('dir', 'cur')
-		dir.setAttribute('tabindex', '0')
-		header.appendChild(dir)
-
-		return header
-	},
+	renderListHeader: function(items, context){
+		var elem = this.renderList(null, items, null, context).firstChild 
+		// XXX should we replace 'list' or add 'header'
+		elem.classList.add('header')
+		return elem },
+	renderListFooter: function(items, context){
+		var elem = this.renderList(null, items, null, context).firstChild 
+		// XXX should we replace 'list' or add 'footer'
+		elem.classList.add('footer')
+		return elem },
 	//
 	// Format:
 	// 	<div class="list">
@@ -4377,6 +4442,18 @@ var HTMLBrowserPrototype = {
 
 	// Filtering/search mode...
 	// XXX
+
+	/*/ XXX this should only work on root...
+	__init__: function(func, options){
+		var args = [...arguments]
+		options = args[args.length-1] instanceof Function ?
+			{}
+			: args[args.length-1]
+		;(args[1] instanceof Function)
+			&& this.constructor[options.defaultHeader]
+			&& args.unshift(this.constructor[options.defaultHeader])
+		return object.parent(HTMLBrowserPrototype.__init__, this).call(this, ...args) },
+	//*/
 }
 
 
@@ -4416,7 +4493,7 @@ var TextBrowserPrototype = {
 	
 	// NOTE: we do not need .renderGroup(..) here as a group is not 
 	// 		visible in text...
-	renderList: function(items, options){
+	renderList: function(header, items, footer, options){
 		var that = this
 		return this.renderNested(null, items, null, null, options)
 			.join('\n') },
