@@ -609,15 +609,12 @@ function(event, {handler, action, default_item, filter, options={}, getter='sear
 				[]
 			: [items]
 		return filter ? 
-			items.filter(filter) 
+			items.filter(filter.bind(this)) 
 			: items }
 	// options constructor...
 	var makeOptions = function(){
 		return Object.assign(
 			{ 
-				// get items from all sections...
-				// XXX SECTION_FOCUS
-				//section: '*',
 				// NOTE: we need to be able to pass item objects, so we can not
 				// 		use queries at the same time as there is not way to 
 				// 		distinguish one from the other...
@@ -663,14 +660,14 @@ function(event, {handler, action, default_item, filter, options={}, getter='sear
 					item
 				// array of queries...
 				: item instanceof Array ?
-					filterItems(item
+					filterItems.call(this, item
 						.map(function(e){
 							return that.search(e, opts) })
 						.flat()
 						.unique())
 				// explicit item or query...
 				: item != null ? 
-					filterItems(this[getter](item, opts))
+					filterItems.call(this, this[getter](item, opts))
 				// item is undefined -- get default...
 				: item !== null && default_item instanceof Function ?
 					[default_item.call(that) || []].flat()
@@ -749,7 +746,7 @@ function(get_state, set_state, unset_state, default_item, multi, options){
 		&& multi
 	var filterItems = function(items){
 		return filter ? 
-			items.filter(filter) 
+			items.filter(filter.bind(this)) 
 			: items }
 	multi = multi !== false
 	var getter = multi ? 'search' : 'get'
@@ -796,7 +793,7 @@ function(get_state, set_state, unset_state, default_item, multi, options){
 				: item == null ?
 					false	
 				: state == '?' ?
-					filterItems(
+					filterItems.call(this,
 						[this[getter](item, options)]
 							.flat())
 							.map(_get_state)
@@ -806,7 +803,7 @@ function(get_state, set_state, unset_state, default_item, multi, options){
 					_unset_state.call(this, item)
 				// 'next' or '!'...
 				// NOTE: 'next' and '!' are opposites of each other...
-				: filterItems(
+				: filterItems.call(this,
 					[this[getter](item, options)]
 						.flat())
 						.map(function(e){
@@ -3064,17 +3061,16 @@ var BaseBrowserPrototype = {
 			var item = items.shift()
 			// do not change focus if item is not in the main section...
 			// NOTE: we will still trigger item focus handlers...
-			/*/ XXX SECTION_FOCUS
 			if(item != null 
 					&& this.get(item) == null 
 					&& !(this.options || {}).allowSecondaySectionFocus){
+				// XXX SECTION_FOCUS
 				// XXX this fixes the .__focus__(..) falling into recursion 
 				// 		problem but prevent non-main-section item handlers 
 				// 		from triggering...
 				evt.stopPropagation()
 				return 
 			}
-			//*/
 			// blur .focused...
 			this.focused
 				&& this.blur(this.focused)
@@ -3085,15 +3081,7 @@ var BaseBrowserPrototype = {
 		default_item: function(){ return this.get(0) },
 		options: function(){
 			return {
-				/*/ XXX SECTION_FOCUS this set to '*' will enable non-main-section
-				// 		to be passed to .focus(..) handlers, otherwise they will
-				// 		get undefined (i.e. blur the .focused item)...
-				// 		...setting this to '*' will also make next/prev keywords get 
-				// 		other section items...
-				// 		...in turn this will break .__focus__(..) when 
-				// 		on footer/header...
 				section: '*',
-				//*/
 				skipDisabled: !(this.options || {}).focusDisabledItems,
 			} },
 		getter: 'get' }),
@@ -3102,19 +3090,21 @@ var BaseBrowserPrototype = {
 			items.forEach(function(item){
 				delete item.focused }) },
 		default_item: function(){ return this.focused } }),
-	// NOTE: .next() / .prev() will wrap around the first/last elements,
-	// 		this is different from .focus('next') / .focus('prev')...
-	next: function(){ 
-		this.focus('next').focused || this.focus('first') 
-		return this },
-	prev: function(){ 
-		this.focus('prev').focused || this.focus('last') 
-		return this },
 	toggleFocus: makeItemEventToggler(
 		'focused', 
 		'focus', 'blur', 
 		function(){ return this.focused || 0 }, 
 		false),
+	// NOTE: .next() / .prev() will wrap around the first/last elements,
+	// 		this is different from .focus('next') / .focus('prev')...
+	// NOTE: these also differ from focus in that they will only go 
+	// 		through the main section...
+	next: function(){ 
+		this.focus(this.get('next') || this.get('first'))
+		return this },
+	prev: function(){ 
+		this.focus(this.get('prev') || this.get('last'))
+		return this },
 	// selection...
 	select: makeItemOptionOnEventMethod('select', 'selected', {
 		options: function(){
@@ -4480,6 +4470,7 @@ var HTMLBrowserPrototype = {
 					})
 				})
 				// set focus...
+				// XXX SECTION_FOCUS breaks int recursion on non main section items...
 				.focus() },
 	__blur__: function(evt, elem){
 		var that = this
