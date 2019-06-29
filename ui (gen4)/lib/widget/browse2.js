@@ -615,6 +615,9 @@ function(event, {handler, action, default_item, filter, options={}, getter='sear
 	var makeOptions = function(){
 		return Object.assign(
 			{ 
+				// get items from all sections...
+				// XXX SECTION_FOCUS
+				//section: '*',
 				// NOTE: we need to be able to pass item objects, so we can not
 				// 		use queries at the same time as there is not way to 
 				// 		distinguish one from the other...
@@ -877,7 +880,9 @@ var BaseBrowserPrototype = {
 			'footer',
 		],
 
-		focusDisabled: false,
+		focusDisabledItems: false,
+
+		allowSecondaySectionFocus: false,
 
 		// If true item keys must be unique...
 		uniqueKeys: false,
@@ -3056,18 +3061,40 @@ var BaseBrowserPrototype = {
 	// NOTE: this will reveal the focused item...
 	focus: makeItemEventMethod('focus', {
 		handler: function(evt, items){
+			var item = items.shift()
+			// do not change focus if item is not in the main section...
+			// NOTE: we will still trigger item focus handlers...
+			/*/ XXX SECTION_FOCUS
+			if(item != null 
+					&& this.get(item) == null 
+					&& !(this.options || {}).allowSecondaySectionFocus){
+				// XXX this fixes the .__focus__(..) falling into recursion 
+				// 		problem but prevent non-main-section item handlers 
+				// 		from triggering...
+				evt.stopPropagation()
+				return 
+			}
+			//*/
 			// blur .focused...
 			this.focused
 				&& this.blur(this.focused)
 			// NOTE: if we got multiple matches we care only about the first one...
-			var item = items.shift()
 			item != null
 				&& this.reveal(item)
 				&& (item.focused = true) },
 		default_item: function(){ return this.get(0) },
 		options: function(){
 			return {
-				skipDisabled: !(this.options || {}).focusDisabled,
+				/*/ XXX SECTION_FOCUS this set to '*' will enable non-main-section
+				// 		to be passed to .focus(..) handlers, otherwise they will
+				// 		get undefined (i.e. blur the .focused item)...
+				// 		...setting this to '*' will also make next/prev keywords get 
+				// 		other section items...
+				// 		...in turn this will break .__focus__(..) when 
+				// 		on footer/header...
+				section: '*',
+				//*/
+				skipDisabled: !(this.options || {}).focusDisabledItems,
 			} },
 		getter: 'get' }),
 	blur: makeItemEventMethod('blur', {
@@ -3092,7 +3119,7 @@ var BaseBrowserPrototype = {
 	select: makeItemOptionOnEventMethod('select', 'selected', {
 		options: function(){
 			return {
-				skipDisabled: !(this.options || {}).focusDisabled,
+				skipDisabled: !(this.options || {}).focusDisabledItems,
 			} }, }),
 	deselect: makeItemOptionOffEventMethod('deselect', 'selected', {
 		options: { skipDisabled: false }, }),
@@ -3113,7 +3140,7 @@ var BaseBrowserPrototype = {
 	// item state events...
 	disable: makeItemOptionOnEventMethod('disable', 'disabled', 
 		{ handler: function(item){ 
-			(this.options || {}).focusDisabled 
+			(this.options || {}).focusDisabledItems 
 				|| this.blur(item) }, }),
 	enable: makeItemOptionOffEventMethod('enable', 'disabled', 
 		{ options: {skipDisabled: false}, }),
@@ -3475,8 +3502,8 @@ var focusItem = function(direction){
 		var threashold = this.options.focusOffsetWhileScrolling || 0
 
 		var focused = this.focused
-		var first = this.get('first', {skipDisabled: !(this.options || {}).focusDisabled})
-		var last = this.get('last', {skipDisabled: !(this.options || {}).focusDisabled})
+		var first = this.get('first', {skipDisabled: !(this.options || {}).focusDisabledItems})
+		var last = this.get('last', {skipDisabled: !(this.options || {}).focusDisabledItems})
 
 		// center the first/last elements to reveal hidden items before/after...
 		;(focused === last || focused === first) ?
@@ -3511,12 +3538,12 @@ var focusPage = function(direction){
 		var focused = this.focused
 
 		// reveal diabled elements above the top focusable...
-		;(target === this.get(t, {skipDisabled: !(this.options || {}).focusDisabled}) 
+		;(target === this.get(t, {skipDisabled: !(this.options || {}).focusDisabledItems}) 
 				&& target === focused) ?
 			this.scrollTo(target, 'center')
 		// scroll one page and focus...
 		: target === focused ?
-			this.focus(this.get(d, 1, {skipDisabled: !(this.options || {}).focusDisabled}))
+			this.focus(this.get(d, 1, {skipDisabled: !(this.options || {}).focusDisabledItems}))
 		// focus top/bottom of current page...
 		: this.focus(target)
 
@@ -3787,7 +3814,7 @@ var HTMLBrowserPrototype = {
 						reverse: pos == 'bottom' ? 
 							'flat' 
 							: false,
-						skipDisabled: !(this.options || {}).focusDisabled, 
+						skipDisabled: !(this.options || {}).focusDisabledItems, 
 					})
 				.run(function(){
 					return this instanceof Array ?
@@ -4109,7 +4136,7 @@ var HTMLBrowserPrototype = {
 	// 		...can a disabled item be focused?
 	// 		...how do we collapse/expand a disabled root?
 	// 		...what do we focus when toggleing disabled?
-	// XXX handle .options.focusDisabled correctly...
+	// XXX handle .options.focusDisabledItems correctly...
 	// 		- tabindex -- DONE
 	// 		- ???
 	renderItem: function(item, i, context){
@@ -4178,7 +4205,7 @@ var HTMLBrowserPrototype = {
 				return !!item[cls] })))
 
 		// attrs...
-		;(item.disabled && !options.focusDisabled)
+		;(item.disabled && !options.focusDisabledItems)
 			|| elem.setAttribute('tabindex', '0')
 		Object.entries(item.attrs || {})
 			// shorthand attrs...
@@ -4239,6 +4266,9 @@ var HTMLBrowserPrototype = {
 				// NOTE: we do not retrigger focus on an item if it's 
 				// 		already focused...
 				that.focused !== item
+					// only trigger focus on gettable items...
+					// ...i.e. items in the main section excluding headers 
+					// and footers...
 					&& that.focus(item) })
 		elem.addEventListener('contextmenu', 
 			function(evt){ 
@@ -4323,6 +4353,8 @@ var HTMLBrowserPrototype = {
 					// we tab out of the item focus the item we get to...
 					button.addEventListener('focus', function(){
 						item.focused 
+							// only focus items in the main section, 
+							// outside of headers and footers...
 							|| that.focus(item) 
 								&& button.focus() })
 					// main button action (click/enter)...
@@ -4376,19 +4408,6 @@ var HTMLBrowserPrototype = {
 
 		return elem 
 	},
-
-
-	/* XXX sort out .dom updates...
-	render: function(...args){
-		var res = object.parent(HTMLBrowserPrototype.render, this).call(this, ...args)
-
-		// XXX set .dom...
-		// 		...need support for item lists...
-		//this.dom = res
-
-		return res
-	},
-	//*/
 
 
 	// Events extensions...
