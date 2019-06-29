@@ -1589,158 +1589,163 @@ var BaseBrowserPrototype = {
 						|| node.walk ) }
 
 		return walk(
-			function(state, node, next, stop){
-				// keep only the root stop(..) -> stop the entire call tree...
-				stop = context.stop = context.stop || stop
+				function(state, node, next, stop){
+					// keep only the root stop(..) -> stop the entire call tree...
+					stop = context.stop = context.stop || stop
 
-				// skip non-iterable items...
-				if(!iterateNonIterable && node.noniterable){
-					return state }
-				// skip disabled branch...
-				if(skipDisabled == 'branch' && node.disabled){
-					return state }
+					// skip non-iterable items...
+					if(!iterateNonIterable && node.noniterable){
+						return state }
+					// skip disabled branch...
+					if(skipDisabled == 'branch' && node.disabled){
+						return state }
 
-				// XXX BUG?: doNested(false) will not count any of the 
-				// 		skipped elements thus messing up i...
-				// 		...we can't just use .length as this would 1)
-				// 		introduce a branch in the protocol + would not
-				// 		comply with the passed options in all cases but 
-				// 		the default...
-				// 		...one way to do this is to set func to a dud
-				// 		the only problem we have is the next(..) call
-				// 		below that will call the parent function and
-				// 		mess things up... we can go around this via 
-				// 		the context (context.skipping) but this feels 
-				// 		hack-ish...
-				var nested = false
-				var doNested = function(list){
-					// this can be called only once -> return cached results...
-					if(nested !== false){
-						return nested }
-					// calling this on a node without .children is a no-op...
-					if(children == null){
-						return [] }
+					// XXX BUG?: doNested(false) will not count any of the 
+					// 		skipped elements thus messing up i...
+					// 		...we can't just use .length as this would 1)
+					// 		introduce a branch in the protocol + would not
+					// 		comply with the passed options in all cases but 
+					// 		the default...
+					// 		...one way to do this is to set func to a dud
+					// 		the only problem we have is the next(..) call
+					// 		below that will call the parent function and
+					// 		mess things up... we can go around this via 
+					// 		the context (context.skipping) but this feels 
+					// 		hack-ish...
+					var nested = false
+					var doNested = function(list){
+						// this can be called only once -> return cached results...
+						if(nested !== false){
+							return nested }
+						// calling this on a node without .children is a no-op...
+						if(children == null){
+							return [] }
 
-					// normalize...
-					list = list === true ?
-							children	
-						: (!iterateCollapsed && node.collapsed) ?
-							[]
-						: list == null ?
-							children
-						: list
-
-					// call .walk(..) recursively...
-					var useWalk = function(){
-						return list.walk(
-							func, 
-							recursion, 
-							...(formArgs instanceof Function ? 
-								[formArgs] 
-								: [walkable]), 
-							options, context) }
-
-					return (
-							// XXX BUG?: in this case we lose item indexing...
-							list === false || list == 'skip' ?
+						// normalize...
+						list = list === true ?
+								children	
+							: (!iterateCollapsed && node.collapsed) ?
 								[]
-							// handle arrays internally...
-							: list instanceof Array ?
-								// NOTE: this gets the path and i from context...
-								next('do', [], 
-									...(reverse ? 
-										list.slice().reverse() 
-										: list))
-							// user-defined recursion...
-							: recursion instanceof Function ?
-								recursion.call(that, 
-									list, context.index, p, 
-									options, context, 
-									func, useWalk)
-							// method with arg forming...
-							: formArgs instanceof Function 
-									&& list[recursion] ?
-								list[recursion](
-									...(formArgs(
+							: list == null ?
+								children
+							: list
+
+						// call .walk(..) recursively...
+						var useWalk = function(){
+							return list.walk(
+								func, 
+								recursion, 
+								...(formArgs instanceof Function ? 
+									[formArgs] 
+									: [walkable]), 
+								options, context) }
+
+						return (
+								// XXX BUG?: in this case we lose item indexing...
+								list === false || list == 'skip' ?
+									[]
+								// handle arrays internally...
+								: list instanceof Array ?
+									// NOTE: this gets the path and i from context...
+									next('do', [], 
+										...(reverse ? 
+											list.slice().reverse() 
+											: list))
+								// user-defined recursion...
+								: recursion instanceof Function ?
+									recursion.call(that, 
 										list, context.index, p, 
 										options, context, 
-										func, useWalk) || []))
-							// .walk(..)
-							: useWalk())
-						// normalize and merge to state...
-						.run(function(){
-							return (nested = this instanceof Array ?
-								this
-								: [this]) }) }
+										func, useWalk)
+								// method with arg forming...
+								: formArgs instanceof Function 
+										&& list[recursion] ?
+									list[recursion](
+										...(formArgs(
+											list, context.index, p, 
+											options, context, 
+											func, useWalk) || []))
+								// .walk(..)
+								: useWalk())
+							// normalize and merge to state...
+							.run(function(){
+								return (nested = this instanceof Array ?
+									this
+									: [this]) }) }
 
-				// prepare context...
-				var id = node.id
-				var path = context.path = context.path || []
-				var [inline, p, children] = 
-					// inline...
-					isWalkable(node) ?
-						[true, path.slice(), node]
-					// nested...
-					: (!skipNested && isWalkable(node.children)) ?
-						[false, 
-							// update context for nested items...
-							path.push(id) 
-								&& path.slice(), 
-							node.children]
-					// leaf...
-					: [false, path.concat([id]), undefined]
+					// prepare context...
+					var id = node.id
+					var path = context.path = context.path || []
+					var [inline, p, children] = 
+						// inline...
+						isWalkable(node) ?
+							[true, path.slice(), node]
+						// nested...
+						: (!skipNested && isWalkable(node.children)) ?
+							[false, 
+								// update context for nested items...
+								path.push(id) 
+									&& path.slice(), 
+								node.children]
+						// leaf...
+						: [false, path.concat([id]), undefined]
 
-				if(inline && skipInlined){
-					return state }
+					if(inline && skipInlined){
+						return state }
 
-				// go through the elements...
-				state.splice(state.length, 0,
-					...[
-						// reverse -> do children...
-						reverse == 'flat' 
-							&& children
-							&& doNested() 
-							|| [],
-						// do element...
-						!(skipDisabled && node.disabled) ?
-							(func ? 
-								(func.call(that, 
-									...(inline ? 
-										[null, context.index] 
-										: [node, context.index++]),
-									p, 
-									// NOTE: when calling this it is the 
-									// 		responsibility of the caller to return
-									// 		the result to be added to state...
-									doNested, 
-									stop,
-									children) || []) 
-								: [node])
-							// element is disabled -> handle children...
-							: [],
-						// normal order -> do children...
-						children
-							&& nested === false
-							&& doNested() 
-							|| [],
-				   	].flat())
+					// go through the elements...
+					state.splice(state.length, 0,
+						...[
+							// reverse -> do children...
+							reverse == 'flat' 
+								&& children
+								&& doNested() 
+								|| [],
+							// do element...
+							!(skipDisabled && node.disabled) ?
+								(func ? 
+									(func.call(that, 
+										...(inline ? 
+											[null, context.index] 
+											: [node, context.index++]),
+										p, 
+										// NOTE: when calling this it is the 
+										// 		responsibility of the caller to return
+										// 		the result to be added to state...
+										doNested, 
+										stop,
+										children) || []) 
+									: [node])
+								// element is disabled -> handle children...
+								: [],
+							// normal order -> do children...
+							children
+								&& nested === false
+								&& doNested() 
+								|| [],
+						].flat())
 
-				// restore path context...
-				children
-					&& context.path.pop()
+					// restore path context...
+					children
+						&& context.path.pop()
 
-				return state
-			}, 
-			[], 
-			// input items...
-			...(sections
-				.map(function(name){
-					return that[name] || [] })
-				.flat()
-				.run(function(){
-					return reverse ?
-						this.reverse()
-						: this }))) },
+					return state
+				}, 
+				[], 
+				// input items...
+				...(sections
+					.map(function(name){
+						return that[name] || [] })
+					.flat()
+					.run(function(){
+						return reverse ?
+							this.reverse()
+							: this })))
+			// NOTE: walk(..) if passed to items will return a function...
+   			.run(function(){
+				return this instanceof Function ? 
+					[] 
+					: this})},
 
 
 	// Test/Example Text renders...
