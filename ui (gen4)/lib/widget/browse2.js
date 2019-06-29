@@ -3104,14 +3104,12 @@ var BaseBrowserPrototype = {
 		options = Object.assign(
 			{ skipDisabled: !(this.options || {}).focusDisabledItems },
 			options || {})
-		this.focus(this.get('next', options) || this.get('first', options))
-		return this },
+		return this.focus(this.get('next', options) || this.get('first', options)) },
 	prev: function(options){ 
 		options = Object.assign(
 			{ skipDisabled: !(this.options || {}).focusDisabledItems },
 			options || {})
-		this.focus(this.get('prev', options) || this.get('last', options))
-		return this },
+		return this.focus(this.get('prev', options) || this.get('last', options)) },
 	// selection...
 	select: makeItemOptionOnEventMethod('select', 'selected', {
 		options: function(){
@@ -3512,7 +3510,9 @@ var focusItem = function(direction){
 		// hold repeat at last element...
 		focused === (direction == 'up' ? first : last)
 			&& this.keyboard.pauseRepeat
-			&& this.keyboard.pauseRepeat() } }
+			&& this.keyboard.pauseRepeat() 
+
+		return this } }
 // XXX this behaves in an odd way with .options.scrollBehavior = 'smooth'
 var focusPage = function(direction){
 	var d = direction == 'up' ?
