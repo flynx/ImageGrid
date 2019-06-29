@@ -172,7 +172,7 @@ requirejs([
 
 	// XXX split this into several dialogues, show each and then combine...
 	dialog = browser.Browser(
-		browser.Browser.PATH_HEADER,
+		browser.Browser.PATH_DISPLAY,
 		function(make){
 			make(['list', 'of', 'text'])
 			make.group(
@@ -242,7 +242,7 @@ requirejs([
 						return make(i) }))
 
 		}, 
-		browser.Browser.INFO_FOOTER,
+		browser.Browser.INFO_DISPLAY,
 		{
 			itemButtons: [
 				['&ndash;', 

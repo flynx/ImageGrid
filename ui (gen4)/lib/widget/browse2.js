@@ -3423,39 +3423,54 @@ var updateElemClass = function(action, cls, handler){
 var HTMLBrowserClassPrototype = {
 	__proto__: BaseBrowser,
 
-		// XXX move this into the browser2.js
-		//		-> .options.defaultHeader
-		//		-> Browser.PATH_HEADER
-		// XXX add search/filter field...
-		// XXX add
-	PATH_HEADER: function(make, options){
-		make('CURRENT_PATH', {
-			id: 'header_current_path',
-			cls: 'path',
-			buttons: (options || {}).headerButtons 
-				|| (this.options || {}).headerButtons 
-				|| [], }) 
-		this.focus(function(){
-			var e = this.get({id: 'header_current_path'}, {section: 'header'})
-			e.value = this.pathArray
-			this.renderItem(e) }) },
+	// Headers...
+	//
+	// Item path...
+	// XXX add search/filter field...
+	// XXX add path navigation...
+	PATH_DISPLAY: function(make, options){
+		// indicator...
+		var e = make('CURRENT_PATH', {
+				id: 'item_path_display',
+				cls: 'path',
+				buttons: (options || {}).headerButtons 
+					|| (this.options || {}).headerButtons 
+					|| [], }) 
+			.last()
+		// event handlers...
+		this
+			.off('*', 'item_path_display')
+			.on('focus', 
+				function(){
+					e.value = this.pathArray
+					this.renderItem(e) },
+				'item_path_display') },
+
+	// Footers...
+	//
+	// Item info...
 	// XXX use focused element...
 	// XXX add on mouse over...
-	INFO_FOOTER: function(make, options){
-		make('INFO', {
-			id: 'footer_info',
-			cls: 'info',
-			buttons: (options || {}).footerButtons 
-				|| (this.options || {}).footerButtons 
-				|| [], })
-		this.focus(function(){
-			var focused = this.focused
-			var e = this.get({id: 'footer_info'}, {section: 'footer'})
-			e.value = focused.info 
-				|| focused.alt
-				|| '&nbsp;'
-			this.renderItem(e) })
-	},
+	INFO_DISPLAY: function(make, options){
+		// indicator...
+		var e = make('INFO', {
+				id: 'item_info_display',
+				cls: 'info',
+				buttons: (options || {}).footerButtons 
+					|| (this.options || {}).footerButtons 
+					|| [], })
+			.last()
+		// event handlers...
+		this
+			.off('*', 'item_info_display')
+			.on('focus',
+				function(){
+					var focused = this.focused
+					e.value = focused.info 
+						|| focused.alt
+						|| '&nbsp;'
+					this.renderItem(e) },
+			'item_info_display') },
 }
 
 // XXX render of nested lists does not affect the parent list(s)...
@@ -3470,8 +3485,9 @@ var HTMLBrowserPrototype = {
 	options: {
 		__proto__: BaseBrowser.prototype.options,
 
-		// XXX not used...
-		defaultHeader: 'PATH_HEADER',
+		// XXX not used yet...
+		//defaultHeader: 'PATH_DISPLAY',
+		//defaultFooter: 'INFO_DISPLAY',
 
 		// for more docs see:
 		//	https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView
