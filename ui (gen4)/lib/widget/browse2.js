@@ -3316,7 +3316,7 @@ object.makeConstructor('HTMLItem',
 //
 var scrollOffset = function(browser, direction, elem){
 	var elem = (elem || browser.focused).elem
-	var lst = browser.dom.querySelector('.list')
+	var lst = browser.dom.querySelector('.list.items')
 	return direction == 'top' ?
 		elem.offsetTop - lst.scrollTop
 		: lst.offsetHeight 
@@ -3331,7 +3331,7 @@ var nudgeElement = function(browser, direction, elem){
 			'top' 
 			: 'bottom', 
 		elem)
-	var lst = browser.dom.querySelector('.list')
+	var lst = browser.dom.querySelector('.list.items')
 
 	offset < threashold
 		&& lst.scrollBy(0, 
@@ -3651,6 +3651,7 @@ var HTMLBrowserPrototype = {
 	//	.search('pagebottom'[, offset] ..)
 	//
 	// XXX add support for pixel offset???
+	// XXX BROKEN -- 'pagetop' / 'pagebottom'
 	search: function(pattern){
 		var args = [...arguments].slice(1)
 		var p = pattern
@@ -3658,7 +3659,7 @@ var HTMLBrowserPrototype = {
 		// XXX skip detached elements...
 		var getAtPagePosition = function(pos, offset){
 			pos = pos || 'top'
-			var lst = this.dom.querySelector('.list')
+			var lst = this.dom.querySelector('.list.items')
 			offset = lst.offsetHeight * (offset || 0)
 			var st = lst.scrollTop
 			var H = pos == 'bottom' ? 
@@ -3874,7 +3875,7 @@ var HTMLBrowserPrototype = {
 
 		// list...
 		var list = document.createElement('div')
-		list.classList.add('list', 'v-block')
+		list.classList.add('list', 'v-block', 'items')
 		// prevent scrollbar from grabbing focus...
 		list.addEventListener('mousedown', 
 			function(evt){ evt.stopPropagation() })
@@ -3907,12 +3908,12 @@ var HTMLBrowserPrototype = {
 	renderListHeader: function(items, context){
 		var elem = this.renderList(null, items, null, context).firstChild 
 		// XXX should we replace 'list' or add 'header'
-		elem.classList.add('header')
+		elem.classList.replace('items', 'header')
 		return elem },
 	renderListFooter: function(items, context){
 		var elem = this.renderList(null, items, null, context).firstChild 
 		// XXX should we replace 'list' or add 'footer'
-		elem.classList.add('footer')
+		elem.classList.replace('items', 'footer')
 		return elem },
 	//
 	// Format:
