@@ -3100,11 +3100,17 @@ var BaseBrowserPrototype = {
 	// 		this is different from .focus('next') / .focus('prev')...
 	// NOTE: these also differ from focus in that they will only go 
 	// 		through the main section...
-	next: function(){ 
-		this.focus(this.get('next') || this.get('first'))
+	next: function(options){ 
+		options = Object.assign(
+			{ skipDisabled: !(this.options || {}).focusDisabledItems },
+			options || {})
+		this.focus(this.get('next', options) || this.get('first', options))
 		return this },
-	prev: function(){ 
-		this.focus(this.get('prev') || this.get('last'))
+	prev: function(options){ 
+		options = Object.assign(
+			{ skipDisabled: !(this.options || {}).focusDisabledItems },
+			options || {})
+		this.focus(this.get('prev', options) || this.get('last', options))
 		return this },
 	// selection...
 	select: makeItemOptionOnEventMethod('select', 'selected', {
