@@ -3580,14 +3580,34 @@ var HTMLBrowserPrototype = {
 	options: {
 		__proto__: BaseBrowser.prototype.options,
 
+		// Default header/footer generators...
+		//
+		// These are the Item.<generator> to use when the user does not
+		// manually set a header/footer.
+		//
+		// If set to null, no corresponding header/footer will be created 
+		// automatically.
+		//
+		// NOTE: changing these on the fly would require both clearing 
+		// 		the cache and an update, i.e.:
+		// 			dialog.options.defaultFooter = 'DisplayItemInfo'
+		// 			dialog
+		// 				.clearCache()
+		// 				.update(true)
 		defaultHeader: 'DisplayFocusedPath',
 		//defaultFooter: 'DisplayItemInfo',
-
-		// for more docs see:
-		//	https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView
+	
+		// If true hide header/footer...
 		//
-		// XXX 'smooth' value yields odd results...
-		//scrollBehavior: 'auto',
+		// NOTE: these will prevent rendering of the corresponding 
+		// 		header/footer but their data will still be made and 
+		// 		potentially updated...
+		hideListHeader: false,
+		hideListFooter: false,
+
+		// If true render hidden elements...
+		//
+		renderHidden: false,
 
 		// Sets the distance between the focused element and top/bottom
 		// border while moving through elements...
@@ -3596,10 +3616,36 @@ var HTMLBrowserPrototype = {
 		// 		...i.e. about half of the average element height...
 		focusOffsetWhileScrolling: 18,
 
-		hideListHeader: false,
+		// for more docs see:
+		//	https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView
+		//
+		// XXX 'smooth' value yields odd results...
+		//scrollBehavior: 'auto',
 
-		renderHidden: false,
 
+		itemTemplate: {
+			__proto__: (BaseBrowser.prototype.options || {}).itemTemplate || {},
+
+			'   ': {
+				'class': 'separator',
+				'html': '<div/>',
+				noniterable: true,
+			},
+			'---': {
+				'class': 'separator',
+				'html': '<hr>',
+				noniterable: true,
+			},
+			'...': {
+				'class': 'separator',
+				'html': '<center><div class="loader"/></center>',
+				noniterable: true,
+			},
+		},
+
+
+		// events not to bubble up the tree...
+		//
 		localEvents: [
 			// XXX STUB???
 			'click',
@@ -3613,6 +3659,8 @@ var HTMLBrowserPrototype = {
 		//buttonLocalEvents: [
 		//],
 
+		// Default buttons for header/items/footer sections...
+		//
 		// Format:
 		// 	[
 		// 		// basic button handler...
@@ -3647,45 +3695,31 @@ var HTMLBrowserPrototype = {
 		// 			'<action>: <arg> .. -- comment' 
 		// 				| <function>,
 		//
-		// 			// force active (optional)...
+		// 			// force active on disabled items (optional)...
 		// 			bool 
 		// 				| <function>,
 		//
 		// 			// button metadata (optional)...
-		// 			<metadata>,
+		// 			{
+		// 				cls: <css-class>,
+		// 				alt: <string>,
+		// 				keys: <key> | [ <key>, ... ],
+		// 				...
+		// 			},
 		// 		],
 		//
 		// 		...
 		// 	]
-		itemButtons: [
-		],
-		// XXX TEST...
+		//
 		headerButtons: [
+			// XXX TEST...
 			['c', 'collapse: "*"'],
 			['e', 'expand: "*"'],
 		],
+		itemButtons: [
+		],
 		footerButtons: [
 		],
-
-		itemTemplate: {
-			__proto__: (BaseBrowser.prototype.options || {}).itemTemplate || {},
-
-			'   ': {
-				'class': 'separator',
-				'html': '<div/>',
-				noniterable: true,
-			},
-			'---': {
-				'class': 'separator',
-				'html': '<hr>',
-				noniterable: true,
-			},
-			'...': {
-				'class': 'separator',
-				'html': '<center><div class="loader"/></center>',
-				noniterable: true,
-			},
-		},
 
 		// If true will disable button shortcut key handling...
 		//disableButtonSortcuts: false,
