@@ -114,7 +114,7 @@ Items.last = function(){
 
 // Focus last created item...
 Items.focus = function(){
-	this.last().current = true }
+	this.last().focused = true }
 
 
 
