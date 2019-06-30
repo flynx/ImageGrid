@@ -871,22 +871,65 @@ var BaseBrowserClassPrototype = {
 // 		carefully + strictly document the result...
 var BaseBrowserPrototype = {
 	options: {
+		// List of sections to make...
+		//
+		// default: ['header', 'items', 'footer']
 		sections: [
 			'header',
 			'items',
 			'footer',
 		],
 
+		// If true allows disabled items to be focused...
 		focusDisabledItems: false,
 
+		// If true allows focus to shift into header/footer...
+		//
+		// XXX needs more work and testing....
 		allowSecondaySectionFocus: false,
 
 		// If true item keys must be unique...
 		uniqueKeys: false,
 
+		// Controls how the disabled sub-tree root elements are skipped...
+		//
+		// Can be:
+		// 	'node'		- skip only the disabled node (default)
+		// 	'branch'	- skip whole branch, i.e. all nested elements.
+		//
+		// XXX if this is 'branch' we should also either show all the 
+		// 		nested elements as disabled or outright disable them,
+		// 		otherwise they can still be focused via clicking and other
+		// 		means...
 		//skipDisabledMode: 'node',
 
+		// Minimum number of milliseconds between updates...
+		//
+		// This works in the following manner:
+		// 	- for 10 consecutive calls:
+		// 		- call (first) 
+		// 			-> triggered right away
+		// 		- call (within timeout)
+		// 			-> schedule after timeout
+		// 		- call (within timeout)
+		// 			-> drop previous scheduled call
+		// 			-> schedule after timeout
+		// 		- ...
+		//
+		// Essentially this prevents more than one call to .update(..) 
+		// within the timeout and more than two calls within a fast call
+		// sequence...
+		//
+		// NOTE: this does not care about the semantics of the .update(..)
+		// 		calls it drops (i.e. the arguments passed), only the first 
+		// 		and last call in sequence get actually called.
+		// 		XXX is this correct???
+		//
+		// XXX should update handlers of canceled calls also be canceled???
 		updateTimeout: 30,
+		// Sets the maximum time between .update(..) when calling updates 
+		// in sequence...
+		updateMaxDelay: 200,
 
 		// Item templates...
 		//
@@ -895,7 +938,7 @@ var BaseBrowserPrototype = {
 		// 		// Default item template...
 		// 		//
 		// 		// This will be added to all items, including ones that
-		// 		// directly match a template...
+		// 		// directly match another template template...
 		// 		'*': <item>,
 		//
 		// 		// Normal item template...
@@ -3176,7 +3219,12 @@ var BaseBrowserPrototype = {
 	//
 	// XXX calling this on a nested browser should update the whole thing...
 	// 		...can we restore the context via .parent???
+	// XXX should we force calling update if options are given???
+	// 		...and should full get passed if at least one call in sequence
+	// 		got a full=true???
+	// XXX should we cancel update handlers of delayed calls???
 	__update_timeout: null,
+	__update_max_timeout: null,
 	update: makeEventMethod('update', 
 		function(evt, full, options){
 			options = (full && full !== true && full !== false) ? 
@@ -3187,8 +3235,12 @@ var BaseBrowserPrototype = {
 				: full
 			var timeout = (options || {}).updateTimeout
 				|| this.options.updateTimeout
+			var max_timeout = (options || {}).updateMaxTimeout
+				|| this.options.updateMaxTimeout
 
 			var _update = function(){
+				clearTimeout(this.__update_max_timeout)
+				delete this.__update_max_timeout
 				delete this.__update_timeout
 				this
 					.run(function(){
@@ -3204,8 +3256,11 @@ var BaseBrowserPrototype = {
 
 			// first call -> call sync then delay...
 			} else if(this.__update_timeout == null){
+				// call...
 				_update()
+				// schedule clear...
 				this.__update_timeout = setTimeout(function(){
+					delete this.__update_max_timeout
 					delete this.__update_timeout
 				}.bind(this), timeout) 
 
@@ -3213,6 +3268,10 @@ var BaseBrowserPrototype = {
 			} else {
 				clearTimeout(this.__update_timeout)
 				this.__update_timeout = setTimeout(_update, timeout) 
+				// force run at max_timeout...
+				max_timeout 
+					&& this.__update_max_timeout == null
+					&& (this.__update_max_timeout = setTimeout(_update, max_timeout))
 			}
 		}, 
 		// we'll retrigger manually...
