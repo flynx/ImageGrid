@@ -288,18 +288,29 @@ Items.EditablePinnedList = function(values){}
 
 
 // XXX EXPERIMENTAL...
-// XXX get keys from options...
+//
+// options:
+// 	{
+// 		showOKButton: <bool>,
+//
+// 	}
+//
 Items.Confirm = function(message, accept, reject, options){
 	return this(message, 
 		Object.assign({
 			// XXX should the user be able to merge buttons from options???
 			buttons: [
-				...[reject instanceof Function ?
-					['$Cancel', reject]
-					: []],
-				...[accept instanceof Function ?
-					['$OK', accept]
-					: []], ], },
+				...(reject instanceof Function ?
+					[['$Cancel', reject]]
+					: []),
+				...(accept instanceof Function 
+						&& (options || {}).showOKButton ?
+					[['$OK', accept]]
+					: []), ], 
+			},
+			accept ? 
+				{open: accept}
+				: {},
 			options || {})) }
 
 
@@ -3503,16 +3514,16 @@ module.KEYBOARD_CONFIG = {
 		Home: 'focus: "first"',
 		End: 'focus: "last"',
 
-		'#1': 'focus: 0',
-		'#2': 'focus: 1',
-		'#3': 'focus: 2',
-		'#4': 'focus: 3',
-		'#5': 'focus: 4',
-		'#6': 'focus: 5',
-		'#7': 'focus: 6',
-		'#8': 'focus: 7',
-		'#9': 'focus: 8',
-		'#0': 'focus: 9',
+		'#1': 'open: 0',
+		'#2': 'open: 1',
+		'#3': 'open: 2',
+		'#4': 'open: 3',
+		'#5': 'open: 4',
+		'#6': 'open: 5',
+		'#7': 'open: 6',
+		'#8': 'open: 7',
+		'#9': 'open: 8',
+		'#0': 'open: 9',
 
 
 		Enter: 'open',
@@ -4662,7 +4673,9 @@ var HTMLBrowserPrototype = {
 							if(!shortcuts[k]){
 								shortcuts[k] = function(){ 
 									// XXX should this focus or open???
-									that.focus(e) } 
+									that
+										.focus(e) 
+										.open(e) } 
 
 								var keys = e.keys = e.keys || []
 								keys.includes(k)
@@ -4707,6 +4720,7 @@ var HTMLBrowserPrototype = {
 					// refocus the dialog...
 					that.dom
 						&& that.dom.focus() }) },
+	__open__: function(evt, elem){ this.focus(elem) },
 	__expand__: function(){ this.update() },
 	__collapse__: function(){ this.update() },
 	__select__: updateElemClass('add', 'selected'),
