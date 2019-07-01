@@ -4095,6 +4095,9 @@ var HTMLBrowserPrototype = {
 
 	// Copy/Paste support...
 	//
+	// The paste code is essentially a hack to work around access issues 
+	// in different browser engines.
+	//
 	// NOTE: not for direct use...
 	// NOTE: both of these feel hackish...
 	__paste: function(callback){
