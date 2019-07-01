@@ -271,6 +271,8 @@ Items.Heading = function(value, options){
 		: typeof(options.cls) == typeof('str') ?
 			options.cls +' '+ cls
 		: [cls]
+	options.buttons = options.buttons 
+		|| this.dialog.options.headingButtons
 	return this(value, options) }
 Items.Selected = function(value){}
 Items.Action = function(value, options){}
@@ -363,10 +365,13 @@ Items.DisplayFocusedPath = function(make, options){
 	var dialog = this.dialog || this
 	var tag = options.id || 'item_path_display'
 	// indicator...
-	var e = make('CURRENT_PATH', {
-			id: tag,
-			cls: 'path', 
-		}) 
+	var e = make('CURRENT_PATH', 
+			Object.assign(
+				{
+					id: tag,
+					cls: 'path', 
+				},
+				options))
 		.last()
 	// event handlers...
 	dialog 
@@ -375,7 +380,8 @@ Items.DisplayFocusedPath = function(make, options){
 			function(){
 				e.value = this.pathArray
 				this.renderItem(e) },
-			tag) }
+			tag) 
+	return make}
 
 // Item info...
 //
@@ -399,10 +405,13 @@ Items.DisplayItemInfo = function(make, options){
 	var tag = options.id || 'item_info_display'
 
 	// indicator...
-	var e = make('INFO', {
-			id: tag,
-			cls: 'info',
-		})
+	var e = make('INFO', 
+			Object.assign(
+				{
+					id: tag,
+					cls: 'info',
+				},
+				options))
 		.last()
 	// event handlers...
 	dialog
@@ -410,11 +419,12 @@ Items.DisplayItemInfo = function(make, options){
 		.on('focus',
 			function(){
 				var focused = this.focused
-				e.value = focused.info 
+				e.value = focused.doc
 					|| focused.alt
 					|| '&nbsp;'
 				this.renderItem(e) },
-		tag) }
+		tag) 
+	return make }
 
 
 
@@ -3812,20 +3822,29 @@ var HTMLBrowserPrototype = {
 		},
 
 
+		// Item options/attributes that get processed directly if given
+		// at item root and not just via the respective sections...
+		//
+		shorthandItemClasses: [
+			'focused',
+			'selected',
+			'disabled',
+			'hidden',
+		],
+		shorthandItemAttrs: [
+			'doc',
+			'alt',
+		],
+		shorthandItemEvents: [],
+
+
 		// events not to bubble up the tree...
 		//
-		localEvents: [
-			// XXX STUB???
+		itemLocalEvents: [
 			'click',
-
-			// XXX keyboard stuff...
-			// XXX
-
-			// XXX custom events...
-			// XXX
 		],
-		//buttonLocalEvents: [
-		//],
+		//buttonLocalEvents: [],
+
 
 		// Default buttons for header/items/footer sections...
 		//
@@ -3879,12 +3898,18 @@ var HTMLBrowserPrototype = {
 		// 		...
 		// 	]
 		//
-		headerButtons: [
+		headerButtons: [],
+		itemButtons: [],
+		footerButtons: [],
+
+		// Default buttons for Item.Heading(..)
+		//
+		// NOTE: the use of this is implemented in Items.Heading(..) see
+		// 		it for more info...
+		headingButtons: [
+			'ToggleCollapse',
 		],
-		itemButtons: [
-		],
-		footerButtons: [
-		],
+
 
 		// If true will disable button shortcut key handling...
 		//disableButtonSortcuts: false,
@@ -4263,7 +4288,7 @@ var HTMLBrowserPrototype = {
 
 		// localize events...
 		var stopPropagation = function(evt){ evt.stopPropagation() }
-		;(options.localEvents || [])
+		;(options.itemLocalEvents || [])
 			.forEach(function(evt){
 				e.addEventListener(evt, stopPropagation) })
 
@@ -4402,22 +4427,19 @@ var HTMLBrowserPrototype = {
 						this
 						: this.split(/\s+/g) }))
 			// special classes...
-			.concat([
-				'focused',
-				'selected',
-				'disabled',
-				'hidden',
-			].filter(function(cls){ 
-				return !!item[cls] })))
+			.concat(
+				(options.shorthandItemClasses || {})
+					.filter(function(cls){ 
+						return !!item[cls] })))
 
 		// attrs...
 		;(item.disabled && !options.focusDisabledItems)
 			|| elem.setAttribute('tabindex', '0')
 		Object.entries(item.attrs || {})
 			// shorthand attrs...
-			//.concat([
-			//].map(function(key){ 
-			//	return [key, item[key]] }))
+			.concat((options.shorthandItemAttrs || [])
+				.map(function(key){ 
+					return [key, item[key]] }))
 			.forEach(function([key, value]){
 				value !== undefined
 					&& elem.setAttribute(key, value) })
@@ -4482,8 +4504,8 @@ var HTMLBrowserPrototype = {
 		// user events...
 		Object.entries(item.events || {})
 			// shorthand DOM events...
-			.concat([
-				].map(function(evt){ 
+			.concat((options.shorthandItemEvents || [])
+				.map(function(evt){ 
 					return [evt, item[evt]] }))
 			// setup the handlers...
 			.forEach(function([evt, handler]){
@@ -4547,8 +4569,10 @@ var HTMLBrowserPrototype = {
 						doTextKeys(v,
 							function(k){
 								k = that.keyboard.normalizeKey(k)
-								return !text_keys.includes(k)
-									&& text_keys.push(k) })
+								return options.disableButtonSortcuts ?
+									false
+									: !text_keys.includes(k)
+										&& text_keys.push(k) })
 						: v)
 				keys = text_keys.length > 0 ?
 					(keys || []).concat(text_keys)
@@ -4560,7 +4584,7 @@ var HTMLBrowserPrototype = {
 						: (force || !item.disabled) ){
 					button.setAttribute('tabindex', '0')
 					// events to keep in buttons...
-					;(options.buttonLocalEvents || options.localEvents || [])
+					;(options.buttonLocalEvents || options.itemLocalEvents || [])
 						.forEach(function(evt){
 							button.addEventListener(evt, stopPropagation) })
 					// button keys...

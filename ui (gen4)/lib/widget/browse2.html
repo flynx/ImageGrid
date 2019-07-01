@@ -19,27 +19,30 @@ body {
 .browse-widget {
 	user-select: none;
 }
-.browse-widget:not(.flat) .list :focus {
+.browse-widget .list :focus {
 	outline: none; 
 }
 
 
 /* XXX move these to the main CSS */
-.browse-widget:not(.flat) .list div:not(.not-traversable) .text:after {
+.browse-widget .list div:not(.not-traversable) .text:after {
     content: "";
 }
 /* XXX this needs to be the last .text item only */
-.browse-widget:not(.flat) .list .traversable .text:after {
+.browse-widget .list .traversable .text:after {
     content: "/" !important;
 }
 
 /* selection... */
-.browse-widget:not(.flat) .list .selected {
+.browse-widget .list .selected {
 	color: yellow;
 	background: none;
 }
-.browse-widget:not(.flat) .list .focused {
+.browse-widget .list .focused {
 	background: rgba(0, 0, 0, 0.08);
+}
+.browse-widget .list .item.heading.focused {
+	background: rgba(0, 0, 0, 0.7);
 }
 
 /* XXX not sure about this... */
@@ -59,6 +62,14 @@ body {
 /* show non-global key hint on buttons only when element is focused... */
 .browse-widget .list .item:not(.focused) .button .key-hint:not(.global) {
 	text-decoration: none;
+}
+
+/* flat list... */
+.browse-widget.flat .list .list {
+	padding-left: 0px;
+}
+.browse-widget.flat .list .list>.item:first-child {
+	margin-left: 0px;
 }
 
 /* XXX foe some reason the shadows here are BELLOW the content... */
@@ -92,18 +103,18 @@ body {
 
 
 /* XXX stub...
-.browse-widget:not(.flat) .list .text:first-child:before {
+.browse-widget .list .text:first-child:before {
 	display: inline-block;
 	width: 5pt;
 	padding-right: 3pt;
 	content: " ";
 }
-.browse-widget:not(.flat) .list .traversable .text:first-child:before {
+.browse-widget .list .traversable .text:first-child:before {
 }
-.browse-widget:not(.flat) .list .traversable:not(.collapsed) .text:first-child:before {
+.browse-widget .list .traversable:not(.collapsed) .text:first-child:before {
     content: "-";
 }
-.browse-widget:not(.flat) .list .traversable.collapsed .text:first-child:before {
+.browse-widget .list .traversable.collapsed .text:first-child:before {
     content: "+";
 }
 */
@@ -195,6 +206,18 @@ requirejs([
 					function(){ console.log('confirm') }, 
 					function(){ console.log('reject') })
 			])
+			make.nest(make.Heading('$Dynamic Items', {
+				doc: 'Item generator examples...',
+			}), [
+				make.DisplayFocusedPath({
+					id: 'inline_item_path_display',
+					doc: 'Shows path of focused item...'
+				}),
+				make.DisplayItemInfo({
+					id: 'inline_item_info_display',
+					doc: 'Shows the value of .doc/.alt item attr...',
+				}),
+			])
 
 			make.Separator()
 
@@ -204,8 +227,6 @@ requirejs([
 					function(){ console.log('##', ...arguments) }),
 				'group item 1 (bare)')
 			// XXX Q: should we show only one if multiple lines are in sequence???
-			make('---')
-			make.DisplayFocusedPath({id: 'inline_item_path_display'})
 			make('---')
 			// embeded browser...
 			make(browser.Browser(function(make){
