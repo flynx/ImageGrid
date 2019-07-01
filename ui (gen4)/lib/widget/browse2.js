@@ -647,6 +647,7 @@ function(item, event, evt, ...args){
 // 	{
 // 		// if true unresolved items will not trigger the event unless the
 // 		// input was null/undefined...
+// 		// default: true
 // 		skipUnresolved: <bool>,
 //
 // 		...
@@ -686,6 +687,8 @@ function(event, {handler, action, default_item, filter, options={}, getter='sear
 				// 		distinguish one from the other...
 				noQueryCheck: true, 
 				skipDisabled: true,
+				// XXX should this be the default...
+				skipUnresolved: true,
 			},
 			options instanceof Function ? 
 				options.call(this) 
@@ -3193,7 +3196,6 @@ var BaseBrowserPrototype = {
 		default_item: function(){ return this.get(0) },
 		options: function(){
 			return {
-				skipUnresolved: true,
 				skipDisabled: !(this.options || {}).focusDisabledItems,
 			} },
 		getter: 'get' }),
