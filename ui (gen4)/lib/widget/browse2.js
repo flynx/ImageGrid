@@ -643,6 +643,16 @@ function(item, event, evt, ...args){
 // 		-> bool
 //
 //
+// options format:
+// 	{
+// 		// if true unresolved items will not trigger the event unless the
+// 		// input was null/undefined...
+// 		skipUnresolved: <bool>,
+//
+// 		...
+// 	}
+//
+//
 // NOTE: item is compatible to .search(item, ..) spec, see that for more 
 // 		details...
 // NOTE: triggering an event that matches several items will handle each 
@@ -710,7 +720,8 @@ function(event, {handler, action, default_item, filter, options={}, getter='sear
 			var opts = options instanceof Function ?
 				makeOptions.call(this)
 				: options
-			return base.call(this, 
+			var skipUnresolved = opts.skipUnresolved
+			var resolved = 
 				// event handler...
 				item instanceof Function ?
 					item
@@ -728,8 +739,15 @@ function(event, {handler, action, default_item, filter, options={}, getter='sear
 				: item !== null && default_item instanceof Function ?
 					[default_item.call(that) || []].flat()
 				// item is null (explicitly) or other...
-				: [],
-				...args) },
+				: []
+			return (skipUnresolved 
+					&& resolved.length == 0 
+					&& item != null) ?
+				// skip unresolved...
+				this
+				: base.call(this, 
+					resolved,
+					...args) },
 			// get base method attributes -- keep the event method format...
    			base) }
 
@@ -3162,22 +3180,9 @@ var BaseBrowserPrototype = {
 	// 		first last elements...
 	// NOTE: if focus does not change this will trigger any handlers...
 	// NOTE: this will reveal the focused item...
-	// XXX SECTION_FOCUS
 	focus: makeItemEventMethod('focus', {
 		handler: function(evt, items){
 			var item = items.shift()
-			// do not change focus if item is not in the main section...
-			// NOTE: we will still trigger item focus handlers...
-			if(item != null 
-					&& this.get(item) == null 
-					&& !(this.options || {}).allowSecondaySectionFocus){
-				// XXX SECTION_FOCUS
-				// XXX this fixes the .__focus__(..) falling into recursion 
-				// 		problem but prevent non-main-section item handlers 
-				// 		from triggering...
-				evt.stopPropagation()
-				return 
-			}
 			// blur .focused...
 			this.focused
 				&& this.blur(this.focused)
@@ -3188,10 +3193,7 @@ var BaseBrowserPrototype = {
 		default_item: function(){ return this.get(0) },
 		options: function(){
 			return {
-				// XXX this messes up focusing by index, e.g. .focus(0) 
-				// 		if a header is available...
-				// XXX SECTION_FOCUS
-				section: '*',
+				skipUnresolved: true,
 				skipDisabled: !(this.options || {}).focusDisabledItems,
 			} },
 		getter: 'get' }),
@@ -4677,7 +4679,6 @@ var HTMLBrowserPrototype = {
 		}, {skipDisabled: false})
 	},
 	// NOTE: element alignment is done via the browser focus mechanics...
-	// XXX SECTION_FOCUS
 	__focus__: function(evt, elem){
 		var that = this
 		elem
@@ -4694,7 +4695,6 @@ var HTMLBrowserPrototype = {
 					})
 				})
 				// set focus...
-				// XXX SECTION_FOCUS breaks int recursion on non main section items...
 				.focus() },
 	__blur__: function(evt, elem){
 		var that = this
