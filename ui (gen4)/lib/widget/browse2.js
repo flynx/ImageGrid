@@ -928,11 +928,9 @@ var BaseBrowserPrototype = {
 		// NOTE: this does not care about other semantics of the .update(..)
 		// 		calls it drops (i.e. the options passed), only the first 
 		// 		and last call in sequence get actually called.
-		// 		XXX is this correct???
-		//
-		// XXX should update handlers of canceled calls also be canceled???
 		updateTimeout: 30,
-		// Sets the maximum time between .update(..) when calling updates 
+
+		// Maximum time between .update(..) calls when calling updates 
 		// in sequence...
 		updateMaxDelay: 200,
 
@@ -3227,7 +3225,6 @@ var BaseBrowserPrototype = {
 	// XXX should we force calling update if options are given???
 	// 		...and should full get passed if at least one call in sequence
 	// 		got a full=true???
-	// XXX should we cancel update handlers of delayed calls???
 	__update_full: undefined,
 	__update_args: undefined,
 	__update_timeout: undefined,
@@ -3241,6 +3238,15 @@ var BaseBrowserPrototype = {
 			full = full === options ? 
 				false 
 				: full
+			// NOTE: we can't simply use _update(..) closure for this as
+			// 		it can be called out of two contexts (timeout and 
+			// 		max_timeout), one (timeout) is renewed on each call 
+			// 		thus storing the latest args, while the other (i.e.
+			// 		max_timeout) is not renewed until it is actually 
+			// 		called and thus would store the args at the time of 
+			// 		its setTimeout(..)...
+			// 		storing the arguments in .__update_args would remove
+			// 		this inconsistency...
 			var args = this.__update_args = [
 				[evt, full, 
 					...(options ? 
