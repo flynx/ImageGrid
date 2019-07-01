@@ -920,8 +920,13 @@ var BaseBrowserPrototype = {
 		// within the timeout and more than two calls within a fast call
 		// sequence...
 		//
-		// NOTE: this does not care about the semantics of the .update(..)
-		// 		calls it drops (i.e. the arguments passed), only the first 
+		// NOTE: the full options to .update(..) is remembered even if the
+		// 		update was deferred the next update either after the timeout
+		// 		or max timeout will be full retaining the passed options...
+		// NOTE: the delayed update is called with the same set of arguments
+		// 		as the last update call of that type (full / non-full).
+		// NOTE: this does not care about other semantics of the .update(..)
+		// 		calls it drops (i.e. the options passed), only the first 
 		// 		and last call in sequence get actually called.
 		// 		XXX is this correct???
 		//
@@ -3223,32 +3228,58 @@ var BaseBrowserPrototype = {
 	// 		...and should full get passed if at least one call in sequence
 	// 		got a full=true???
 	// XXX should we cancel update handlers of delayed calls???
-	__update_timeout: null,
-	__update_max_timeout: null,
+	__update_full: undefined,
+	__update_args: undefined,
+	__update_timeout: undefined,
+	__update_max_timeout: undefined,
 	update: makeEventMethod('update', 
 		function(evt, full, options){
-			options = (full && full !== true && full !== false) ? 
-				full 
-				: options
+			options = 
+				(full && full !== true && full !== false) ? 
+					full 
+					: options
 			full = full === options ? 
 				false 
 				: full
+			var args = this.__update_args = [
+				[evt, full, 
+					...(options ? 
+						[options] 
+						: [])], 
+				options]
+			this.__update_full = (full && args) 
+				|| this.__update_full
 			var timeout = (options || {}).updateTimeout
 				|| this.options.updateTimeout
-			var max_timeout = (options || {}).updateMaxTimeout
-				|| this.options.updateMaxTimeout
+			var max_timeout = (options || {}).updateMaxDelay
+				|| this.options.updateMaxDelay
 
-			var _update = function(){
+			var _clear_timers = function(){
+				// house keeping...
 				clearTimeout(this.__update_max_timeout)
 				delete this.__update_max_timeout
-				delete this.__update_timeout
+				clearTimeout(this.__update_timeout)
+				delete this.__update_timeout }.bind(this)
+			var _update = function(){
+				_clear_timers()
+				var full = !!this.__update_full
+				var [args, opts] = this.__update_full 
+					|| this.__update_args 
+
+				delete this.__update_full
+				delete this.__update_args
+
+				full 
+					&& this.make(opts) 
 				this
-					.run(function(){
-						full 
-							&& this.make(options) 
-						this.preRender() })
-					.render(options) 
-				this.trigger(evt, full, options) }.bind(this)
+					.preRender()
+					.render(opts) 
+				this.trigger(...args) }.bind(this)
+			var _update_n_delay = function(){
+				// call...
+				_update()
+				// schedule clear...
+				this.__update_timeout = setTimeout(_clear_timers, timeout) }.bind(this)
 
 			// no timeout...
 			if(!timeout){
@@ -3256,13 +3287,7 @@ var BaseBrowserPrototype = {
 
 			// first call -> call sync then delay...
 			} else if(this.__update_timeout == null){
-				// call...
-				_update()
-				// schedule clear...
-				this.__update_timeout = setTimeout(function(){
-					delete this.__update_max_timeout
-					delete this.__update_timeout
-				}.bind(this), timeout) 
+				_update_n_delay()
 
 			// fast subsequent calls -> delay... 
 			} else {
@@ -3271,7 +3296,8 @@ var BaseBrowserPrototype = {
 				// force run at max_timeout...
 				max_timeout 
 					&& this.__update_max_timeout == null
-					&& (this.__update_max_timeout = setTimeout(_update, max_timeout))
+					&& (this.__update_max_timeout = 
+						setTimeout(_update_n_delay, max_timeout))
 			}
 		}, 
 		// we'll retrigger manually...
