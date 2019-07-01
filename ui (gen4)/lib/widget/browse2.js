@@ -277,6 +277,26 @@ Items.EditablePinnedList = function(values){}
 // NOTE: when re-using these options.id needs to be set so as not to 
 // 		overwrite existing instances data and handlers...
 
+// Make item generator...
+//
+Items.makeDisplayItem = function(text, options){
+	var args = [...arguments]
+	return function(make, options){
+		make(...args) } }
+
+// Make confirm item generator...
+//
+// XXX see how this relates to Item.Confirm(..)
+Items.makeDisplayConfirm = function(message, accept, reject){
+	return this.makeDisplayItem(message, {
+		buttons: [
+			...[reject instanceof Function ?
+				['Cancel', reject]
+				: []],
+			...[accept instanceof Function ?
+				['OK', accept]
+				: []], ], }) }
+
 // Focused item path...
 //
 // XXX add search/filter field...
@@ -294,10 +314,8 @@ Items.DisplayFocusedPath = function(make, options){
 	// indicator...
 	var e = make('CURRENT_PATH', {
 			id: tag,
-			cls: 'path',
-			buttons: options.headerButtons 
-				|| (dialog.options || {}).headerButtons 
-				|| [], }) 
+			cls: 'path', 
+		}) 
 		.last()
 	// event handlers...
 	dialog 
@@ -333,9 +351,7 @@ Items.DisplayItemInfo = function(make, options){
 	var e = make('INFO', {
 			id: tag,
 			cls: 'info',
-			buttons: options.footerButtons 
-				|| (dialog.options || {}).footerButtons 
-				|| [], })
+		})
 		.last()
 	// event handlers...
 	dialog
@@ -1388,6 +1404,7 @@ var BaseBrowserPrototype = {
 			if(value instanceof BaseBrowser){
 				var item = value
 				item.parent = this
+				item.section = section
 
 			// normal item...
 			} else {
@@ -1436,7 +1453,10 @@ var BaseBrowserPrototype = {
 					// item template...
 					(options.itemTemplate || {})[opts.value] || {},
 					opts,
-					{ parent: this })
+					{ 
+						parent: this, 
+						section,
+					})
 
 				// XXX do we need both this and the above ref???
 				item.children instanceof BaseBrowser
@@ -3656,8 +3676,7 @@ var updateElemClass = function(action, cls, handler){
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
 var HTMLBrowserClassPrototype = {
-	__proto__: BaseBrowser,
-}
+	__proto__: BaseBrowser, }
 
 // XXX render of nested lists does not affect the parent list(s)...
 // 		...need to render lists and items both as a whole or independently...
@@ -3803,9 +3822,6 @@ var HTMLBrowserPrototype = {
 		// 	]
 		//
 		headerButtons: [
-			// XXX TEST...
-			['c', 'collapse: "*"'],
-			['e', 'expand: "*"'],
 		],
 		itemButtons: [
 		],
@@ -4267,6 +4283,7 @@ var HTMLBrowserPrototype = {
 		if(options.hidden && !options.renderHidden){
 			return null
 		}
+		var section = item.section || options.section
 
 		// helpers...
 		// XXX we need to more carefully test the value to avoid name clashes...
@@ -4410,7 +4427,13 @@ var HTMLBrowserPrototype = {
 		// buttons...
 		var button_keys = {}
 		// XXX migrate button inheritance...
-		var buttons = (item.buttons || options.itemButtons || [])
+		var buttons = (item.buttons 
+				|| (section == 'header' 
+					&& (options.headerButtons || []))
+				|| (section == 'footer' 
+					&& (options.footerButtons || [])) 
+				|| options.itemButtons 
+				|| [])
 			// resolve buttons from library...
 			.map(function(button){
 				return button instanceof Array ?

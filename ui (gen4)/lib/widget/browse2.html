@@ -181,6 +181,7 @@ requirejs([
 	// XXX split this into several dialogues, show each and then combine...
 	dialog = browser.Browser(
 		//browser.items.DisplayFocusedPath,
+		//null,
 		function(make){
 			make(['list', 'of', 'text'])
 			make.group(
@@ -253,7 +254,15 @@ requirejs([
 
 		}, 
 		//browser.items.DisplayItemInfo,
+		//browser.items.makeDisplayItem('Simple message...'),
+		//browser.items.makeDisplayConfirm(null, 
+		//	function(){ console.log('OK') },
+		//	function(){ console.log('Cancel') }),
 		{
+			headerButtons: [
+				['c', 'collapse: "*"'],
+				['e', 'expand: "*"'],
+			],
 			itemButtons: [
 				['&ndash;', 
 					'buttonAction: item button focused -- example button action...'],
@@ -263,6 +272,12 @@ requirejs([
 				'ToggleCollapse',
 				'ToggleDisabled',
 			],
+			/*
+			footerButtons: [
+				['save'],
+				['cancel'],
+			],
+			//*/
 		})
 
 	dialog.container = $('.container').first()[0]
