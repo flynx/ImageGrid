@@ -149,6 +149,19 @@ Items.group = function(...items){
 
 // Place list in a sub-list of item...
 //
+// Examples:
+// 	make.nest('literal header', [
+// 		'literal item',
+// 		make('item'),
+// 		...
+// 	])
+//
+// 	make.nest(make('header'), [
+// 		'literal item',
+// 		make('item'),
+// 		...
+// 	])
+// 	
 Items.nest = function(item, list, options){
 	options = options || {}
 	//options = Object.assign(Object.create(this.options || {}), options || {})
@@ -157,7 +170,9 @@ Items.nest = function(item, list, options){
 			collectItems(this, list)
 			: list },
 		options)
-	return this(item, options)
+	return item === this ?
+		((this.last().children = options.children), this)
+		: this(item, options)
 }
 
 
@@ -247,7 +262,16 @@ Items.Item = function(value, options){ return this(...arguments) }
 Items.Empty = function(value){}
 Items.Separator = function(){ return this('---') }
 Items.Spinner = function(){ return this('...') }
-Items.Heading = function(value, options){}
+
+Items.Heading = function(value, options){
+	var cls = 'heading'
+	options = options || {}
+	options.cls = options.cls instanceof Array ? 
+			options.cls.concat([cls])
+		: typeof(options.cls) == typeof('str') ?
+			options.cls +' '+ cls
+		: [cls]
+	return this(value, options) }
 Items.Selected = function(value){}
 Items.Action = function(value, options){}
 Items.ConfirmAction = function(value){}
@@ -261,6 +285,22 @@ Items.EditablePinnedList = function(values){}
 // Special list components...
 //Items.ListPath = function(){}
 //Items.ListTitle = function(){}
+
+
+// XXX EXPERIMENTAL...
+// XXX get keys from options...
+Items.Confirm = function(message, accept, reject, options){
+	return this(message, 
+		Object.assign({
+			// XXX should the user be able to merge buttons from options???
+			buttons: [
+				...[reject instanceof Function ?
+					['$Cancel', reject]
+					: []],
+				...[accept instanceof Function ?
+					['$OK', accept]
+					: []], ], },
+			options || {})) }
 
 
 
@@ -286,7 +326,7 @@ Items.makeDisplayItem = function(text, options){
 
 // Make confirm item generator...
 //
-// XXX see how this relates to Item.Confirm(..)
+// XXX move this to Item.Confirm(..) and reuse that...
 Items.makeDisplayConfirm = function(message, accept, reject){
 	return this.makeDisplayItem(message, {
 		buttons: [
@@ -3148,6 +3188,9 @@ var BaseBrowserPrototype = {
 		default_item: function(){ return this.get(0) },
 		options: function(){
 			return {
+				// XXX this messes up focusing by index, e.g. .focus(0) 
+				// 		if a header is available...
+				// XXX SECTION_FOCUS
 				section: '*',
 				skipDisabled: !(this.options || {}).focusDisabledItems,
 			} },
@@ -4277,6 +4320,7 @@ var HTMLBrowserPrototype = {
 	// XXX handle .options.focusDisabledItems correctly...
 	// 		- tabindex -- DONE
 	// 		- ???
+	// XXX show button global/local keys...
 	renderItem: function(item, i, context){
 		var that = this
 		var options = (context || {}).options || this.options || {}
@@ -4306,6 +4350,14 @@ var HTMLBrowserPrototype = {
 				value.appendTo(target)
 			: (target.innerHTML = value)
 			return target }
+		var doTextKeys = function(text, doKey){
+			return text.replace(/\$\w/g, 
+				function(k){
+					// forget the '$'...
+					k = k[1] 
+					return (doKey && doKey(k)) ?
+						`<u class="key-hint">${k}</u>`
+						: k }) }
 
 		// special-case: item.html...
 		if(item.html){
@@ -4368,16 +4420,15 @@ var HTMLBrowserPrototype = {
 					item.value 
 					: [item.value])
 				// handle $keys and other stuff...
+				// NOTE: the actual key setup is done in .__preRender__(..)
+				// 		see that for more info...
 				.map(function(v){
 					// handle key-shortcuts $K...
 					v = typeof(v) == typeof('str') ?
-							v.replace(/\$\w/g, 
-								function(k){
-									k = k[1] 
-									return (item.keys || [])
-											.includes(that.keyboard.normalizeKey(k)) ?
-										`<u class="key-hint">${k}</u>`
-										: k })
+						doTextKeys(v, 
+							function(k){
+								return (item.keys || [])
+									.includes(that.keyboard.normalizeKey(k)) })
 						: v
 
 					var value = document.createElement('span')
@@ -4474,8 +4525,19 @@ var HTMLBrowserPrototype = {
 					&& button.setAttribute('alt', alt)
 
 				// button content...
+				var text_keys = []
+				var v = resolveValue(html, Items.buttons, {item})
 				setDOMValue(button,
-					resolveValue(html, Items.buttons, {item}))
+					typeof(v) == typeof('str') ?
+						doTextKeys(v,
+							function(k){
+								k = that.keyboard.normalizeKey(k)
+								return !text_keys.includes(k)
+									&& text_keys.push(k) })
+						: v)
+				keys = text_keys.length > 0 ?
+					(keys || []).concat(text_keys)
+					: keys
 
 				// non-disabled button...
 				if(force instanceof Function ? 
@@ -4546,6 +4608,8 @@ var HTMLBrowserPrototype = {
 				if(k in button_keys){
 					evt.preventDefault()
 					evt.stopPropagation()
+					button_keys[k].focus()
+					// XXX should this be optional???
 					button_keys[k].click() } })
 		
 		item.dom = elem
@@ -4558,6 +4622,8 @@ var HTMLBrowserPrototype = {
 	// Events extensions...
 	//
 	// NOTE: this will also kill any user-set keys for disabled/hidden items...
+	//
+	// XXX also handle global button keys...
 	__preRender__: function(){
 		var that = this
 		// reset item shortcuts...
@@ -4590,7 +4656,9 @@ var HTMLBrowserPrototype = {
 							k = that.keyboard.normalizeKey(k[1])
 
 							if(!shortcuts[k]){
-								shortcuts[k] = function(){ that.focus(e) } 
+								shortcuts[k] = function(){ 
+									// XXX should this focus or open???
+									that.focus(e) } 
 
 								var keys = e.keys = e.keys || []
 								keys.includes(k)

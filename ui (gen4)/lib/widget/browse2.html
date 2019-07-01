@@ -56,6 +56,11 @@ body {
 	text-decoration-skip-ink: none;
 }
 
+/* show non-global key hint on buttons only when element is focused... */
+.browse-widget .list .item:not(.focused) .button .key-hint:not(.global) {
+	text-decoration: none;
+}
+
 /* XXX foe some reason the shadows here are BELLOW the content... */
 .browse-widget>.list {
 	box-shadow: 
@@ -183,6 +188,16 @@ requirejs([
 		//browser.items.DisplayFocusedPath,
 		//null,
 		function(make){
+			make.nest(make.Heading('$Predefined Items'), [
+				make('Normal item'),
+				make.Heading('Heading'),
+				make.Confirm('Confirm', 
+					function(){ console.log('confirm') }, 
+					function(){ console.log('reject') })
+			])
+
+			make.Separator()
+
 			make(['list', 'of', 'text'])
 			make.group(
 				make('$group item 0 (open event)', 
