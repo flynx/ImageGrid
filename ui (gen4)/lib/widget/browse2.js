@@ -2823,6 +2823,15 @@ var BaseBrowserPrototype = {
 	// 		the .options attribute...
 	//
 	// XXX use partial render for things like search....
+	// 		...current filter implementation is crude, need a way to combine/chain
+	// 		this with selectors...
+	// 		...a hacky way to do search is:
+	// 			s = dialog.search(..)
+	// 			dialog.render({
+	// 				filter: e => s.includes(e)
+	// 			})
+	// 		the downside here is this is only render, control still uses
+	// 		the full data...
 	// XXX make partial render be lazy -- i.e. add/remove elements and 
 	// 		do not reconstruct the ones already present...
 	// XXX should from/to/around/count be a feature of this or of .walk(..)???
@@ -2852,7 +2861,7 @@ var BaseBrowserPrototype = {
 			// 		.iterateNonIterable here it is not seen down the line...
 			{from: null, to: null, around: null,
 				iterateNonIterable: options.iterateNonIterable})
-			//{from: null, to: null, around: null, count: null})
+			
 		// index getter...
 		var normIndex = function(i){
 			return (i === undefined || typeof(i) == typeof(123)) ?
@@ -2907,30 +2916,34 @@ var BaseBrowserPrototype = {
 
 		// root call -> build sections (calling .render(..) per section)...
 		if(context.root == null && section instanceof Array){
-			context.root = this
+			// NOTE: we are not passing context down to make each section
+			// 		independent of the others... (XXX ???)
 			var s= {}
 			section
 				.forEach(function(name){
 					s[name] = this.render(
 						Object.assign(
-							Object.create(options),
+							{},
+							options,
 							{
 								section: name,
 								nonFinalized: true,
 							}), 
 						renderer) }.bind(this))
-
+			// setup context for final render...
+			context.root = this
 			return (!options.nonFinalized && context.root === this) ?
 				renderer.renderFinalize(s.header, s.items, s.footer, context)
 				: s
 
 		// build specific sections...
 		} else {
+			var filter = options.filter
 			// do the walk...
 			var items = this.walk(
 				function(elem, i, path, nested){
 					return (
-						// special case: nested <from> elem -> topology only...
+						// special case: nested <from> elem -> render topology only...
 						(from_path 
 								&& i < from 
 								// only for nested...
@@ -2938,6 +2951,9 @@ var BaseBrowserPrototype = {
 								// only sub-path...
 								&& path.cmp(from_path.slice(0, path.length))) ?
 							[ renderer.renderNestedBlank(nested(), i, context) ]
+						// filter -> skip unmatching...
+						: (filter && !filter.call(this, elem, i, path, section)) ?
+							[]
 						// out of range -> skip...
 						: ((from != null && i < from) 
 								|| (to != null && i >= to)) ?
