@@ -1141,6 +1141,7 @@ var BaseBrowserPrototype = {
 	//
 	// NOTE: .clearCache(true) will yield a state that would require at 
 	// 		least a .update() call to be usable...
+	// XXX should we use .hasOwnProperty(..)???
 	clearCache: function(title){
 		if(title == null || title === true){
 			Object.keys(this)
@@ -1180,6 +1181,7 @@ var BaseBrowserPrototype = {
 	// XXX for some odd reason this is sorted wrong...
 	// 		...keys that are numbers for some reason are first and sorted 
 	// 		by value and not by position...
+	// XXX should we use .hasOwnProperty(..)???
 	__item_index_cache: null,
 	get index(){
 		return (this.__item_index_cache = 
@@ -3527,28 +3529,35 @@ var BaseBrowserPrototype = {
 		var that = this
 		// XXX move this out...
 		// 		this can be merged into BaseBrowser or live in a separate mixin...
-		var getRoot = function(e){
-			var cur = e
-			while(cur.source){
+		var getRoot = function(o, attr){
+			var cur = o
+			while(cur.source 
+					&& (!attr 
+						|| !cur.hasOwnProperty(attr))){
 				cur = cur.source }
-			return e }
+			return cur }
 		return {
 			__proto__: this,
 			source: this,
 
+			// keep the DOM data in one place...
 			get dom(){
-				return getRoot(this).dom },
+				return getRoot(this, '__dom').dom },
 			set dom(value){
-				getRoot(this).dom = value },
+				getRoot(this, '__dom').dom = value },
 			get container(){
-				return getRoot(this).container },
+				return getRoot(this, '__container').container },
 			set container(value){
-				getRoot(this).container = value },
+				getRoot(this, '__container').container = value },
+
+			// XXX do we need to isolate caches???
+			// XXX
 
 			end: function(){
 				return this.source },
 
 		}.run(function(){
+			// XXX do we need to copy other sections???
 			this.items = 
 				action instanceof Array ?
 					action
