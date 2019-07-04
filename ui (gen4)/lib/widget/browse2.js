@@ -2164,6 +2164,9 @@ var BaseBrowserPrototype = {
 			function(_, i, p, options, context){
 				return [func, options, context] },
 			options, context) },
+	// XXX should this be cached???
+	toArray: function(){
+		return this.map() },
 
 
 	// Search items...
@@ -2389,7 +2392,7 @@ var BaseBrowserPrototype = {
 				|| (pattern instanceof Array
 					&& !pattern
 						.reduce(function(r, e){ 
-							return r && typeof(e) != typeof({})  }, true))){
+							return r && typeof(e) != typeof({}) }, true))){
 			// reverse index...
 			index = this
 				.reduce(function(res, e, i, p){
@@ -3492,6 +3495,68 @@ var BaseBrowserPrototype = {
 		this.options = Object.assign(
 			Object.create(this.options || {}), 
 			args[0] || {}) },
+
+
+	// XXX EXPERIMENTAL...
+	// 		- set correct isolation boundary between this and .source...
+	// 		- make this a real instance...
+	// 		- return from selectors...
+	// 		- treat .items as cache 
+	// 			-> reset on parent .make(..)
+	// 			-> re-acquire data (???)
+	// 		- take control (optionally), i.e. handle keyboard
+	// XXX make all navigation DOM-based... (???)
+	// 		...we can't do this in a trivial way because we could have a 
+	// 		partially rendered state...
+	// XXX BUG:
+	// 			// render a part of the dialog...
+	// 			d = dialog
+	// 				.clone([7,8,9])
+	// 				.update()
+	// 			// XXX this does not restore the dialog...
+	// 			//		would need to
+	// 			//			dialog.dom = d.dom
+	// 			//		...after each render...
+	// 			dialog
+	// 				.update(true)
+	// 		this is due to the fact that we overwrite the .dom in the child 
+	// 		but not in the source...
+	// 		a simple solution would be to keep all the dom props in one 
+	// 		place...
+	clone: function(action, ...args){
+		var that = this
+		// XXX move this out...
+		// 		this can be merged into BaseBrowser or live in a separate mixin...
+		var getRoot = function(e){
+			var cur = e
+			while(cur.source){
+				cur = cur.source }
+			return e }
+		return {
+			__proto__: this,
+			source: this,
+
+			get dom(){
+				return getRoot(this).dom },
+			set dom(value){
+				getRoot(this).dom = value },
+			get container(){
+				return getRoot(this).container },
+			set container(value){
+				getRoot(this).container = value },
+
+			end: function(){
+				return this.source },
+
+		}.run(function(){
+			this.items = 
+				action instanceof Array ?
+					action
+						.map(function(e){ 
+							return that.get(e) })
+				: action ?
+					that[action](...args) 
+				: that.items.slice() }) },
 }
 
 
