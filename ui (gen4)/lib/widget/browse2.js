@@ -491,6 +491,7 @@ object.makeConstructor('BaseItem',
 
 
 //---------------------------------------------------------------------
+// View/Clone Mixin...
 
 var getMixinRoot = function(o, attr){
 	var cur = o
@@ -500,15 +501,11 @@ var getMixinRoot = function(o, attr){
 		cur = cur.source }
 	return cur }
 
+
 var BrowserViewMixin = {
 	// source: <object>,
 	//
-	// query: {
-	// 		// XXX doc...
-	// 		action: <str> | <array>,
-	//
-	// 		args: <array>
-	// }
+	// query: [ .. ],
 
 	// keep the DOM data in one place (.source)...
 	//
@@ -525,6 +522,8 @@ var BrowserViewMixin = {
 	set container(value){
 		getMixinRoot(this, '__container').container = value },
 
+	isView: function(){
+		return true },
 	end: function(){
 		return this.source },
 
@@ -538,8 +537,8 @@ var BrowserViewMixin = {
 	// 		...not sure of the correct way to do this, "weak" event handler???
 	// XXX how do we handle sections???
 	__refresh: function(){
-		var action = this.query.action
-		var args = this.query.args
+		var source = this.source
+		var [action, ...args] = this.query
 
 		this.items = 
 			action instanceof Array ?
@@ -547,8 +546,8 @@ var BrowserViewMixin = {
 					.map(function(e){ 
 						return that.get(e) })
 			: action ?
-				that[action](...args) 
-			: that.items.slice() 
+				source[action](...args) 
+			: source.items.slice() 
 
 		return this
 	},
@@ -3604,17 +3603,13 @@ var BaseBrowserPrototype = {
 				{
 					__proto__: this,
 					source: this,
-
 					// XXX
-					query: {
-						action,
-						args,
-					},
+					query: [...arguments],
 				},
 				BrowserViewMixin)
 			.__refresh() },
 	isView: function(){
-		return !!this.source },
+		return false },
 }
 
 
