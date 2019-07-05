@@ -500,7 +500,16 @@ var getMixinRoot = function(o, attr){
 		cur = cur.source }
 	return cur }
 
-var BrowserCloneMixin = {
+var BrowserViewMixin = {
+	// source: <object>,
+	//
+	// query: {
+	// 		// XXX doc...
+	// 		action: <str> | <array>,
+	//
+	// 		args: <array>
+	// }
+
 	// keep the DOM data in one place (.source)...
 	//
 	// NOTE: this is in contrast to the rest of the props that 
@@ -518,6 +527,36 @@ var BrowserCloneMixin = {
 
 	end: function(){
 		return this.source },
+
+	// NOTE: we are not simply doing this in .make(..) as we need to be 
+	// 		able to refresh the data without triggering .make(..) on the 
+	// 		source object...
+	// XXX should this be .refresh()???
+	// 		...if yes what's going to be the difference between it here 
+	// 		and in the source object???
+	// XXX also need to track source objects .make(..) calls...
+	// 		...not sure of the correct way to do this, "weak" event handler???
+	// XXX how do we handle sections???
+	__refresh: function(){
+		var action = this.query.action
+		var args = this.query.args
+
+		this.items = 
+			action instanceof Array ?
+				action
+					.map(function(e){ 
+						return that.get(e) })
+			: action ?
+				that[action](...args) 
+			: that.items.slice() 
+
+		return this
+	},
+	make: function(){
+		var res = this.__proto__.make(...arguments)
+		this.__refresh()
+		return res
+	},
 }
 
 
@@ -3535,12 +3574,14 @@ var BaseBrowserPrototype = {
 
 	// XXX EXPERIMENTAL...
 	// 		- set correct isolation boundary between this and .source...
-	// 		- make this a real instance...
+	// 		- make this a real instance (???)
+	// 			...do we need this for anything other than doc???
 	// 		- return from selectors...
 	// 		- treat .items as cache 
 	// 			-> reset on parent .make(..)
 	// 			-> re-acquire data (???)
 	// 		- take control (optionally), i.e. handle keyboard
+	// XXX need to trigger an update (or invalidation) on .make(..)...
 	// XXX BUG?: .update(..) from events resolves to the .source...
 	// 		to reproduce:
 	// 			dialog
@@ -3559,21 +3600,19 @@ var BaseBrowserPrototype = {
 		// NOTE: for super calls do:
 		// 		this.__proto__.<method>.call(this, ...)
 		return object
-			.mixinFlat({
-				__proto__: this,
-				source: this,
-			},
-			BrowserCloneMixin)
-				.run(function(){
-					// XXX how do we handle sections???
-					this.items = 
-						action instanceof Array ?
-							action
-								.map(function(e){ 
-									return that.get(e) })
-						: action ?
-							that[action](...args) 
-						: that.items.slice() }) },
+			.mixinFlat(
+				{
+					__proto__: this,
+					source: this,
+
+					// XXX
+					query: {
+						action,
+						args,
+					},
+				},
+				BrowserViewMixin)
+			.__refresh() },
 	isView: function(){
 		return !!this.source },
 }
