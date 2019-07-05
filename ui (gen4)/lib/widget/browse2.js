@@ -491,6 +491,38 @@ object.makeConstructor('BaseItem',
 
 
 //---------------------------------------------------------------------
+
+var getMixinRoot = function(o, attr){
+	var cur = o
+	while(cur.source 
+			&& (!attr 
+				|| !cur.hasOwnProperty(attr))){
+		cur = cur.source }
+	return cur }
+
+var BrowserCloneMixin = {
+	// keep the DOM data in one place (.source)...
+	//
+	// NOTE: this is in contrast to the rest of the props that 
+	// 		are explicitly local...
+	// NOTE: these will affect the source only when .render(..) 
+	// 		is called...
+	get dom(){
+		return getMixinRoot(this, '__dom').dom },
+	set dom(value){
+		getMixinRoot(this, '__dom').dom = value },
+	get container(){
+		return getMixinRoot(this, '__container').container },
+	set container(value){
+		getMixinRoot(this, '__container').container = value },
+
+	end: function(){
+		return this.source },
+}
+
+
+
+//---------------------------------------------------------------------
 // Event system parts and helpers...
 //
 // XXX might be a good idea to make this a generic module...
@@ -1091,6 +1123,7 @@ var BaseBrowserPrototype = {
 	// NOTE: this can't be a map/dict as we need both order manipulation 
 	// 		and nested structures which would overcomplicate things, as 
 	// 		a compromise we use .index below for item identification.
+	// XXX should we use .hasOwnProperty(..)???
 	__header: null,
 	get header(){
 		this.__header
@@ -1141,7 +1174,6 @@ var BaseBrowserPrototype = {
 	//
 	// NOTE: .clearCache(true) will yield a state that would require at 
 	// 		least a .update() call to be usable...
-	// XXX should we use .hasOwnProperty(..)???
 	clearCache: function(title){
 		if(title == null || title === true){
 			Object.keys(this)
@@ -1157,7 +1189,9 @@ var BaseBrowserPrototype = {
 				}.bind(this))
 		}
 		if(title === true){
+			delete this.__header
 			delete this.__items
+			delete this.__footer
 		}
 		return this },
 
@@ -1185,7 +1219,7 @@ var BaseBrowserPrototype = {
 	__item_index_cache: null,
 	get index(){
 		return (this.__item_index_cache = 
-			this.__item_index_cache 
+			(this.hasOwnProperty('__item_index_cache') && this.__item_index_cache)
 				|| this
 					.reduce(function(index, e, i, p){
 						var id = p = p.join('/')
@@ -3507,65 +3541,41 @@ var BaseBrowserPrototype = {
 	// 			-> reset on parent .make(..)
 	// 			-> re-acquire data (???)
 	// 		- take control (optionally), i.e. handle keyboard
-	// XXX make all navigation DOM-based... (???)
-	// 		...we can't do this in a trivial way because we could have a 
-	// 		partially rendered state...
-	// XXX BUG:
-	// 			// render a part of the dialog...
-	// 			d = dialog
-	// 				.clone([7,8,9])
-	// 				.update()
-	// 			// XXX this does not restore the dialog...
-	// 			//		would need to
-	// 			//			dialog.dom = d.dom
-	// 			//		...after each render...
+	// XXX BUG?: .update(..) from events resolves to the .source...
+	// 		to reproduce:
 	// 			dialog
-	// 				.update(true)
-	// 		this is due to the fact that we overwrite the .dom in the child 
-	// 		but not in the source...
-	// 		a simple solution would be to keep all the dom props in one 
-	// 		place...
-	clone: function(action, ...args){
+	//				.clone([7, 8, 9])
+	//				.update()
+	//				.focus()
+	//				// XXX this will render the base dialog...
+	//				//		...likely due to that the handler's context 
+	//				//		resolves to the root and not the clone...
+	//				.disable()
+	view: function(action, ...args){
 		var that = this
-		// XXX move this out...
-		// 		this can be merged into BaseBrowser or live in a separate mixin...
-		var getRoot = function(o, attr){
-			var cur = o
-			while(cur.source 
-					&& (!attr 
-						|| !cur.hasOwnProperty(attr))){
-				cur = cur.source }
-			return cur }
-		return {
-			__proto__: this,
-			source: this,
-
-			// keep the DOM data in one place...
-			get dom(){
-				return getRoot(this, '__dom').dom },
-			set dom(value){
-				getRoot(this, '__dom').dom = value },
-			get container(){
-				return getRoot(this, '__container').container },
-			set container(value){
-				getRoot(this, '__container').container = value },
-
-			// XXX do we need to isolate caches???
-			// XXX
-
-			end: function(){
-				return this.source },
-
-		}.run(function(){
-			// XXX do we need to copy other sections???
-			this.items = 
-				action instanceof Array ?
-					action
-						.map(function(e){ 
-							return that.get(e) })
-				: action ?
-					that[action](...args) 
-				: that.items.slice() }) },
+		args = args[0] instanceof Array && args.length == 1 ? 
+			args[0] 
+			: args
+		// NOTE: for super calls do:
+		// 		this.__proto__.<method>.call(this, ...)
+		return object
+			.mixinFlat({
+				__proto__: this,
+				source: this,
+			},
+			BrowserCloneMixin)
+				.run(function(){
+					// XXX how do we handle sections???
+					this.items = 
+						action instanceof Array ?
+							action
+								.map(function(e){ 
+									return that.get(e) })
+						: action ?
+							that[action](...args) 
+						: that.items.slice() }) },
+	isView: function(){
+		return !!this.source },
 }
 
 
@@ -4020,7 +4030,8 @@ var HTMLBrowserPrototype = {
 		var that = this
 		// XXX should this be here on in start event???
 		var kb = this.__keyboard_object = 
-			this.__keyboard_object 
+			(this.hasOwnProperty('__keyboard_object') 
+					&& this.__keyboard_object)
 				|| keyboard.KeyboardWithCSSModes(
 					function(data){ 
 						if(data){
@@ -4032,15 +4043,18 @@ var HTMLBrowserPrototype = {
 					function(){ return that.dom })
 		return kb },
 	// NOTE: this is not designed for direct use...
+	____keyboard_handler: null,
 	get __keyboard_handler(){
 		var options = this.options || {}
-		return (this.____keyboard_handler = this.____keyboard_handler 
-			|| keyboard.makePausableKeyboardHandler(
-				this.keyboard,
-				function(){ 
-					options.keyboardReportUnhandled
-						&& console.log('KEY:', ...arguments) }, 
-				this)) },
+		return (this.____keyboard_handler = 
+			(this.hasOwnProperty('____keyboard_handler') 
+					&& this.____keyboard_handler)
+				|| keyboard.makePausableKeyboardHandler(
+					this.keyboard,
+					function(){ 
+						options.keyboardReportUnhandled
+							&& console.log('UNHANDLED KEY:', ...arguments) }, 
+					this)) },
 	
 	// Proxy to .keyboard.parseStringHandler(..)
 	parseStringHandler: function(code, context){
@@ -4058,6 +4072,7 @@ var HTMLBrowserPrototype = {
 	// parent element (optional)...
 	// XXX rename???
 	// 		... should this be .containerDom or .parentDom???
+	// XXX do we use .hasOwnProperty(..) here???
 	get container(){
 		return this.__container 
 			|| (this.__dom ? 
