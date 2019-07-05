@@ -522,6 +522,17 @@ var BrowserViewMixin = {
 	set container(value){
 		getMixinRoot(this, '__container').container = value },
 
+	// refresh local items if/when diverging from .source...
+	get items(){
+		return this.hasOwnProperty('__items') 
+				&& this.isCurrent() ?
+			this.__items
+			: this.__refresh() },
+
+	// check if we are current with .source...
+	isCurrent: function(){
+		return new Set(Object.values(this.source.index)).has(this.__items[0]) },
+
 	isView: function(){
 		return true },
 	end: function(){
@@ -533,23 +544,23 @@ var BrowserViewMixin = {
 	// XXX should this be .refresh()???
 	// 		...if yes what's going to be the difference between it here 
 	// 		and in the source object???
-	// XXX also need to track source objects .make(..) calls...
-	// 		...not sure of the correct way to do this, "weak" event handler???
 	// XXX how do we handle sections???
 	__refresh: function(){
 		var source = this.source
 		var [action, ...args] = this.query
 
-		this.items = 
+		this.clearCache()
+
+		return (this.items = 
 			action instanceof Array ?
 				action
 					.map(function(e){ 
-						return that.get(e) })
+						return source.get(e) })
 			: action ?
 				source[action](...args) 
-			: source.items.slice() 
+			: source.items.slice())
 
-		return this
+		//return this
 	},
 	make: function(){
 		var res = this.__proto__.make(...arguments)
@@ -1634,6 +1645,7 @@ var BaseBrowserPrototype = {
 		make.dialog = this
 
 		// build the sections...
+		var reset_index = false
 		sections
 			.forEach(function([name, handler]){
 				// setup closure for make(..)...
@@ -1641,6 +1653,9 @@ var BaseBrowserPrototype = {
 				make_called = false
 				ids = new Set()
 				list = make.items = that[name] = []
+
+				// prepare for index reset...
+				reset_index = reset_index || name == 'items'
 
 				// build list...
 				var res = handler.call(that, 
@@ -1660,7 +1675,7 @@ var BaseBrowserPrototype = {
 		// reset the index/cache...
 		// XXX should this be only for .items???
 		// 		...should this be global (all items?)
-		if(sections.includes('items')){
+		if(reset_index){
 			var old_index = this.__item_index_cache || {}
 			this.clearCache()
 
@@ -3606,8 +3621,7 @@ var BaseBrowserPrototype = {
 					// XXX
 					query: [...arguments],
 				},
-				BrowserViewMixin)
-			.__refresh() },
+				BrowserViewMixin) },
 	isView: function(){
 		return false },
 }
