@@ -16,6 +16,10 @@ var walk = require('lib/walk').walk
 
 
 /*********************************************************************/
+
+
+
+//---------------------------------------------------------------------
 // Helpers...
 
 // Collect a list of literal values and "make(..) calls" into an array...
@@ -75,7 +79,7 @@ var collectItems = function(make, items){
 
 
 //---------------------------------------------------------------------
-// Items...
+// Item constructors...
 //
 // XXX general design:
 // 		- each of these can take either a value or a function (constructor)
@@ -429,7 +433,7 @@ Items.DisplayItemInfo = function(make, options){
 
 
 //---------------------------------------------------------------------
-// Item...
+// Base Item...
 
 var BaseItemClassPrototype = {
 	text: function(elem){
@@ -872,6 +876,7 @@ function(event, {handler, action, default_item, filter, options={}, getter='sear
 				skipDisabled: true,
 				// XXX should this be the default...
 				skipUnresolved: true,
+				rawResults: true,
 			},
 			options instanceof Function ? 
 				options.call(this) 
@@ -1121,6 +1126,7 @@ var makeItemEventToggler2 = function(get_state, set_state, unset_state, default_
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+// Base Browser...
 
 var BaseBrowserClassPrototype = {
 }
@@ -3734,6 +3740,7 @@ object.makeConstructor('BaseBrowser',
 
 
 
+
 //---------------------------------------------------------------------
 
 var KEYBOARD_CONFIG =
@@ -3989,6 +3996,7 @@ var updateElemClass = function(action, cls, handler){
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+// HTML Browser...
 
 var HTMLBrowserClassPrototype = {
 	__proto__: BaseBrowser, }
@@ -5093,12 +5101,6 @@ object.makeConstructor('HTMLBrowser',
 		HTMLBrowserPrototype)
 
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-// shorthans...
-
-module.Item = HTMLItem
-module.Browser = HTMLBrowser
-
 
 
 //---------------------------------------------------------------------
@@ -5162,6 +5164,14 @@ module.TextBrowser =
 object.makeConstructor('TextBrowser', 
 		TextBrowserClassPrototype, 
 		TextBrowserPrototype)
+
+
+
+//---------------------------------------------------------------------
+// shorthans...
+
+module.Item = HTMLItem
+module.Browser = HTMLBrowser
 
 
 
