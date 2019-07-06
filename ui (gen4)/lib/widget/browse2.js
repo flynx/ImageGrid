@@ -531,9 +531,28 @@ var getMixinRoot = function(o, attr){
 // View mixin...
 //
 var BrowserViewMixin = {
+	//
 	// source: <object>,
 	//
 	// query: [ .. ],
+	
+	// NOTE: this is not live, changes to this will take effect on next 
+	// 		view instance creation, to change options assign to .options
+	// 		or .source.options...
+	__view_options_defaults__: {
+		// Views are flat by default...
+		skipNested: true,
+	},
+	
+	get options(){
+		return (this.__options = 
+			this.__options 
+				|| this.query[2]
+				|| Object.assign(
+					{ __proto__: this.source.options || {} },
+					this.__view_options_defaults__ || {}) ) },
+	set options(value){
+		this.__options = value },
 
 	// keep the DOM data in one place (.source)...
 	//
@@ -572,23 +591,24 @@ var BrowserViewMixin = {
 	// XXX should this be .refresh()???
 	// 		...if yes what's going to be the difference between it here 
 	// 		and in the source object???
+	// 		rename to .sync()??
 	// XXX how do we handle sections???
 	__refresh: function(){
 		var source = this.source
-		var [action, ...args] = this.query
+		var [action, args, options] = this.query
 
 		this.clearCache()
 
 		return (this.items = 
-			action instanceof Array ?
+			action == 'as-is' ?
+				args
+			: action instanceof Array ?
 				action
 					.map(function(e){ 
 						return source.get(e) })
 			: action ?
 				source[action](...args) 
 			: source.items.slice())
-
-		//return this
 	},
 	make: function(){
 		var res = this.__proto__.make(...arguments)
@@ -596,6 +616,39 @@ var BrowserViewMixin = {
 		return res
 	},
 }
+
+
+
+//
+// options format:
+// 	{
+// 		// if true this will overwrite the wrapper with false...
+//		//
+// 		// default: undefined
+// 		rawResults: <bool>,
+//
+// 		// If present it will be returned...
+// 		wrapper: null | <function>,
+//
+// 		// default: true
+// 		skipNested: <bool>,
+// 	}
+//
+var makeFlatViewWrapper = 
+function(options){
+	return (options || {}).rawResults === true ?
+		false
+		: (options.wrapper 
+			|| function(res){
+				return this.view(
+					'as-is', 
+					res, 
+					{
+						__proto__: this.options || {},
+						skipNested: 'skipNested' in (options || {}) ? 
+							options.skipNested 
+							: true,
+					}) }) }
 
 
 
@@ -1756,11 +1809,8 @@ var BaseBrowserPrototype = {
 	//				//		...likely due to that the handler's context 
 	//				//		resolves to the root and not the clone...
 	//				.disable()
-	view: function(action, ...args){
+	view: function(action, args, options){
 		var that = this
-		args = args[0] instanceof Array && args.length == 1 ? 
-			args[0] 
-			: args
 		return object
 			.mixinFlat(
 				{
@@ -2146,7 +2196,13 @@ var BaseBrowserPrototype = {
    			.run(function(){
 				return this instanceof Function ? 
 					[] 
-					: this})},
+					: this })
+			// wrap the result...
+   			.run(function(){
+				return options.wrapper instanceof Function 
+						&& context.root === that ?
+					options.wrapper.call(that, this)
+					: this }) },
 
 
 	// Test/Example Text renders...
@@ -2309,6 +2365,7 @@ var BaseBrowserPrototype = {
 				options, 
 				{ defaultReverse: 'flat' })
 			: options
+		options.wrapper = makeFlatViewWrapper(options)
 		var context = args.shift()
 
 		return this.walk(
@@ -2326,7 +2383,10 @@ var BaseBrowserPrototype = {
 			options, context) },
 	// XXX should this be cached???
 	toArray: function(options){
-		return this.map(null, options) },
+		return this.map(null, 
+			Object.assign({},
+				options || {}, 
+				{rawResults: true})) },
 
 
 	// Search items...
@@ -2534,6 +2594,7 @@ var BaseBrowserPrototype = {
 		// NOTE: we do not inherit options from this.options here is it 
 		// 		will be done in .walk(..)
 		options = args.shift() || {}
+		options.wrapper = makeFlatViewWrapper(options)
 		var context = args.shift()
 
 		// non-path array or item as-is...
@@ -2705,7 +2766,10 @@ var BaseBrowserPrototype = {
 			: function(e, i, p){ return e }
 		// NOTE: we do not inherit options from this.options here is it 
 		// 		will be done in .walk(..)
-		options = args.pop() || {}
+		options = Object.assign(
+			{},
+			args.pop() || {},
+			{rawResults: true})
 
 		// special case: path pattern -> include collapsed elements... 
 		// XXX use something like .isPath(..)
@@ -2778,7 +2842,11 @@ var BaseBrowserPrototype = {
 	forEach: function(func, options){
 		this.map(...arguments)
 		return this },
+	// XXX should this produce a flat view???
+	// 		...can this be configurable???
 	filter: function(func, options, context){
+		options = options || {}
+		options.wrapper = makeFlatViewWrapper(options)
 		return this.walk(
 			function(e, i, p){
 				return e && func.call(this, e, i, p) ? [e] : [] },
