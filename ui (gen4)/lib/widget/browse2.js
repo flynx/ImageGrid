@@ -491,8 +491,34 @@ object.makeConstructor('BaseItem',
 
 
 //---------------------------------------------------------------------
-// View/Clone Mixin...
+// View mixin...
+//
+// This is used as a basis for Browser object wrappers (views) generated
+// via .view(..)
+//
+// NOTE: this is not intended for direct use.
+// NOTE: to call .source methods from inside a view's <method> you can 
+// 		do one of the following:
+// 			// for isolated calls, i.e. calls that may not affect the 
+// 			// view object directly...
+// 			this.source.<method>(..)
+// 			this.__proto__.<method>(..)
+//
+// 			// for proper super calls...
+// 			this.__proto__.<method>.call(this, ..)
 
+// Get the view/mixin source root...
+//
+//	Get mixin root...
+// 	getMixinRoot(object)
+// 		-> object
+//
+// 	Get closest object in .source chain containing attr...
+// 	getMixinRoot(object, attr)
+// 		-> object
+//
+// NOTE: a view can be created from a view and so on, so .source may not
+// 		necessarily point to the actual root object...
 var getMixinRoot = function(o, attr){
 	var cur = o
 	while(cur.source 
@@ -502,6 +528,8 @@ var getMixinRoot = function(o, attr){
 	return cur }
 
 
+// View mixin...
+//
 var BrowserViewMixin = {
 	// source: <object>,
 	//
@@ -1702,6 +1730,49 @@ var BaseBrowserPrototype = {
 	},
 
 
+	// XXX EXPERIMENTAL...
+	// Data views...
+	//
+	// For View object specifics see: BrowserViewMixin
+	
+	//
+	// TODO:
+	// 	- set correct isolation boundary between this and .source...
+	// 	- make this a real instance (???)
+	// 		...do we need this for anything other than doc???
+	// 	- return from selectors...
+	// 	- treat .items as cache 
+	// 		-> reset on parent .make(..)
+	// 		-> re-acquire data (???)
+	// 	- take control (optionally), i.e. handle keyboard
+	//
+	// XXX BUG?: .update(..) from events resolves to the .source...
+	// 		to reproduce:
+	// 			dialog
+	//				.clone([7, 8, 9])
+	//				.update()
+	//				.focus()
+	//				// XXX this will render the base dialog...
+	//				//		...likely due to that the handler's context 
+	//				//		resolves to the root and not the clone...
+	//				.disable()
+	view: function(action, ...args){
+		var that = this
+		args = args[0] instanceof Array && args.length == 1 ? 
+			args[0] 
+			: args
+		return object
+			.mixinFlat(
+				{
+					__proto__: this,
+					source: this,
+					query: [...arguments],
+				},
+				BrowserViewMixin) },
+	isView: function(){
+		return false },
+
+
 	// Data access and iteration...
 
 	// Walk the browser...
@@ -2227,7 +2298,7 @@ var BaseBrowserPrototype = {
 		// parse args...
 		var args = [...arguments]
 		func = (args[0] instanceof Function 
-				|| args[0] === undefined) ? 
+				|| args[0] == null) ? 
 			args.shift() 
 			: undefined
 		// NOTE: we do not inherit options from this.options here is it 
@@ -2243,19 +2314,19 @@ var BaseBrowserPrototype = {
 		return this.walk(
 			function(elem, i, path){
 				return elem != null ?
-					[func === undefined ?
-						elem
+					[func ?
 						// XXX should this pass the current or the root 
 						// 		container to func???
-						: func.call(that, elem, i, path, that)]
+						func.call(that, elem, i, path, that)
+						: elem]
 					: [] }, 
 			'map',
 			function(_, i, p, options, context){
 				return [func, options, context] },
 			options, context) },
 	// XXX should this be cached???
-	toArray: function(){
-		return this.map() },
+	toArray: function(options){
+		return this.map(null, options) },
 
 
 	// Search items...
@@ -2457,7 +2528,7 @@ var BaseBrowserPrototype = {
 			true 
 			: args.shift() 
 		func = (args[0] instanceof Function 
-				|| args[0] === undefined) ? 
+				|| args[0] == null) ? 
 			args.shift() 
 			: undefined
 		// NOTE: we do not inherit options from this.options here is it 
@@ -3584,46 +3655,6 @@ var BaseBrowserPrototype = {
 		this.options = Object.assign(
 			Object.create(this.options || {}), 
 			args[0] || {}) },
-
-
-	// XXX EXPERIMENTAL...
-	// 		- set correct isolation boundary between this and .source...
-	// 		- make this a real instance (???)
-	// 			...do we need this for anything other than doc???
-	// 		- return from selectors...
-	// 		- treat .items as cache 
-	// 			-> reset on parent .make(..)
-	// 			-> re-acquire data (???)
-	// 		- take control (optionally), i.e. handle keyboard
-	// XXX need to trigger an update (or invalidation) on .make(..)...
-	// XXX BUG?: .update(..) from events resolves to the .source...
-	// 		to reproduce:
-	// 			dialog
-	//				.clone([7, 8, 9])
-	//				.update()
-	//				.focus()
-	//				// XXX this will render the base dialog...
-	//				//		...likely due to that the handler's context 
-	//				//		resolves to the root and not the clone...
-	//				.disable()
-	view: function(action, ...args){
-		var that = this
-		args = args[0] instanceof Array && args.length == 1 ? 
-			args[0] 
-			: args
-		// NOTE: for super calls do:
-		// 		this.__proto__.<method>.call(this, ...)
-		return object
-			.mixinFlat(
-				{
-					__proto__: this,
-					source: this,
-					// XXX
-					query: [...arguments],
-				},
-				BrowserViewMixin) },
-	isView: function(){
-		return false },
 }
 
 
