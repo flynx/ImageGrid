@@ -5168,7 +5168,7 @@ object.makeConstructor('TextBrowser',
 
 
 //---------------------------------------------------------------------
-// shorthans...
+// shorthands...
 
 module.Item = HTMLItem
 module.Browser = HTMLBrowser
