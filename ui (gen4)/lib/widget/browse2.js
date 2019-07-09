@@ -510,6 +510,15 @@ object.makeConstructor('BaseItem',
 //
 // 			// for proper super calls...
 // 			this.__proto__.<method>.call(this, ..)
+//
+// XXX care must be taken with attribute assignment through the proxy/view 
+// 		object, most of the state of the Browser is stored in mutable 
+// 		objects/props, some are intentionally overwritten by the proxy
+// 		(like .items / .__items, ...) and some are not, but any attribute 
+// 		assignment through the proxy/view if not transferred to the .source
+// 		will not reach it.
+//
+
 
 // Get the view/mixin source root...
 //
