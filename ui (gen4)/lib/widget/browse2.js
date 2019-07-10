@@ -563,10 +563,13 @@ var BrowserViewMixin = {
 		// 		...currently there is not way to create a topology view
 		// 		without modifying the actual topology...
 		// 		(topology views are non-priority at this point)
+		// 		XXX one way to do partial topology is to:
+		// 			- store a list of visible elements
+		// 			- render elements only once...
 		skipNested: true,
 	},
 	
-	// Merge option defaults with .source options...
+	// Construct options by merging option defaults with .source options...
 	get options(){
 		return (this.__options = 
 			this.__options 
