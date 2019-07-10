@@ -544,6 +544,8 @@ var getMixinRoot = function(o, attr){
 
 // View mixin...
 //
+//
+// XXX can/should we use a Proxy object for this??/
 var BrowserViewMixin = {
 	//
 	// source: <object>,
