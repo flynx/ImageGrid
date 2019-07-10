@@ -518,6 +518,7 @@ object.makeConstructor('BaseItem',
 // 		assignment through the proxy/view if not transferred to the .source
 // 		will not reach it.
 //
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
 
 // Get the view/mixin source root...
@@ -554,9 +555,18 @@ var BrowserViewMixin = {
 	// 		or .source.options...
 	__view_options_defaults__: {
 		// Views are flat by default...
+		//
+		// NOTE: if false when generating a view out of a lister that 
+		// 		included both a parent element and it's children 
+		// 		(ex: .map()), this will render all the deeper than base 
+		// 		elements at least twice (once per parent node)...
+		// 		...currently there is not way to create a topology view
+		// 		without modifying the actual topology...
+		// 		(topology views are non-priority at this point)
 		skipNested: true,
 	},
 	
+	// Merge option defaults with .source options...
 	get options(){
 		return (this.__options = 
 			this.__options 
