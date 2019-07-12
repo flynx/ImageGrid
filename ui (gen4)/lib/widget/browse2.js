@@ -1182,7 +1182,7 @@ var BaseBrowserPrototype = {
 		uniqueKeys: false,
 
 		// if true do not render an item more than once... 
-		renderUnique: false,
+		renderUnique: true,
 
 
 		// Controls how the disabled sub-tree root elements are skipped...
@@ -3220,6 +3220,12 @@ var BaseBrowserPrototype = {
 								// only sub-path...
 								&& path.cmp(from_path.slice(0, path.length))) ?
 							[ renderer.renderNestedBlank(nested(), i, context) ]
+						// seen...
+						: seen instanceof Set 
+								&& (seen.has(elem) 
+									// add to seen and move to next test...
+									|| !seen.add(elem)) ?
+							[]
 						// filter -> skip unmatching...
 						: (filter && !filter.call(this, elem, i, path, section)) ?
 							[]
