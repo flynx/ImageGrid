@@ -1181,6 +1181,10 @@ var BaseBrowserPrototype = {
 		// If true item keys must be unique...
 		uniqueKeys: false,
 
+		// if true do not render an item more than once... 
+		renderUnique: false,
+
+
 		// Controls how the disabled sub-tree root elements are skipped...
 		//
 		// Can be:
@@ -3114,6 +3118,10 @@ var BaseBrowserPrototype = {
 			section[0]
 			: section
 
+		var seen = options.renderUnique ?
+			(context.seen = context.seen || new Set())
+			: false
+
 		// build range bounds...
 		// use .get(..) on full (non-partial) range...
 		var get_options = Object.assign(
@@ -3122,7 +3130,7 @@ var BaseBrowserPrototype = {
 			// 		.iterateNonIterable here it is not seen down the line...
 			{from: null, to: null, around: null,
 				iterateNonIterable: options.iterateNonIterable})
-			
+
 		// index getter...
 		var normIndex = function(i){
 			return (i === undefined || typeof(i) == typeof(123)) ?
