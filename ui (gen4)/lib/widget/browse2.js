@@ -558,16 +558,13 @@ var BrowserViewMixin = {
 	__view_options_defaults__: {
 		// Views are flat by default...
 		//
-		// NOTE: if false when generating a view out of a lister that 
-		// 		included both a parent element and it's children 
-		// 		(ex: .map()), this will render all the deeper than base 
-		// 		elements at least twice (once per parent node)...
-		// 		...currently there is not way to create a topology view
-		// 		without modifying the actual topology...
-		// 		(topology views are non-priority at this point)
-		// 		XXX one way to do partial topology is to:
-		// 			- store a list of visible elements
-		// 			- render elements only once...
+		// NOTE: if false with .renderUnique also false and including an
+		// 		item with .children, the view will render nested elements
+		// 		twice, once in their respective sub-tree and for the 
+		// 		second time in the list...
+		//
+		// XXX should we have an ability to skip children if the parent is
+		// 		not selected???
 		skipNested: true,
 	},
 	
