@@ -545,7 +545,9 @@ var getMixinRoot = function(o, attr){
 // View mixin...
 //
 //
-// XXX can/should we use a Proxy object for this??/
+// XXX can/should we use a Proxy object for this???
+// XXX would be nice to be able to thread a set of options int the view 
+// 		when constructing via .search(..) and friends...
 var BrowserViewMixin = {
 	//
 	// source: <object>,
@@ -562,10 +564,12 @@ var BrowserViewMixin = {
 		// 		item with .children, the view will render nested elements
 		// 		twice, once in their respective sub-tree and for the 
 		// 		second time in the list...
-		//
+		skipNested: true,
+	
 		// XXX should we have an ability to skip children if the parent is
 		// 		not selected???
-		skipNested: true,
+		// XXX might also be a good idea to be able to disable sub-trees...
+		//skipDisabledTree: true,
 	},
 	
 	// Construct options by merging option defaults with .source options...
