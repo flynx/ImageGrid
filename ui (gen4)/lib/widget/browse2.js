@@ -437,12 +437,11 @@ Items.DisplayItemInfo = function(make, options){
 
 var BaseItemClassPrototype = {
 	text: function(elem){
-		var txt = elem.value instanceof Array ?
+		return elem.value instanceof Array ?
 				elem.value.join(' ')	
 			: elem.value == null || elem.value instanceof Object ?
 				elem.alt || elem.__id 
-			: elem.value
-		return txt },
+			: elem.value },
 }
 
 var BaseItemPrototype = {
@@ -461,11 +460,16 @@ var BaseItemPrototype = {
 	// selected: null,
 	// collapsed: null,
 	
+	// item id if explicitly set otherwise its .text...
+	//
+	// NOTE: this will not fall into infinite recursion with .text as 
+	// 		the later accesses .__id directly...
 	get id(){
 		return this.__id || this.text },
 	set id(value){
 		this.__id = value },
 
+	// normalized .value, .alt or .__id
 	get text(){
 		return this.constructor.text(this) },
 
@@ -1180,9 +1184,20 @@ var BaseBrowserPrototype = {
 		allowSecondaySectionFocus: false,
 
 		// If true item keys must be unique...
+		//
+		// If false and two items have the same key but no .id set a unique
+		// .id will be generated to distinguish the items.
+		//
+		// NOTE: item.id is still required to be unique.
+		// NOTE: see .__key__(..) and .__id__(..) for key/id generation
+		// 		specifics.
+		//
+		// default: false
 		uniqueKeys: false,
 
 		// if true do not render an item more than once... 
+		//
+		// default: true
 		renderUnique: true,
 
 
