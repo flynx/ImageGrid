@@ -477,7 +477,7 @@ var VirtualDOMRibbonsPrototype = {
 
 var VirtualDOMRibbons =
 module.VirtualDOMRibbons =
-object.makeConstructor('VirtualDOMRibbons', 
+object.Constructor('VirtualDOMRibbons', 
 	VirtualDOMRibbonsClassPrototype,
 	VirtualDOMRibbonsPrototype)
 

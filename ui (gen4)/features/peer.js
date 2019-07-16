@@ -120,7 +120,7 @@ var CooperativePromisePrototype = {
 
 var CooperativePromise =
 module.CooperativePromise =
-object.makeConstructor('CooperativePromise', 
+object.Constructor('CooperativePromise', 
 	Promise,
 	CooperativePromisePrototype)
 

@@ -194,7 +194,7 @@ RibbonsPrototype.__proto__ = ribbons.BaseRibbons.prototype
 
 var Ribbons =
 module.Ribbons =
-object.makeConstructor('Ribbons', 
+object.Constructor('Ribbons', 
 	RibbonsClassPrototype,
 	RibbonsPrototype)
 

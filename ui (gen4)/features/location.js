@@ -41,7 +41,7 @@ var LocationProto = {
 	},
 }
 
-var Location = object.makeConstructor('Location', LocationProto)
+var Location = object.Constructor('Location', LocationProto)
 
 
 

@@ -146,7 +146,7 @@ ImageGridMetaActions.__proto__ = actions.MetaActions
 
 var ImageGrid = 
 module.ImageGrid = 
-	object.makeConstructor('ImageGrid', ImageGridMetaActions)
+	object.Constructor('ImageGrid', ImageGridMetaActions)
 
 // Root ImageGrid feature set....
 var ImageGridFeatures =
