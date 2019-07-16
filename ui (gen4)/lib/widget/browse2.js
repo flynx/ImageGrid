@@ -47,6 +47,7 @@ var walk = require('lib/walk').walk
 // 		...also, considering that this implicitly identifies the items 
 // 		passing the make function without calling it can trick the system
 // 		and lead to unexpected results.
+// NOTE: for examples see: Item.nest(..) and Item.group(..)
 //
 // XXX would be nice to have a better check/test...
 // 		...this could be done by chaining instances of make instead of 
@@ -114,13 +115,6 @@ Items.items = null
 // XXX should this be a prop???
 Items.last = function(){
 	return (this.items || [])[this.items.length - 1] }
-
-
-// Focus last created item...
-Items.focus = function(){
-	this.last().focused = true }
-
-
 
 
 // Group a set of items...
@@ -264,6 +258,7 @@ buttons.Delete = [
 Items.Item = function(value, options){ return this(...arguments) }
 
 Items.Empty = function(value){}
+
 Items.Separator = function(){ return this('---') }
 Items.Spinner = function(){ return this('...') }
 
@@ -278,7 +273,6 @@ Items.Heading = function(value, options){
 	options.buttons = options.buttons 
 		|| this.dialog.options.headingButtons
 	return this(value, options) }
-Items.Selected = function(value){}
 Items.Action = function(value, options){}
 Items.ConfirmAction = function(value){}
 Items.Editable = function(value){}
@@ -527,17 +521,17 @@ object.makeConstructor('BaseItem',
 
 // Get the view/mixin source root...
 //
-//	Get mixin root...
-// 	getMixinRoot(object)
+//	Get .source root...
+// 	getSource(object)
 // 		-> object
 //
 // 	Get closest object in .source chain containing attr...
-// 	getMixinRoot(object, attr)
+// 	getSource(object, attr)
 // 		-> object
 //
 // NOTE: a view can be created from a view and so on, so .source may not
 // 		necessarily point to the actual root object...
-var getMixinRoot = function(o, attr){
+var getSource = function(o, attr){
 	var cur = o
 	while(cur.source 
 			&& (!attr 
@@ -548,9 +542,30 @@ var getMixinRoot = function(o, attr){
 
 // View mixin...
 //
+// This adds the following attrs/props:
+// 	.source
+// 	.rootSource
+// 	.query
+//
+// This adds the following methods:
+// 	.isView()
+// 		-> true	
+// 	.sync()
+// 		-> this			
+// 	.end()
+// 		-> source
+//
+//
+// NOTE: options changes are isolated to the view, to change the source 
+// 		options use:
+// 			// to change the parent's options...
+// 			.source.options.x = ...
+//
+// 			// to change the root options...
+// 			.rootSource.options.x = ...
 //
 // XXX can/should we use a Proxy object for this???
-// XXX would be nice to be able to thread a set of options int the view 
+// XXX would be nice to be able to thread a set of options into the view 
 // 		when constructing via .search(..) and friends...
 var BrowserViewMixin = {
 	//
@@ -587,6 +602,10 @@ var BrowserViewMixin = {
 	set options(value){
 		this.__options = value },
 
+	//source: null,
+	get rootSource(){
+		return getSource(this) },
+
 	// keep the DOM data in one place (.source)...
 	//
 	// NOTE: this is in contrast to the rest of the props that 
@@ -594,20 +613,20 @@ var BrowserViewMixin = {
 	// NOTE: these will affect the source only when .render(..) 
 	// 		is called...
 	get dom(){
-		return getMixinRoot(this, '__dom').dom },
+		return getSource(this, '__dom').dom },
 	set dom(value){
-		getMixinRoot(this, '__dom').dom = value },
+		getSource(this, '__dom').dom = value },
 	get container(){
-		return getMixinRoot(this, '__container').container },
+		return getSource(this, '__container').container },
 	set container(value){
-		getMixinRoot(this, '__container').container = value },
+		getSource(this, '__container').container = value },
 
 	// refresh local items if/when diverging from .source...
 	get items(){
 		return this.hasOwnProperty('__items') 
 				&& this.isCurrent() ?
 			this.__items
-			: this.__refresh() },
+			: this.sync() },
 
 	// check if we are current with .source...
 	isCurrent: function(){
@@ -626,7 +645,7 @@ var BrowserViewMixin = {
 	// 		and in the source object???
 	// 		rename to .sync()??
 	// XXX how do we handle sections???
-	__refresh: function(){
+	sync: function(){
 		var source = this.source
 		var [action, args, options] = this.query
 
@@ -645,7 +664,7 @@ var BrowserViewMixin = {
 	},
 	make: function(){
 		var res = this.__proto__.make(...arguments)
-		this.__refresh()
+		this.sync()
 		return res
 	},
 }
