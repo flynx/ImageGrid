@@ -372,7 +372,7 @@ module.QueueActions = actions.Actions(QueuePrototype, {
 
 var Queue = 
 module.Queue = 
-object.makeConstructor('Queue', QueueActions)
+object.Constructor('Queue', QueueActions)
 
 
 

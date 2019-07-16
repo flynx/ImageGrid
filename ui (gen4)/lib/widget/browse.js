@@ -4134,7 +4134,7 @@ var BrowserPrototype = {
 
 var Browser = 
 module.Browser = 
-object.makeConstructor('Browser', 
+object.Constructor('Browser', 
 		BrowserClassPrototype, 
 		BrowserPrototype)
 
@@ -4166,7 +4166,7 @@ ListerPrototype.options.__proto__ = Browser.prototype.options
 
 var Lister = 
 module.Lister = 
-object.makeConstructor('Lister', 
+object.Constructor('Lister', 
 		BrowserClassPrototype, 
 		ListerPrototype)
 
@@ -4246,7 +4246,7 @@ ListPrototype.options.__proto__ = Browser.prototype.options
 
 var List = 
 module.List = 
-object.makeConstructor('List', 
+object.Constructor('List', 
 		BrowserClassPrototype, 
 		ListPrototype)
 
@@ -4509,7 +4509,7 @@ PathListPrototype.options.__proto__ = Browser.prototype.options
 
 var PathList = 
 module.PathList = 
-object.makeConstructor('PathList', 
+object.Constructor('PathList', 
 		BrowserClassPrototype, 
 		PathListPrototype)
 

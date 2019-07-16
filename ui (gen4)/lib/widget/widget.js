@@ -208,7 +208,7 @@ var WidgetPrototype = {
 
 var Widget = 
 module.Widget = 
-object.makeConstructor('Widget', 
+object.Constructor('Widget', 
 		WidgetClassPrototype, 
 		WidgetPrototype)
 
@@ -290,7 +290,7 @@ var ContainerPrototype = {
 
 var Container = 
 module.Container = 
-object.makeConstructor('Container', 
+object.Constructor('Container', 
 		ContainerClassPrototype, 
 		ContainerPrototype)
 

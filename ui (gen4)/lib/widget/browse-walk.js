@@ -351,7 +351,7 @@ var WalkPrototype = {
 
 var Walk = 
 module.Walk = 
-object.makeConstructor('Walk', 
+object.Constructor('Walk', 
 		browse.Browser, 
 		WalkPrototype)
 

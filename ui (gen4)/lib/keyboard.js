@@ -1089,7 +1089,7 @@ var KeyboardPrototype = {
 
 var Keyboard = 
 module.Keyboard = 
-object.makeConstructor('Keyboard', 
+object.Constructor('Keyboard', 
 		KeyboardClassPrototype, 
 		KeyboardPrototype)
 
@@ -1133,7 +1133,7 @@ var KeyboardWithCSSModesPrototype = {
 
 var KeyboardWithCSSModes = 
 module.KeyboardWithCSSModes = 
-object.makeConstructor('KeyboardWithCSSModes', 
+object.Constructor('KeyboardWithCSSModes', 
 		KeyboardClassPrototype, 
 		KeyboardWithCSSModesPrototype)
 // inherit from Keyboard...

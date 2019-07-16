@@ -458,7 +458,7 @@ object.mixinFlat(function(){}, {
 
 var Make = 
 module.Make = 
-object.makeConstructor('Make', Items)
+object.Constructor('Make', Items)
 
 
 
@@ -522,7 +522,7 @@ var BaseItemPrototype = {
 
 var BaseItem = 
 module.BaseItem = 
-object.makeConstructor('BaseItem', 
+object.Constructor('BaseItem', 
 	BaseItemClassPrototype,
 	BaseItemPrototype)
 
@@ -749,7 +749,7 @@ function(options){
 //
 var BrowserEvent =
 module.BrowserEvent = 
-object.makeConstructor('BrowserEvent', 
+object.Constructor('BrowserEvent', 
 {
 	// event name...
 	name: undefined,
@@ -3837,7 +3837,7 @@ var BaseBrowserPrototype = {
 
 var BaseBrowser = 
 module.BaseBrowser = 
-object.makeConstructor('BaseBrowser', 
+object.Constructor('BaseBrowser', 
 		BaseBrowserClassPrototype, 
 		BaseBrowserPrototype)
 
@@ -3983,7 +3983,7 @@ var HTMLItemPrototype = {
 
 var HTMLItem = 
 module.HTMLItem = 
-object.makeConstructor('HTMLItem', 
+object.Constructor('HTMLItem', 
 	HTMLItemClassPrototype,
 	HTMLItemPrototype)
 
@@ -5199,7 +5199,7 @@ var HTMLBrowserPrototype = {
 // XXX should this be a Widget too???
 var HTMLBrowser = 
 module.HTMLBrowser = 
-object.makeConstructor('HTMLBrowser', 
+object.Constructor('HTMLBrowser', 
 		HTMLBrowserClassPrototype, 
 		HTMLBrowserPrototype)
 
@@ -5264,7 +5264,7 @@ var TextBrowserPrototype = {
 
 var TextBrowser = 
 module.TextBrowser = 
-object.makeConstructor('TextBrowser', 
+object.Constructor('TextBrowser', 
 		TextBrowserClassPrototype, 
 		TextBrowserPrototype)
 

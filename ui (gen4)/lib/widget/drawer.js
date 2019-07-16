@@ -193,7 +193,7 @@ var DrawerPrototype = {
 
 var Drawer = 
 module.Drawer = 
-object.makeConstructor('Drawer', 
+object.Constructor('Drawer', 
 		DrawerClassPrototype, 
 		DrawerPrototype)
 

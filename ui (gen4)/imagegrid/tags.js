@@ -2114,7 +2114,7 @@ var BaseTagsPrototype = {
 
 var BaseTags = 
 module.BaseTags = 
-	object.makeConstructor('BaseTags', 
+	object.Constructor('BaseTags', 
 		BaseTagsClassPrototype, 
 		BaseTagsPrototype)
 
@@ -2267,7 +2267,7 @@ var TagsWithHandlersPrototype = {
 
 var TagsWithHandlers = 
 module.TagsWithHandlers = 
-	object.makeConstructor('TagsWithHandlers', 
+	object.Constructor('TagsWithHandlers', 
 		BaseTagsClassPrototype,
 		TagsWithHandlersPrototype)
 
@@ -2296,7 +2296,7 @@ var TagsWithPersistentPathsPrototype = {
 
 var TagsWithPersistentPaths = 
 module.TagsWithPersistentPaths = 
-	object.makeConstructor('TagsWithPersistentPaths', 
+	object.Constructor('TagsWithPersistentPaths', 
 		BaseTagsClassPrototype,
 		TagsWithPersistentPathsPrototype)
 
@@ -2521,7 +2521,7 @@ var TagsWithDictPrototype = {
 
 var TagsWithDict = 
 module.TagsWithDict = 
-	object.makeConstructor('TagsWithDict', 
+	object.Constructor('TagsWithDict', 
 		BaseTagsClassPrototype,
 		TagsWithDictPrototype)
 
@@ -2533,7 +2533,7 @@ var Tags =
 module.Tags = 
 	//TagsWithHandlers
 	//BaseTags
-	object.makeConstructor('Tags', 
+	object.Constructor('Tags', 
 		BaseTagsClassPrototype,
 		object.mixin(BaseTagsPrototype,
 			TagsWithHandlersPrototype,

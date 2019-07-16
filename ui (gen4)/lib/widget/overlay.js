@@ -138,7 +138,7 @@ var OverlayPrototype = {
 
 var Overlay = 
 module.Overlay = 
-object.makeConstructor('Overlay', 
+object.Constructor('Overlay', 
 		OverlayClassPrototype, 
 		OverlayPrototype)
 

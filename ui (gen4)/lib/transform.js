@@ -474,7 +474,7 @@ var transformEditor = function(){
 
 var TransformEditor = 
 module.TransformEditor =
-object.makeConstructor('TransformEditor', transformEditor())
+object.Constructor('TransformEditor', transformEditor())
 
 // XXX STUB: for testing only...
 window.transformEditor = TransformEditor

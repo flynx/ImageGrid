@@ -996,7 +996,7 @@ var BaseRibbonsPrototype = {
 
 var BaseRibbons = 
 module.BaseRibbons = 
-	object.makeConstructor('BaseRibbons', 
+	object.Constructor('BaseRibbons', 
 		BaseRibbonsClassPrototype, 
 		BaseRibbonsPrototype)
 
@@ -2572,7 +2572,7 @@ RibbonsPrototype.__proto__ = BaseRibbonsPrototype
 
 var Ribbons = 
 module.Ribbons = 
-	object.makeConstructor('Ribbons', 
+	object.Constructor('Ribbons', 
 		RibbonsClassPrototype, 
 		RibbonsPrototype)
 
