@@ -81,348 +81,349 @@ var collectItems = function(make, items){
 
 //---------------------------------------------------------------------
 // Item constructors...
-//
-// XXX general design:
-// 		- each of these can take either a value or a function (constructor)
-//		- the function has access to Items.* and context
-//		- the constructor can be called from two contexts:
-//			- external
-//				called from the module or as a function...
-//				calls the passed constructor (passing context)
-//				builds the container
-//			- nested
-//				called from constructor function...
-//				calls constructor (if applicable)
-//				builds item(s)
-// XXX need a way to pass container constructors (a-la ui-widgets dialog containers)
-// 		- passing through the context (this) makes this more flexible...
-// 		- passing via args fixes the signature which is a good thing...
-//		
-//
 
-// XXX
-// XXX can't use Object.assign(..) here as it will not copy props...
-var Items = module.items = function(){}
+var Items =
+object.mixinFlat(function(){}, {
+	dialog: null,
+	called: false,
 
 
-// placeholders...
-Items.dialog = null
-Items.items = null
+	// Props...
+	//
+	// NOTE: writing to .items will reset .called to false...
+	__items: undefined,
+	get items(){
+		return this.__items },
+	set items(value){
+		this.called = false
+		this.__items = value },
+
+	
+	buttons: {
+		//
+		// 	Draw checked checkboz is <attr> is true...
+		// 	Checkbox('attr')
+		//
+		// 	Draw checked checkboz is <attr> is false...
+		// 	Checkbox('!attr')
+		//
+		// XXX rename -- distinguish from actual button...
+		Checkbox: function(item, attr){
+			return (attr[0] == '!' 
+						&& !item[attr.slice(1)]) 
+					|| item[attr] ? 
+				'&#9744;' 
+				: '&#9745;' },
+		// XXX can we make these not use the same icon...
+		ToggleDisabled: [
+			'Checkbox: "disabled"',
+			'toggleDisabled: item',
+			true,
+			{
+				alt: 'Disable/enable item',
+				cls: 'toggle-disabled',
+			}],
+		ToggleHidden: [
+			'Checkbox: "hidden"',
+			'toggleHidden: item',
+			{
+				alt: 'Show/hide item',
+				cls: 'toggle-hidden',
+			}],
+		ToggleSelected: [
+			'Checkbox: "selected"',
+			'toggleSelect: item',
+			{
+				alt: 'Select/deselect item',
+				cls: 'toggle-select',
+			}],
+		// NOTE: this button is disabled for all items but the ones with .children...
+		ToggleCollapse: [
+			function(item){
+				return !item.children ?
+						// placeholder...
+						'&nbsp;'
+					: item.collapsed ?
+						'+'
+					: '-' },
+			'toggleCollapse: item',
+			// disable button for all items that do not have children...
+			function(item){ 
+				return 'children' in item },
+			{
+				alt: 'Collapse/expand item',
+				cls: function(item){ 
+					return 'children' in item ? 
+						'toggle-collapse' 
+						: ['toggle-collapse', 'blank'] },
+			}],
+		// XXX delete button -- requires .markDelete(..) action...
+		Delete: [
+			'&times;',
+			'markDelete: item',
+			{
+				alt: 'Mark item for deletion',
+				cls: 'toggle-delete',
+				//keys: ['Delete', 'd'],
+			}],
+	},
 
 
-// Last item created...
-// XXX not sure about this...
-// XXX should this be a prop???
-Items.last = function(){
-	return (this.items || [])[this.items.length - 1] }
+	// Getters...
+
+	// Last item created...
+	// XXX not sure about this...
+	// XXX should this be a prop???
+	last: function(){
+		return (this.items || [])[this.items.length - 1] },
 
 
-// Group a set of items...
-//
-//	.group(make(..), ..)
-//	.group([make(..), ..])
-//		-> make
-//
-//
-// Example:
-// 	make.group(
-// 		make('made item'),
-// 		'literal item',
-// 		...)
-//
-//
-// NOTE: see notes to collectItems(..) for more info...
-//
-// XXX do we need to pass options to groups???
-Items.group = function(...items){
-	var that = this
-	items = items.length == 1 && items[0] instanceof Array ?
-		items[0]
-		: items
-	// replace the items with the group...
-	this.items.splice(this.items.length, 0, collectItems(this, items))
-	return this
-}
+	// Constructors/modifiers...
+
+	// Group a set of items...
+	//
+	//	.group(make(..), ..)
+	//	.group([make(..), ..])
+	//		-> make
+	//
+	//
+	// Example:
+	// 	make.group(
+	// 		make('made item'),
+	// 		'literal item',
+	// 		...)
+	//
+	//
+	// NOTE: see notes to collectItems(..) for more info...
+	//
+	// XXX do we need to pass options to groups???
+	group: function(...items){
+		var that = this
+		items = items.length == 1 && items[0] instanceof Array ?
+			items[0]
+			: items
+		// replace the items with the group...
+		this.items.splice(this.items.length, 0, collectItems(this, items))
+		return this },
+
+	// Place list in a sub-list of item...
+	//
+	// Examples:
+	// 	make.nest('literal header', [
+	// 		'literal item',
+	// 		make('item'),
+	// 		...
+	// 	])
+	//
+	// 	make.nest(make('header'), [
+	// 		'literal item',
+	// 		make('item'),
+	// 		...
+	// 	])
+	// 	
+	nest: function(item, list, options){
+		options = options || {}
+		//options = Object.assign(Object.create(this.options || {}), options || {})
+		options = Object.assign({},
+			{ children: list instanceof Array ?
+				collectItems(this, list)
+				: list },
+			options)
+		return item === this ?
+			((this.last().children = options.children), this)
+			: this(item, options) },
 
 
-// Place list in a sub-list of item...
-//
-// Examples:
-// 	make.nest('literal header', [
-// 		'literal item',
-// 		make('item'),
-// 		...
-// 	])
-//
-// 	make.nest(make('header'), [
-// 		'literal item',
-// 		make('item'),
-// 		...
-// 	])
-// 	
-Items.nest = function(item, list, options){
-	options = options || {}
-	//options = Object.assign(Object.create(this.options || {}), options || {})
-	options = Object.assign({},
-		{ children: list instanceof Array ?
-			collectItems(this, list)
-			: list },
-		options)
-	return item === this ?
-		((this.last().children = options.children), this)
-		: this(item, options)
-}
+	// Wrappers...
+
+	// this is here for uniformity...
+	Item: function(value, options){ 
+		return this(...arguments) },
+
+	Empty: function(value){},
+
+	Separator: function(){ 
+		return this('---') },
+	Spinner: function(){ 
+		return this('...') },
+
+	Heading: function(value, options){
+		var cls = 'heading'
+		options = options || {}
+		options.cls = options.cls instanceof Array ? 
+				options.cls.concat([cls])
+			: typeof(options.cls) == typeof('str') ?
+				options.cls +' '+ cls
+			: [cls]
+		options.buttons = options.buttons 
+			|| this.dialog.options.headingButtons
+		return this(value, options) },
+	Action: function(value, options){},
+	ConfirmAction: function(value){},
+	Editable: function(value){},
+
+	// lists...
+	List: function(values){},
+	EditableList: function(values){},
+	EditablePinnedList: function(values){},
+
+	// Special list components...
+	//Items.ListPath = function(){},
+	//Items.ListTitle = function(){},
+
+	// XXX EXPERIMENTAL...
+	//
+	// options:
+	// 	{
+	// 		showOKButton: <bool>,
+	//
+	// 	}
+	//
+	Confirm: function(message, accept, reject, options){
+		return this(message, 
+			Object.assign({
+				// XXX should the user be able to merge buttons from options???
+				buttons: [
+					...(reject instanceof Function ?
+						[['$Cancel', reject]]
+						: []),
+					...(accept instanceof Function 
+							&& (options || {}).showOKButton ?
+						[['$OK', accept]]
+						: []), ], 
+				},
+				accept ? 
+					{open: accept}
+					: {},
+				options || {})) },
 
 
+	// Generators...
+	//
+	// A generator is a function that creates 1 or more elements and sets up
+	// the appropriate interactions...
+	//
+	// NOTE: these can work both as item generators called from inside 
+	// 		.make(..), i.e. as methods of the make constructor, or as
+	// 		generators assigned to .__header__ / .__items__ / .__footer__
+	// 		attributes...
+	// NOTE: when re-using these options.id needs to be set so as not to 
+	// 		overwrite existing instances data and handlers...
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-// Buttons...
-var buttons = Items.buttons = {}
+	// Make item generator...
+	//
+	makeDisplayItem: function(text, options){
+		var args = [...arguments]
+		return function(make, options){
+			make(...args) } },
 
-//
-// 	Draw checked checkboz is <attr> is true...
-// 	Checkbox('attr')
-//
-// 	Draw checked checkboz is <attr> is false...
-// 	Checkbox('!attr')
-//
-// XXX rename -- distinguish from actual button...
-buttons.Checkbox = function(item, attr){
-	return (attr[0] == '!' 
-				&& !item[attr.slice(1)]) 
-			|| item[attr] ? 
-		'&#9744;' 
-		: '&#9745;' } 
-
-
-// XXX can we make these not use the same icon...
-buttons.ToggleDisabled = [
-	'Checkbox: "disabled"',
-	'toggleDisabled: item',
-	true,
-	{
-		alt: 'Disable/enable item',
-		cls: 'toggle-disabled',
-	}]
-buttons.ToggleHidden = [
-	'Checkbox: "hidden"',
-	'toggleHidden: item',
-	{
-		alt: 'Show/hide item',
-		cls: 'toggle-hidden',
-	}]
-buttons.ToggleSelected = [
-	'Checkbox: "selected"',
-	'toggleSelect: item',
-	{
-		alt: 'Select/deselect item',
-		cls: 'toggle-select',
-	}]
-// NOTE: this button is disabled for all items but the ones with .children...
-buttons.ToggleCollapse = [
-	function(item){
-		return !item.children ?
-				// placeholder...
-				'&nbsp;'
-			: item.collapsed ?
-				'+'
-			: '-' },
-	'toggleCollapse: item',
-	// disable button for all items that do not have children...
-	function(item){ 
-		return 'children' in item },
-	{
-		alt: 'Collapse/expand item',
-		cls: function(item){ 
-			return 'children' in item ? 
-				'toggle-collapse' 
-				: ['toggle-collapse', 'blank'] },
-	}]
-
-// XXX delete button -- requires .markDelete(..) action...
-buttons.Delete = [
-	'&times;',
-	'markDelete: item',
-	{
-		alt: 'Mark item for deletion',
-		cls: 'toggle-delete',
-		//keys: ['Delete', 'd'],
-	}]
-
-
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-// Wrappers...
-
-// this is here for uniformity...
-Items.Item = function(value, options){ return this(...arguments) }
-
-Items.Empty = function(value){}
-
-Items.Separator = function(){ return this('---') }
-Items.Spinner = function(){ return this('...') }
-
-Items.Heading = function(value, options){
-	var cls = 'heading'
-	options = options || {}
-	options.cls = options.cls instanceof Array ? 
-			options.cls.concat([cls])
-		: typeof(options.cls) == typeof('str') ?
-			options.cls +' '+ cls
-		: [cls]
-	options.buttons = options.buttons 
-		|| this.dialog.options.headingButtons
-	return this(value, options) }
-Items.Action = function(value, options){}
-Items.ConfirmAction = function(value){}
-Items.Editable = function(value){}
-
-// lists...
-Items.List = function(values){}
-Items.EditableList = function(values){}
-Items.EditablePinnedList = function(values){}
-
-// Special list components...
-//Items.ListPath = function(){}
-//Items.ListTitle = function(){}
-
-
-// XXX EXPERIMENTAL...
-//
-// options:
-// 	{
-// 		showOKButton: <bool>,
-//
-// 	}
-//
-Items.Confirm = function(message, accept, reject, options){
-	return this(message, 
-		Object.assign({
-			// XXX should the user be able to merge buttons from options???
+	// Make confirm item generator...
+	//
+	// XXX move this to Item.Confirm(..) and reuse that...
+	makeDisplayConfirm: function(message, accept, reject){
+		return this.makeDisplayItem(message, {
 			buttons: [
-				...(reject instanceof Function ?
-					[['$Cancel', reject]]
-					: []),
-				...(accept instanceof Function 
-						&& (options || {}).showOKButton ?
-					[['$OK', accept]]
-					: []), ], 
-			},
-			accept ? 
-				{open: accept}
-				: {},
-			options || {})) }
+				...[reject instanceof Function ?
+					['Cancel', reject]
+					: []],
+				...[accept instanceof Function ?
+					['OK', accept]
+					: []], ], }) },
 
+	// Focused item path...
+	//
+	// XXX add search/filter field...
+	// XXX add path navigation...
+	DisplayFocusedPath: function(make, options){
+		options = make instanceof Function ?
+			options
+			: make
+		options = options || {}
+		make = make instanceof Function ?
+			make
+			: this
+		var dialog = this.dialog || this
+		var tag = options.id || 'item_path_display'
+		// indicator...
+		var e = make('CURRENT_PATH', 
+				Object.assign(
+					{
+						id: tag,
+						cls: 'path', 
+					},
+					options))
+			.last()
+		// event handlers...
+		dialog 
+			.off('*', tag)
+			.on('focus', 
+				function(){
+					e.value = this.pathArray
+					this.renderItem(e) },
+				tag) 
+		return make },
 
+	// Item info...
+	//
+	// Show item .info or .alt text.
+	//
+	// This will show info for items that are:
+	// 	- focused
+	// 	- hovered (not yet implemented)
+	//
+	// XXX use focused elements and not just item...
+	// XXX add on mouse over...
+	DisplayItemInfo: function(make, options){
+		options = make instanceof Function ?
+			options
+			: make
+		options = options || {}
+		make = make instanceof Function ?
+			make
+			: this
+		var dialog = this.dialog || this
+		var tag = options.id || 'item_info_display'
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-// Generators...
-//
-// A generator is a function that creates 1 or more elements and sets up
-// the appropriate interactions...
-//
-// NOTE: these can work both as item generators called from inside 
-// 		.make(..), i.e. as methods of the make constructor, or as
-// 		generators assigned to .__header__ / .__items__ / .__footer__
-// 		attributes...
-// NOTE: when re-using these options.id needs to be set so as not to 
-// 		overwrite existing instances data and handlers...
-
-// Make item generator...
-//
-Items.makeDisplayItem = function(text, options){
-	var args = [...arguments]
-	return function(make, options){
-		make(...args) } }
-
-// Make confirm item generator...
-//
-// XXX move this to Item.Confirm(..) and reuse that...
-Items.makeDisplayConfirm = function(message, accept, reject){
-	return this.makeDisplayItem(message, {
-		buttons: [
-			...[reject instanceof Function ?
-				['Cancel', reject]
-				: []],
-			...[accept instanceof Function ?
-				['OK', accept]
-				: []], ], }) }
-
-// Focused item path...
-//
-// XXX add search/filter field...
-// XXX add path navigation...
-Items.DisplayFocusedPath = function(make, options){
-	options = make instanceof Function ?
-		options
-		: make
-	options = options || {}
-	make = make instanceof Function ?
-		make
-		: this
-	var dialog = this.dialog || this
-	var tag = options.id || 'item_path_display'
-	// indicator...
-	var e = make('CURRENT_PATH', 
-			Object.assign(
-				{
-					id: tag,
-					cls: 'path', 
-				},
-				options))
-		.last()
-	// event handlers...
-	dialog 
-		.off('*', tag)
-		.on('focus', 
-			function(){
-				e.value = this.pathArray
-				this.renderItem(e) },
+		// indicator...
+		var e = make('INFO', 
+				Object.assign(
+					{
+						id: tag,
+						cls: 'info',
+					},
+					options))
+			.last()
+		// event handlers...
+		dialog
+			.off('*', tag)
+			.on('focus',
+				function(){
+					var focused = this.focused
+					e.value = focused.doc
+						|| focused.alt
+						|| '&nbsp;'
+					this.renderItem(e) },
 			tag) 
-	return make}
+		return make },
 
-// Item info...
-//
-// Show item .info or .alt text.
-//
-// This will show info for items that are:
-// 	- focused
-// 	- hovered (not yet implemented)
-//
-// XXX use focused elements and not just item...
-// XXX add on mouse over...
-Items.DisplayItemInfo = function(make, options){
-	options = make instanceof Function ?
-		options
-		: make
-	options = options || {}
-	make = make instanceof Function ?
-		make
-		: this
-	var dialog = this.dialog || this
-	var tag = options.id || 'item_info_display'
 
-	// indicator...
-	var e = make('INFO', 
-			Object.assign(
-				{
-					id: tag,
-					cls: 'info',
-				},
-				options))
-		.last()
-	// event handlers...
-	dialog
-		.off('*', tag)
-		.on('focus',
-			function(){
-				var focused = this.focused
-				e.value = focused.doc
-					|| focused.alt
-					|| '&nbsp;'
-				this.renderItem(e) },
-		tag) 
-	return make }
+	// Constructors...
+	//
+	__new__: function(_, dialog, constructor){
+		var that = function(){
+			that.called = true
+			constructor.call(that, ...arguments)
+			return that }
+		return that },
+	__init__: function(dialog){
+		this.items = []
+		this.dialog = dialog },
+})
+
+
+var Make = 
+module.Make = 
+object.makeConstructor('Make', Items)
 
 
 
@@ -1644,7 +1645,7 @@ var BaseBrowserPrototype = {
 	// XXX revise options handling for .__items__(..)
 	// XXX might be a good idea to enable the user to merge the state 
 	// 		manually...
-	// 		one way to do:
+	// 		one way to go:
 	// 			- get the previous item via an index, 
 	// 			- update it
 	// 			- pass it to make(..)
@@ -1703,106 +1704,100 @@ var BaseBrowserPrototype = {
 		// 		...would be more logical to store the object (i.e. browser/list)
 		// 		directly as the element...
 		var section
-		var make_called = false
 		var ids = new Set()
-		var list = []
 		var keys = options.uniqueKeys ? 
 			new Set() 
 			: null
-		var make = function(value, opts){
-			make_called = true
+		var make = new Make(this, 
+			function(value, opts){
+				var dialog = this.dialog
 
-			// special-case: inlined browser...
-			//
-			// NOTE: we ignore opts here...
-			// XXX not sure if this is the right way to go...
-			// 		...for removal just remove the if statement and its
-			// 		first branch...
-			if(value instanceof BaseBrowser){
-				var item = value
-				item.parent = this
-				item.section = section
+				// special-case: inlined browser...
+				//
+				// NOTE: we ignore opts here...
+				// XXX not sure if this is the right way to go...
+				// 		...for removal just remove the if statement and its
+				// 		first branch...
+				if(value instanceof BaseBrowser){
+					var item = value
+					item.parent = dialog
+					item.section = section
 
-			// normal item...
-			} else {
-				var args = [...arguments]
-				opts = opts || {}
-				// handle: make(.., func, ..)
-				opts = opts instanceof Function ?
-					{open: opts}
-					: opts
-				// handle trailing options...
-				opts = args.length > 2 ?
-					Object.assign({},
-						args.pop(),
-						opts)
-					: opts
-				opts = Object.assign(
-					{},
-					opts, 
-					{value: value})
+				// normal item...
+				} else {
+					var args = [...arguments]
+					opts = opts || {}
+					// handle: make(.., func, ..)
+					opts = opts instanceof Function ?
+						{open: opts}
+						: opts
+					// handle trailing options...
+					opts = args.length > 2 ?
+						Object.assign({},
+							args.pop(),
+							opts)
+						: opts
+					opts = Object.assign(
+						{},
+						opts, 
+						{value: value})
 
-				// item id...
-				var key = this.__key__(opts)
+					// item id...
+					var key = dialog.__key__(opts)
 
-				// duplicate keys (if .options.uniqueKeys is set)...
-				if(keys){
-				   	if(keys.has(key)){
-						throw new Error(`make(..): duplicate key "${key}": `
-							+`can't create multiple items with the same key `
-							+`when .options.uniqueKeys is set.`) 
+					// duplicate keys (if .options.uniqueKeys is set)...
+					if(keys){
+						if(keys.has(key)){
+							throw new Error(`make(..): duplicate key "${key}": `
+								+`can't create multiple items with the same key `
+								+`when .options.uniqueKeys is set.`) 
+						}
+						keys.add(key)
 					}
-					keys.add(key)
+					// duplicate ids...
+					if(opts.id && ids.has(opts.id)){
+						throw new Error(`make(..): duplicate id "${opts.id}": `
+							+`can't create multiple items with the same id.`) }
+
+					// build the item...
+					// NOTE: we intentionally isolate the item object from 
+					// 		the input opts here, yes, having a ref to a mutable
+					// 		object may be convenient in some cases but in this
+					// 		case it would promote going around the main API...
+					var item = new dialog.__item__(
+						// default item template...
+						(options.itemTemplate || {})['*'] || {},
+						// item template...
+						(options.itemTemplate || {})[opts.value] || {},
+						opts,
+						{ 
+							parent: dialog, 
+							section,
+						})
+
+					// XXX do we need both this and the above ref???
+					item.children instanceof BaseBrowser
+						&& (item.children.parent = dialog)
 				}
-				// duplicate ids...
-				if(opts.id && ids.has(opts.id)){
-					throw new Error(`make(..): duplicate id "${opts.id}": `
-						+`can't create multiple items with the same id.`) }
 
-				// build the item...
-				// NOTE: we intentionally isolate the item object from 
-				// 		the input opts here, yes, having a ref to a mutable
-				// 		object may be convenient in some cases but in this
-				// 		case it would promote going around the main API...
-				var item = new this.__item__(
-					// default item template...
-					(options.itemTemplate || {})['*'] || {},
-					// item template...
-					(options.itemTemplate || {})[opts.value] || {},
-					opts,
-					{ 
-						parent: this, 
-						section,
-					})
+				// user extended make...
+				// XXX differentiate this for header and list...
+				dialog.__make__
+					&& dialog.__make__(section, item)
 
-				// XXX do we need both this and the above ref???
-				item.children instanceof BaseBrowser
-					&& (item.children.parent = this)
-			}
-
-			// user extended make...
-			// XXX differentiate this for header and list...
-			this.__make__
-				&& this.__make__(section, item)
-
-			// store the item...
-			list.push(item)
-			ids.add(key)
-
-			return make
-		}.bind(this)
-		make.__proto__ = Items
-		make.dialog = this
+				// store the item...
+				this.items.push(item)
+				ids.add(key) 
+			})
 
 		// build the sections...
 		var reset_index = false
 		sections
 			.forEach(function([name, handler]){
-				// setup closure for make(..)...
-				section = name
-				make_called = false
+				// setup state/closure for make(..)...
 				ids = new Set()
-				list = make.items = that[name] = []
+				section = name
+				make.items = that[name] = []
 
 				// prepare for index reset...
 				reset_index = reset_index || name == 'items'
@@ -1818,7 +1813,7 @@ var BaseBrowserPrototype = {
 						: null)
 
 				// if make was not called use the .__items__(..) return value...
-				that[name] = make_called ? 
+				that[name] = make.called ? 
 					that[name]
 					: res })
 
