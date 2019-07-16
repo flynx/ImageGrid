@@ -99,6 +99,39 @@ object.mixinFlat(function(){}, {
 		this.__items = value },
 
 	
+	// Bottons...
+	//
+	// Format:
+	// 	{
+	// 		// Button generator...
+	// 		<name>: function(item, attr),
+	//
+	// 		<name>: [
+	// 			// text...
+	// 			//
+	// 			// NOTE: code is resolved to .buttons[action](..), i.e.
+	// 			//		a button can reuse other buttons to generate its
+	// 			//		text...
+	// 			<code> | <html> | function(item),
+	//
+	// 			// action (optional)...
+	// 			//
+	// 			// NOTE: code is resolved to .dialog[action](..)
+	// 			<code> | function(item),
+	//
+	// 			// disabled predicate (optional)...
+	// 			function(item),
+	//
+	// 			// attrs (optional)...
+	// 			{
+	// 				<name>: <value> | function(item),
+	// 				...
+	// 			},
+	// 		],
+	//
+	// 		...
+	// 	}
+	//
 	buttons: {
 		//
 		// 	Draw checked checkboz is <attr> is true...
@@ -108,12 +141,13 @@ object.mixinFlat(function(){}, {
 		// 	Checkbox('!attr')
 		//
 		// XXX rename -- distinguish from actual button...
-		Checkbox: function(item, attr){
+		Checkbox: function(item, attr=''){
 			return (attr[0] == '!' 
 						&& !item[attr.slice(1)]) 
 					|| item[attr] ? 
 				'&#9744;' 
 				: '&#9745;' },
+
 		// XXX can we make these not use the same icon...
 		ToggleDisabled: [
 			'Checkbox: "disabled"',
@@ -157,7 +191,8 @@ object.mixinFlat(function(){}, {
 						'toggle-collapse' 
 						: ['toggle-collapse', 'blank'] },
 			}],
-		// XXX delete button -- requires .markDelete(..) action...
+
+		// NOTE: this requires .markDelete(..) action...
 		Delete: [
 			'&times;',
 			'markDelete: item',
@@ -4859,7 +4894,7 @@ var HTMLBrowserPrototype = {
 						button
 					// XXX reference the actual make(..) and not Items...
 					: Items.buttons[button] instanceof Function ?
-						Items.buttons[button].call(that, item)
+						[Items.buttons[button].call(that, item)].flat()
 					: Items.buttons[button] || button })
 			// NOTE: keep the order unsurprising -- first defined, first from left...
 			.reverse()
