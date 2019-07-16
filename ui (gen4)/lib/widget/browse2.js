@@ -1172,40 +1172,6 @@ function(get_state, set_state, unset_state, default_item, multi, options){
 		.run(function(){
 			this.__proto__ = toggler.Toggler.prototype
 			this.constructor = toggler.Toggler })}
-// XXX this is incomplete...
-var makeItemEventToggler2 = function(get_state, set_state, unset_state, default_item, multi){
-	var _get_state = get_state instanceof Function ?
-		get_state
-		: function(e){ return !!e[get_state] }
-	var _set_state = set_state instanceof Function ?
-		set_state
-		: function(e){ return !!this[set_state](e) }
-	var _unset_state = unset_state instanceof Function ?
-		unset_state
-		: function(e){ return !this[unset_state](e) }
-	multi = multi !== false
-	var getter = multi ? 'search' : 'get'
-
-	return toggler.Toggler(
-		default_item,
-		function(item, state){
-			if(item == null){
-				return false
-			}
-			return state == null ?
-				_get_state(item)
-				: state
-		},
-		[true, false],
-		function(state, item){
-			// if no item focused/given return false...
-			return item == null ? 
-					false 
-				// XXX add support for item lists...
-				: state ?
-	   				_set_state.call(this, item)
-				: _unset_state.call(this, item) })
-}
 
 
 
