@@ -3755,7 +3755,7 @@ var BaseBrowserPrototype = {
 	close: makeEventMethod('close', function(evt, reason){}),
 	
 
-	// Constructor...
+	// Instance constructor...
 	//
 	// 	BaseBrowser(items(make, options)[, options])
 	// 		-> browser
@@ -4291,7 +4291,7 @@ var HTMLBrowserPrototype = {
 		return this.keyboard.parseStringHandler(code, context || this) },
 
 
-	// DOM props..
+	// Props..
 	//
 	// XXX the problem with nested browser elements .update(..) not 
 	// 		updating unless called with correct context is that .dom / .container
@@ -4325,6 +4325,16 @@ var HTMLBrowserPrototype = {
 				: this.container.appendChild(value))
 		this.__dom = value },
 
+	// page-relative items...
+	get pagetop(){
+		return this.get('pagetop') },
+	set pagetop(item){
+		this.scrollTo(item, 'start') },
+	get pagebottom(){
+		return this.get('pagebottom') },
+	set pagebottom(item){
+		this.scrollTo(item, 'end') },
+
 
 	// Extending query...
 	//	
@@ -4339,7 +4349,6 @@ var HTMLBrowserPrototype = {
 	//	.search('pagebottom'[, offset] ..)
 	//
 	// XXX add support for pixel offset???
-	// XXX BROKEN -- 'pagetop' / 'pagebottom'
 	search: function(pattern){
 		var args = [...arguments].slice(1)
 		var p = pattern
@@ -4367,6 +4376,7 @@ var HTMLBrowserPrototype = {
 								- Math.max(0, st + H + offset) <= 0
 							&& stop(e) },
 					{ 
+						rawResults: true,
 						reverse: pos == 'bottom' ? 
 							'flat' 
 							: false,
@@ -5053,8 +5063,7 @@ var HTMLBrowserPrototype = {
 			} else {
 				delete e.keys
 			}
-		}, {skipDisabled: false})
-	},
+		}, {skipDisabled: false}) },
 	// NOTE: element alignment is done via the browser focus mechanics...
 	__focus__: function(evt, elem){
 		var that = this
