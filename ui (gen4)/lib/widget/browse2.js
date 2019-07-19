@@ -4329,17 +4329,13 @@ var HTMLBrowserPrototype = {
 
 	// page-relative items...
 	get pagetop(){
-		return this.dom 
-			&& this.get('pagetop') },
+		return this.get('pagetop') },
 	set pagetop(item){
-		this.dom 
-			&& this.scrollTo(item, 'start') },
+		this.scrollTo(item, 'start') },
 	get pagebottom(){
-		return this.dom
-			&& this.get('pagebottom') },
+		return this.get('pagebottom') },
 	set pagebottom(item){
-		this.dom
-			&& this.scrollTo(item, 'end') },
+		this.scrollTo(item, 'end') },
 
 
 	// Extending query...
@@ -4361,6 +4357,9 @@ var HTMLBrowserPrototype = {
 
 		// XXX skip detached elements...
 		var getAtPagePosition = function(pos, offset){
+			if(!this.dom){
+				return []
+			}
 			pos = pos || 'top'
 			var lst = this.dom.querySelector('.list.items')
 			offset = lst.offsetHeight * (offset || 0)
@@ -4387,16 +4386,12 @@ var HTMLBrowserPrototype = {
 							'flat' 
 							: false,
 						skipDisabled: !(this.options || {}).focusDisabledItems, 
-					})
-				.run(function(){
-					return this instanceof Array ?
-						undefined
-						: this }) }.bind(this)
+					}) }.bind(this)
 
 		pattern = arguments[0] = 
 			// DOM element...
 			pattern instanceof HTMLElement ?
-				function(e){ return e.elem === p || e.elem === p }
+				function(e){ return e.dom === p || e.elem === p }
 			// jQuery object...
 			: (typeof(jQuery) != 'undefined' && pattern instanceof jQuery) ?
 				function(e){ return p.is(e.dom) || p.is(e.elem) }
