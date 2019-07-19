@@ -3693,9 +3693,11 @@ var BaseBrowserPrototype = {
 
 				full 
 					&& this.make(opts) 
+				var context = {}
 				this
-					.preRender()
-					.render(opts) 
+					// XXX this needs access to render context....
+					.preRender(opts, (opts || {}).renderer, context)
+					.render(opts, (opts || {}).renderer, context) 
 				this.trigger(...args) }.bind(this)
 			var _update_n_delay = function(){
 				// call...
@@ -4327,13 +4329,17 @@ var HTMLBrowserPrototype = {
 
 	// page-relative items...
 	get pagetop(){
-		return this.get('pagetop') },
+		return this.dom 
+			&& this.get('pagetop') },
 	set pagetop(item){
-		this.scrollTo(item, 'start') },
+		this.dom 
+			&& this.scrollTo(item, 'start') },
 	get pagebottom(){
-		return this.get('pagebottom') },
+		return this.dom
+			&& this.get('pagebottom') },
 	set pagebottom(item){
-		this.scrollTo(item, 'end') },
+		this.dom
+			&& this.scrollTo(item, 'end') },
 
 
 	// Extending query...
@@ -4493,6 +4499,7 @@ var HTMLBrowserPrototype = {
 	// 		</div>
 	// 	or same as .renderList(..)
 	//
+	// XXX set scroll offset...
 	renderFinalize: function(header, items, footer, context){
 		var that = this
 		var d = this.renderList(header, items, footer, context)
@@ -4527,9 +4534,16 @@ var HTMLBrowserPrototype = {
 			   that.focused
 					&& that.focused.elem.focus() })
 		//*/
+		
+		// XXX get the scroll offset...
+		// XXX
+		console.log('SCROLL OFFSET:', context.scroll_offset)
 
 		// XXX should this be done here or in .render(..)???
 		this.dom = d
+
+		// set the scroll offset...
+		// XXX
 
 		// keep focus where it is...
 		var focused = this.focused
@@ -5011,8 +5025,17 @@ var HTMLBrowserPrototype = {
 	// NOTE: this will also kill any user-set keys for disabled/hidden items...
 	//
 	// XXX also handle global button keys...
-	__preRender__: function(){
+	__preRender__: function(evt, options, renderer, context){
 		var that = this
+
+		// prepare for maintaining the scroll position...
+		var ref = context.scroll_reference = this.focused || this.pagetop
+		context.scroll_offset = 
+			context.scroll_offset
+			|| (ref && ref.dom && ref.dom.offsetTop) ?
+				ref.dom.offsetTop - ref.dom.offsetParent.scrollTop
+				: null
+
 		// reset item shortcuts...
 		var shortcuts = 
 			this.keybindings.ItemShortcuts = 
