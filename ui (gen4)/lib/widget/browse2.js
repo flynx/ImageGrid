@@ -2821,6 +2821,7 @@ var BaseBrowserPrototype = {
 	// 		first result only.
 	//
 	// XXX should we be able to get offset values relative to any match?
+	// XXX BUG: when pattern is a path this returns a view rather than the item....
 	get: function(pattern, options){
 		var args = [...arguments]
 		pattern = args.shift()
@@ -2852,9 +2853,8 @@ var BaseBrowserPrototype = {
 							.reduce(function(r, e){ 
 								return r || typeof(e) != typeof('str') }, false)))
 				&& !('iterateCollapsed' in options)){
-			options = Object.assign(
-				Object.create(options), 
-				{iterateCollapsed: true}) }
+			options.iterateCollapsed = true 
+		}
 
 		// sanity checks...
 		if(offset <= 0){
