@@ -2821,7 +2821,6 @@ var BaseBrowserPrototype = {
 	// 		first result only.
 	//
 	// XXX should we be able to get offset values relative to any match?
-	// XXX BUG: when pattern is a path this returns a view rather than the item....
 	get: function(pattern, options){
 		var args = [...arguments]
 		pattern = args.shift()
@@ -4421,9 +4420,6 @@ var HTMLBrowserPrototype = {
 	// 		passed 'pagetop'/'pagebottom' + offset, this may become an 
 	// 		issue if .get(..) starts doing something extra, currently 
 	// 		this is a non-issue...
-	//
-	// XXX BUG: when pattern is a path this returns a view rather than the item....
-	// 		...could be an upstream bug...
 	get: function(pattern){
 		var args = [...arguments].slice(1)
 		var offset = typeof(args[0]) == typeof(123) ?
