@@ -4529,15 +4529,22 @@ var HTMLBrowserPrototype = {
 					&& that.focused.elem.focus() })
 		//*/
 		
-		// XXX get the scroll offset...
-		// XXX
-		console.log('SCROLL OFFSET:', context.scroll_offset)
 
 		// XXX should this be done here or in .render(..)???
 		this.dom = d
 
 		// set the scroll offset...
-		// XXX
+		if(context.root === this && context.scroll_offset){
+			console.log('SCROLL OFFSET:', context.scroll_offset)
+
+			var ref = this.focused || this.pagetop
+			// XXX for some reason this can be null...
+			// 		...this seems to be the case for nested browsers...
+			var scrolled = ref.dom.offsetParent 
+
+			scrolled.scrollTop = 
+				ref.dom.offsetTop - scrolled.scrollTop - context.scroll_offset
+		}
 
 		// keep focus where it is...
 		var focused = this.focused
@@ -5023,6 +5030,7 @@ var HTMLBrowserPrototype = {
 		var that = this
 
 		// prepare for maintaining the scroll position...
+		// XXX this should be done in render...
 		var ref = context.scroll_reference = this.focused || this.pagetop
 		context.scroll_offset = 
 			context.scroll_offset
