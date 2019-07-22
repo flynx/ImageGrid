@@ -3019,6 +3019,8 @@ var BaseBrowserPrototype = {
 
 	// Renderers...
 	//
+	// 	.renderContext(context)
+	//
 	// 	.renderFinalize(header, items, footer, context)
 	// 	.renderList(header, items, footer, context)
 	// 	.renderNested(header, children, item, context)
@@ -3030,6 +3032,8 @@ var BaseBrowserPrototype = {
 	// NOTE: there are not to be used directly...
 	// XXX might be a good idea to move these into a separate renderer 
 	// 		object (mixin or encapsulated)...
+	renderContext: function(context){
+		return context || {} },
 	renderFinalize: function(header, items, footer, context){
 		return this.renderList(header, items, footer, context) },
 	renderList: function(header, items, footer, context){
@@ -3138,7 +3142,7 @@ var BaseBrowserPrototype = {
 	// XXX should from/to/around/count be a feature of this or of .walk(..)???
 	// XXX render all the sections at root... (???)
 	render: function(options, renderer, context){
-		context = context || {}
+		context = this.renderContext(context)
 		renderer = renderer || this
 		options = context.options = context.options 
 			|| Object.assign(
@@ -4479,6 +4483,31 @@ var HTMLBrowserPrototype = {
 
 	// Renderers (DOM)...
 	//
+	// Prepare context for maintaining scroll offset...
+	//
+	// XXX need a counterpart to this to finalize the context on any render...
+	renderContext: function(context){
+		context = context || {}
+
+		if(context.scroll_offset == null){
+			// prepare for maintaining the scroll position...
+			// XXX need to do this pre any .render*(..) call...
+			// 		...something like:
+			// 			this.getRenderContext(context)
+			// 		should do the trick...
+			// 		another way to go might be a context object, but that seems to be 
+			// 		complicating things...
+			var ref = context.scroll_reference = this.focused || this.pagetop
+			context.scroll_offset = 
+				context.scroll_offset
+				|| ((ref && ref.dom && ref.dom.offsetTop) ?
+					ref.dom.offsetTop - ref.dom.offsetParent.scrollTop
+					: null)
+		}
+
+		return context 
+	},
+	//
 	// This also does:
 	// 	- save the rendered state to .dom 
 	// 	- wrap a list of nodes (nested list) in a div
@@ -4496,6 +4525,8 @@ var HTMLBrowserPrototype = {
 	// XXX set scroll offset...
 	renderFinalize: function(header, items, footer, context){
 		var that = this
+		var context = this.renderContext(context)
+
 		var d = this.renderList(header, items, footer, context)
 		var options = context.options || this.options || {}
 
@@ -4534,12 +4565,17 @@ var HTMLBrowserPrototype = {
 		this.dom = d
 
 		// set the scroll offset...
+		// XXX does not work correctly for all cases yet...
+		// XXX move this to a seporate method -- need to trigger this 
+		// 		on render that can affect scroll position, e.g. partial 
+		// 		render...
+		// XXX need to trigger the setup for this from .render(..) itself...
 		if(context.root === this && context.scroll_offset){
-			console.log('SCROLL OFFSET:', context.scroll_offset)
-
 			var ref = this.focused || this.pagetop
 			// XXX for some reason this can be null...
-			// 		...this seems to be the case for nested browsers...
+			// 		...this seems to be the case for nested browsers, their
+			// 		.dom looks to be still ditached from main dom at this 
+			// 		point... (setTimeout(.., 0) does not fix this)
 			var scrolled = ref.dom.offsetParent 
 
 			scrolled.scrollTop = 
@@ -4574,6 +4610,7 @@ var HTMLBrowserPrototype = {
 	//
 	renderList: function(header, items, footer, context){
 		var that = this
+		var context = this.renderContext(context)
 		var options = context.options || this.options || {}
 
 		// dialog (container)...
@@ -4643,6 +4680,7 @@ var HTMLBrowserPrototype = {
 	//
 	renderNested: function(header, children, item, context){
 		var that = this
+		var context = this.renderContext(context)
 		var options = context.options || this.options || {}
 
 		// container...
@@ -4690,6 +4728,7 @@ var HTMLBrowserPrototype = {
 	// 	</div>
 	//
 	renderGroup: function(items, context){
+		var context = this.renderContext(context)
 		var e = document.createElement('div')
 		e.classList.add('group')
 		items
@@ -4726,6 +4765,7 @@ var HTMLBrowserPrototype = {
 	// XXX show button global/local keys...
 	renderItem: function(item, i, context){
 		var that = this
+		var context = this.renderContext(context)
 		var options = (context || {}).options || this.options || {}
 		if(options.hidden && !options.renderHidden){
 			return null
@@ -5028,15 +5068,6 @@ var HTMLBrowserPrototype = {
 	// XXX also handle global button keys...
 	__preRender__: function(evt, options, renderer, context){
 		var that = this
-
-		// prepare for maintaining the scroll position...
-		// XXX this should be done in render...
-		var ref = context.scroll_reference = this.focused || this.pagetop
-		context.scroll_offset = 
-			context.scroll_offset
-			|| (ref && ref.dom && ref.dom.offsetTop) ?
-				ref.dom.offsetTop - ref.dom.offsetParent.scrollTop
-				: null
 
 		// reset item shortcuts...
 		var shortcuts = 
