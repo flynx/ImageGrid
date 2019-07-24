@@ -1005,8 +1005,6 @@ function(event, {handler, action, default_item, filter, options={}, getter='sear
 			var resolved = 
 				// event handler...
 				item instanceof Function ?
-					// XXX where do we handle this...
-					//this.on(event, item) 
 					item
 				// array of queries...
 				: item instanceof Array ?
@@ -1024,6 +1022,7 @@ function(event, {handler, action, default_item, filter, options={}, getter='sear
 				// item is null (explicitly) or other...
 				: []
 			return (skipUnresolved 
+					// handler registration...
 					&& !(resolved instanceof Function)
 					&& resolved.length == 0 
 					&& item != null) ?
