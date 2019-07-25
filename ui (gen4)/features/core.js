@@ -458,24 +458,32 @@ var LifeCycleActions = actions.Actions({
 
 			// ready timeout -> force ready...
 			this.config['declare-ready-timeout'] > 0
-				&& setTimeout(function(){
-					// cleanup...
-					if((that.__ready_announce_requests || new Set()).size == 0){
-						delete that.__ready_announce_requests
-					}
-					// force start...
-					if(!that.isReady()){
-						that.ready() 
+				&& !this.__ready_announce_timeout
+				&& (this.__ready_announce_timeout = 
+					setTimeout(function(){
+						// cleanup...
+						delete this.__ready_announce_timeout
+						if((this.__ready_announce_requests || new Set()).size == 0){
+							delete this.__ready_announce_requests
+						}
+						// force start...
+						if(!this.isReady()){
+							// report...
+							this.logger 
+								&& this.logger.push('start')
+									.emit('forcing ready.')
+									.emit('stalled:', 
+										this.__ready_announce_requested, 
+										...(this.__ready_announce_requests || []))
 
-						// report...
-						that.logger 
-							&& that.logger.psuh('start')
-								.emit('forced ready.')
-								.emit('stalled:', 
-									this.__ready_announce_requested, 
-									...[this.__ready_announce_requests || []])
-					}
-				}, this.config['declare-ready-timeout'])
+							// force ready...
+							this.__ready = !!this.ready() 
+
+							// cleanup...
+							delete this.__ready_announce_requested
+							delete this.__ready_announce_requests
+						}
+					}.bind(this), this.config['declare-ready-timeout']))
 
 			// trigger the started event...
 			this.started()
