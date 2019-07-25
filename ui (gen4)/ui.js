@@ -153,6 +153,7 @@ $(function(){
 
 			// XXX
 			//log.push([msg, e, v])
+			return this
 		},
 
 		push: function(msg){

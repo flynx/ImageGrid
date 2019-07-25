@@ -319,9 +319,16 @@ module.Introspection = ImageGridFeatures.Feature({
 // XXX should his have state???
 // 		...if so, should this be a toggler???
 var LifeCycleActions = actions.Actions({
+	config: {
+		// if set indicates the timeput after which the application quits
+		// wating for .declareReady() and forcefully triggers .ready()
+		'declare-ready-timeout': 15000,
+	},
+	
 	__stop_handler: null,
 	__ready: null,
 	__ready_announce_requested: null,
+	__ready_announce_requests: null,
 
 	// introspection...
 	isStarted: function(){ 
@@ -440,13 +447,35 @@ var LifeCycleActions = actions.Actions({
 			// ...if no one requested to do it.
 			if(this.__ready_announce_requested == null
 					|| this.__ready_announce_requested <= 0){
+				// in the browser world trigger .declareReady(..) on load event...
 				if(runtime.browser){
-					$(function(){ that.declareReady() })
+					$(function(){ that.declareReady('start') })
 
 				} else {
-					this.declareReady()
+					this.declareReady('start')
 				}
 			}
+
+			// ready timeout -> force ready...
+			this.config['declare-ready-timeout'] > 0
+				&& setTimeout(function(){
+					// cleanup...
+					if((that.__ready_announce_requests || new Set()).size == 0){
+						delete that.__ready_announce_requests
+					}
+					// force start...
+					if(!that.isReady()){
+						that.ready() 
+
+						// report...
+						that.logger 
+							&& that.logger.psuh('start')
+								.emit('forced ready.')
+								.emit('stalled:', 
+									this.__ready_announce_requested, 
+									...[this.__ready_announce_requests || []])
+					}
+				}, this.config['declare-ready-timeout'])
 
 			// trigger the started event...
 			this.started()
@@ -460,6 +489,9 @@ var LifeCycleActions = actions.Actions({
 			// Not intended for direct use.
 		})],
 
+	// NOTE: it is recommended to use this protocol in such a way that
+	// 		the .ready() handler would recover from a stalled 
+	// 		.requestReadyAnnounce() call...
 	ready: ['- System/System ready event',
 		doc`Ready core event
 
@@ -495,13 +527,18 @@ var LifeCycleActions = actions.Actions({
 
 		NOTE: this will call .ready() only once per start/stop cycle.
 		`,
-		function(){
+		function(message){
 			this.__ready_announce_requested
 				&& (this.__ready_announce_requested -= 1)
 
+			message
+				&& this.__ready_announce_requests instanceof Set
+				&& this.__ready_announce_requests.delete(message)
+
 			if(!this.__ready_announce_requested 
-					|| this.__ready_announce_requested == 0){
-				this.__ready = this.__ready || !!this.ready() 
+					|| this.__ready_announce_requested <= 0){
+				this.__ready = this.__ready 
+					|| !!this.ready() 
 				delete this.__ready_announce_requested
 			}
 		}],
@@ -509,6 +546,7 @@ var LifeCycleActions = actions.Actions({
 		doc`Request to announce the .ready() event.
 
 			.requestReadyAnnounce()
+			.requestReadyAnnounce(message)
 
 		This enables a feature to delay the .ready() call until it is 
 		ready, this is useful for async or long stuff that can block
@@ -526,8 +564,13 @@ var LifeCycleActions = actions.Actions({
 		NOTE: if this is called, .ready() will not get triggered 
 			automatically by the system.
 		`,
-		function(){
-			return this.__ready_announce_requested = (this.__ready_announce_requested || 0) + 1
+		function(message){
+			message
+				&& (this.__ready_announce_requests = 
+					this.__ready_announce_requests || new Set())
+				&& this.__ready_announce_requests.add(message)
+
+			return (this.__ready_announce_requested = (this.__ready_announce_requested || 0) + 1)
 		}],
 
 	stop: ['- System/', 

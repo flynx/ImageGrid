@@ -555,7 +555,7 @@ module.WindowedAppControl = core.ImageGridFeatures.Feature({
 		['start.pre',
 			function(){ 
 				// we are going to declare ready ourselves...
-				this.requestReadyAnnounce() }],
+				this.requestReadyAnnounce('ui-windowed-app-control') }],
 		// XXX should we create and show the window here???
 		['start',
 			function(){ 
@@ -587,7 +587,7 @@ module.WindowedAppControl = core.ImageGridFeatures.Feature({
 
 				// declare we are ready when DOM is ready...
 				$(function(){ 
-					that.declareReady() })
+					that.declareReady('ui-windowed-app-control') })
 			}],
 
 		// show window + hide splash screen...

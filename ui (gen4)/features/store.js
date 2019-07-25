@@ -479,11 +479,11 @@ module.Store = core.ImageGridFeatures.Feature({
 		['start.pre', 
 			function(){ 
 				if(this.config['store-mode'] != null){
-					this.requestReadyAnnounce()
+					this.requestReadyAnnounce('store')
 					this
 						.loadData() 
 						.then(function(){
-							this.declareReady() }.bind(this)) 
+							this.declareReady('store') }.bind(this)) 
 				} }],
 		['stop', 
 			function(){ 
