@@ -4526,7 +4526,13 @@ var HTMLBrowserPrototype = {
 	// 		</div>
 	// 	or same as .renderList(..)
 	//
-	// XXX set scroll offset...
+	// XXX set scroll offset... should it be here?
+	// 		...would be nice to universally wrap any render operation 
+	// 		in a context getter/setter that would track the root call and 
+	// 		trigger an postRender event...
+	// 		how can we Identify the root call??
+	//		...the traditional way would be a stack -- pop last elem 
+	//		means we are done...
 	renderFinalize: function(header, items, footer, context){
 		var that = this
 		var context = this.renderContext(context)
