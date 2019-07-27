@@ -4533,6 +4533,9 @@ var HTMLBrowserPrototype = {
 	// 		how can we Identify the root call??
 	//		...the traditional way would be a stack -- pop last elem 
 	//		means we are done...
+	//		ways to go with this:
+	//			- renderer wrapper/generator
+	//			- a 1:1 item-based render mechanic with single entry point...
 	renderFinalize: function(header, items, footer, context){
 		var that = this
 		var context = this.renderContext(context)
