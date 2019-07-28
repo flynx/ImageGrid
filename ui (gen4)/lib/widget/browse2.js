@@ -4536,6 +4536,8 @@ var HTMLBrowserPrototype = {
 	//		ways to go with this:
 	//			- renderer wrapper/generator
 	//			- a 1:1 item-based render mechanic with single entry point...
+	//				...this may be a problem as some of the renderers 
+	//				can call others... (???)
 	renderFinalize: function(header, items, footer, context){
 		var that = this
 		var context = this.renderContext(context)
