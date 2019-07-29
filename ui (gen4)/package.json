@@ -21,7 +21,7 @@
     "app-module-path": "^1.0.6",
     "async-json": "0.0.2",
     "commander": "^2.20.0",
-    "electron": "^5.0.7",
+    "electron": "^5.0.8",
     "exiftool": "^0.0.3",
     "fs-extra": "^7.0.1",
     "fs-walk": "^0.0.1",
