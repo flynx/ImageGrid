@@ -4591,10 +4591,13 @@ var HTMLBrowserPrototype = {
 			// 		...this seems to be the case for nested browsers, their
 			// 		.dom looks to be still ditached from main dom at this 
 			// 		point... (setTimeout(.., 0) does not fix this)
+			// 		...one likely cause can be that we are someplace 
+			// 		creating the elem twice, i.e. once within the nested 
+			// 		browser and the other outside -- check...
 			var scrolled = ref.dom.offsetParent 
 
 			scrolled.scrollTop = 
-				ref.dom.offsetTop - scrolled.scrollTop - context.scroll_offset
+				ref.elem.offsetTop - scrolled.scrollTop - context.scroll_offset
 		}
 
 		// keep focus where it is...
