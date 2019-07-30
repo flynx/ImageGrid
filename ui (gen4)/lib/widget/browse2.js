@@ -4585,17 +4585,20 @@ var HTMLBrowserPrototype = {
 		// 		on render that can affect scroll position, e.g. partial 
 		// 		render...
 		// XXX need to trigger the setup for this from .render(..) itself...
+		// XXX BUG: context.root === this is true for non-root containers too...
+		//
+		// 		to reproduce:
+		// 			dialog.collapse('B/C/D')
+		//
+		//		this works fine:
+		//			dialog.get('B/C/D').collapsed = true
+		//			dialog.render()
+		//
+		//		...this appears to be due to .render(..) not being called 
+		//		from the root object in case #1, need more investigating...
 		if(context.root === this && context.scroll_offset){
 			var ref = this.focused || this.pagetop
-			// XXX for some reason this can be null...
-			// 		...this seems to be the case for nested browsers, their
-			// 		.dom looks to be still ditached from main dom at this 
-			// 		point... (setTimeout(.., 0) does not fix this)
-			// 		...one likely cause can be that we are someplace 
-			// 		creating the elem twice, i.e. once within the nested 
-			// 		browser and the other outside -- check...
 			var scrolled = ref.dom.offsetParent 
-
 			scrolled.scrollTop = 
 				ref.elem.offsetTop - scrolled.scrollTop - context.scroll_offset
 		}
