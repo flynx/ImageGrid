@@ -4493,21 +4493,24 @@ var HTMLBrowserPrototype = {
 	renderContext: function(context){
 		context = context || {}
 
-		if(context.scroll_offset == null){
-			// prepare for maintaining the scroll position...
-			// XXX need to do this pre any .render*(..) call...
-			// 		...something like:
-			// 			this.getRenderContext(context)
-			// 		should do the trick...
-			// 		another way to go might be a context object, but that seems to be 
-			// 		complicating things...
-			var ref = context.scroll_reference = this.focused || this.pagetop
-			context.scroll_offset = 
-				context.scroll_offset
-				|| ((ref && ref.dom && ref.dom.offsetTop) ?
-					ref.dom.offsetTop - ref.dom.offsetParent.scrollTop
-					: null)
-		}
+		// prepare for maintaining the scroll position...
+		// XXX need to do this pre any .render*(..) call...
+		// 		...something like:
+		// 			this.getRenderContext(context)
+		// 		should do the trick...
+		// 		another way to go might be a context object, but that seems to be 
+		// 		complicating things...
+		var ref = context.scroll_reference = 
+			context.scroll_reference 
+				|| this.focused 
+				|| this.pagetop
+		context.scroll_offset = 
+			context.scroll_offset
+			|| ((ref && ref.dom && ref.dom.offsetTop) ?
+				ref.dom.offsetTop - ref.dom.offsetParent.scrollTop
+				: null)
+
+		context.scroll_offset && console.log('renderContext:', context.scroll_offset)
 
 		return context 
 	},
@@ -4596,11 +4599,19 @@ var HTMLBrowserPrototype = {
 		//
 		//		...this appears to be due to .render(..) not being called 
 		//		from the root object in case #1, need more investigating...
-		if(context.root === this && context.scroll_offset){
+		//		...we seem to be re-rendering nested dialogs on each level...
+		console.log('finalize:', 
+			context.scroll_offset, 
+			context.scroll_reference 
+				&& context.scroll_reference.dom.offsetParent)
+		if(context.scroll_offset){
 			var ref = this.focused || this.pagetop
 			var scrolled = ref.dom.offsetParent 
-			scrolled.scrollTop = 
-				ref.elem.offsetTop - scrolled.scrollTop - context.scroll_offset
+			//scrolled.scrollTop = 
+			//	ref.elem.offsetTop - scrolled.scrollTop - context.scroll_offset
+			scrolled
+				&& (scrolled.scrollTop = 
+					ref.elem.offsetTop - scrolled.scrollTop - context.scroll_offset)
 		}
 
 		// keep focus where it is...
