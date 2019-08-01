@@ -37,7 +37,8 @@ var SlideshowActions = actions.Actions({
 		'slideshow-direction': 'forward',
 		'slideshow-interval': '3s',
 		'slideshow-interval-max-count': 7,
-		'slideshow-hold': 'on',
+
+		'slideshow-pause-on-blur': true,
 
 		'slideshow-intervals': [
 			'0.2s',
@@ -48,7 +49,6 @@ var SlideshowActions = actions.Actions({
 		],
 	},
 
-	// XXX should this take the slideshow off pause if paused???
 	toggleSlideshow: ['Slideshow/$Slideshow quick toggle',
 		toggler.CSSClassToggler(
 			function(){ return this.dom }, 
@@ -183,9 +183,17 @@ var SlideshowActions = actions.Actions({
 
 			return o
 		})],
-
 	slideshowButtonAction: ['- Slideshow/',
-		core.doc`
+		core.doc`Slideshow button action
+
+		This differs from .toggleSlideshow() in that it also handles the paused
+		timer/slideshow state according to the following FSM:
+
+			off <--> on <--- paused
+
+		i.e. if the slideshow is paused it will resume it otherwise stop/start.
+
+		NOTE: this is not a toggler.
 		`,
 		function(){
 			return this.toggleSlideshowTimer('?') == 'paused' ?
@@ -237,8 +245,8 @@ var SlideshowActions = actions.Actions({
 	toggleSlideshowLooping: ['- Slideshow/Slideshow $looping',
 		core.makeConfigToggler('slideshow-looping', ['on', 'off'])],
 
-	toggleSlideshowHold: ['Interface|Slideshow/Slideshow $hold',
-		core.makeConfigToggler('slideshow-hold', ['on', 'off'])],
+	toggleSlideshowPauseOnBlur: ['Interface|Slideshow/Slideshow pause on app blur',
+		core.makeConfigToggler('slideshow-pause-on-blur', ['on', 'off'])],
 
 	resetSlideshowTimer: ['- Slideshow/Reset slideshow timer',
 		function(){
@@ -352,7 +360,7 @@ module.Slideshow = core.ImageGridFeatures.Feature({
 		['stop',
 			function(){ this.toggleSlideshow('off') }],
 
-		// slideshow pause...
+		// slideshow pause on click or blur...
 		['toggleSlideshow',
 			function(){
 				var that = this
@@ -379,28 +387,30 @@ module.Slideshow = core.ImageGridFeatures.Feature({
 					: this.dom.off('click', toggle)
 
 				// toggle on blur/focus...
-				var user_paused = false
-				var focus_debounce = false
-				var blur = this.__slideshow_blur_handler
-					= this.__slideshow_blur_handler
-						|| function(){
-							if(!focus_debounce){
-								user_paused = that.toggleSlideshowTimer('?') == 'paused' 
-								that.toggleSlideshowTimer('paused') 
-								focus_debounce = true } }
-				var focus = this.__slideshow_focus_handler
-					= this.__slideshow_focus_handler
-						|| function(){
-							focus_debounce = false
-							user_paused 
-								|| that.toggleSlideshowTimer('running') }
-				running ?
-					this.dom
-						.on('blur', blur)
-						.on('focus', focus)
-					: this.dom
-						.off('blur', blur)
-						.off('focus', focus)
+				if(this.config['slideshow-pause-on-blur'] !== false){
+					var user_paused = false
+					var focus_debounce = false
+					var blur = this.__slideshow_blur_handler
+						= this.__slideshow_blur_handler
+							|| function(){
+								if(!focus_debounce){
+									user_paused = that.toggleSlideshowTimer('?') == 'paused' 
+									that.toggleSlideshowTimer('paused') 
+									focus_debounce = true } }
+					var focus = this.__slideshow_focus_handler
+						= this.__slideshow_focus_handler
+							|| function(){
+								focus_debounce = false
+								user_paused 
+									|| that.toggleSlideshowTimer('running') }
+					running ?
+						this.dom
+							.on('blur', blur)
+							.on('focus', focus)
+						: this.dom
+							.off('blur', blur)
+							.off('focus', focus)
+				}
 			}],
 
 		// pause/resume slideshow on modal stuff...
