@@ -48,6 +48,7 @@ var SlideshowActions = actions.Actions({
 		],
 	},
 
+	// XXX should this take the slideshow off pause if paused???
 	toggleSlideshow: ['Slideshow/$Slideshow quick toggle',
 		toggler.CSSClassToggler(
 			function(){ return this.dom }, 
@@ -182,6 +183,14 @@ var SlideshowActions = actions.Actions({
 
 			return o
 		})],
+
+	slideshowButtonAction: ['- Slideshow/',
+		core.doc`
+		`,
+		function(){
+			return this.toggleSlideshowTimer('?') == 'paused' ?
+				(this.toggleSlideshowTimer() && 'on')
+				: this.toggleSlideshow() }],
 	
 	// settings...
 	// NOTE: these are disabled as they are repeated in the slideshow dialog...
@@ -241,7 +250,7 @@ var SlideshowActions = actions.Actions({
 				this.__slideshow_timer = 'suspended'
 			}
 		}],
-	toggleSlideshowTimer:['Slideshow/Pause or resume running slideshow',
+	toggleSlideshowTimer: ['Slideshow/Pause or resume running slideshow',
 		core.doc`
 
 		NOTE: this will have no effect if the slideshow is not running...
@@ -250,8 +259,10 @@ var SlideshowActions = actions.Actions({
 		toggler.Toggler(null, 
 			function(_, state){ 
 				if(state == null){
-					return this.__slideshow_timer == 'suspended' ? 'paused' 
-						: !!this.__slideshow_timer ? 'running'
+					return this.__slideshow_timer == 'suspended' ? 
+							'paused' 
+						: !!this.__slideshow_timer ? 
+							'running'
 						: 'off'
 				}
 
@@ -341,12 +352,7 @@ module.Slideshow = core.ImageGridFeatures.Feature({
 		['stop',
 			function(){ this.toggleSlideshow('off') }],
 
-		// slideshow hold...
-		//
-		// Holding down a key or mouse button will suspend the slideshow 
-		// and resume it when the key/button is released...
-		//
-		// XXX experimental, needs more testing...
+		// slideshow pause...
 		['toggleSlideshow',
 			function(){
 				var that = this
@@ -355,20 +361,10 @@ module.Slideshow = core.ImageGridFeatures.Feature({
 					return
 				}
 
+				var running = this.toggleSlideshow('?') == 'on' 
 				var toggle_debounce = false
 
-				var hold = this.__slideshow_hold_handler 
-					= this.__slideshow_hold_handler 
-						|| function(evt){
-							!toggle_debounce 
-								&& that.toggleSlideshowTimer('?') == 'running'
-								&& that.suspendSlideshowTimer() }
-				var release = this.__slideshow_release_handler 
-					= this.__slideshow_release_handler 
-						|| function(evt){
-							!toggle_debounce 
-								&& that.toggleSlideshowTimer('?') != 'running'
-								&& that.resetSlideshowTimer() }
+				// toggle on click...
 				var toggle = this.__slideshow_toggle_handler
 					= this.__slideshow_toggle_handler
 						|| function(){
@@ -377,22 +373,35 @@ module.Slideshow = core.ImageGridFeatures.Feature({
 								toggle_debounce = true
 								setTimeout(function(){ 
 									toggle_debounce = false 
-								}, that.config['image-click-debounce-timeout'] || 100)
-							}
-						}
+								}, that.config['image-click-debounce-timeout'] || 100) } }
+				running ?
+					this.dom.on('click', toggle)
+					: this.dom.off('click', toggle)
 
-				if(this.toggleSlideshow('?') == 'on'){
-					this.dom.on('mousedown', hold)
-					this.dom.on('mouseup', release)
-					this.dom.on('tap', toggle)
-
-				} else {
-					this.dom.off('mousedown', hold)
-					this.dom.off('mouseup', release)
-					this.dom.off('touchend', toggle)
-				}
+				// toggle on blur/focus...
+				var user_paused = false
+				var focus_debounce = false
+				var blur = this.__slideshow_blur_handler
+					= this.__slideshow_blur_handler
+						|| function(){
+							if(!focus_debounce){
+								user_paused = that.toggleSlideshowTimer('?') == 'paused' 
+								that.toggleSlideshowTimer('paused') 
+								focus_debounce = true } }
+				var focus = this.__slideshow_focus_handler
+					= this.__slideshow_focus_handler
+						|| function(){
+							focus_debounce = false
+							user_paused 
+								|| that.toggleSlideshowTimer('running') }
+				running ?
+					this.dom
+						.on('blur', blur)
+						.on('focus', focus)
+					: this.dom
+						.off('blur', blur)
+						.off('focus', focus)
 			}],
-		//*/
 
 		// pause/resume slideshow on modal stuff...
 		['firstModalOpen',

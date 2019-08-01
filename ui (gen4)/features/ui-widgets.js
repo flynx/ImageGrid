@@ -2247,7 +2247,7 @@ var ButtonsActions = actions.Actions({
 			]],
 			'C<sub/>': ['crop', 'browseActions: "Crop/" -- Crop menu...'],
 			'&#9655;': ['slideshow', [
-				'toggleSlideshow -- Slideshow',
+				'slideshowButtonAction -- Slideshow',
 				'slideshowDialog -- Slideshow menu...',
 			]],
 		},
@@ -2411,8 +2411,10 @@ module.Buttons = core.ImageGridFeatures.Feature({
 						'width': '0px',
 						'overflow': 'visible',
 					})
-					.text(l > 99 ?  '99+' 
-						: l == 0 ? ''
+					.text(l > 99 ? 
+							'99+' 
+						: l == 0 ? 
+							''
 						: l)
 				/*
 				$('.main-buttons.buttons .collections.button sub')
@@ -2427,14 +2429,25 @@ module.Buttons = core.ImageGridFeatures.Feature({
 				//*/
 		   	}],
 		// update slideshow status...
-		['toggleSlideshow',
+		[['toggleSlideshow', 'toggleSlideshowTimer'],
 			function(){
+				var mode = this.toggleSlideshow('?')
+				mode = (mode == 'on' 
+						&& this.toggleSlideshowTimer('?') == 'paused') ?
+					'paused'
+					: mode
+				// update the button icon...
 				$('.main-buttons.buttons .slideshow.button')
-					.html(this.toggleSlideshow('?') == 'on' ? 
-						'&#9724;' 
+					.html(mode == 'on' ? 
+							'&#9724;' 
+						: mode == 'paused' ?
+							'&#10074;&#10074;'
 						//'&#9723;'
-						: '&#9655;')
-			}],
+						: '&#9655;') 
+					.run(function(){
+						mode == 'paused' ?
+							this.addClass('visible')
+							: this.removeClass('visible') }) }],
 		// update zoom button status...
 		['viewScale', 
 			function(){

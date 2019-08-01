@@ -318,21 +318,27 @@ button:hover {
 	position: relative;
 	float: left;
 
-	opacity: 0.4;
-
 	size: 30px;
 
 	cursor: default;
 
 	z-index: 4000;
 }
-.buttons:hover {
+
+/* general button visibility */
+.buttons .button {
+	opacity: 0.4;
+}
+.buttons:hover .button {
 	opacity: 1;
 }
-.light .buttons {
+.buttons .button.visible {
+	opacity: 1 !important;
+}
+.light .buttons .button {
 	opacity: 0.5;
 }
-.dark .buttons {
+.dark .buttons .button {
 	opacity: 0.2;
 }
 
@@ -359,7 +365,7 @@ button:hover {
 	background: transparent;
 }
 .buttons .button sub {
-    font-size: x-small;
+	font-size: x-small;
 }
 
 
@@ -394,25 +400,17 @@ button:hover {
 }
 
 
-
 /* main buttons... */
 .main-buttons.buttons {
 	top: 0px;
 	left: 0px;
 }
-.main-buttons.buttons:hover {
-	opacity: 1;
-}
-
 
 
 /* secondary buttons... */
 .secondary-buttons.buttons {
 	top: 0px;
 	float: right;
-}
-.secondary-buttons.buttons:hover {
-	opacity: 1;
 }
 /*
 .secondary-buttons.buttons {
@@ -431,9 +429,6 @@ button:hover {
 	margin-left: 40px;
 
 	z-index: 9999;
-}
-.app-buttons.buttons:hover {
-	opacity: 1;
 }
 .app-buttons .button.close:hover {
 	background: rgba(255, 0, 0, 0.8);
@@ -538,12 +533,12 @@ button:hover {
 }
 
 /* XXX not sure if this is the right way to go... */
-.single-image-mode .main-buttons,
-.single-image-mode .app-buttons {
+.single-image-mode .main-buttons:not(:hover) .button,
+.single-image-mode .app-buttons:not(:hover) .button {
 	opacity: 0.1;
 }
-.slideshow-running .main-buttons,
-.slideshow-running .app-buttons {
+.slideshow-running .main-buttons:not(:hover) .button,
+.slideshow-running .app-buttons:not(:hover) .button {
 	opacity: 0;
 }
 

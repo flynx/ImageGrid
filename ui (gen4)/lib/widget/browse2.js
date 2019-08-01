@@ -1314,6 +1314,15 @@ var BaseBrowserPrototype = {
 	// NOTE: this may or may not be a Browser object.
 	parent: null,
 
+	// Root dialog...
+	//
+	get root(){
+		var cur = this
+		while(cur.parent instanceof BaseBrowser){
+			cur = cur.parent
+		}
+		return cur },
+
 	// Section containers...
 	//
 	// Format:
@@ -5180,8 +5189,16 @@ var HTMLBrowserPrototype = {
 					that.dom
 						&& that.dom.focus() }) },
 	__open__: function(evt, elem){ this.focus(elem) },
+	//* XXX there is a problem with .update() propagation up the nested 
+	// 		dialogs -- we lose context...
+	// 		...see .renderContext(..) / .renderFinalize(..) for details...
 	__expand__: function(){ this.update() },
 	__collapse__: function(){ this.update() },
+	/*/ 
+	// XXX this is a hack -- we should fix the actual update propagation and revert to the above...
+	__expand__: function(){ this.root.update() },
+	__collapse__: function(){ this.root.update() },
+	//*/
 	__select__: updateElemClass('add', 'selected'),
 	__deselect__: updateElemClass('remove', 'selected'),
 	__disable__: updateElemClass('add', 'disabled', function(){ this.update() }),
