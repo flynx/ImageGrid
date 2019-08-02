@@ -5192,6 +5192,9 @@ var HTMLBrowserPrototype = {
 	//* XXX there is a problem with .update() propagation up the nested 
 	// 		dialogs -- we lose context...
 	// 		...see .renderContext(..) / .renderFinalize(..) for details...
+	// 		There are two routs to make this uniform:
+	// 			1) make some events (update) root-only
+	// 			2) make local updates possible (connect .dom to parent's dom)
 	__expand__: function(){ this.update() },
 	__collapse__: function(){ this.update() },
 	/*/ 
@@ -5201,6 +5204,7 @@ var HTMLBrowserPrototype = {
 	//*/
 	__select__: updateElemClass('add', 'selected'),
 	__deselect__: updateElemClass('remove', 'selected'),
+	// XXX would be more logical to update the actual sepcific elements...
 	__disable__: updateElemClass('add', 'disabled', function(){ this.update() }),
 	__enable__: updateElemClass('remove', 'disabled', function(){ this.update() }),
 	__hide__: updateElemClass('add', 'hidden'),
