@@ -4498,6 +4498,16 @@ var HTMLBrowserPrototype = {
 	// 		...this could be done via:
 	// 			.renderUpdate(..) -- like .renderFinalize(..) but replaces nodes...
 	// 		needs more thought...
+	// 		...another idea would be to make the render flow "internal", i.e. each
+	// 		item renders and places itself item "packing" is done internally 
+	// 		rather than via outer render combinators...
+	// 			- create/get root context
+	// 				- container -> create/clone context + append/replace in parent context
+	// 					- item -> create/clone + append/replace self in parent context
+	// 					- ...
+	// 			- update root context
+	// 		this approach should make the individual renderers self-contained, i.e.
+	// 		rendering a single item would update it in the main tree... (needs thought)
 	//
 	//
 	// Prepare context for maintaining scroll offset...
@@ -5195,7 +5205,7 @@ var HTMLBrowserPrototype = {
 					that.dom
 						&& that.dom.focus() }) },
 	__open__: function(evt, elem){ this.focus(elem) },
-	//* XXX there is a problem with .update() propagation up the nested 
+	/* XXX there is a problem with .update() propagation up the nested 
 	// 		dialogs -- we lose context...
 	// 		...see .renderContext(..) / .renderFinalize(..) for details...
 	// 		There are two routs to make this uniform:
