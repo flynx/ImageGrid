@@ -5205,6 +5205,11 @@ var HTMLBrowserPrototype = {
 					that.dom
 						&& that.dom.focus() }) },
 	__open__: function(evt, elem){ this.focus(elem) },
+	// XXX when expanding an element at the bottom of the screen (i.e. 
+	// 		when the expanded tree is not visible) need to nudge the 
+	// 		element up to reveal the expanded subtree...
+	// 		...would also be logical to "show" the expanded tree but 
+	// 		keeping the focused elem in view...
 	/* XXX there is a problem with .update() propagation up the nested 
 	// 		dialogs -- we lose context...
 	// 		...see .renderContext(..) / .renderFinalize(..) for details...
@@ -5214,13 +5219,13 @@ var HTMLBrowserPrototype = {
 	__expand__: function(){ this.update() },
 	__collapse__: function(){ this.update() },
 	/*/ 
-	// XXX this is a hack -- we should fix the actual update propagation and revert to the above...
+	// XXX make this a "local" update -- i.e. only update the subtree... 
 	__expand__: function(){ this.root.update() },
 	__collapse__: function(){ this.root.update() },
 	//*/
 	__select__: updateElemClass('add', 'selected'),
 	__deselect__: updateElemClass('remove', 'selected'),
-	// XXX would be more logical to update the actual sepcific elements...
+	// XXX would be more logical to update only the sepcific elements...
 	__disable__: updateElemClass('add', 'disabled', function(){ this.update() }),
 	__enable__: updateElemClass('remove', 'disabled', function(){ this.update() }),
 	__hide__: updateElemClass('add', 'hidden'),
