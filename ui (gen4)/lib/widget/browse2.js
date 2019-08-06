@@ -4535,7 +4535,7 @@ var HTMLBrowserPrototype = {
 				ref.dom.offsetTop - ref.dom.offsetParent.scrollTop
 				: null)
 
-		context.scroll_offset && console.log('renderContext:', context.scroll_offset)
+		//context.scroll_offset && console.log('renderContext:', context.scroll_offset)
 
 		return context 
 	},
@@ -4625,10 +4625,6 @@ var HTMLBrowserPrototype = {
 		//		...this appears to be due to .render(..) not being called 
 		//		from the root object in case #1, need more investigating...
 		//		...we seem to be re-rendering nested dialogs on each level...
-		console.log('finalize:', 
-			context.scroll_offset, 
-			context.scroll_reference 
-				&& context.scroll_reference.dom.offsetParent)
 		if(context.scroll_offset){
 			var ref = this.focused || this.pagetop
 			var scrolled = ref.dom.offsetParent 
