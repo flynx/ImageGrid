@@ -4596,7 +4596,7 @@ var HTMLBrowserPrototype = {
 			function(e){ 
 				e.stopPropagation()
 				d.focus() })
-		/* XXX this messes up scrollbar...
+		/* XXX this messes up the scrollbar...
 		d.addEventListener('focus',
 		   function(){
 			   that.focused
