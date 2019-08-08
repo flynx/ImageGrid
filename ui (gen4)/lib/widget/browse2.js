@@ -3152,6 +3152,7 @@ var BaseBrowserPrototype = {
 	// 		do not reconstruct the ones already present...
 	// XXX should from/to/around/count be a feature of this or of .walk(..)???
 	// XXX render all the sections at root... (???)
+	// XXX might be a good idea to use this.root === this instead of context.root === this
 	render: function(options, renderer, context){
 		context = this.renderContext(context)
 		renderer = renderer || this
@@ -4613,18 +4614,6 @@ var HTMLBrowserPrototype = {
 		// 		on render that can affect scroll position, e.g. partial 
 		// 		render...
 		// XXX need to trigger the setup for this from .render(..) itself...
-		// XXX BUG: context.root === this is true for non-root containers too...
-		//
-		// 		to reproduce:
-		// 			dialog.collapse('B/C/D')
-		//
-		//		this works fine:
-		//			dialog.get('B/C/D').collapsed = true
-		//			dialog.render()
-		//
-		//		...this appears to be due to .render(..) not being called 
-		//		from the root object in case #1, need more investigating...
-		//		...we seem to be re-rendering nested dialogs on each level...
 		if(context.scroll_offset){
 			var ref = this.focused || this.pagetop
 			var scrolled = ref.dom.offsetParent 
