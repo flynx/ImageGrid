@@ -142,8 +142,7 @@ JSON_NAME="%-:1d/${METADATA_DIR}/%f.json"
 #			- creates a file: $RAW-thumb.jpg
 #		dcraw -c $RAW | pnmtojpeg -quality=90 > $JPG
 #			- process raw and convert to jpeg (slow)
-# TODO ignore (or err on) raw images located in the ARCHIVE_ROOT directly...
-#	...to avoid creating directories outside of $ARCHIVE_ROOT...
+# TODO ignore raw images located in the ARCHIVE_ROOT directly...
 
 # XXX need to also copy jpg originals to the preview dir (things that 
 #	were shot in jpeg in-camera)...
@@ -272,6 +271,7 @@ cd "./${ARCHIVE_ROOT}"
 
 # make low-res previews...
 if [ -z $SKIP_PREVIEWS ] || [ $LOW_RES_PREVIEWS ] ; then
+	#find . -path '*hi-res (RAW)/*.jpg' -exec bash -c 'makepreview "$SIZE" "{}"' \;
 	find . -path '*hi-res (RAW)/*.jpg' -print0 \
 		| xargs -0 -n 1 -P $THREADS -I {} bash -c 'makepreview "$SIZE" "{}"'
 fi
