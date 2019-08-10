@@ -166,7 +166,7 @@ while true ; do
 
 	mkdir -vp "$DIR"
 
-	echo "Copying files from $1..."
+	echo "Copying files from ${BASE}/${DRIVE}..."
 	$COPY $COPYFLAGS ${BASE}/${DRIVE}/* "$DIR"
 	echo "Copying files: done."
 
