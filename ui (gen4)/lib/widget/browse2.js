@@ -3151,7 +3151,6 @@ var BaseBrowserPrototype = {
 	// XXX make partial render be lazy -- i.e. add/remove elements and 
 	// 		do not reconstruct the ones already present...
 	// XXX should from/to/around/count be a feature of this or of .walk(..)???
-	// XXX render all the sections at root... (???)
 	// XXX might be a good idea to use this.root === this instead of context.root === this
 	render: function(options, renderer, context){
 		context = this.renderContext(context)
