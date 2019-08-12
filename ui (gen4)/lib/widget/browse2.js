@@ -3148,7 +3148,7 @@ var BaseBrowserPrototype = {
 	// 			})
 	// 		the downside here is this is only render, control still uses
 	// 		the full data...
-	// XXX make partial render be lazy -- i.e. add/remove elements and 
+	// XXX make partial render lazy -- i.e. add/remove elements and 
 	// 		do not reconstruct the ones already present...
 	// XXX should from/to/around/count be a feature of this or of .walk(..)???
 	// XXX might be a good idea to use this.root === this instead of context.root === this
