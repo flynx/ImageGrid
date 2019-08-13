@@ -3143,9 +3143,9 @@ var BaseBrowserPrototype = {
 	// 		this with selectors...
 	// 		...a hacky way to do search is:
 	// 			s = dialog.search(..)
-	// 			dialog.render({
-	// 				filter: e => s.includes(e)
-	// 			})
+	// 			dialog
+	// 				.render({
+	// 					filter: e => s.includes(e) })
 	// 		the downside here is this is only render, control still uses
 	// 		the full data...
 	// XXX make partial render lazy -- i.e. add/remove elements and 
