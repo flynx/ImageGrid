@@ -32,26 +32,16 @@
 /********************************************************** Mixins ***/
 
 .user-select (@mode: auto) {
-	-moz-user-select: @mode;
-	-webkit-user-select: @mode;
-	-o-user-select: @mode;
-	-ms-user-select: @mode;
 	user-select: @mode;
 }
 
 
 .origin (@x:top, @y:left) {
-	-webkit-transform-origin: @arguments;
-	-ms-transform-origin: @arguments;
 	transform-origin: @arguments;
 }
 
 
 .transform (@deg:0deg, @scaleX:1, @scaleY:1) {
-	-webkit-transform: rotate(@deg) scaleY(@scaleY) scaleX(@scaleX);
-	-moz-transform: rotate(@deg) scaleY(@scaleY) scaleX(@scaleX);
-	-o-transform: rotate(@deg) scaleY(@scaleY) scaleX(@scaleX);
-	-ms-transform: rotate(@deg) scaleY(@scaleY) scaleX(@scaleX);
 	transform: rotate(@deg) scaleY(@scaleY) scaleX(@scaleX);
 
 	/* This prevents elements from aligning to sub-pixels...*/
