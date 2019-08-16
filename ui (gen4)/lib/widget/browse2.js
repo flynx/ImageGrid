@@ -522,6 +522,17 @@ var BaseItemPrototype = {
 	get path(){
 		return this.pathArray.join('/') },
 
+
+	// XXX local update/render...
+	// XXX should we use these in the main render???
+	render: function(){
+		// XXX
+	},
+	update: function(){
+		// XXX
+	},
+
+
 	__init__(...state){
 		Object.assign(this, ...state) },
 }
