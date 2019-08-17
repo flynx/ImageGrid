@@ -525,9 +525,6 @@ var BaseItemPrototype = {
 
 	// XXX local update/render...
 	// XXX should we use these in the main render???
-	render: function(){
-		// XXX
-	},
 	update: function(){
 		// XXX
 	},
