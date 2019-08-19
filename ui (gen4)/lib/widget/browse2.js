@@ -525,11 +525,11 @@ var BaseItemPrototype = {
 
 	// XXX local update/render...
 	// XXX should we use these in the main render???
-	// XXX how do we split this between here and HTMLItem???
 	update: function(){
-		// XXX render order:
-		// 		.elem
-		// 		.children
+
+		// XXX
+
+		return this
 	},
 
 
@@ -3978,6 +3978,21 @@ var HTMLItemPrototype = {
 		this.dom ?
 			this.elem.replaceWith(value)
 			: (this.dom = value)},
+
+	// XXX should we use these in the main render???
+	update: function(){
+		return object
+			.parent(HTMLItemPrototype.update, this).call(this, ...arguments)
+			.run(function(){
+				var parent = this.parent
+
+				// XXX needs i and context...
+				// XXX this should only replace the element, now it replaces 
+				// 		both the elem and the children...
+				this.elem = parent.renderItem(this, 0, {})
+
+				// XXX handle children...
+			}) },
 }
 
 var HTMLItem = 
