@@ -3987,8 +3987,7 @@ var HTMLItemPrototype = {
 				var parent = this.parent
 
 				// XXX needs i and context...
-				// XXX this should only replace the element, now it replaces 
-				// 		both the elem and the children...
+				// XXX see issue with .elem above...
 				this.elem = parent.renderItem(this, 0, {})
 
 				// XXX handle children...
@@ -5122,6 +5121,12 @@ var HTMLBrowserPrototype = {
 					button_keys[k].click() } })
 		
 		item.dom = elem
+		// XXX for some reason this messes up navigation...
+		// 		to reproduce:
+		// 			- select element with children
+		// 			- press right
+		// 				-> blur current elem
+		// 				-> next elem not selected...
 		//item.elem = elem
 
 		return elem 
