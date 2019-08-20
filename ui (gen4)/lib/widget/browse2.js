@@ -3979,6 +3979,7 @@ var HTMLItemPrototype = {
 			this.elem.replaceWith(value)
 			: (this.dom = value)},
 
+	// XXX EXPERIMENTAL...
 	// XXX should we use these in the main render???
 	update: function(){
 		return object
