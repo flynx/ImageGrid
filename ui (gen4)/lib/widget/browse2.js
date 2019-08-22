@@ -1916,6 +1916,18 @@ var BaseBrowserPrototype = {
 		return false },
 
 
+	// XXX EXPERIMENTAL -- an attempt to simplify walking...
+	walk2: function(func, options){
+		return this.items
+			.map(function(elem){
+				return elem instanceof BaseBrowser ?
+					: elem instanceof BaseItem ?
+					: elem.children ?
+					: elem
+			})
+			.flat() },
+
+
 	// Data access and iteration...
 
 	// Walk the browser...
