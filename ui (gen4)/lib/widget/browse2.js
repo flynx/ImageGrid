@@ -1346,6 +1346,8 @@ var BaseBrowserPrototype = {
 	// 	{
 	// 		value: ...,
 	//
+	// 		children: ...,
+	//
 	// 		...
 	// 	}
 	//
@@ -1917,15 +1919,62 @@ var BaseBrowserPrototype = {
 
 
 	// XXX EXPERIMENTAL -- an attempt to simplify walking...
+	//
+	// 	.walk(func, options)
+	// 		-> res???
+	//
+	// 	func(elem, i, path, next(..), stop())
+	// 		-> res???
+	//
 	walk2: function(func, options){
-		return this.items
-			.map(function(elem){
-				return elem instanceof BaseBrowser ?
-					: elem instanceof BaseItem ?
-					: elem.children ?
-					: elem
-			})
-			.flat() },
+		var that = this
+
+		var res
+		var Stop = new Error('walk2(..): Stop walk.')
+		var stop = function(res){ throw stop }
+
+		try {
+			var map
+			return this.items
+				.map(map = function(elem){
+					// XXX
+					var i = 0
+					var path = []
+
+					var children = (elem instanceof BaseBrowser 
+								|| elem instanceof Array) ?
+							elem
+						: (elem.children || [])
+
+					var next = function(elems){
+						children = elems == null ?
+							[]
+							: elems }
+					return [
+						// item...
+						// XXX should we call func(..) on inlined sections???
+						// 		i.e. when elem instanceof Array || elem instanceof BaseBrowser ??? 
+						// 		...should this be an option???
+						...[(elem instanceof Array || elem instanceof BaseBrowser) ?
+								[]
+								// XXX should that be root call context or the local call context??? 
+								: func.call(that, elem, i, path, next, stop) || []].flat(),
+						// children...
+						...children instanceof Array ?
+								children
+									.map(map)
+									.flat()
+							: children instanceof BaseBrowser ?
+								children
+									.walk2(func, options)
+							: [] ] })
+				.flat() 
+
+		// handle Stop and errors...
+		} catch(e){
+			if(e === Stop){
+				return res }
+			throw e } },
 
 
 	// Data access and iteration...
