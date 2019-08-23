@@ -1942,15 +1942,40 @@ var BaseBrowserPrototype = {
 	//
 	//
 	// XXX add sections support...
+	// XXX add i and path handling...
 	walk2: function(func, options){
 		var that = this
 		var [func, options={}, context={}] = [...arguments]
 
+		// context...
+		context.root = context.root || this
+
 		// options...
+		options = Object.assign(
+			Object.create(this.options || {}),
+			options)
+		// options.reverse...
 		var handleReverse = function(lst){
 			return options.reverse ?
 				lst.slice().reverse()
 				: lst }
+		// options.section...
+		var sections = options.section == '*' ?
+			(options.sections 
+				|| ['header', 'items', 'footer'])
+			: options.section 
+		// NOTE: we include sections other than 'items' only for the root context...
+		sections = (sections instanceof Array 
+				&& context.root !== this)
+				&& sections.includes('items') ?
+			'items'
+			: (sections || 'items')
+		sections = sections instanceof Array ? 
+			sections 
+			: [sections]
+		// XXX iteration filtering...
+		var iterateNonIterable = options.iterateAll || options.iterateNonIterable
+		var iterateCollapsed = options.iterateAll || options.iterateCollapsed
 
 		// stopping mechanics...
 		var res, StopException
@@ -1964,7 +1989,11 @@ var BaseBrowserPrototype = {
 
 		try {
 			var map
-			return handleReverse(this.items)
+			return handleReverse(
+					sections
+						.map(function(section){
+							return that[section] || [] })
+						.flat())
 				.map(map = function(elem){
 					// XXX
 					var i = 0
