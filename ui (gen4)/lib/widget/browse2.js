@@ -1923,7 +1923,7 @@ var BaseBrowserPrototype = {
 	// 	.walk(func, options)
 	// 		-> res???
 	//
-	// 	func(elem, i, path, next(..), stop())
+	// 	func(elem, i, path, next(..), stop(..))
 	// 		-> res???
 	//
 	//
@@ -1963,16 +1963,16 @@ var BaseBrowserPrototype = {
 		var sections = options.section == '*' ?
 			(options.sections 
 				|| ['header', 'items', 'footer'])
-			: options.section 
-		// NOTE: we include sections other than 'items' only for the root context...
-		sections = (sections instanceof Array 
-				&& context.root !== this)
-				&& sections.includes('items') ?
-			'items'
-			: (sections || 'items')
-		sections = sections instanceof Array ? 
-			sections 
-			: [sections]
+			: [options.section || 'items'].flat() 
+		// NOTE: sections other than 'items' are included only for the root context...
+		sections = (context.root !== this
+				&& sections.includes('items')) ?
+			['items']
+			: sections
+
+
+
+
 		// XXX iteration filtering...
 		var iterateNonIterable = options.iterateAll || options.iterateNonIterable
 		var iterateCollapsed = options.iterateAll || options.iterateCollapsed
