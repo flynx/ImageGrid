@@ -1953,15 +1953,14 @@ var BaseBrowserPrototype = {
 				: lst }
 
 		// stopping mechanics...
-		var res
-		var Stop = context.stop ? 
-			null 
-			: new Error('walk2(..): Stop.')
+		var res, StopException
 		var stop = context.stop = 
 			context.stop 
 				|| function(r){ 
-					res = r
-					throw Stop }
+						res = r
+						throw StopException }
+					.run(function(){
+						StopException = new Error('walk2(..): StopException.') })
 
 		try {
 			var map
@@ -2014,9 +2013,9 @@ var BaseBrowserPrototype = {
 							: [], ] })
 				.flat() 
 
-		// handle Stop and errors...
+		// handle StopException and errors...
 		} catch(e){
-			if(e === Stop){
+			if(e === StopException){
 				return res }
 			throw e } },
 
