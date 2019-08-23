@@ -1926,16 +1926,46 @@ var BaseBrowserPrototype = {
 	// 	func(elem, i, path, next(..), stop())
 	// 		-> res???
 	//
+	//
+	// NOTE: when options.reverse is set to true, func(..) for a parent 
+	// 		item is still called BEFORE it is called for the children but
+	// 		its return value is placed after, i.e. the func(..) call order
+	// 		is different to the result order.
+	//
+	//
+	// options format:
+	// 	{
+	// 		reverse: <bool>,
+	//
+	// 		...
+	// 	}
+	//
+	//
+	// XXX add sections support...
 	walk2: function(func, options){
 		var that = this
+		var [func, options={}, context={}] = [...arguments]
 
+		// options...
+		var handleReverse = function(lst){
+			return options.reverse ?
+				lst.slice().reverse()
+				: lst }
+
+		// stopping mechanics...
 		var res
-		var Stop = new Error('walk2(..): Stop walk.')
-		var stop = function(res){ throw stop }
+		var Stop = context.stop ? 
+			null 
+			: new Error('walk2(..): Stop.')
+		var stop = context.stop = 
+			context.stop 
+				|| function(r){ 
+					res = r
+					throw Stop }
 
 		try {
 			var map
-			return this.items
+			return handleReverse(this.items)
 				.map(map = function(elem){
 					// XXX
 					var i = 0
@@ -1950,24 +1980,38 @@ var BaseBrowserPrototype = {
 						children = elems == null ?
 							[]
 							: elems }
+
+					// handle item...
+					// XXX should func(..) be called before .children is handled
+					// 		in reverse mode???
+					var item = 
+						[(elem instanceof Array || elem instanceof BaseBrowser) ?
+							// skip inlined block items...
+							[]
+							// XXX revise return value semantics... 
+							// 		should false be treated the same as null and undefined???
+							: func.call(that, elem, i, path, next, stop) || []]
+						.flat()
+
 					return [
 						// item...
-						// XXX should we call func(..) on inlined sections???
-						// 		i.e. when elem instanceof Array || elem instanceof BaseBrowser ??? 
-						// 		...should this be an option???
-						...[(elem instanceof Array || elem instanceof BaseBrowser) ?
-								[]
-								// XXX should that be root call context or the local call context??? 
-								: func.call(that, elem, i, path, next, stop) || []].flat(),
+						...!options.reverse ? 
+							item 
+							: [],
 						// children...
 						...children instanceof Array ?
-								children
+								handleReverse(children)
 									.map(map)
 									.flat()
 							: children instanceof BaseBrowser ?
+								// XXX add support for other handlers (???)
 								children
-									.walk2(func, options)
-							: [] ] })
+									.walk2(func, options, context)
+							: [],
+						// item (in reverse)...
+						...options.reverse ? 
+							item 
+							: [], ] })
 				.flat() 
 
 		// handle Stop and errors...
