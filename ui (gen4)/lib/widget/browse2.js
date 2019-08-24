@@ -1937,24 +1937,51 @@ var BaseBrowserPrototype = {
 	// 	{
 	// 		reverse: <bool>,
 	//
+	// 		// XXX ???
+	// 		//reverseCall: <bool>,
+	//
+	//
+	// 		iterateNonIterable: <bool>,
+	// 		iterateCollapsed: <bool>,
+	//
+	//		// shorthand for:
+	//		//	iterateCollapsed: true, iterateNonIterable: true
+	// 		iterateAll: <bool>,
+	//
+	// 		// XXX ???
+	// 		//includeInlinedBlocks: <bool>,
+	//
+	//
+	// 		// list of sections to iterate...
+	// 		section: '*' | [ <section>, ... ],
+	//
+	// 		// list of iterable sections...
+	// 		//
+	// 		// used when options.section is '*'
+	// 		sections: [ <section>, ... ]
+	//
 	// 		...
 	// 	}
 	//
 	//
-	// XXX add sections support...
 	// XXX add i and path handling...
+	// XXX revise func(..) return value semantics... 
+	// 		should false be treated the same as null and undefined???
 	walk2: function(func, options){
 		var that = this
-		var [func, options={}, context={}] = [...arguments]
+		var [func, options={}, path=[], context={}] = [...arguments]
 
 		// context...
 		context.root = context.root || this
+		context.index = context.index || 0
 
 		// options...
 		options = Object.assign(
 			Object.create(this.options || {}),
 			options)
 		// options.reverse...
+		// XXX
+		var reverseCall = !!options.reverseCall
 		var handleReverse = function(lst){
 			return options.reverse ?
 				lst.slice().reverse()
@@ -1969,13 +1996,11 @@ var BaseBrowserPrototype = {
 				&& sections.includes('items')) ?
 			['items']
 			: sections
-
-
-
-
-		// XXX iteration filtering...
-		var iterateNonIterable = options.iterateAll || options.iterateNonIterable
-		var iterateCollapsed = options.iterateAll || options.iterateCollapsed
+		// iteration filtering...
+		var iterateNonIterable = !!(options.iterateAll || options.iterateNonIterable)
+		var iterateCollapsed = !!(options.iterateAll || options.iterateCollapsed)
+		// XXX
+		var includeInlinedBlocks = !!options.includeInlinedBlocks
 
 		// stopping mechanics...
 		var res, StopException
@@ -1987,59 +2012,70 @@ var BaseBrowserPrototype = {
 					.run(function(){
 						StopException = new Error('walk2(..): StopException.') })
 
+		// item handler generator...
+		var makeMap = function(path){
+			return function(elem){
+				var p = path
+
+				var children = 
+					// skip collapsed...
+					(!iterateCollapsed && elem.collapsed) ?
+						[]
+					// inlined...
+					: (elem instanceof BaseBrowser 
+							|| elem instanceof Array) ?
+						elem
+					// nested...
+					: (elem.children || [])
+
+				var next = function(elems){
+					children = elems == null ?
+						[]
+						: elems }
+
+				// handle item...
+				var item = 
+					// skip non-iterable...
+					(!iterateNonIterable && elem.noniterable) ?
+						[]
+					: [(elem instanceof Array || elem instanceof BaseBrowser) ?
+							// skip inlined block items...
+							[]
+							: func.call(that, elem, 
+								context.index++, 
+								// NOTE: path will be updated ONLY for non-inlined items...
+								p = path.concat(elem.id), 
+								next, stop) || []]
+						.flat()
+
+				return [
+					// item...
+					...!options.reverse ? 
+						item 
+						: [],
+					// children...
+					...children instanceof Array ?
+							handleReverse(children)
+								.map(makeMap(p))
+								.flat()
+						: children instanceof BaseBrowser ?
+							children
+								.walk2(func, options, p, context)
+						: [],
+					// item (in reverse)...
+					...options.reverse ? 
+						item 
+						: [], ] } }
+
+
+		// do the handling...
 		try {
-			var map
 			return handleReverse(
 					sections
 						.map(function(section){
 							return that[section] || [] })
 						.flat())
-				.map(map = function(elem){
-					// XXX
-					var i = 0
-					var path = []
-
-					var children = (elem instanceof BaseBrowser 
-								|| elem instanceof Array) ?
-							elem
-						: (elem.children || [])
-
-					var next = function(elems){
-						children = elems == null ?
-							[]
-							: elems }
-
-					// handle item...
-					// XXX should func(..) be called before .children is handled
-					// 		in reverse mode???
-					var item = 
-						[(elem instanceof Array || elem instanceof BaseBrowser) ?
-							// skip inlined block items...
-							[]
-							// XXX revise return value semantics... 
-							// 		should false be treated the same as null and undefined???
-							: func.call(that, elem, i, path, next, stop) || []]
-						.flat()
-
-					return [
-						// item...
-						...!options.reverse ? 
-							item 
-							: [],
-						// children...
-						...children instanceof Array ?
-								handleReverse(children)
-									.map(map)
-									.flat()
-							: children instanceof BaseBrowser ?
-								// XXX add support for other handlers (???)
-								children
-									.walk2(func, options, context)
-							: [],
-						// item (in reverse)...
-						...options.reverse ? 
-							item 
-							: [], ] })
+				.map(makeMap(path))
 				.flat() 
 
 		// handle StopException and errors...
