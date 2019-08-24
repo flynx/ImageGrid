@@ -464,7 +464,7 @@ object.mixinFlat(function(){}, {
 
 var Make = 
 module.Make = 
-object.Constructor('Make', Items)
+	object.Constructor('Make', Items)
 
 
 
@@ -1935,11 +1935,8 @@ var BaseBrowserPrototype = {
 	//
 	// options format:
 	// 	{
-	// 		reverse: <bool>,
 	//
-	// 		// XXX ???
-	// 		//reverseCall: <bool>,
-	//
+	// 		reverse: <bool> | 'full',
 	//
 	// 		iterateNonIterable: <bool>,
 	// 		iterateCollapsed: <bool>,
@@ -1964,9 +1961,6 @@ var BaseBrowserPrototype = {
 	// 	}
 	//
 	//
-	// XXX add i and path handling...
-	// XXX revise func(..) return value semantics... 
-	// 		should false be treated the same as null and undefined???
 	walk2: function(func, options){
 		var that = this
 		var [func, options={}, path=[], context={}] = [...arguments]
@@ -1980,8 +1974,6 @@ var BaseBrowserPrototype = {
 			Object.create(this.options || {}),
 			options)
 		// options.reverse...
-		// XXX
-		var reverseCall = !!options.reverseCall
 		var handleReverse = function(lst){
 			return options.reverse ?
 				lst.slice().reverse()
@@ -2000,7 +1992,7 @@ var BaseBrowserPrototype = {
 		var iterateNonIterable = !!(options.iterateAll || options.iterateNonIterable)
 		var iterateCollapsed = !!(options.iterateAll || options.iterateCollapsed)
 		// XXX
-		var includeInlinedBlocks = !!options.includeInlinedBlocks
+		//var includeInlinedBlocks = !!options.includeInlinedBlocks
 
 		// stopping mechanics...
 		var res, StopException
@@ -2034,24 +2026,29 @@ var BaseBrowserPrototype = {
 						: elems }
 
 				// handle item...
-				var item = 
-					// skip non-iterable...
-					(!iterateNonIterable && elem.noniterable) ?
-						[]
-					: [(elem instanceof Array || elem instanceof BaseBrowser) ?
-							// skip inlined block items...
-							[]
-							: func.call(that, elem, 
-								context.index++, 
-								// NOTE: path will be updated ONLY for non-inlined items...
-								p = path.concat(elem.id), 
-								next, stop) || []]
-						.flat()
+				// skip non-iterable and inlined block items...
+				var handleItem = !((!iterateNonIterable && elem.noniterable) 
+					|| (elem instanceof Array || elem instanceof BaseBrowser))
+				var p = handleItem ?
+					path.concat(elem.id)
+					: p
+				var item
+				// NOTE: this will handle the item once and then re-return the value...
+				var getItem = function(){
+					return (item = 
+						item !== undefined ?
+							item
+						: handleItem ?
+							[ func.call(that, elem, context.index++, p, next, stop) ].flat()
+						: []) }
+				// pre-call the item if options.reverse is not set to 'full'...
+				options.reverse == 'full'
+					|| getItem()
 
 				return [
 					// item...
 					...!options.reverse ? 
-						item 
+						getItem() 
 						: [],
 					// children...
 					...children instanceof Array ?
@@ -2064,7 +2061,7 @@ var BaseBrowserPrototype = {
 						: [],
 					// item (in reverse)...
 					...options.reverse ? 
-						item 
+						getItem() 
 						: [], ] } }
 
 
