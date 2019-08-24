@@ -724,6 +724,17 @@ var BrowserViewMixin = {
 
 
 
+var viewWrap =
+function(context, lst, options){
+	return context.view(
+		'as-is', 
+		lst, 
+		{
+			__proto__: context.options || {},
+			skipNested: 'skipNested' in (options || {}) ? 
+				options.skipNested 
+				: true,
+		}) }
 //
 // options format:
 // 	{
@@ -745,15 +756,16 @@ function(options){
 		false
 		: (options.wrapper 
 			|| function(res){
-				return this.view(
-					'as-is', 
-					res, 
-					{
-						__proto__: this.options || {},
-						skipNested: 'skipNested' in (options || {}) ? 
-							options.skipNested 
-							: true,
-					}) }) }
+				return viewWrap(this, res, options) }) }
+
+
+var makeFlatRunViewWrapper = 
+function(context, options){
+	return function(){
+		return (options || {}).rawResults === true ?
+			this
+			: viewWrap(context, this, options) } } 
+
 
 
 
@@ -1920,33 +1932,82 @@ var BaseBrowserPrototype = {
 
 	// XXX EXPERIMENTAL -- an attempt to simplify walking...
 	//
-	// 	.walk(func, options)
-	// 		-> res???
+	// 	.walk(func[, options])
+	// 		-> list
+	// 		-> res
+	//
 	//
 	// 	func(elem, i, path, next(..), stop(..))
-	// 		-> res???
+	// 		-> [item, ..]
+	// 		-> item
 	//
 	//
-	// NOTE: when options.reverse is set to true, func(..) for a parent 
-	// 		item is still called BEFORE it is called for the children but
-	// 		its return value is placed after, i.e. the func(..) call order
-	// 		is different to the result order.
+	// 		Ignore current .children...
+	// 		next()
+	//
+	// 		Explicitly pass the children to handle...
+	// 		next(browser)
+	// 		next([elem, ...])
+	//
+	//
+	// 		Stop walking (returning undefined)...
+	// 		stop()
+	//
+	// 		Stop walking and return res...
+	// 		stop(res)
+	//
+	//
+	// If func(..) returns an array it's content is merged (.flat()) into
+	// .walk(..)'s return value, this enables it to:
+	// 	- return more than one value per item by returning an array of values
+	// 	- return no values for an item by returning []
+	//
+	// NOTE: to explicitly return an array wrap it in another array.
+	//
 	//
 	//
 	// options format:
 	// 	{
+	// 		// reverse walking...
+	//		//
+	// 		// modes:
+	// 		//	true				- use .defaultReverse
+	// 		//	'mixed'				- results reversed,
+	// 		//							handlers called topologically 
+	// 		//							(i.e. container handled before children 
+	// 		//							but its return value is placed after)
+	// 		//	'full'				- results reversed
+	// 		//							(i.e. container handled after children)
+	// 		//	'tree'				- results reversed topologically
+	// 		//							(i.e. container handled after children)
+	// 		//
+	// 		// NOTE: in 'full' mode, next(..) has no effect, as when the 
+	// 		//		container handler is called the children have already 
+	// 		//		been processed...
+	// 		reverse: <bool> | 'mixed' | 'full' | 'tree',
 	//
-	// 		reverse: <bool> | 'full',
+	//		defaultReverse: 'mixed',
 	//
-	// 		iterateNonIterable: <bool>,
+	// 		// if true iterate collapsed children...
 	// 		iterateCollapsed: <bool>,
+	//
+	// 		// if true iterate non-iterable elements... 
+	// 		iterateNonIterable: <bool>,
+	//
 	//
 	//		// shorthand for:
 	//		//	iterateCollapsed: true, iterateNonIterable: true
 	// 		iterateAll: <bool>,
 	//
-	// 		// XXX ???
-	// 		//includeInlinedBlocks: <bool>,
+	// 		// if true call func(..) on inline block containers...
+	// 		includeInlinedBlocks: <bool>,
+	//
+	// 		skipDisabledMode: 'node' | 'branch',
+	// 		skipDisabled: <bool> | 'node' | 'branch',
+	//
+	// 		// skip nested/inlined elements (children)...
+	// 		skipNested: <bool>,
+	// 		skipInlined: <bool>,
 	//
 	//
 	// 		// list of sections to iterate...
@@ -1961,6 +2022,8 @@ var BaseBrowserPrototype = {
 	// 	}
 	//
 	//
+	// XXX should we implement next(true) to synchronously process the 
+	// 		children and return the result to the caller??? 
 	walk2: function(func, options){
 		var that = this
 		var [func, options={}, path=[], context={}] = [...arguments]
@@ -1974,8 +2037,11 @@ var BaseBrowserPrototype = {
 			Object.create(this.options || {}),
 			options)
 		// options.reverse...
+		var reverse = options.reverse === true ? 
+			(options.defaultReverse || 'mixed') 
+			: options.reverse
 		var handleReverse = function(lst){
-			return options.reverse ?
+			return reverse ?
 				lst.slice().reverse()
 				: lst }
 		// options.section...
@@ -1991,8 +2057,10 @@ var BaseBrowserPrototype = {
 		// iteration filtering...
 		var iterateNonIterable = !!(options.iterateAll || options.iterateNonIterable)
 		var iterateCollapsed = !!(options.iterateAll || options.iterateCollapsed)
-		// XXX
-		//var includeInlinedBlocks = !!options.includeInlinedBlocks
+		var includeInlinedBlocks = !!options.includeInlinedBlocks
+		var skipDisabled = options.skipDisabled === true ?
+			options.skipDisabledMode || 'node'
+			: options.skipDisabled
 
 		// stopping mechanics...
 		var res, StopException
@@ -2009,45 +2077,50 @@ var BaseBrowserPrototype = {
 			return function(elem){
 				var p = path
 
-				var children = 
-					// skip collapsed...
-					(!iterateCollapsed && elem.collapsed) ?
-						[]
-					// inlined...
-					: (elem instanceof BaseBrowser 
-							|| elem instanceof Array) ?
-						elem
-					// nested...
-					: (elem.children || [])
+				// item...
+				var skipItem = 
+					(skipDisabled && elem.disabled)
+					|| (!iterateNonIterable && elem.noniterable) 
+					|| (!includeInlinedBlocks 
+						&& (elem instanceof Array || elem instanceof BaseBrowser))
+				var p = !skipItem ?
+					path.concat(elem.id)
+					: p
+				var item
+				// NOTE: this will handle the item once and then re-return its value...
+				var getItem = function(){
+					return (item = 
+						item !== undefined ?
+							item
+						: !skipItem ?
+							[ func.call(that, elem, context.index++, p, next, stop) ].flat()
+						: []) }
+				// pre-call the item if reverse is not 'full'...
+				reverse == 'full'
+					|| getItem()
 
+				// children...
+				var children = (
+						// skip...
+						((!iterateCollapsed && elem.collapsed) 
+								|| (skipDisabled == 'branch')) ?
+							[]
+						// inlined...
+						: !options.skipInlined
+								&& (elem instanceof BaseBrowser || elem instanceof Array) ?
+							elem
+						// nested...
+						: (!options.skipNested && elem.children) ) 
+					|| []
 				var next = function(elems){
 					children = elems == null ?
 						[]
 						: elems }
 
-				// handle item...
-				// skip non-iterable and inlined block items...
-				var handleItem = !((!iterateNonIterable && elem.noniterable) 
-					|| (elem instanceof Array || elem instanceof BaseBrowser))
-				var p = handleItem ?
-					path.concat(elem.id)
-					: p
-				var item
-				// NOTE: this will handle the item once and then re-return the value...
-				var getItem = function(){
-					return (item = 
-						item !== undefined ?
-							item
-						: handleItem ?
-							[ func.call(that, elem, context.index++, p, next, stop) ].flat()
-						: []) }
-				// pre-call the item if options.reverse is not set to 'full'...
-				options.reverse == 'full'
-					|| getItem()
-
+				// build the result...
 				return [
-					// item...
-					...!options.reverse ? 
+					// item (normal order)...
+					...!(reverse && reverse != 'tree') ? 
 						getItem() 
 						: [],
 					// children...
@@ -2060,12 +2133,10 @@ var BaseBrowserPrototype = {
 								.walk2(func, options, p, context)
 						: [],
 					// item (in reverse)...
-					...options.reverse ? 
+					...(reverse && reverse != 'tree') ? 
 						getItem() 
 						: [], ] } }
 
-
-		// do the handling...
 		try {
 			return handleReverse(
 					sections
@@ -2075,11 +2146,63 @@ var BaseBrowserPrototype = {
 				.map(makeMap(path))
 				.flat() 
 
-		// handle StopException and errors...
+		// handle stop(..) and propagate errors...
 		} catch(e){
 			if(e === StopException){
 				return res }
 			throw e } },
+
+	// basic iteration...
+	map2: function(func, options){
+		var that = this
+		options = !(options || {}).defaultReverse ?
+			Object.assign({},
+				options || {}, 
+				{ defaultReverse: 'full' })
+			: options
+		return this.walk2(
+				function(e, i, p){
+					return [func ?
+						func.call(that, e, i, p)
+						: e] }, 
+				options) 
+			.run(makeFlatRunViewWrapper(this, options)) },
+	filter2: function(func, options){ 
+		var that = this
+		options = !(options || {}).defaultReverse ?
+			Object.assign({},
+				options || {}, 
+				{ defaultReverse: 'full' })
+			: options
+		return this.walk2(
+			function(e, i, p){
+				return func.call(that, e, i, p) ? [e] : [] }, 
+			options)
+			.run(makeFlatRunViewWrapper(this, options)) },
+	reduce2: function(func, start, options){
+		var that = this
+		options = !(options || {}).defaultReverse ?
+			Object.assign({},
+				options || {}, 
+				{ defaultReverse: 'full' })
+			: options
+		this.walk2(
+			function(e, i, p){
+				start = func.call(that, start, e, i, p) }, 
+			options) 
+		return start },
+	forEach2: function(func, options){ 
+		this.map2(...arguments)
+		return this },
+
+	toArray2: function(options){
+		return this.map2(null,
+			Object.assign({},
+				options || {}, 
+				{rawResults: true})) },
+
+	// XXX search(..), get(..), ...
+
 
 
 	// Data access and iteration...
@@ -2142,9 +2265,9 @@ var BaseBrowserPrototype = {
 	// 		// Partial walking...
 	// 		//
 	// 		// XXX not implemented yet...
-	// 		start: <index> | <path>,
-	// 		count: <number>,
-	// 		end: <index> | <path>,
+	// 		//start: <index> | <path>,
+	// 		//count: <number>,
+	// 		//end: <index> | <path>,
 	//
 	//
 	// 		// Iterate ALL items...
