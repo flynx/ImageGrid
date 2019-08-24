@@ -1931,38 +1931,49 @@ var BaseBrowserPrototype = {
 
 
 	// XXX EXPERIMENTAL -- an attempt to simplify walking...
+	// Walk the browser...
 	//
-	// 	.walk(func[, options])
+	// 	Get list of nodes...
+	// 	.walk()
+	// 	.walk(null[, options])
+	// 		-> list
+	//
+	//	Walk the tree passing each elem to func(..)
+	// 	.walk(func(..)[, options])
 	// 		-> list
 	// 		-> res
 	//
 	//
-	// 	func(elem, i, path, next(..), stop(..))
-	// 		-> [item, ..]
-	// 		-> item
+	// 		Handle elem...
+	// 		 func(elem, index, path, next(..), stop(..))
+	// 			-> [item, ..]
+	//	 		-> item
 	//
 	//
-	// 		Ignore current .children...
-	// 		next()
+	// 			Ignore current .children...
+	// 			 next()
 	//
-	// 		Explicitly pass the children to handle...
-	// 		next(browser)
-	// 		next([elem, ...])
-	//
-	//
-	// 		Stop walking (returning undefined)...
-	// 		stop()
-	//
-	// 		Stop walking and return res...
-	// 		stop(res)
+	// 			Explicitly pass children to be handled...
+	// 			 next(browser)
+	// 			 next([elem, ...])
 	//
 	//
-	// If func(..) returns an array it's content is merged (.flat()) into
-	// .walk(..)'s return value, this enables it to:
-	// 	- return more than one value per item by returning an array of values
-	// 	- return no values for an item by returning []
+	// 			Stop walking (return undefined)...
+	// 			 stop()
 	//
-	// NOTE: to explicitly return an array wrap it in another array.
+	// 			Stop walking and return res...
+	// 			 stop(res)
+	//
+	//
+	// NOTE: stop(..) breaks execution so nothing after it is called
+	// 		in the function will get reached.
+	// NOTE: if func(..) returns an array it's content is merged (.flat()) 
+	// 		into .walk(..)'s return value, this enables it to:
+	// 			- return more than one value per item by returning an 
+	// 				array of values
+	// 			- return no values for an item by returning []
+	// NOTE: to explicitly return an array from func(..) wrap it in 
+	// 		another array.
 	//
 	//
 	//
@@ -2026,7 +2037,7 @@ var BaseBrowserPrototype = {
 	// 		children and return the result to the caller??? 
 	walk2: function(func, options){
 		var that = this
-		var [func, options={}, path=[], context={}] = [...arguments]
+		var [func=null, options={}, path=[], context={}] = [...arguments]
 
 		// context...
 		context.root = context.root || this
@@ -2092,7 +2103,7 @@ var BaseBrowserPrototype = {
 					return (item = 
 						item !== undefined ?
 							item
-						: !skipItem ?
+						: !skipItem && func ?
 							[ func.call(that, elem, context.index++, p, next, stop) ].flat()
 						: []) }
 				// pre-call the item if reverse is not 'full'...
@@ -2155,10 +2166,18 @@ var BaseBrowserPrototype = {
 	// basic iteration...
 	map2: function(func, options){
 		var that = this
-		options = !(options || {}).defaultReverse ?
+		var args = [...arguments]
+		func = (args[0] instanceof Function 
+				|| args[0] == null) ? 
+			args.shift() 
+			: undefined
+		// NOTE: we do not inherit options from this.options here is it 
+		// 		will be done in .walk(..)
+		options = args.shift() || {}
+		options = !options.defaultReverse ?
 			Object.assign({},
-				options || {}, 
-				{ defaultReverse: 'full' })
+				options, 
+				{ defaultReverse: 'flat' })
 			: options
 		return this.walk2(
 				function(e, i, p){
@@ -2201,7 +2220,9 @@ var BaseBrowserPrototype = {
 				options || {}, 
 				{rawResults: true})) },
 
-	// XXX search(..), get(..), ...
+	// XXX
+	search2: function(){},
+	get2: function(){},
 
 
 
