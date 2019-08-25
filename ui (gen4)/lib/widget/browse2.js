@@ -724,6 +724,8 @@ var BrowserViewMixin = {
 
 
 
+// XXX if this is the common case shouldn't we set the args as defaults 
+// 		to .View(..) ???
 var viewWrap =
 function(context, lst, options){
 	return context.view(
@@ -735,6 +737,16 @@ function(context, lst, options){
 				options.skipNested 
 				: true,
 		}) }
+
+// Make a View wrapper function for use in .run(..)...
+//
+var makeFlatRunViewWrapper = 
+function(context, options){
+	return function(){
+		return (options || {}).rawResults === true ?
+			this
+			: viewWrap(context, this, options) } } 
+
 //
 // options format:
 // 	{
@@ -757,15 +769,6 @@ function(options){
 		: (options.wrapper 
 			|| function(res){
 				return viewWrap(this, res, options) }) }
-
-
-var makeFlatRunViewWrapper = 
-function(context, options){
-	return function(){
-		return (options || {}).rawResults === true ?
-			this
-			: viewWrap(context, this, options) } } 
-
 
 
 
@@ -1930,7 +1933,8 @@ var BaseBrowserPrototype = {
 		return false },
 
 
-	// XXX EXPERIMENTAL -- an attempt to simplify walking...
+	// XXX EXPERIMENTAL -- simplifying walking...
+
 	// Walk the browser...
 	//
 	// 	Get list of nodes...
@@ -1952,10 +1956,16 @@ var BaseBrowserPrototype = {
 	//
 	// 			Ignore current .children...
 	// 			 next()
+	// 			 	-> children
+	//
+	// 			Force children processing synchronously...
+	// 			 next(true)
+	// 			 	-> res
 	//
 	// 			Explicitly pass children to be handled...
 	// 			 next(browser)
 	// 			 next([elem, ...])
+	// 			 	-> input
 	//
 	//
 	// 			Stop walking (return undefined)...
@@ -2033,8 +2043,6 @@ var BaseBrowserPrototype = {
 	// 	}
 	//
 	//
-	// XXX should we implement next(true) to synchronously process the 
-	// 		children and return the result to the caller??? 
 	walk2: function(func, options){
 		var that = this
 		var [func=null, options={}, path=[], context={}] = [...arguments]
@@ -2042,6 +2050,15 @@ var BaseBrowserPrototype = {
 		// context...
 		context.root = context.root || this
 		context.index = context.index || 0
+		// stop...
+		var res, StopException
+		var stop = context.stop = 
+			context.stop 
+				|| function(r){ 
+						res = r
+						throw StopException }
+					.run(function(){
+						StopException = new Error('walk2(..): StopException.') })
 
 		// options...
 		options = Object.assign(
@@ -2073,16 +2090,6 @@ var BaseBrowserPrototype = {
 			options.skipDisabledMode || 'node'
 			: options.skipDisabled
 
-		// stopping mechanics...
-		var res, StopException
-		var stop = context.stop = 
-			context.stop 
-				|| function(r){ 
-						res = r
-						throw StopException }
-					.run(function(){
-						StopException = new Error('walk2(..): StopException.') })
-
 		// item handler generator...
 		var makeMap = function(path){
 			return function(elem){
@@ -2098,17 +2105,14 @@ var BaseBrowserPrototype = {
 					path.concat(elem.id)
 					: p
 				var item
-				// NOTE: this will handle the item once and then re-return its value...
-				var getItem = function(){
+				// NOTE: this will process the value once then return the cached value...
+				var processItem = function(){
 					return (item = 
 						item !== undefined ?
 							item
 						: !skipItem && func ?
 							[ func.call(that, elem, context.index++, p, next, stop) ].flat()
 						: []) }
-				// pre-call the item if reverse is not 'full'...
-				reverse == 'full'
-					|| getItem()
 
 				// children...
 				var children = (
@@ -2124,28 +2128,49 @@ var BaseBrowserPrototype = {
 						: (!options.skipNested && elem.children) ) 
 					|| []
 				var next = function(elems){
-					children = elems == null ?
-						[]
-						: elems }
+					return (children = 
+						// skip...
+						elems == null ?
+							[]
+						// force processing now...
+						: elems === true ?
+							processChildren()
+						// set elems as children...
+						: elems) }
+				var processed
+				// NOTE: this will process the value once then return the cached value...
+				var processChildren = function(){
+					return (processed = 
+						processed !== undefined ?
+							processed
+						: children instanceof Array ?
+							handleReverse(children)
+								.map(makeMap(p))
+								.flat()
+						: children instanceof BaseBrowser ?
+							// NOTE: this will never return non-array as 
+							// 		when stop(..) is called it will break
+							// 		execution and get handled in the catch 
+							// 		clause below...
+							children
+								.walk2(func, options, p, context)
+						: []) }
+
+				// pre-call the item if reverse is not 'full'...
+				reverse == 'full'
+					|| processItem()
 
 				// build the result...
 				return [
 					// item (normal order)...
 					...!(reverse && reverse != 'tree') ? 
-						getItem() 
+						processItem() 
 						: [],
 					// children...
-					...children instanceof Array ?
-							handleReverse(children)
-								.map(makeMap(p))
-								.flat()
-						: children instanceof BaseBrowser ?
-							children
-								.walk2(func, options, p, context)
-						: [],
+					...processChildren(),
 					// item (in reverse)...
 					...(reverse && reverse != 'tree') ? 
-						getItem() 
+						processItem() 
 						: [], ] } }
 
 		try {
@@ -2164,6 +2189,8 @@ var BaseBrowserPrototype = {
 			throw e } },
 
 	// basic iteration...
+	// NOTE: we do not inherit options from this.options here as it 
+	// 		will be done in .walk(..)
 	map2: function(func, options){
 		var that = this
 		var args = [...arguments]
@@ -2171,8 +2198,6 @@ var BaseBrowserPrototype = {
 				|| args[0] == null) ? 
 			args.shift() 
 			: undefined
-		// NOTE: we do not inherit options from this.options here is it 
-		// 		will be done in .walk(..)
 		options = args.shift() || {}
 		options = !options.defaultReverse ?
 			Object.assign({},
@@ -2220,9 +2245,10 @@ var BaseBrowserPrototype = {
 				options || {}, 
 				{rawResults: true})) },
 
-	// XXX
+	// XXX the rest of the 2'nd and 3'rd gen data access API should fall 
+	// 		inline as soon as this is done...
+	// XXX reuse __search_test_generators__...
 	search2: function(){},
-	get2: function(){},
 
 
 
@@ -3233,11 +3259,6 @@ var BaseBrowserPrototype = {
 					stop([func(elem, i, path)]) }, 
 				options) ].flat()[0] },
 
-	// Sublist map functions...
-	// XXX this does not include inlined sections, should it???
-	sublists: function(func, options){
-		return this.search({children: true}, func, options) },
-
 	// XXX should these return an array or a .constructor(..) instance??
 	// XXX should this call .forEach(..) on nested stuff or just fall 
 	// 		back to .map(..)???
@@ -3273,6 +3294,11 @@ var BaseBrowserPrototype = {
 			options, context)
 		return context.result
 	},
+
+	// Sublist map functions...
+	// XXX this does not include inlined sections, should it???
+	sublists: function(func, options){
+		return this.search({children: true}, func, options) },
 
 	// 	
 	// 	Get parent of .focused
