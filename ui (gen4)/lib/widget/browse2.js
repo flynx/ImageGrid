@@ -2248,7 +2248,140 @@ var BaseBrowserPrototype = {
 	// XXX the rest of the 2'nd and 3'rd gen data access API should fall 
 	// 		inline as soon as this is done...
 	// XXX reuse __search_test_generators__...
-	search2: function(){},
+	// XXX REVISE...
+	search2: function(pattern, func, options){
+		var that = this
+
+		// parse args...
+		var args = [...arguments]
+		pattern = args.length == 0 ? 
+			true 
+			: args.shift() 
+		func = (args[0] instanceof Function 
+				|| args[0] == null) ? 
+			args.shift() 
+			: undefined
+		// NOTE: we do not inherit options from this.options here is it 
+		// 		will be done in .walk(..)
+		options = args.shift() || {}
+		var context = args.shift()
+
+		// non-path array or item as-is...
+		//
+		// here we'll do one of the following for pattern / each element of pattern:
+		// 	- pattern is an explicitly given item
+		// 		-> pass to func(..) if given, else return as-is
+		// 	- call .search(pattern, ..)
+		//
+		// NOTE: a non-path array is one where at least one element is 
+		// 		an object...
+		// NOTE: this might get expensive as we call .search(..) per item...
+		// XXX needs refactoring -- feels overcomplicated...
+		var index = new Set(Object.values(this.index))
+		if(index.has(pattern) 
+				|| (pattern instanceof Array
+					&& !pattern
+						.reduce(function(r, e){ 
+							return r && typeof(e) != typeof({}) }, true))){
+			// reverse index...
+			index = this
+				.reduce2(function(res, e, i, p){
+					res.set(e, [i, p])
+					return res
+				}, new Map(), {iterateCollapsed: true})
+			var res
+			var Stop = new Error('Stop iteration')
+			try {
+				return (pattern instanceof Array ? 
+						pattern 
+						: [pattern])
+					.map(function(pattern){ 
+						return index.has(pattern) ? 
+							// pattern is an explicit item...
+							[ func ?
+								func.call(this, pattern, 
+									...index.get(pattern), 
+									// stop(..)
+									function stop(v){
+										res = v
+										throw Stop })
+								: pattern ]
+							// search...
+							: that.search2(pattern, ...args.slice(1)) })
+					.flat()
+					.unique() 
+			} catch(e){
+				if(e === Stop){
+					return res
+				}
+				throw e } }
+
+		// pattern -- normalize and do pattern keywords...
+		pattern = options.ignoreKeywords ?
+				pattern
+			: typeof(pattern) == typeof('str') ?
+				((pattern === 'all' || pattern == '*') ?
+					true
+				: pattern == 'first' ?
+					0
+				: pattern == 'last' ?
+					-1
+				: pattern == 'selected' ?
+					function(e){ return !!e.selected }
+				: pattern == 'focused' ?
+					function(e){ return !!e.focused }
+				: pattern)
+			: pattern
+		// normalize negative index...
+		if(typeof(pattern) == typeof(123) && pattern < 0){
+			pattern = -pattern - 1
+			options = Object.assign({},
+				options,
+				{reverse: 'flat'})
+		}
+		// normalize/build the test predicate...
+		var test = (
+			// all...
+			pattern === true ?
+				pattern
+			// predicate...
+			: pattern instanceof Function ?
+				pattern
+			// other -> get a compatible test function...
+			: Object.entries(this.__search_test_generators__)
+				.filter(function([key, _]){
+					return !(options.noQueryCheck 
+						&& key == 'query') })
+				.reduce(function(res, [_, get]){
+					return res 
+						|| get.call(that.__search_test_generators__, pattern) }, false) )
+
+		return this.walk2(
+			function(elem, i, path, next, stop){
+				// match...
+				var res = (elem
+						&& (test === true 
+							// identity check...
+							|| (!options.noIdentityCheck 
+								&& pattern === elem)
+							// test...
+							|| (test 
+								// NOTE: we pass next here to provide the 
+								// 		test with the option to filter out
+								// 		branches that it knows will not 
+								// 		match...
+								&& test.call(this, elem, i, path, next)))) ?
+					// handle the passed items...
+					[ func ?
+						func.call(this, elem, i, path, stop)
+						: elem ]
+					: [] 
+				return ((options.firstMatch 
+							|| typeof(pattern) == typeof(123)) 
+						&& res.length > 0) ? 
+					stop(res)
+					: res },
+			options) },
 
 
 
