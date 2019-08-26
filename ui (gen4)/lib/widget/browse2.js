@@ -2096,22 +2096,30 @@ var BaseBrowserPrototype = {
 				var p = path
 
 				// item...
+				var inlined = elem instanceof Array 
+					|| elem instanceof BaseBrowser
 				var skipItem = 
 					(skipDisabled && elem.disabled)
 					|| (!iterateNonIterable && elem.noniterable) 
-					|| (!includeInlinedBlocks 
-						&& (elem instanceof Array || elem instanceof BaseBrowser))
+					|| (!includeInlinedBlocks && inlined)
 				var p = !skipItem ?
 					path.concat(elem.id)
 					: p
 				var item
-				// NOTE: this will process the value once then return the cached value...
+				// NOTE: this will calc the value once and return it cached next...
 				var processItem = function(){
 					return (item = 
 						item !== undefined ?
 							item
 						: !skipItem && func ?
-							[ func.call(that, elem, context.index++, p, next, stop) ].flat()
+							[ func.call(that, elem, 
+								inlined ? 
+									// NOTE: we do not increment index for 
+									// 		inlined block containers as they 
+									// 		do not occupy and space...
+									context.index 
+									: context.index++, 
+								p, next, stop) ].flat()
 						: []) }
 
 				// children...
@@ -2138,7 +2146,7 @@ var BaseBrowserPrototype = {
 						// set elems as children...
 						: elems) }
 				var processed
-				// NOTE: this will process the value once then return the cached value...
+				// NOTE: this will calc the value once and return it cached next...
 				var processChildren = function(){
 					return (processed = 
 						processed !== undefined ?
@@ -2191,7 +2199,7 @@ var BaseBrowserPrototype = {
 	// basic iteration...
 	// NOTE: we do not inherit options from this.options here as it 
 	// 		will be done in .walk(..)
-	map2: function(func, options){
+	map: function(func, options){
 		var that = this
 		var args = [...arguments]
 		func = (args[0] instanceof Function 
@@ -2211,7 +2219,7 @@ var BaseBrowserPrototype = {
 						: e] }, 
 				options) 
 			.run(makeFlatRunViewWrapper(this, options)) },
-	filter2: function(func, options){ 
+	filter: function(func, options){ 
 		var that = this
 		options = !(options || {}).defaultReverse ?
 			Object.assign({},
@@ -2223,7 +2231,7 @@ var BaseBrowserPrototype = {
 				return func.call(that, e, i, p) ? [e] : [] }, 
 			options)
 			.run(makeFlatRunViewWrapper(this, options)) },
-	reduce2: function(func, start, options){
+	reduce: function(func, start, options){
 		var that = this
 		options = !(options || {}).defaultReverse ?
 			Object.assign({},
@@ -2235,12 +2243,12 @@ var BaseBrowserPrototype = {
 				start = func.call(that, start, e, i, p) }, 
 			options) 
 		return start },
-	forEach2: function(func, options){ 
+	forEach: function(func, options){ 
 		this.map2(...arguments)
 		return this },
 
-	toArray2: function(options){
-		return this.map2(null,
+	toArray: function(options){
+		return this.map(null,
 			Object.assign({},
 				options || {}, 
 				{rawResults: true})) },
@@ -2249,7 +2257,7 @@ var BaseBrowserPrototype = {
 	// 		inline as soon as this is done...
 	// XXX reuse __search_test_generators__...
 	// XXX REVISE...
-	search2: function(pattern, func, options){
+	search: function(pattern, func, options){
 		var that = this
 
 		// parse args...
@@ -2285,7 +2293,7 @@ var BaseBrowserPrototype = {
 							return r && typeof(e) != typeof({}) }, true))){
 			// reverse index...
 			index = this
-				.reduce2(function(res, e, i, p){
+				.reduce(function(res, e, i, p){
 					res.set(e, [i, p])
 					return res
 				}, new Map(), {iterateCollapsed: true})
@@ -2381,6 +2389,9 @@ var BaseBrowserPrototype = {
 					stop(res)
 					: res },
 			options) },
+
+	// XXX migrate .render(..) to use .walk2(..)
+	// 		- are we rendering with the nested .render(..)???
 
 
 
@@ -2909,6 +2920,7 @@ var BaseBrowserPrototype = {
 	//
 	// XXX should we move the defaults to .config???
 	// XXX Q: should we have an option to treat groups as elements???
+	/* XXX WALK2
 	map: function(func, options){
 		var that = this
 
@@ -2948,6 +2960,7 @@ var BaseBrowserPrototype = {
 			Object.assign({},
 				options || {}, 
 				{rawResults: true})) },
+	//*/
 
 
 	// Search items...
@@ -3140,6 +3153,7 @@ var BaseBrowserPrototype = {
 								//	&& elem[key] instanceof pattern)
 							) }, true) } },
 	},
+	/* XXX WALK2
 	search: function(pattern, func, options){
 		var that = this
 		var args = [...arguments]
@@ -3277,6 +3291,7 @@ var BaseBrowserPrototype = {
 			function(_, i, p, options, context){
 				return [pattern, func, options, context] },
 			options, context) },
+	//*/
 
 
 	// Get item... 
@@ -3394,6 +3409,7 @@ var BaseBrowserPrototype = {
 	// XXX should these return an array or a .constructor(..) instance??
 	// XXX should this call .forEach(..) on nested stuff or just fall 
 	// 		back to .map(..)???
+	/* XXX WALK2
 	forEach: function(func, options){
 		this.map(...arguments)
 		return this },
@@ -3426,6 +3442,7 @@ var BaseBrowserPrototype = {
 			options, context)
 		return context.result
 	},
+	//*/
 
 	// Sublist map functions...
 	// XXX this does not include inlined sections, should it???
