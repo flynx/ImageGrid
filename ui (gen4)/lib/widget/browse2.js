@@ -2312,8 +2312,7 @@ var BaseBrowserPrototype = {
 					.unique() 
 			} catch(e){
 				if(e === Stop){
-					return res
-				}
+					return res }
 				throw e } }
 
 		// pattern -- normalize and do pattern keywords...
