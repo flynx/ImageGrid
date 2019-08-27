@@ -2196,200 +2196,6 @@ var BaseBrowserPrototype = {
 				return res }
 			throw e } },
 
-	// basic iteration...
-	// NOTE: we do not inherit options from this.options here as it 
-	// 		will be done in .walk(..)
-	map: function(func, options){
-		var that = this
-		var args = [...arguments]
-		func = (args[0] instanceof Function 
-				|| args[0] == null) ? 
-			args.shift() 
-			: undefined
-		options = args.shift() || {}
-		options = !options.defaultReverse ?
-			Object.assign({},
-				options, 
-				{ defaultReverse: 'flat' })
-			: options
-		return this.walk2(
-				function(e, i, p){
-					return [func ?
-						func.call(that, e, i, p)
-						: e] }, 
-				options) 
-			.run(makeFlatRunViewWrapper(this, options)) },
-	filter: function(func, options){ 
-		var that = this
-		options = !(options || {}).defaultReverse ?
-			Object.assign({},
-				options || {}, 
-				{ defaultReverse: 'full' })
-			: options
-		return this.walk2(
-			function(e, i, p){
-				return func.call(that, e, i, p) ? [e] : [] }, 
-			options)
-			.run(makeFlatRunViewWrapper(this, options)) },
-	reduce: function(func, start, options){
-		var that = this
-		options = !(options || {}).defaultReverse ?
-			Object.assign({},
-				options || {}, 
-				{ defaultReverse: 'full' })
-			: options
-		this.walk2(
-			function(e, i, p){
-				start = func.call(that, start, e, i, p) }, 
-			options) 
-		return start },
-	forEach: function(func, options){ 
-		this.map2(...arguments)
-		return this },
-
-	toArray: function(options){
-		return this.map(null,
-			Object.assign({},
-				options || {}, 
-				{rawResults: true})) },
-
-	// XXX the rest of the 2'nd and 3'rd gen data access API should fall 
-	// 		inline as soon as this is done...
-	// XXX reuse __search_test_generators__...
-	// XXX REVISE...
-	search: function(pattern, func, options){
-		var that = this
-
-		// parse args...
-		var args = [...arguments]
-		pattern = args.length == 0 ? 
-			true 
-			: args.shift() 
-		func = (args[0] instanceof Function 
-				|| args[0] == null) ? 
-			args.shift() 
-			: undefined
-		// NOTE: we do not inherit options from this.options here is it 
-		// 		will be done in .walk(..)
-		options = args.shift() || {}
-		var context = args.shift()
-
-		// non-path array or item as-is...
-		//
-		// here we'll do one of the following for pattern / each element of pattern:
-		// 	- pattern is an explicitly given item
-		// 		-> pass to func(..) if given, else return as-is
-		// 	- call .search(pattern, ..)
-		//
-		// NOTE: a non-path array is one where at least one element is 
-		// 		an object...
-		// NOTE: this might get expensive as we call .search(..) per item...
-		// XXX needs refactoring -- feels overcomplicated...
-		var index = new Set(Object.values(this.index))
-		if(index.has(pattern) 
-				|| (pattern instanceof Array
-					&& !pattern
-						.reduce(function(r, e){ 
-							return r && typeof(e) != typeof({}) }, true))){
-			// reverse index...
-			index = this
-				.reduce(function(res, e, i, p){
-					res.set(e, [i, p])
-					return res
-				}, new Map(), {iterateCollapsed: true})
-			var res
-			var Stop = new Error('Stop iteration')
-			try {
-				return (pattern instanceof Array ? 
-						pattern 
-						: [pattern])
-					.map(function(pattern){ 
-						return index.has(pattern) ? 
-							// pattern is an explicit item...
-							[ func ?
-								func.call(this, pattern, 
-									...index.get(pattern), 
-									// stop(..)
-									function stop(v){
-										res = v
-										throw Stop })
-								: pattern ]
-							// search...
-							: that.search2(pattern, ...args.slice(1)) })
-					.flat()
-					.unique() 
-			} catch(e){
-				if(e === Stop){
-					return res }
-				throw e } }
-
-		// pattern -- normalize and do pattern keywords...
-		pattern = options.ignoreKeywords ?
-				pattern
-			: typeof(pattern) == typeof('str') ?
-				((pattern === 'all' || pattern == '*') ?
-					true
-				: pattern == 'first' ?
-					0
-				: pattern == 'last' ?
-					-1
-				: pattern == 'selected' ?
-					function(e){ return !!e.selected }
-				: pattern == 'focused' ?
-					function(e){ return !!e.focused }
-				: pattern)
-			: pattern
-		// normalize negative index...
-		if(typeof(pattern) == typeof(123) && pattern < 0){
-			pattern = -pattern - 1
-			options = Object.assign({},
-				options,
-				{reverse: 'flat'})
-		}
-		// normalize/build the test predicate...
-		var test = (
-			// all...
-			pattern === true ?
-				pattern
-			// predicate...
-			: pattern instanceof Function ?
-				pattern
-			// other -> get a compatible test function...
-			: Object.entries(this.__search_test_generators__)
-				.filter(function([key, _]){
-					return !(options.noQueryCheck 
-						&& key == 'query') })
-				.reduce(function(res, [_, get]){
-					return res 
-						|| get.call(that.__search_test_generators__, pattern) }, false) )
-
-		return this.walk2(
-			function(elem, i, path, next, stop){
-				// match...
-				var res = (elem
-						&& (test === true 
-							// identity check...
-							|| (!options.noIdentityCheck 
-								&& pattern === elem)
-							// test...
-							|| (test 
-								// NOTE: we pass next here to provide the 
-								// 		test with the option to filter out
-								// 		branches that it knows will not 
-								// 		match...
-								&& test.call(this, elem, i, path, next)))) ?
-					// handle the passed items...
-					[ func ?
-						func.call(this, elem, i, path, stop)
-						: elem ]
-					: [] 
-				return ((options.firstMatch 
-							|| typeof(pattern) == typeof(123)) 
-						&& res.length > 0) ? 
-					stop(res)
-					: res },
-			options) },
-
 	// XXX migrate .render(..) to use .walk2(..)
 	// 		- are we rendering with the nested .render(..)???
 
@@ -2487,15 +2293,15 @@ var BaseBrowserPrototype = {
 	//		//	true | 'tree'		- reverse order of levels but keep 
 	//		//							topology order, i.e. containers
 	//		//							will precede contained elements.
-	//		//	'flat'				- full flat reverse
+	//		//	'full'				- full flat reverse
 	//		//
-	//		// NOTE: in 'flat' mode the client loses control over the 
+	//		// NOTE: in 'full' mode the client loses control over the 
 	//		//		order of processing via doNested(..) as it will be 
 	//		//		called before handleItem(..)
-	// 		reverse: <bool> | 'flat' | 'tree',
+	// 		reverse: <bool> | 'full' | 'tree',
 	//
 	// 		// The value to be used if .reverse is set to true...
-	// 		defaultReverse: 'tree' (default) | 'flat',
+	// 		defaultReverse: 'tree' (default) | 'full',
 	//
 	//
 	// 		// If true include inlined parent id in path...
@@ -2720,7 +2526,7 @@ var BaseBrowserPrototype = {
 					state.splice(state.length, 0,
 						...[
 							// reverse -> do children...
-							reverse == 'flat' 
+							reverse == 'full' 
 								&& children
 								&& doNested() 
 								|| [],
@@ -2902,7 +2708,7 @@ var BaseBrowserPrototype = {
 	// 		// The value used if .reverse is set to true...
 	// 		//
 	// 		// NOTE: the default is different from .walk(..)
-	// 		defaultReverse: 'flat' (default) | 'tree',
+	// 		defaultReverse: 'full' (default) | 'tree',
 	//
 	// 		// For other supported options see docs for .walk(..)
 	// 		...
@@ -2920,7 +2726,65 @@ var BaseBrowserPrototype = {
 	//
 	// XXX should we move the defaults to .config???
 	// XXX Q: should we have an option to treat groups as elements???
-	/* XXX WALK2
+	
+	// XXX WALK2: update docs for .map(..)
+	// NOTE: we do not inherit options from this.options here as it 
+	// 		will be done in .walk(..)
+	map: function(func, options){
+		var that = this
+		var args = [...arguments]
+		func = (args[0] instanceof Function 
+				|| args[0] == null) ? 
+			args.shift() 
+			: undefined
+		options = args.shift() || {}
+		options = !options.defaultReverse ?
+			Object.assign({},
+				options, 
+				{ defaultReverse: 'full' })
+			: options
+		return this.walk2(
+				function(e, i, p){
+					return [func ?
+						func.call(that, e, i, p)
+						: e] }, 
+				options) 
+			.run(makeFlatRunViewWrapper(this, options)) },
+	filter: function(func, options){ 
+		var that = this
+		options = !(options || {}).defaultReverse ?
+			Object.assign({},
+				options || {}, 
+				{ defaultReverse: 'full' })
+			: options
+		return this.walk2(
+			function(e, i, p){
+				return func.call(that, e, i, p) ? [e] : [] }, 
+			options)
+			.run(makeFlatRunViewWrapper(this, options)) },
+	reduce: function(func, start, options){
+		var that = this
+		options = !(options || {}).defaultReverse ?
+			Object.assign({},
+				options || {}, 
+				{ defaultReverse: 'full' })
+			: options
+		this.walk2(
+			function(e, i, p){
+				start = func.call(that, start, e, i, p) }, 
+			options) 
+		return start },
+	forEach: function(func, options){ 
+		this.map2(...arguments)
+		return this },
+
+	toArray: function(options){
+		return this.map(null,
+			Object.assign({},
+				options || {}, 
+				{rawResults: true})) },
+
+	/*/ // XXX WALK2
 	map: function(func, options){
 		var that = this
 
@@ -2936,7 +2800,7 @@ var BaseBrowserPrototype = {
 		options = !options.defaultReverse ?
 			Object.assign({},
 				options, 
-				{ defaultReverse: 'flat' })
+				{ defaultReverse: 'full' })
 			: options
 		options.wrapper = makeFlatViewWrapper(options)
 		var context = args.shift()
@@ -2954,6 +2818,42 @@ var BaseBrowserPrototype = {
 			function(_, i, p, options, context){
 				return [func, options, context] },
 			options, context) },
+	// XXX should this produce a flat view???
+	// 		...can this be configurable???
+	filter: function(func, options, context){
+		options = options || {}
+		options.wrapper = makeFlatViewWrapper(options)
+		return this.walk(
+			function(e, i, p){
+				return e && func.call(this, e, i, p) ? [e] : [] },
+			'filter',
+			function(_, i, p, options, context){
+				return [func, options, context] },
+			options, context) },
+	reduce: function(func, start, options){
+		var that = this
+		var context = arguments[3] || {result: start}
+		this.walk(
+			function(e, i, p){
+				context.result = e ? 
+					func.call(that, context.result, e, i, p) 
+					: context.result
+				return context.result 
+			},
+			'reduce',
+			function(_, i, p, options, context){
+				return [func, context.result, options, context]
+			},
+			options, context)
+		return context.result
+	},
+	// XXX should these return an array or a .constructor(..) instance??
+	// XXX should this call .forEach(..) on nested stuff or just fall 
+	// 		back to .map(..)???
+	forEach: function(func, options){
+		this.map(...arguments)
+		return this },
+
 	// XXX should this be cached???
 	toArray: function(options){
 		return this.map(null, 
@@ -3153,7 +3053,141 @@ var BaseBrowserPrototype = {
 								//	&& elem[key] instanceof pattern)
 							) }, true) } },
 	},
-	/* XXX WALK2
+	// XXX WALK2
+	// XXX REVISE...
+	search: function(pattern, func, options){
+		var that = this
+
+		// parse args...
+		var args = [...arguments]
+		pattern = args.length == 0 ? 
+			true 
+			: args.shift() 
+		func = (args[0] instanceof Function 
+				|| args[0] == null) ? 
+			args.shift() 
+			: undefined
+		// NOTE: we do not inherit options from this.options here is it 
+		// 		will be done in .walk(..)
+		options = args.shift() || {}
+		var context = args.shift()
+
+		// non-path array or item as-is...
+		//
+		// here we'll do one of the following for pattern / each element of pattern:
+		// 	- pattern is an explicitly given item
+		// 		-> pass to func(..) if given, else return as-is
+		// 	- call .search(pattern, ..)
+		//
+		// NOTE: a non-path array is one where at least one element is 
+		// 		an object...
+		// NOTE: this might get expensive as we call .search(..) per item...
+		// XXX needs refactoring -- feels overcomplicated...
+		var index = new Set(Object.values(this.index))
+		if(index.has(pattern) 
+				|| (pattern instanceof Array
+					&& !pattern
+						.reduce(function(r, e){ 
+							return r && typeof(e) != typeof({}) }, true))){
+			// reverse index...
+			index = this
+				.reduce(function(res, e, i, p){
+					res.set(e, [i, p])
+					return res
+				}, new Map(), {iterateCollapsed: true})
+			var res
+			var Stop = new Error('Stop iteration')
+			try {
+				return (pattern instanceof Array ? 
+						pattern 
+						: [pattern])
+					.map(function(pattern){ 
+						return index.has(pattern) ? 
+							// pattern is an explicit item...
+							[ func ?
+								func.call(this, pattern, 
+									...index.get(pattern), 
+									// stop(..)
+									function stop(v){
+										res = v
+										throw Stop })
+								: pattern ]
+							// search...
+							: that.search2(pattern, ...args.slice(1)) })
+					.flat()
+					.unique() 
+			} catch(e){
+				if(e === Stop){
+					return res }
+				throw e } }
+
+		// pattern -- normalize and do pattern keywords...
+		pattern = options.ignoreKeywords ?
+				pattern
+			: typeof(pattern) == typeof('str') ?
+				((pattern === 'all' || pattern == '*') ?
+					true
+				: pattern == 'first' ?
+					0
+				: pattern == 'last' ?
+					-1
+				: pattern == 'selected' ?
+					function(e){ return !!e.selected }
+				: pattern == 'focused' ?
+					function(e){ return !!e.focused }
+				: pattern)
+			: pattern
+		// normalize negative index...
+		if(typeof(pattern) == typeof(123) && pattern < 0){
+			pattern = -pattern - 1
+			options = Object.assign({},
+				options,
+				{reverse: 'full'})
+		}
+		// normalize/build the test predicate...
+		var test = (
+			// all...
+			pattern === true ?
+				pattern
+			// predicate...
+			: pattern instanceof Function ?
+				pattern
+			// other -> get a compatible test function...
+			: Object.entries(this.__search_test_generators__)
+				.filter(function([key, _]){
+					return !(options.noQueryCheck 
+						&& key == 'query') })
+				.reduce(function(res, [_, get]){
+					return res 
+						|| get.call(that.__search_test_generators__, pattern) }, false) )
+
+		return this.walk2(
+			function(elem, i, path, next, stop){
+				// match...
+				var res = (elem
+						&& (test === true 
+							// identity check...
+							|| (!options.noIdentityCheck 
+								&& pattern === elem)
+							// test...
+							|| (test 
+								// NOTE: we pass next here to provide the 
+								// 		test with the option to filter out
+								// 		branches that it knows will not 
+								// 		match...
+								&& test.call(this, elem, i, path, next)))) ?
+					// handle the passed items...
+					[ func ?
+						func.call(this, elem, i, path, stop)
+						: elem ]
+					: [] 
+				return ((options.firstMatch 
+							|| typeof(pattern) == typeof(123)) 
+						&& res.length > 0) ? 
+					stop(res)
+					: res },
+			options) },
+	/*/
 	search: function(pattern, func, options){
 		var that = this
 		var args = [...arguments]
@@ -3243,7 +3277,7 @@ var BaseBrowserPrototype = {
 			pattern = -pattern - 1
 			options = Object.assign({},
 				options,
-				{reverse: 'flat'})
+				{reverse: 'full'})
 		}
 		// normalize/build the test predicate...
 		var test = (
@@ -3405,44 +3439,6 @@ var BaseBrowserPrototype = {
 				function(elem, i, path, stop){
 					stop([func(elem, i, path)]) }, 
 				options) ].flat()[0] },
-
-	// XXX should these return an array or a .constructor(..) instance??
-	// XXX should this call .forEach(..) on nested stuff or just fall 
-	// 		back to .map(..)???
-	/* XXX WALK2
-	forEach: function(func, options){
-		this.map(...arguments)
-		return this },
-	// XXX should this produce a flat view???
-	// 		...can this be configurable???
-	filter: function(func, options, context){
-		options = options || {}
-		options.wrapper = makeFlatViewWrapper(options)
-		return this.walk(
-			function(e, i, p){
-				return e && func.call(this, e, i, p) ? [e] : [] },
-			'filter',
-			function(_, i, p, options, context){
-				return [func, options, context] },
-			options, context) },
-	reduce: function(func, start, options){
-		var that = this
-		var context = arguments[3] || {result: start}
-		this.walk(
-			function(e, i, p){
-				context.result = e ? 
-					func.call(that, context.result, e, i, p) 
-					: context.result
-				return context.result 
-			},
-			'reduce',
-			function(_, i, p, options, context){
-				return [func, context.result, options, context]
-			},
-			options, context)
-		return context.result
-	},
-	//*/
 
 	// Sublist map functions...
 	// XXX this does not include inlined sections, should it???
@@ -4908,7 +4904,7 @@ var HTMLBrowserPrototype = {
 					{ 
 						rawResults: true,
 						reverse: pos == 'bottom' ? 
-							'flat' 
+							'full'
 							: false,
 						skipDisabled: !(this.options || {}).focusDisabledItems, 
 					}) }.bind(this)
