@@ -1933,6 +1933,12 @@ var BaseBrowserPrototype = {
 		return false },
 
 
+
+
+
+	// Data access and iteration...
+
+
 	// XXX EXPERIMENTAL -- simplifying walking...
 
 	// Walk the browser...
@@ -2043,6 +2049,8 @@ var BaseBrowserPrototype = {
 	// 	}
 	//
 	//
+	// XXX migrate .render(..) to use .walk2(..)
+	// 		- are we rendering with the nested .render(..)???
 	walk2: function(func, options){
 		var that = this
 		var [func=null, options={}, path=[], context={}] = [...arguments]
@@ -2196,12 +2204,6 @@ var BaseBrowserPrototype = {
 				return res }
 			throw e } },
 
-	// XXX migrate .render(..) to use .walk2(..)
-	// 		- are we rendering with the nested .render(..)???
-
-
-
-	// Data access and iteration...
 
 	// Walk the browser...
 	//
@@ -3644,9 +3646,175 @@ var BaseBrowserPrototype = {
 	// 		do not reconstruct the ones already present...
 	// XXX should from/to/around/count be a feature of this or of .walk(..)???
 	// XXX might be a good idea to use this.root === this instead of context.root === this
+
+	/*/ XXX WALK2...
+	// XXX this still has problems.... 
 	render: function(options, renderer, context){
-		context = this.renderContext(context)
 		renderer = renderer || this
+		context = renderer.renderContext(context)
+
+		options = context.options = context.options 
+			|| Object.assign(
+				Object.create(this.options || {}),
+				{ iterateNonIterable: true }, 
+				options || {})
+
+		var section = options.section || '*'
+		section = section == '*' ?
+			options.sections
+			: section
+		section = section instanceof Array && section.length == 1 ?
+			section[0]
+			: section
+
+		var seen = options.renderUnique ?
+			(context.seen = context.seen || new Set())
+			: false
+
+		// build range bounds...
+		// use .get(..) on full (non-partial) range...
+		var get_options = Object.assign(
+			Object.create(options),
+			// XXX for some magical reason if we do not explicitly include 
+			// 		.iterateNonIterable here it is not seen down the line...
+			{from: null, to: null, around: null,
+				iterateNonIterable: options.iterateNonIterable})
+
+		// index getter...
+		var normIndex = function(i){
+			return (i === undefined || typeof(i) == typeof(123)) ?
+				i
+				: this.get(i, 
+					function(_, i){ return i }, 
+					get_options) }.bind(this)
+		// NOTE: we prefer context.from / context.to as they are more 
+		// 		likely to be normalized.
+		// 		as to the rest of the values of set we look first in the 
+		// 		options as we'll need them only if from/to are not 
+		// 		normalized...
+		var from = context.from = normIndex('from' in context ? context.from : options.from)
+		var to = context.to = normIndex('to' in context ? context.to : options.to)
+		var around = normIndex('around' in options ? options.around : context.around)
+		var count = 'count' in options ? options.count : context.count
+		// NOTE: count < 0 is the same as no count / all...
+		count = count < 0 ? 
+			null 
+			: count
+		// complete to/from based on count and/or around...
+		// NOTE: we do not care about overflow here...
+		;(from == null && count != null) 
+			&& (from = context.from = 
+				to != null ? 
+					to - count
+				: around != null ?
+					around - Math.floor(count/2)
+				: from)
+		;(to == null && count != null)
+			&& (to = context.to = 
+				from != null ? 
+					from + count
+				: around != null ?
+					around + Math.ceil(count/2)
+				: to)
+		// sanity check...
+		if(from != null && to != null && to < from){
+			throw new Error(`.render(..): context.from must be less than `
+				+`or equal to context.to. (got: from=${from} and to=${to})`) }
+
+		// XXX use this to check if an item is on the path to <from> and
+		// 		pass it to the skipped topology constructor...
+		var from_path = context.from_path =
+			context.from_path	
+				|| (from != null 
+					&& this.get(from, 
+						function(e, i, p){ return p }, 
+						get_options))
+		from_path = from_path instanceof Array
+			&& from_path
+
+		// root call -> build sections (calling .render(..) per section)...
+		if(context.root == null && section instanceof Array){
+			// NOTE: we are not passing context down to make each section
+			// 		independent of the others... (XXX ???)
+			var s= {}
+			section
+				.forEach(function(name){
+					s[name] = this.render(
+						Object.assign(
+							{},
+							options,
+							{
+								section: name,
+								nonFinalized: true,
+							}), 
+						renderer) }.bind(this))
+			// setup context for final render...
+			context.root = this
+			return (!options.nonFinalized && context.root === this) ?
+				renderer.renderFinalize(s.header, s.items, s.footer, context)
+				: s
+
+		// build specific sections...
+		} else {
+			var filter = options.filter
+			// do the walk...
+			var items = this.walk2(
+				function(elem, i, path, nested){
+					return (
+						// special case: nested <from> elem -> render topology only...
+						(from_path 
+								&& i < from 
+								// only for nested...
+								&& elem && elem.children
+								// only sub-path...
+								&& path.cmp(from_path.slice(0, path.length))) ?
+							[ renderer.renderNestedBlank(nested(true), i, context) ]
+						// seen...
+						: seen instanceof Set 
+								&& (seen.has(elem) 
+									// add to seen and move to next test...
+									|| !seen.add(elem)) ?
+							[]
+						// filter -> skip unmatching...
+						: (filter && !filter.call(this, elem, i, path, section)) ?
+							[]
+						// out of range -> skip...
+						: ((from != null && i < from) 
+								|| (to != null && i >= to)) ?
+							[]
+						// inline...
+						: elem == null ?
+							// NOTE: here we are forcing rendering of the 
+							// 		inline browser/list, i.e. ignoring 
+							// 		options.skipNested for inline stuff...
+							[ renderer.renderGroup(nested(true), context) ]
+						// nested...
+						: elem.children ?
+							[ renderer.renderNested(
+								renderer.renderNestedHeader(elem, i, context),
+								// XXX this renders the elements seporately 
+								// 		in one flat list, need to stop auto-recursion
+								// 		down and call .render(..)
+								// XXX
+								nested(true),
+								elem, 
+								context) ]
+						// normal elem...
+						: [ renderer.renderItem(elem, i, context) ] ) },
+				options) 
+
+			// finalize depending on render mode...
+			return (!options.nonFinalized && context.root === this) ?
+				// root context -> render list and return this...
+				renderer.renderFinalize(null, items, null, context)
+				// nested context -> return item list...
+				: items } },
+	/*/
+	render: function(options, renderer, context){
+		renderer = renderer || this
+
+		context = renderer.renderContext(context)
+
 		options = context.options = context.options 
 			|| Object.assign(
 				Object.create(this.options || {}),
@@ -3802,6 +3970,7 @@ var BaseBrowserPrototype = {
 				renderer.renderFinalize(null, items, null, context)
 				// nested context -> return item list...
 				: items } },
+	//*/
 	
 
 	// Events...
