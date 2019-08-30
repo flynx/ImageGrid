@@ -1933,13 +1933,7 @@ var BaseBrowserPrototype = {
 		return false },
 
 
-
-
-
 	// Data access and iteration...
-
-
-	// XXX EXPERIMENTAL -- simplifying walking...
 
 	// Walk the browser...
 	//
@@ -2055,7 +2049,7 @@ var BaseBrowserPrototype = {
 	//
 	//
 	// XXX might be good to be able to return the partial result via stop(..)
-	walk2: function(func, options){
+	walk: function(func, options){
 		var that = this
 		var [func=null, options={}, path=[], context={}] = [...arguments]
 
@@ -2070,7 +2064,7 @@ var BaseBrowserPrototype = {
 						res = r
 						throw StopException }
 					.run(function(){
-						StopException = new Error('walk2(..): StopException.') })
+						StopException = new Error('walk(..): StopException.') })
 
 		// options...
 		options = Object.assign(
@@ -2179,7 +2173,7 @@ var BaseBrowserPrototype = {
 							// 		execution and get handled in the catch 
 							// 		clause below...
 							elems
-								.walk2(func, options, p, context)
+								.walk(func, options, p, context)
 						: []) }
 
 				// pre-call the item if reverse is not 'full'...
@@ -2215,489 +2209,6 @@ var BaseBrowserPrototype = {
 			throw e } },
 
 
-	// Walk the browser...
-	//
-	//	Get list of nodes in tree...
-	//	.walk()
-	//		-> list
-	//
-	//	Walk the tree passing each node to func(..)
-	//	.walk(func(..)[, options])
-	//		-> list
-	//
-	//	Walk tree passing each node to func(..) using method name to 
-	//	walk nested browsers...
-	//	NOTE: 'walk' is used as name if name is not present in the object...
-	//	.walk(func(..), name, args(..)[, options])
-	//	.walk(func(..), name, args(..), walkable(..)[, options])
-	//		-> list
-	//
-	//	Walk tree passign each node to func(..) and handle nested browser 
-	//	walking in recursion(..) optionally testing if walkable with walkable(..)
-	//	.walk(func(..), recursion(..)[, options])
-	//		-> list
-	//
-	//
-	//	Item handler...
-	//	func(node, index, path, next(..), stop(..), children)
-	//		-> list
-	//
-	//	Trigger next/nested item handling...
-	//	next(children)
-	//		-> list
-	//
-	//	Stop handling...
-	//	stop(result)
-	//
-	//
-	//	Handle walkable node children (recursively)...
-	//	recursion(children, index, path, options, context, func(..), stop(..), walk())
-	//		-> list
-	//
-	//
-	//	Prepare arguments for call of name function on nested browser...
-	//	args(list, index, path, options, context, func(..), stop(..))
-	//		-> list
-	//
-	//
-	//	Test if node is walkable...
-	//	walkable(node)
-	//		-> bool
-	//
-	//
-	// For examples see: .text(..), .paths(..) and .map(..)
-	//
-	//
-	// options format:
-	// 	{
-	// 		// Partial walking...
-	// 		//
-	// 		// XXX not implemented yet...
-	// 		//start: <index> | <path>,
-	// 		//count: <number>,
-	// 		//end: <index> | <path>,
-	//
-	//
-	// 		// Iterate ALL items...
-	// 		//
-	// 		// NOTE: this if true overrides all other iteration coverage 
-	// 		//		options... 
-	// 		iterateAll: <bool>,
-	//
-	// 		// If true do not skip items with .noniterable set to true...
-	// 		iterateNonIterable: <bool>,
-	// 		// If true do not skip item.children of items with .collapsed 
-	// 		// set to true...
-	// 		iterateCollapsed: <bool>,
-	// 		// If true skip iterating nested items...
-	// 		skipNested: <bool>,
-	//
-	// 		// XXX not yet supported...
-	// 		skipInlined: <bool>,
-	//
-	// 		skipDisabledMode: 'node' | 'branch',
-	// 		skipDisabled: <bool> | 'node' | 'branch',
-	//
-	// 		// Reverse iteration order...
-	//		//
-	//		// modes:
-	//		//	false | null		- normal order (default)
-	//		//	true | 'tree'		- reverse order of levels but keep 
-	//		//							topology order, i.e. containers
-	//		//							will precede contained elements.
-	//		//	'full'				- full flat reverse
-	//		//
-	//		// NOTE: in 'full' mode the client loses control over the 
-	//		//		order of processing via doNested(..) as it will be 
-	//		//		called before handleItem(..)
-	// 		reverse: <bool> | 'full' | 'tree',
-	//
-	// 		// The value to be used if .reverse is set to true...
-	// 		defaultReverse: 'tree' (default) | 'full',
-	//
-	//
-	// 		// If true include inlined parent id in path...
-	// 		// XXX not implemented yet -- can we implement this???...
-	// 		// XXX do we need this??
-	// 		inlinedPaths: <bool>,
-	// 	}
-	//
-	//
-	// NOTE: if recursion(..) is not given then .walk(..) is used to 
-	// 		handle all the nested elements (children)...
-	// NOTE: if walkable(..) is not given then we check for .walk(..)
-	// 		availability...
-	// NOTE: children arrays are handled internally...
-	//
-	//
-	// XXX BUG?: next(false) will not count any of the skipped elements
-	// 		thus messing up the element index...
-	// XXX which of the forms should be documented in the signature???
-	// 		NOTE: it does not matter which is used as we manually
-	// 		parse arguments...
-	// XXX passing both index directly and context containing index 
-	// 		(context.index) feels excessive...
-	// 			+ this is done so as to provide the user a simpler 
-	// 				.map(..)-like form...
-	// 				Ex:
-	// 					.walk((e, i, p, next, stop) => p.join('/'))
-	// 					// vs.
-	// 					.walk((e, c, next, stop) => c.path.join('/'))
-	// 			- two ways to get index and one to update it...
-	// 		...if this can produce errors we need to simplify...
-	// XXX add options.skip(elem) function to test elements for skipping...
-	// XXX add docs:
-	// 		- maintaining context to implement/extend walkers...
-	// 		- correctly stopping recursive calls (call root stop(..))
-	// XXX can this be simpler???
-	walk: function(func, recursion, walkable, options){
-		var that = this
-
-		// parse args...
-		var args = [...arguments]
-		func = (args[0] instanceof Function 
-				|| args[0] == null) ? 
-			args.shift() 
-			: undefined
-		var recursion = (args[0] instanceof Function 
-				|| typeof(args[0]) == typeof('str')
-				|| args[0] == null) ? 
-			args.shift() 
-			: undefined
-		var formArgs = (typeof(recursion) == typeof('str')
-				&& args[0] instanceof Function) ?
-			args.shift()
-			: null
-		// sanity check...
-		if(formArgs == null && typeof(recursion) == typeof('str')){
-			throw new Error(`.walk(func, name, formArgs, ..): `
-				+`expected function as third argument, got: ${formArgs}.`) }
-		var walkable = (!formArgs 
-				&& (args[0] instanceof Function 
-					|| args[0] == null)) ?
-			args.shift() 
-			: null 
-		options = Object.assign(
-			Object.create(this.options || {}),
-			args.shift() || {})
-
-		// get/build context...
-		var context = args.shift()
-		context = context instanceof Array ? 
-			{ path: context } 
-			: (context || {})
-		context.root = context.root || this
-		context.index = context.index || 0
-
-		// options specifics...
-		var sections = options.section == '*' ?
-			(options.sections 
-				|| ['header', 'items', 'footer'])
-			: options.section 
-		// NOTE: we include sections other than 'items' only for the root context...
-		sections = (sections instanceof Array 
-				&& context.root !== this)
-				&& sections.includes('items') ?
-			'items'
-			: (sections || 'items')
-		sections = sections instanceof Array ? 
-			sections 
-			: [sections]
-
-		var iterateNonIterable = options.iterateAll || options.iterateNonIterable
-		var iterateCollapsed = options.iterateAll || options.iterateCollapsed
-		var skipNested = !options.iterateAll && options.skipNested
-		var skipInlined = !options.iterateAll && options.skipInlined
-
-		var skipDisabled = !options.iterateAll && options.skipDisabled
-		skipDisabled = skipDisabled === true ? 
-			(options.skipDisabledMode || 'node')
-			: skipDisabled
-
-		var reverse = options.reverse === true ?
-			(options.defaultReverse || 'tree')
-			: options.reverse
-
-		var isWalkable = walkable ?
-			function(node){
-				return node instanceof Array || walkable(node) }
-			: function(node){
-				return node 
-					&& (node instanceof Array 
-						// requested method name is available...
-						|| (typeof(recursion) == typeof('str') 
-							&& node[recursion])
-						|| node.walk ) }
-
-		return walk(
-				function(state, node, next, stop){
-					// keep only the root stop(..) -> stop the entire call tree...
-					stop = context.stop = context.stop || stop
-
-					// skip non-iterable items...
-					if(!iterateNonIterable && node.noniterable){
-						return state }
-					// skip disabled branch...
-					if(skipDisabled == 'branch' && node.disabled){
-						return state }
-
-					// XXX BUG?: doNested(false) will not count any of the 
-					// 		skipped elements thus messing up i...
-					// 		...we can't just use .length as this would 1)
-					// 		introduce a branch in the protocol + would not
-					// 		comply with the passed options in all cases but 
-					// 		the default...
-					// 		...one way to do this is to set func to a dud
-					// 		the only problem we have is the next(..) call
-					// 		below that will call the parent function and
-					// 		mess things up... we can go around this via 
-					// 		the context (context.skipping) but this feels 
-					// 		hack-ish...
-					var nested = false
-					var doNested = function(list){
-						// this can be called only once -> return cached results...
-						if(nested !== false){
-							return nested }
-						// calling this on a node without .children is a no-op...
-						if(children == null){
-							return [] }
-
-						// normalize...
-						list = list === true ?
-								children	
-							: (!iterateCollapsed && node.collapsed) ?
-								[]
-							: list == null ?
-								children
-							: list
-
-						// call .walk(..) recursively...
-						var useWalk = function(){
-							return list.walk(
-								func, 
-								recursion, 
-								...(formArgs instanceof Function ? 
-									[formArgs] 
-									: [walkable]), 
-								options, context) }
-
-						return (
-								// XXX BUG?: in this case we lose item indexing...
-								list === false || list == 'skip' ?
-									[]
-								// handle arrays internally...
-								: list instanceof Array ?
-									// NOTE: this gets the path and i from context...
-									next('do', [], 
-										...(reverse ? 
-											list.slice().reverse() 
-											: list))
-								// user-defined recursion...
-								: recursion instanceof Function ?
-									recursion.call(that, 
-										list, context.index, p, 
-										options, context, 
-										func, useWalk)
-								// method with arg forming...
-								: formArgs instanceof Function 
-										&& list[recursion] ?
-									list[recursion](
-										...(formArgs(
-											list, context.index, p, 
-											options, context, 
-											func, useWalk) || []))
-								// .walk(..)
-								: useWalk())
-							// normalize and merge to state...
-							.run(function(){
-								return (nested = this instanceof Array ?
-									this
-									: [this]) }) }
-
-					// prepare context...
-					var id = node.id
-					var path = context.path = context.path || []
-					var [inline, p, children] = 
-						// inline...
-						isWalkable(node) ?
-							[true, path.slice(), node]
-						// nested...
-						: (!skipNested && isWalkable(node.children)) ?
-							[false, 
-								// update context for nested items...
-								path.push(id) 
-									&& path.slice(), 
-								node.children]
-						// leaf...
-						: [false, path.concat([id]), undefined]
-
-					if(inline && skipInlined){
-						return state }
-
-					// go through the elements...
-					state.splice(state.length, 0,
-						...[
-							// reverse -> do children...
-							reverse == 'full' 
-								&& children
-								&& doNested() 
-								|| [],
-							// do element...
-							!(skipDisabled && node.disabled) ?
-								(func ? 
-									(func.call(that, 
-										...(inline ? 
-											[null, context.index] 
-											: [node, context.index++]),
-										p, 
-										// NOTE: when calling this it is the 
-										// 		responsibility of the caller to return
-										// 		the result to be added to state...
-										doNested, 
-										stop,
-										children) || []) 
-									: [node])
-								// element is disabled -> handle children...
-								: [],
-							// normal order -> do children...
-							children
-								&& nested === false
-								&& doNested() 
-								|| [],
-						].flat())
-
-					// restore path context...
-					children
-						&& context.path.pop()
-
-					return state
-				}, 
-				[], 
-				// input items...
-				...(sections
-					.map(function(name){
-						return that[name] || [] })
-					.flat()
-					.run(function(){
-						return reverse ?
-							this.reverse()
-							: this })))
-			// NOTE: walk(..) if passed to items will return a function...
-   			.run(function(){
-				return this instanceof Function ? 
-					[] 
-					: this })
-			// wrap the result...
-   			.run(function(){
-				return options.wrapper instanceof Function 
-						&& context.root === that ?
-					options.wrapper.call(that, this)
-					: this }) },
-
-
-	// Test/Example Text renders...
-	//
-	//	Recursively render the browser as text tree...
-	//	._test_texttree(..)
-	//		-> string
-	//
-	//	Recursively render the browser as text tree with manual nesting...
-	//	._test_texttree_manual(..)
-	//		-> string
-	//
-	//	Build a nested object tree from the browser...
-	//	._test_tree(..)
-	//		-> object
-	//
-	_test_texttree: function(options, context){
-		// NOTE: here we do not care about the topology (other than path 
-		// 		depth) and just handle items...
-		return this
-			.walk(
-				function(node, i, path){
-					return node ? 
-						path.slice(1)
-							.map(e => '  ')
-							.join('') 
-								+ node.text
-						: [] },
-				'_test_texttree',
-				function(func, i, path, options, context){
-					return [options, context] },
-				options, context)
-			.join('\n') },
-	_test_texttree_manual: function(options, context){
-		// NOTE: here we do basic topology -- append children to their 
-		// 		respective node...
-		return this
-			.walk(
-				function(node, i, path, next){
-					return node == null ? 
-							[]
-						// make a node...
-						: [path.slice(1)
-							.map(e => '  ')
-							.join('')
-								+ node.text]
-							// append child nodes if present...
-			   				.concat(node.children ?
-								next()
-								: []) },
-				'_test_texttree_manual',
-				function(func, i, path, options, context){
-					return [options, context] },
-				options, context)
-			.join('\n') },
-	// XXX need to check for output key uniqueness per level...
-	_test_tree: function(options, context){
-		var toObject = function(res, e){
-			if(e == null || e[0] == null){
-				return res
-			}
-			res[e[0]] = e[1] instanceof Array ? 
-				// handle nested arrays...
-				// NOTE: these did not get through the .reduce(..) below
-				// 		as they are simple arrays that do not implement
-				// 		either .walk(..) or ._test_tree(..)
-				e.slice(1).reduce(toObject, {}) 
-				: e[1]
-			return res
-		}
-		return this
-			// build [key, children] pairs...
-			.walk(
-				function(node, i, path, next){
-					return node == null ? 
-							[]
-						// make a node...
-						: [[node.text]
-							// append child nodes if present...
-			   				.concat(node.children ?
-								next()
-								: null) ] },
-				'_test_tree',
-				function(func, i, path, options, context){
-					return [options, context] },
-				options, context)
-			// construct the object...
-   			.reduce(toObject, {}) },
-	// XXX we do not need this any more, as we got paths in the index...
-	_test_paths: function(options, context){
-		return this.walk(
-			function(n, i, p){
-				return n 
-					&& [(options || {}).joinPaths !== false ? 
-						p.join('/') 
-						: p] }, 
-			'_test_paths',
-			function(_, i, path, options, context){
-				// NOTE: for paths and indexes to be consistent between
-				// 		levels we need to thread the context on, here and
-				// 		into the base .walk(..) call below...
-				return [options, context] },
-			options, context) },
-
-
 	// Extended map...
 	//
 	//	Get all items...
@@ -2709,9 +2220,8 @@ var BaseBrowserPrototype = {
 	//		-> items
 	//
 	//
-	//
-	//	func(item, index, path, browser)
-	//		-> result
+	//		func(item, index, path, browser)
+	//			-> result
 	//
 	//
 	//
@@ -2738,7 +2248,6 @@ var BaseBrowserPrototype = {
 	//
 	// XXX should we move the defaults to .config???
 	// XXX Q: should we have an option to treat groups as elements???
-	
 	// XXX WALK2: update docs for .map(..)
 	// NOTE: we do not inherit options from this.options here as it 
 	// 		will be done in .walk(..)
@@ -2755,13 +2264,14 @@ var BaseBrowserPrototype = {
 				options, 
 				{ defaultReverse: 'full' })
 			: options
-		return this.walk2(
+		return this.walk(
 				function(e, i, p){
 					return [func ?
 						func.call(that, e, i, p)
 						: e] }, 
 				options) 
 			.run(makeFlatRunViewWrapper(this, options)) },
+	// XXX do we need a non-flat version of this???
 	filter: function(func, options){ 
 		var that = this
 		options = !(options || {}).defaultReverse ?
@@ -2769,7 +2279,7 @@ var BaseBrowserPrototype = {
 				options || {}, 
 				{ defaultReverse: 'full' })
 			: options
-		return this.walk2(
+		return this.walk(
 			function(e, i, p){
 				return func.call(that, e, i, p) ? [e] : [] }, 
 			options)
@@ -2781,7 +2291,7 @@ var BaseBrowserPrototype = {
 				options || {}, 
 				{ defaultReverse: 'full' })
 			: options
-		this.walk2(
+		this.walk(
 			function(e, i, p){
 				start = func.call(that, start, e, i, p) }, 
 			options) 
@@ -2795,84 +2305,6 @@ var BaseBrowserPrototype = {
 			Object.assign({},
 				options || {}, 
 				{rawResults: true})) },
-
-	/*/ // XXX 
-	map: function(func, options){
-		var that = this
-
-		// parse args...
-		var args = [...arguments]
-		func = (args[0] instanceof Function 
-				|| args[0] == null) ? 
-			args.shift() 
-			: undefined
-		// NOTE: we do not inherit options from this.options here is it 
-		// 		will be done in .walk(..)
-		options = args.shift() || {}
-		options = !options.defaultReverse ?
-			Object.assign({},
-				options, 
-				{ defaultReverse: 'full' })
-			: options
-		options.wrapper = makeFlatViewWrapper(options)
-		var context = args.shift()
-
-		return this.walk(
-			function(elem, i, path){
-				return elem != null ?
-					[func ?
-						// XXX should this pass the current or the root 
-						// 		container to func???
-						func.call(that, elem, i, path, that)
-						: elem]
-					: [] }, 
-			'map',
-			function(_, i, p, options, context){
-				return [func, options, context] },
-			options, context) },
-	// XXX should this produce a flat view???
-	// 		...can this be configurable???
-	filter: function(func, options, context){
-		options = options || {}
-		options.wrapper = makeFlatViewWrapper(options)
-		return this.walk(
-			function(e, i, p){
-				return e && func.call(this, e, i, p) ? [e] : [] },
-			'filter',
-			function(_, i, p, options, context){
-				return [func, options, context] },
-			options, context) },
-	reduce: function(func, start, options){
-		var that = this
-		var context = arguments[3] || {result: start}
-		this.walk(
-			function(e, i, p){
-				context.result = e ? 
-					func.call(that, context.result, e, i, p) 
-					: context.result
-				return context.result 
-			},
-			'reduce',
-			function(_, i, p, options, context){
-				return [func, context.result, options, context]
-			},
-			options, context)
-		return context.result
-	},
-	// XXX should these return an array or a .constructor(..) instance??
-	// XXX should this call .forEach(..) on nested stuff or just fall 
-	// 		back to .map(..)???
-	forEach: function(func, options){
-		this.map(...arguments)
-		return this },
-
-	// XXX should this be cached???
-	toArray: function(options){
-		return this.map(null, 
-			Object.assign({},
-				options || {}, 
-				{rawResults: true})) },
-	//*/
 
 
 	// Search items...
@@ -3065,8 +2497,6 @@ var BaseBrowserPrototype = {
 								//	&& elem[key] instanceof pattern)
 							) }, true) } },
 	},
-	// XXX WALK2
-	// XXX REVISE...
 	search: function(pattern, func, options){
 		var that = this
 
@@ -3173,141 +2603,6 @@ var BaseBrowserPrototype = {
 					return res 
 						|| get.call(that.__search_test_generators__, pattern) }, false) )
 
-		return this.walk2(
-			function(elem, i, path, next, stop){
-				// match...
-				var res = (elem
-						&& (test === true 
-							// identity check...
-							|| (!options.noIdentityCheck 
-								&& pattern === elem)
-							// test...
-							|| (test 
-								// NOTE: we pass next here to provide the 
-								// 		test with the option to filter out
-								// 		branches that it knows will not 
-								// 		match...
-								&& test.call(this, elem, i, path, next)))) ?
-					// handle the passed items...
-					[ func ?
-						func.call(this, elem, i, path, stop)
-						: elem ]
-					: [] 
-				return ((options.firstMatch 
-							|| typeof(pattern) == typeof(123)) 
-						&& res.length > 0) ? 
-					stop(res)
-					: res },
-			options) },
-	/*/
-	search: function(pattern, func, options){
-		var that = this
-		var args = [...arguments]
-
-		// parse args...
-		pattern = args.length == 0 ? 
-			true 
-			: args.shift() 
-		func = (args[0] instanceof Function 
-				|| args[0] == null) ? 
-			args.shift() 
-			: undefined
-		// NOTE: we do not inherit options from this.options here is it 
-		// 		will be done in .walk(..)
-		options = args.shift() || {}
-		options.wrapper = makeFlatViewWrapper(options)
-		var context = args.shift()
-
-		// non-path array or item as-is...
-		//
-		// here we'll do one of the following for pattern / each element of pattern:
-		// 	- pattern is an explicitly given item
-		// 		-> pass to func(..) if given, else return as-is
-		// 	- call .search(pattern, ..)
-		//
-		// NOTE: a non-path array is one where at least one element is 
-		// 		an object...
-		// NOTE: this might get expensive as we call .search(..) per item...
-		// XXX needs refactoring -- feels overcomplicated...
-		var index = new Set(Object.values(this.index))
-		if(index.has(pattern) 
-				|| (pattern instanceof Array
-					&& !pattern
-						.reduce(function(r, e){ 
-							return r && typeof(e) != typeof({}) }, true))){
-			// reverse index...
-			index = this
-				.reduce(function(res, e, i, p){
-					res.set(e, [i, p])
-					return res
-				}, new Map(), {iterateCollapsed: true})
-			var res
-			var Stop = new Error('Stop iteration')
-			try {
-				return (pattern instanceof Array ? 
-						pattern 
-						: [pattern])
-					.map(function(pattern){ 
-						return index.has(pattern) ? 
-							// pattern is an explicit item...
-							[ func ?
-								func.call(this, pattern, 
-									...index.get(pattern), 
-									// stop(..)
-									function stop(v){
-										res = v
-										throw Stop })
-								: pattern ]
-							// search...
-							: that.search(pattern, ...args.slice(1)) })
-					.flat()
-					.unique() 
-			} catch(e){
-				if(e === Stop){
-					return res
-				}
-				throw e } }
-
-		// pattern -- normalize and do pattern keywords...
-		pattern = options.ignoreKeywords ?
-				pattern
-			: typeof(pattern) == typeof('str') ?
-				((pattern === 'all' || pattern == '*') ?
-					true
-				: pattern == 'first' ?
-					0
-				: pattern == 'last' ?
-					-1
-				: pattern == 'selected' ?
-					function(e){ return !!e.selected }
-				: pattern == 'focused' ?
-					function(e){ return !!e.focused }
-				: pattern)
-			: pattern
-		// normalize negative index...
-		if(typeof(pattern) == typeof(123) && pattern < 0){
-			pattern = -pattern - 1
-			options = Object.assign({},
-				options,
-				{reverse: 'full'})
-		}
-		// normalize/build the test predicate...
-		var test = (
-			// all...
-			pattern === true ?
-				pattern
-			// predicate...
-			: pattern instanceof Function ?
-				pattern
-			// other -> get a compatible test function...
-			: Object.entries(this.__search_test_generators__)
-				.filter(function([key, _]){
-					return !(options.noQueryCheck 
-						&& key == 'query') })
-				.reduce(function(res, [_, get]){
-					return res 
-						|| get.call(that.__search_test_generators__, pattern) }, false) )
-
 		return this.walk(
 			function(elem, i, path, next, stop){
 				// match...
@@ -3333,11 +2628,7 @@ var BaseBrowserPrototype = {
 						&& res.length > 0) ? 
 					stop(res)
 					: res },
-			'search',
-			function(_, i, p, options, context){
-				return [pattern, func, options, context] },
-			options, context) },
-	//*/
+			options) },
 
 
 	// Get item... 
@@ -3772,7 +3063,7 @@ var BaseBrowserPrototype = {
 		} else {
 			var filter = options.filter
 			// do the walk...
-			var items = this.walk2(
+			var items = this.walk(
 				function(elem, i, path, nested){
 					return (
 						// special case: nested <from> elem -> render topology only...
@@ -3808,7 +3099,11 @@ var BaseBrowserPrototype = {
 						: elem.children ?
 							[ renderer.renderNested(
 								renderer.renderNestedHeader(elem, i, context),
-								(!elem.collapsed && elem.children instanceof BaseBrowser) ?
+								// NOTE: we handle .collapsed here as the nested
+								// 		browser is one level down and knows nothing 
+								// 		of it...
+								((options.iterateCollapsed || !elem.collapsed) 
+										&& elem.children instanceof BaseBrowser) ?
 									(nested(false),
 										elem.children.render(options, renderer, context))
 									: nested(true),
@@ -3824,173 +3119,11 @@ var BaseBrowserPrototype = {
 				renderer.renderFinalize(null, items, null, context)
 				// nested context -> return item list...
 				: items } },
-	/*/
-	render: function(options, renderer, context){
-		renderer = renderer || this
-
-		context = renderer.renderContext(context)
-
-		options = context.options = context.options 
-			|| Object.assign(
-				Object.create(this.options || {}),
-				{ iterateNonIterable: true }, 
-				options || {})
-
-		var section = options.section || '*'
-		section = section == '*' ?
-			options.sections
-			: section
-		section = section instanceof Array && section.length == 1 ?
-			section[0]
-			: section
-
-		var seen = options.renderUnique ?
-			(context.seen = context.seen || new Set())
-			: false
-
-		// build range bounds...
-		// use .get(..) on full (non-partial) range...
-		var get_options = Object.assign(
-			Object.create(options),
-			// XXX for some magical reason if we do not explicitly include 
-			// 		.iterateNonIterable here it is not seen down the line...
-			{from: null, to: null, around: null,
-				iterateNonIterable: options.iterateNonIterable})
-
-		// index getter...
-		var normIndex = function(i){
-			return (i === undefined || typeof(i) == typeof(123)) ?
-				i
-				: this.get(i, 
-					function(_, i){ return i }, 
-					get_options) }.bind(this)
-		// NOTE: we prefer context.from / context.to as they are more 
-		// 		likely to be normalized.
-		// 		as to the rest of the values of set we look first in the 
-		// 		options as we'll need them only if from/to are not 
-		// 		normalized...
-		var from = context.from = normIndex('from' in context ? context.from : options.from)
-		var to = context.to = normIndex('to' in context ? context.to : options.to)
-		var around = normIndex('around' in options ? options.around : context.around)
-		var count = 'count' in options ? options.count : context.count
-		// NOTE: count < 0 is the same as no count / all...
-		count = count < 0 ? 
-			null 
-			: count
-		// complete to/from based on count and/or around...
-		// NOTE: we do not care about overflow here...
-		;(from == null && count != null) 
-			&& (from = context.from = 
-				to != null ? 
-					to - count
-				: around != null ?
-					around - Math.floor(count/2)
-				: from)
-		;(to == null && count != null)
-			&& (to = context.to = 
-				from != null ? 
-					from + count
-				: around != null ?
-					around + Math.ceil(count/2)
-				: to)
-		// sanity check...
-		if(from != null && to != null && to < from){
-			throw new Error(`.render(..): context.from must be less than `
-				+`or equal to context.to. (got: from=${from} and to=${to})`) }
-
-		// XXX use this to check if an item is on the path to <from> and
-		// 		pass it to the skipped topology constructor...
-		var from_path = context.from_path =
-			context.from_path	
-				|| (from != null 
-					&& this.get(from, 
-						function(e, i, p){ return p }, 
-						get_options))
-		from_path = from_path instanceof Array
-			&& from_path
-
-		// root call -> build sections (calling .render(..) per section)...
-		if(context.root == null && section instanceof Array){
-			// NOTE: we are not passing context down to make each section
-			// 		independent of the others... (XXX ???)
-			var s= {}
-			section
-				.forEach(function(name){
-					s[name] = this.render(
-						Object.assign(
-							{},
-							options,
-							{
-								section: name,
-								nonFinalized: true,
-							}), 
-						renderer) }.bind(this))
-			// setup context for final render...
-			context.root = this
-			return (!options.nonFinalized && context.root === this) ?
-				renderer.renderFinalize(s.header, s.items, s.footer, context)
-				: s
-
-		// build specific sections...
-		} else {
-			var filter = options.filter
-			// do the walk...
-			var items = this.walk(
-				function(elem, i, path, nested){
-					return (
-						// special case: nested <from> elem -> render topology only...
-						(from_path 
-								&& i < from 
-								// only for nested...
-								&& elem && elem.children
-								// only sub-path...
-								&& path.cmp(from_path.slice(0, path.length))) ?
-							[ renderer.renderNestedBlank(nested(), i, context) ]
-						// seen...
-						: seen instanceof Set 
-								&& (seen.has(elem) 
-									// add to seen and move to next test...
-									|| !seen.add(elem)) ?
-							[]
-						// filter -> skip unmatching...
-						: (filter && !filter.call(this, elem, i, path, section)) ?
-							[]
-						// out of range -> skip...
-						: ((from != null && i < from) 
-								|| (to != null && i >= to)) ?
-							[]
-						// inline...
-						: elem == null ?
-							// NOTE: here we are forcing rendering of the 
-							// 		inline browser/list, i.e. ignoring 
-							// 		options.skipNested for inline stuff...
-							[ renderer.renderGroup(nested(true), context) ]
-						// nested...
-						: elem.children ?
-							[ renderer.renderNested(
-								renderer.renderNestedHeader(elem, i, context),
-								nested(),
-								elem, 
-								context) ]
-						// normal elem...
-						: [ renderer.renderItem(elem, i, context) ] ) },
-				'render',
-				function(_, i, p, options, context){
-					return [options, renderer, context] },
-				options, context) 
-
-			// finalize depending on render mode...
-			return (!options.nonFinalized && context.root === this) ?
-				// root context -> render list and return this...
-				renderer.renderFinalize(null, items, null, context)
-				// nested context -> return item list...
-				: items } },
-	//*/
 	
-	// XXX .walk2(..): shoulc calling. next(..) return the list to the 
+	// XXX .walk(..): shoulc calling. next(..) return the list to the 
 	// 		user and let them handle it???
 	// 		...currently the user will get the list and each item will 
-	// 		be added to the stream to the list by .walk2(..) this 
+	// 		be added to the stream to the list by .walk(..) this 
 	// 		preventing the user from actually modifying the output...
 	render2: function(options, renderer, context){
 
@@ -4011,7 +3144,7 @@ var BaseBrowserPrototype = {
 		var	elem = function(e){
 			return e.id || e }
 
-		return this.walk2(function(e, i, p, children){
+		return this.walk(function(e, i, p, children){
 
 			// do not go down child browsers -- use their mechanics for rendering...
 			;(e instanceof BaseBrowser || e.children instanceof BaseBrowser)
@@ -4027,7 +3160,10 @@ var BaseBrowserPrototype = {
 				// nested...
 				: e.children instanceof BaseBrowser ?
 					nest(elem(e), 
-						!e.collapsed
+						// NOTE: we handle .collapsed here as the nested
+						// 		browser is one level down and knows nothing 
+						// 		of it...
+						(options.iterateCollapsed || !e.collapsed)
 							&& e.children.render2(options, renderer, context))
 				: e.children instanceof Array ?
 					nest(elem(e), children(true))
@@ -4038,7 +3174,6 @@ var BaseBrowserPrototype = {
 		}, options)
 	},
 
-	
 
 	// Events...
 	//
