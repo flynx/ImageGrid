@@ -1973,6 +1973,11 @@ var BaseBrowserPrototype = {
 	// 			 next([elem, ...])
 	// 			 	-> input
 	//
+	// 			Explicitly pass children to be handled and process them sync...
+	// 			 next(browser, true)
+	// 			 next([elem, ...], true)
+	// 			 	-> input
+	//
 	//
 	// 			Stop walking (return undefined)...
 	// 			 stop()
@@ -2049,8 +2054,7 @@ var BaseBrowserPrototype = {
 	// 	}
 	//
 	//
-	// XXX migrate .render(..) to use .walk2(..)
-	// 		- are we rendering with the nested .render(..)???
+	// XXX might be good to be able to return the partial result via stop(..)
 	walk2: function(func, options){
 		var that = this
 		var [func=null, options={}, path=[], context={}] = [...arguments]
@@ -2135,7 +2139,7 @@ var BaseBrowserPrototype = {
 						// skip...
 						((!iterateCollapsed && elem.collapsed) 
 								|| (skipDisabled == 'branch')) ?
-							[]
+							false
 						// inlined...
 						: !options.skipInlined
 								&& (elem instanceof BaseBrowser || elem instanceof Array) ?
@@ -2143,32 +2147,38 @@ var BaseBrowserPrototype = {
 						// nested...
 						: (!options.skipNested && elem.children) ) 
 					|| []
-				var next = function(elems){
+				var next = function(elems, now){
 					return (children = 
 						// skip...
 						elems == null ?
 							[]
 						// force processing now...
-						: elems === true ?
-							processChildren()
+						: now === true || elems === true ?
+							processChildren(now && elems)
 						// set elems as children...
 						: elems) }
 				var processed
-				// NOTE: this will calc the value once and return it cached next...
-				var processChildren = function(){
+				var processChildren = function(elems){
+					elems = elems instanceof Array ? 
+						elems 
+						: children
 					return (processed = 
-						processed !== undefined ?
+						// nodes processed via next(true), no need to re-process...
+						elems === processed ?
+							[]
+						// cached value...
+						: processed !== undefined ?
 							processed
-						: children instanceof Array ?
-							handleReverse(children)
+						: elems instanceof Array ?
+							handleReverse(elems)
 								.map(makeMap(p))
 								.flat()
-						: children instanceof BaseBrowser ?
+						: elems instanceof BaseBrowser ?
 							// NOTE: this will never return non-array as 
 							// 		when stop(..) is called it will break
 							// 		execution and get handled in the catch 
 							// 		clause below...
-							children
+							elems
 								.walk2(func, options, p, context)
 						: []) }
 
@@ -2786,7 +2796,7 @@ var BaseBrowserPrototype = {
 				options || {}, 
 				{rawResults: true})) },
 
-	/*/ // XXX WALK2
+	/*/ // XXX 
 	map: function(func, options){
 		var that = this
 
@@ -3647,7 +3657,7 @@ var BaseBrowserPrototype = {
 	// XXX should from/to/around/count be a feature of this or of .walk(..)???
 	// XXX might be a good idea to use this.root === this instead of context.root === this
 
-	/*/ XXX WALK2...
+	// XXX WALK2...
 	// XXX this still has problems.... 
 	// 		- nested browser rendering not yet working correctly -- rendered flat...
 	render: function(options, renderer, context){
@@ -3798,7 +3808,7 @@ var BaseBrowserPrototype = {
 						: elem.children ?
 							[ renderer.renderNested(
 								renderer.renderNestedHeader(elem, i, context),
-								elem.children instanceof BaseBrowser ?
+								(!elem.collapsed && elem.children instanceof BaseBrowser) ?
 									(nested(false),
 										elem.children.render(options, renderer, context))
 									: nested(true),
@@ -3977,9 +3987,18 @@ var BaseBrowserPrototype = {
 				: items } },
 	//*/
 	
+	// XXX .walk2(..): shoulc calling. next(..) return the list to the 
+	// 		user and let them handle it???
+	// 		...currently the user will get the list and each item will 
+	// 		be added to the stream to the list by .walk2(..) this 
+	// 		preventing the user from actually modifying the output...
 	render2: function(options, renderer, context){
 
 		// XXX args...
+		options = {
+			includeInlinedBlocks: true,
+			iterateNonIterable: true,
+		}
 
 		// XXX rendering...
 		var inline = function(lst){
@@ -3987,7 +4006,7 @@ var BaseBrowserPrototype = {
 		var nest = function(header, lst){
 			return [
 				header, 
-				...lst.map(function(e){ 
+				...(lst || []).map(function(e){ 
 					return header +'/'+ e })]}
 		var	elem = function(e){
 			return e.id || e }
@@ -4007,17 +4026,16 @@ var BaseBrowserPrototype = {
 
 				// nested...
 				: e.children instanceof BaseBrowser ?
-					nest(elem(e), e.children.render2(options, renderer, context))
+					nest(elem(e), 
+						!e.collapsed
+							&& e.children.render2(options, renderer, context))
 				: e.children instanceof Array ?
 					nest(elem(e), children(true))
 
 				// normal item...
 				: elem(e) )
 
-		}, {
-			includeInlinedBlocks: true,
-			iterateNonIterable: true,
-		})
+		}, options)
 	},
 
 	
