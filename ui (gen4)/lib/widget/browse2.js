@@ -1892,7 +1892,6 @@ var BaseBrowserPrototype = {
 	},
 
 
-	// XXX EXPERIMENTAL...
 	// Data views...
 	//
 	// For View object specifics see: BrowserViewMixin
@@ -2245,6 +2244,7 @@ var BaseBrowserPrototype = {
 	// This extends the Array .map(..) by adding:
 	// 	- ability to run without arguments
 	// 	- support for options
+	// 	- the handler will also get item path in addition to its index
 	//
 	//
 	// NOTE: we do not inherit options from this.options here as it 
@@ -2863,6 +2863,7 @@ var BaseBrowserPrototype = {
 		return item },
 	renderGroup: function(items, context){
 		return items },
+
 
 	// Render state...
 	//
