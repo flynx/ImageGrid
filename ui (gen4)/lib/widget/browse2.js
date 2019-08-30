@@ -3657,7 +3657,10 @@ var BaseBrowserPrototype = {
 		options = context.options = context.options 
 			|| Object.assign(
 				Object.create(this.options || {}),
-				{ iterateNonIterable: true }, 
+				{ 
+					iterateNonIterable: true,
+					includeInlinedBlocks: true,
+				}, 
 				options || {})
 
 		var section = options.section || '*'
@@ -3780,24 +3783,25 @@ var BaseBrowserPrototype = {
 						: (filter && !filter.call(this, elem, i, path, section)) ?
 							[]
 						// out of range -> skip...
+						// XXX should we stop() here???
 						: ((from != null && i < from) 
 								|| (to != null && i >= to)) ?
 							[]
-						// inline...
-						: elem == null ?
-							// NOTE: here we are forcing rendering of the 
-							// 		inline browser/list, i.e. ignoring 
-							// 		options.skipNested for inline stuff...
+						// inline (list)...
+						: elem instanceof Array ?
 							[ renderer.renderGroup(nested(true), context) ]
+						// inline (browser)...
+						: elem instanceof BaseBrowser ?
+							(nested(false), 
+								[ renderer.renderGroup(elem.render(options, renderer, context), context) ])
 						// nested...
 						: elem.children ?
 							[ renderer.renderNested(
 								renderer.renderNestedHeader(elem, i, context),
-								// XXX this renders the elements seporately 
-								// 		in one flat list, need to stop auto-recursion
-								// 		down and call .render(..)
-								// XXX
-								nested(true),
+								elem.children instanceof BaseBrowser ?
+									(nested(false),
+										elem.children.render(options, renderer, context))
+									: nested(true),
 								elem, 
 								context) ]
 						// normal elem...
@@ -3972,6 +3976,50 @@ var BaseBrowserPrototype = {
 				// nested context -> return item list...
 				: items } },
 	//*/
+	
+	render2: function(options, renderer, context){
+
+		// XXX args...
+
+		// XXX rendering...
+		var inline = function(lst){
+			return lst }
+		var nest = function(header, lst){
+			return [
+				header, 
+				...lst.map(function(e){ 
+					return header +'/'+ e })]}
+		var	elem = function(e){
+			return e.id || e }
+
+		return this.walk2(function(e, i, p, children){
+
+			// do not go down child browsers -- use their mechanics for rendering...
+			;(e instanceof BaseBrowser || e.children instanceof BaseBrowser)
+				&& children(false)
+
+			return (
+				// inlined...
+				e instanceof BaseBrowser ?
+					inline(e.render2(options, renderer, context))
+				: e instanceof Array ?
+					inline(children(true))
+
+				// nested...
+				: e.children instanceof BaseBrowser ?
+					nest(elem(e), e.children.render2(options, renderer, context))
+				: e.children instanceof Array ?
+					nest(elem(e), children(true))
+
+				// normal item...
+				: elem(e) )
+
+		}, {
+			includeInlinedBlocks: true,
+			iterateNonIterable: true,
+		})
+	},
+
 	
 
 	// Events...
