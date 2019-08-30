@@ -11,7 +11,6 @@ var toggler = require('../toggler')
 var keyboard = require('../keyboard')
 var object = require('../object')
 var widget = require('./widget')
-var walk = require('lib/walk').walk
 
 
 
@@ -1540,13 +1539,13 @@ var BaseBrowserPrototype = {
 	//
 	// visible only...
 	get length(){
-		return this.map().length },
+		return this.toArray().length },
 	// include collapsed elements...
 	get lengthTree(){
-		return this.map({iterateCollapsed: true}).length },
+		return this.map({iterateCollapsed: true, rawResults: true}).length },
 	// include non-iterable elements...
 	get lengthAll(){
-		return this.map({iterateAll: true}).length },
+		return this.map({iterateAll: true, rawResults: true}).length },
 
 
 	// Configuration / Extension...
@@ -2064,7 +2063,7 @@ var BaseBrowserPrototype = {
 						res = r
 						throw StopException }
 					.run(function(){
-						StopException = new Error('walk(..): StopException.') })
+						StopException = new Error('StopException.') })
 
 		// options...
 		options = Object.assign(
@@ -2117,15 +2116,17 @@ var BaseBrowserPrototype = {
 					return (item = 
 						item !== undefined ?
 							item
-						: !skipItem && func ?
-							[ func.call(that, elem, 
-								inlined ? 
-									// NOTE: we do not increment index for 
-									// 		inlined block containers as they 
-									// 		do not occupy and space...
-									context.index 
-									: context.index++, 
-								p, next, stop) ].flat()
+						: !skipItem ?
+							[ func ? 
+								func.call(that, elem, 
+									inlined ? 
+										// NOTE: we do not increment index for 
+										// 		inlined block containers as they 
+										// 		do not occupy and space...
+										context.index 
+										: context.index++, 
+									p, next, stop) 
+								: elem ].flat()
 						: []) }
 
 				// children...
@@ -2246,9 +2247,6 @@ var BaseBrowserPrototype = {
 	// 	- support for options
 	//
 	//
-	// XXX should we move the defaults to .config???
-	// XXX Q: should we have an option to treat groups as elements???
-	// XXX WALK2: update docs for .map(..)
 	// NOTE: we do not inherit options from this.options here as it 
 	// 		will be done in .walk(..)
 	map: function(func, options){
@@ -2742,11 +2740,6 @@ var BaseBrowserPrototype = {
 				function(elem, i, path, stop){
 					stop([func(elem, i, path)]) }, 
 				options) ].flat()[0] },
-
-	// Sublist map functions...
-	// XXX this does not include inlined sections, should it???
-	sublists: function(func, options){
-		return this.search({children: true}, func, options) },
 
 	// 	
 	// 	Get parent of .focused
