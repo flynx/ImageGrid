@@ -3035,7 +3035,7 @@ var BaseBrowserPrototype = {
 		if(context.root == null && section instanceof Array){
 			// NOTE: we are not passing context down to make each section
 			// 		independent of the others... (XXX ???)
-			var s= {}
+			var s = {}
 			section
 				.forEach(function(name){
 					s[name] = this.render(
