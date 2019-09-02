@@ -3110,59 +3110,91 @@ var BaseBrowserPrototype = {
 				// nested context -> return item list...
 				: items } },
 	
-	// XXX .walk(..): shoulc calling. next(..) return the list to the 
-	// 		user and let them handle it???
-	// 		...currently the user will get the list and each item will 
-	// 		be added to the stream to the list by .walk(..) this 
-	// 		preventing the user from actually modifying the output...
-	render2: function(options, renderer, context){
+	// XXX EXPERIMENTAL....
+	// XXX move this out???
+	// 		...should there be a placeholder renderer???
+	__renderer__: {
+		// placeholders...
+		root: null,
+		options: null,
 
-		// XXX args...
-		options = {
-			includeInlinedBlocks: true,
-			iterateNonIterable: true,
-		}
-
-		// XXX rendering...
-		var inline = function(lst){
-			return lst }
-		var nest = function(header, lst){
+		// renderers...
+		elem: function(e){
+			return e.id || e },
+		inline: function(lst){
+			return lst },
+		nest: function(header, lst){
+			header = this.elem(header)
 			return [
 				header, 
 				...(lst || []).map(function(e){ 
-					return header +'/'+ e })]}
-		var	elem = function(e){
-			return e.id || e }
+					return header +'/'+ e }) ] },
+
+		// render life-cycle...
+		start: function(root, options){
+			return Object.assign(
+				Object.create(this),
+				{
+					root,
+					options,
+				}) },
+		finalize: function(lst){
+			return lst.join('\n') },
+	},
+	// XXX need:
+	// 		- section rendering...
+	// 		- from/to/around/count support...
+	// 		- ability to render separate items/sub-trees or lists of items...
+	render2: function(options, renderer){
+		var that = this
+
+		// XXX args...
+		renderer = renderer || this.__renderer__
+		renderer = renderer.root == null ?
+			renderer.start(
+				this, 
+				Object.assign(
+					Object.create(this.options || {}),
+					{ 
+						iterateNonIterable: true,
+						includeInlinedBlocks: true,
+					}, 
+					options || {}))
+			: renderer
+		options = renderer.options
+
 
 		return this.walk(function(e, i, p, children){
+				// do not go down child browsers -- use their mechanics for rendering...
+				;(e instanceof BaseBrowser || e.children instanceof BaseBrowser)
+					&& children(false)
 
-			// do not go down child browsers -- use their mechanics for rendering...
-			;(e instanceof BaseBrowser || e.children instanceof BaseBrowser)
-				&& children(false)
+				return (
+					// inlined...
+					e instanceof BaseBrowser ?
+						renderer.inline(e.render2(options, renderer))
+					: e instanceof Array ?
+						renderer.inline(children(true))
 
-			return (
-				// inlined...
-				e instanceof BaseBrowser ?
-					inline(e.render2(options, renderer, context))
-				: e instanceof Array ?
-					inline(children(true))
+					// nested...
+					: e.children instanceof BaseBrowser ?
+						renderer.nest(e, 
+							// NOTE: we handle .collapsed here as the nested
+							// 		browser is one level down and knows nothing 
+							// 		of it...
+							(options.iterateCollapsed || !e.collapsed)
+								&& e.children.render2(options, renderer))
+					: e.children instanceof Array ?
+						renderer.nest(e, children(true))
 
-				// nested...
-				: e.children instanceof BaseBrowser ?
-					nest(elem(e), 
-						// NOTE: we handle .collapsed here as the nested
-						// 		browser is one level down and knows nothing 
-						// 		of it...
-						(options.iterateCollapsed || !e.collapsed)
-							&& e.children.render2(options, renderer, context))
-				: e.children instanceof Array ?
-					nest(elem(e), children(true))
-
-				// normal item...
-				: elem(e) )
-
-		}, options)
-	},
+					// normal item...
+					: renderer.elem(e) )
+				}, options)
+			.run(function(){
+				return renderer.root === that ?
+					// finalize render...
+					renderer.finalize(this)
+					: this }) },
 
 
 	// Events...
