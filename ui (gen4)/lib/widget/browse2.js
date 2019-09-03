@@ -3117,20 +3117,16 @@ var BaseBrowserPrototype = {
 	__renderer__: {
 		// placeholders...
 		root: null,
-		options: null,
 
 		// renderers...
-		elem: function(elem, index, path){
-			//return elem.id || elem },
-			return index },
-		inline: function(lst, index, path){
+		elem: function(elem, index, path, options){
+			return path.join('/') },
+		inline: function(lst, index, path, options){
 			return lst },
-		nest: function(header, lst, index, path){
-			header = this.elem(header, index, path)
+		nest: function(header, lst, index, path, options){
 			return [
-				header, 
-				...(lst || []).map(function(e){ 
-					return header +'/'+ e }) ] },
+				this.elem(header, index, path),
+				...lst ] },
 
 		// render life-cycle...
 		start: function(root, options){
@@ -3138,13 +3134,15 @@ var BaseBrowserPrototype = {
 				Object.create(this),
 				{
 					root,
-					options,
 				}) },
-		finalize: function(lst){
-			return lst.join('\n') },
+		finalize: function(sections, options){
+			return Object.entries(sections)
+				.reduce(function(res, [section, lst]){
+					return res.concat(lst.join('\n')) }, [])
+	   			.join('\n===\n') },
 	},
 	// XXX need:
-	// 		- section rendering...
+	// 		- section rendering... (DONE)
 	// 		- from/to/around/count support...
 	// 		- ability to render separate items/sub-trees or lists of items...
 	render2: function(options, renderer){
@@ -3161,70 +3159,102 @@ var BaseBrowserPrototype = {
 		   	args.pop() 
 			: 0
 
+		options = Object.assign(
+			Object.create(this.options || {}),
+			{ 
+				iterateNonIterable: true,
+				includeInlinedBlocks: true,
+			}, 
+			options || {})
+
 		var render = renderer || this.__renderer__
 		render = render.root == null ?
-			render.start(
-				this, 
-				Object.assign(
-					Object.create(this.options || {}),
-					{ 
-						iterateNonIterable: true,
-						includeInlinedBlocks: true,
-					}, 
-					options || {}))
+			render.start(this, options) 
 			: render
-		options = render.options
+
+		var section = options.section || '*'
+		section = section == '*' ?
+			options.sections
+			: section
+		section = (section instanceof Array && section.length == 1) ?
+			section[0]
+			: section
+
 
 		// XXX from/to/around/count...
 		// XXX
+		
 
 		var l
-		return this.walk(
-			function(e, i, p, children){
-				// NOTE: since we let the nested browsers render sections
-				// 		of the list, we also need to compensate for the 
-				// 		number of elements they render...
-				base_index += (l || []).length
-				l = []
-				i += base_index
-				p = base_path.concat(p)
+		return ((render.root === this && section instanceof Array) ?
+				// render list of sections...
+				section
+					.reduce(function(res, name){
+						res[name] = that.render2(
+							Object.assign({},
+								options,
+								{
+									section: name,
+									nonFinalized: true,
+								}), 
+							render) 
+						return res }, {})
+				// render single section...
+				: this.walk(
+					function(e, i, p, children){
+						// NOTE: since we let the nested browsers render sections
+						// 		of the list, we also need to compensate for the 
+						// 		number of elements they render...
+						base_index += (l || []).length
+						l = []
+						i += base_index
+						p = base_path.concat(p)
 
-				// do not go down child browsers -- use their mechanics for rendering...
-				;(e instanceof BaseBrowser || e.children instanceof BaseBrowser)
-					&& children(false)
+						// do not go down child browsers -- use their .render2(..) 
+						;(e instanceof BaseBrowser 
+								|| e.children instanceof BaseBrowser)
+							&& children(false)
 
-				return (
-					// skip...
-					// XXX
-					false ?
-						[]
+						return (
+							// skip...
+							// XXX
+							false ?
+								[]
 
-					// inlined...
-					: e instanceof BaseBrowser ?
-						render.inline(l = e.render2(options, render, i+1, p), i, p)
-					: e instanceof Array ?
-						render.inline(children(true), i, p)
+							// inlined...
+							: e instanceof BaseBrowser ?
+								render.inline(
+									l = e.render2(options, render, i+1, p), 
+									i, p, options)
+							: e instanceof Array ?
+								render.inline(
+									children(true), 
+									i, p, options)
 
-					// nested...
-					: e.children instanceof BaseBrowser ?
-						render.nest(e, 
-							// NOTE: we handle .collapsed here as the nested
-							// 		browser is one level down and knows nothing 
-							// 		of it...
-							(options.iterateCollapsed || !e.collapsed)
-								&& (l = e.children.render2(options, render, i+1, p)),
-							i, p)
-					: e.children instanceof Array ?
-						render.nest(e, children(true), i, p)
+							// nested...
+							: e.children instanceof BaseBrowser ?
+								render.nest(e, 
+									// NOTE: we handle .collapsed here as the nested
+									// 		browser is one level down and knows nothing 
+									// 		of it...
+									(options.iterateCollapsed || !e.collapsed)
+										&& (l = e.children.render2(options, render, i+1, p)),
+									i, p, options)
+							: e.children instanceof Array ?
+								render.nest(e, 
+									children(true), 
+									i, p, options)
 
-					// normal item...
-					: render.elem(e, i, p) )
-				}, options)
+							// normal item...
+							: render.elem(e, i, p, options) )
+						}, options))
+			// finalize render...
 			.run(function(){
-				return render.root === that ?
-					// finalize render...
-					render.finalize(this)
-					: this }) },
+				return (!options.nonFinalized && render.root === that) ?
+					render.finalize(this instanceof Array ?
+						{[section]: this}
+						: this, options)
+					: this }) }, 
 
 
 	// Events...
