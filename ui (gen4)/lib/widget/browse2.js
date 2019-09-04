@@ -3182,7 +3182,9 @@ var BaseBrowserPrototype = {
 
 
 		// XXX from/to/around/count...
-		// XXX
+
+		// XXX do we need filter on this level or is dialog.filter(..).render() enough?
+		// 		...the difference is filtering here will maintain topology...
 		
 
 		var l
@@ -3217,9 +3219,11 @@ var BaseBrowserPrototype = {
 
 						return (
 							// skip...
-							// XXX
+							// XXX 
 							false ?
 								[]
+							
+							// XXX need to maintain topology...
 
 							// inlined...
 							: e instanceof BaseBrowser ?
