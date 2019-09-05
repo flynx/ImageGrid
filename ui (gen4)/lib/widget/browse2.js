@@ -1290,7 +1290,6 @@ function(get_state, set_state, unset_state, default_item, multi, options){
 			this.constructor = toggler.Toggler })}
 
 
-
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 // Base Browser...
 
@@ -3186,15 +3185,18 @@ var BaseBrowserPrototype = {
 	// 		- from/to/around/count support...
 	// 		- ability to render separate items/sub-trees or lists of items...
 	// 			...pass the list to .walk(..), i.e. .walk(list/query, ...)
+	// XXX doc...
 	render2: function(options, renderer){
 		var that = this
 
 		// XXX args parsing...
 		// XXX
-
-		// NOTE: base_index and base_path only apply to the 'items' 
-		// 		section...
 		var args = [...arguments]
+		// XXX
+		var list
+		var filter
+
+		// NOTE: these only apply to the 'items' section...
 		var base_path = args[args.length-1] instanceof Array ?
 		   	args.pop() 
 			: []
@@ -3236,12 +3238,6 @@ var BaseBrowserPrototype = {
 		return ((render.root === this && section instanceof Array) ?
 				// render list of sections...
 				//
-				// format:
-				// 	{
-				// 		<section-name>: [ <item>, ... ],
-				// 		...
-				// 	}
-				//
 				// NOTE: we will only render the section list on the top 
 				// 		level on all lower levels only the specific section
 				// 		is rendered for all nested browsers...
@@ -3264,6 +3260,7 @@ var BaseBrowserPrototype = {
 
 				// render single section...
 				: this.walk(
+					...(list || []),
 					function(e, i, p, children){
 						// index...
 						// NOTE: since we let the nested browsers render sections
@@ -3304,9 +3301,9 @@ var BaseBrowserPrototype = {
 							// XXX 
 							false ?
 								[]
-							
-							// XXX need to maintain topology...
 
+							// XXX need to maintain topology -- headless nested...
+							
 							// inlined...
 							: (e instanceof BaseBrowser || e instanceof Array) ?
 								render.inline(e,
@@ -3857,7 +3854,6 @@ object.Constructor('BaseBrowser',
 
 
 
-
 //---------------------------------------------------------------------
 
 var KEYBOARD_CONFIG =
@@ -4015,7 +4011,6 @@ module.HTMLItem =
 object.Constructor('HTMLItem', 
 	HTMLItemClassPrototype,
 	HTMLItemPrototype)
-
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
