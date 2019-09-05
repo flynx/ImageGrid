@@ -772,6 +772,89 @@ function(options){
 
 
 //---------------------------------------------------------------------
+// Renderers...
+
+var BaseRenderer =
+module.BaseRenderer = {
+	// placeholders...
+	root: null,
+
+	// component renderers...
+	elem: function(elem, index, path, options){
+		throw new Error('.elem(..): Not implemented.') },
+	inline: function(elem, lst, index, path, options){
+		throw new Error('.inline(..): Not implemented.') },
+	nest: function(header, lst, index, path, options){
+		throw new Error('.nest(..): Not implemented.') },
+
+	// render life-cycle...
+	//
+	// start rendering by creating a renderer instance...
+	start: function(root, options){
+		return Object.assign(
+			Object.create(this),
+			{
+				root,
+			}) },
+	// finalize the render...
+	finalize: function(sections, options){
+		return sections },
+}
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+var TextRenderer =
+module.TextRenderer = {
+	__proto__: BaseRenderer,
+
+	elem: function(elem, index, path, options){
+		return path
+			.slice(0, -1)
+			.map(function(e){ return '    '})
+			.join('') + elem.id },
+	inline: function(elem, lst, index, path, options){
+		return lst },
+	// XXX if header is null then render a headless nested block... 
+	nest: function(header, lst, index, path, options){
+		return [
+			...(header ?
+				[ this.elem(header, index, path) ]
+				: []),
+			...lst ] },
+
+	// XXX should we skip empty sections???
+	finalize: function(sections, options){
+		return Object.entries(sections)
+			.reduce(function(res, [section, lst]){
+				return res.concat(lst.join('\n')) }, [])
+			.join('\n===\n') },
+}
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+var PathRenderer =
+module.PathRenderer = {
+	__proto__: TextRenderer,
+
+	// renderers...
+	//
+	// render paths...
+	elem: function(elem, index, path, options){
+		return path.join('/') },
+	inline: function(elem, lst, index, path, options){
+		return lst },
+	// XXX if header is null then render a headless nested block... 
+	nest: function(header, lst, index, path, options){
+		return [
+			...(header ?
+				[ this.elem(header, index, path) ]
+				: []),
+			...lst ] },
+}
+
+
+
+//---------------------------------------------------------------------
 // Event system parts and helpers...
 //
 // XXX might be a good idea to make this a generic module...
@@ -1461,8 +1544,6 @@ var BaseBrowserPrototype = {
 	// 		...keys that are numbers for some reason are first and sorted 
 	// 		by value and not by position...
 	// XXX should we use .hasOwnProperty(..)???
-	// XXX INLINED_BLOCKS_IN_LIST: do we need to include inlined blocks in .index???
-	// 		...if yes then how??
 	__item_index_cache: null,
 	get index(){
 		var that = this
@@ -1470,24 +1551,8 @@ var BaseBrowserPrototype = {
 			(this.hasOwnProperty('__item_index_cache') && this.__item_index_cache)
 				|| this
 					.reduce(function(index, e, i, p){
-						/* XXX INLINED_BLOCKS_IN_LIST
-						// generate a unique id if needed (inlined arrays)...
-						if(p[p.length-1] === undefined){
-							do {
-								var k = that.__key__(e)
-							} while(k in index)
-							p.splice(p.length-1, 1, k)
-						}
-						//*/
-
 						var id = p = p.join('/')
 						var c = 0
-
-						/* XXX INLINED_BLOCKS_IN_LIST
-						// store id if not set...
-						!(id in e)
-							&& (e.id = id)
-						//*/
 
 						// make id unique...
 						// NOTE: no need to check if e.id is unique as we already 
@@ -1500,8 +1565,6 @@ var BaseBrowserPrototype = {
 					}.bind(this), {}, 
 					{ 
 						iterateAll: true, 
-						// XXX INLINED_BLOCKS_IN_LIST
-						//includeInlinedBlocks: true,
 					})) },
 
 	// Flat item index...
@@ -3143,59 +3206,9 @@ var BaseBrowserPrototype = {
 				: items } },
 	
 	// XXX EXPERIMENTAL....
-	// XXX move this out???
-	// 		...should there be a placeholder renderer???
-	// XXX do we need i and path args???
+	//
 	// XXX add support for headless nested blocks...
-	__renderer__: {
-		// placeholders...
-		root: null,
-
-		// renderers...
-		//
-		// render paths...
-		elem: function(elem, index, path, options){
-			return path.join('/') },
-		inline: function(elem, lst, index, path, options){
-			return lst },
-		// XXX if header is null then render a headless nested block... 
-		nest: function(header, lst, index, path, options){
-			return [
-				...(header ?
-					[ this.elem(header, index, path) ]
-					: []),
-				...lst ] },
-		/*/
-		// render tree...
-		elem: function(elem, index, path, options){
-			return path
-				.slice(0, -1)
-				.map(function(e){ return '    '})
-	   			.join('') + elem.id },
-		inline: function(elem, lst, index, path, options){
-			return lst },
-		// XXX if header is null then render a headless nested block... 
-		nest: function(header, lst, index, path, options){
-			return [
-				...(header ?
-					[ this.elem(header, index, path) ]
-					: []),
-				...lst ] },
-		//*/
-
-		// render life-cycle...
-		start: function(root, options){
-			return Object.assign(
-				Object.create(this),
-				{
-					root,
-				}) },
-		finalize: function(sections, options){
-			return Object.entries(sections)
-				.reduce(function(res, [section, lst]){
-					return res.concat(lst.join('\n')) }, [])
-	   			.join('\n===\n') },
-	},
+	__renderer__: TextRenderer,
 	// XXX need:
 	// 		- section rendering... (DONE)
 	// 		- from/to/around/count support...
@@ -4138,6 +4151,28 @@ var updateElemClass = function(action, cls, handler){
 			&& elem.elem.classList[action](cls) 
 		return handler 
 			&& handler.call(this, evt, elem, ...args)} }
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+// Renderer...
+
+// XXX
+var HTMLRenderer =
+module.HTMLRenderer = {
+	__proto__: BaseRenderer,
+
+	elem: function(elem, index, path, options){
+	},
+	inline: function(elem, lst, index, path, options){
+	},
+	nest: function(header, lst, index, path, options){
+	},
+
+	//start: function(root, options){
+	//},
+	//finalize: function(sections, options){
+	//},
+}
 
 
 
