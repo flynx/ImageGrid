@@ -1461,23 +1461,48 @@ var BaseBrowserPrototype = {
 	// 		...keys that are numbers for some reason are first and sorted 
 	// 		by value and not by position...
 	// XXX should we use .hasOwnProperty(..)???
+	// XXX INLINED_BLOCKS_IN_LIST: do we need to include inlined blocks in .index???
+	// 		...if yes then how??
 	__item_index_cache: null,
 	get index(){
+		var that = this
 		return (this.__item_index_cache = 
 			(this.hasOwnProperty('__item_index_cache') && this.__item_index_cache)
 				|| this
 					.reduce(function(index, e, i, p){
+						/* XXX INLINED_BLOCKS_IN_LIST
+						// generate a unique id if needed (inlined arrays)...
+						if(p[p.length-1] === undefined){
+							do {
+								var k = that.__key__(e)
+							} while(k in index)
+							p.splice(p.length-1, 1, k)
+						}
+						//*/
+
 						var id = p = p.join('/')
 						var c = 0
-						// generate a unique id...
+
+						/* XXX INLINED_BLOCKS_IN_LIST
+						// store id if not set...
+						!(id in e)
+							&& (e.id = id)
+						//*/
+
+						// make id unique...
 						// NOTE: no need to check if e.id is unique as we already 
 						// 		did this in make(..)...
 						while(id in index){
 							id = this.__id__(p, ++c) }
 						index[id] = e
+
 						return index
 					}.bind(this), {}, 
-					{ iterateAll: true, includeInlinedBlocks: true })) },
+					{ 
+						iterateAll: true, 
+						// XXX INLINED_BLOCKS_IN_LIST
+						//includeInlinedBlocks: true,
+					})) },
 
 	// Flat item index...
 	//
@@ -1704,6 +1729,8 @@ var BaseBrowserPrototype = {
 	// 					: opts)
 	// XXX revise if stage 2 is applicable to sections other than .items
 	// XXX INLINED_ID: generate id's for inlined items (inlined arrays)...
+	// 		...where do we store .id for arrays???
+	// 		...should the id be human-readable, something like inlined<date> ???
 	make: function(options){
 		var that = this
 		options = Object.assign(
@@ -1955,7 +1982,8 @@ var BaseBrowserPrototype = {
 	//
 	// 			Ignore current .children...
 	// 			 next()
-	// 			 	-> children
+	// 			 next(false)
+	// 			 	-> [] 
 	//
 	// 			Force children processing synchronously...
 	// 			 next(true)
@@ -3124,7 +3152,7 @@ var BaseBrowserPrototype = {
 		root: null,
 
 		// renderers...
-		/*/
+		//
 		// render paths...
 		elem: function(elem, index, path, options){
 			return path.join('/') },
@@ -3178,6 +3206,8 @@ var BaseBrowserPrototype = {
 		// XXX args parsing...
 		// XXX
 
+		// NOTE: base_index and base_path only apply to the 'items' 
+		// 		section...
 		var args = [...arguments]
 		var base_path = args[args.length-1] instanceof Array ?
 		   	args.pop() 
@@ -3214,9 +3244,21 @@ var BaseBrowserPrototype = {
 		// 		...the difference is filtering here will maintain topology...
 		
 
+		// used as a means to calculate lengths of nested blocks rendered 
+		// via .render2(..)
 		var l
 		return ((render.root === this && section instanceof Array) ?
 				// render list of sections...
+				//
+				// format:
+				// 	{
+				// 		<section-name>: [ <item>, ... ],
+				// 		...
+				// 	}
+				//
+				// NOTE: we will only render the section list on the top 
+				// 		level on all lower levels only the specific section
+				// 		is rendered for all nested browsers...
 				section
 					.reduce(function(res, name){
 						res[name] = that.render2(
@@ -3226,30 +3268,51 @@ var BaseBrowserPrototype = {
 									section: name,
 									nonFinalized: true,
 								}), 
-							render) 
+							render, 
+							// NOTE: base_index and base_path only apply 
+							// 		to the 'items' section...
+							...(name == 'items' ?
+								[base_index, base_path]
+								: [])) 
 						return res }, {})
+
 				// render single section...
 				: this.walk(
 					function(e, i, p, children){
+						// index...
 						// NOTE: since we let the nested browsers render sections
 						// 		of the list, we also need to compensate for the 
 						// 		number of elements they render...
 						base_index += (l || []).length
-						l = []
 						i += base_index
+						l = []
 
+						// path...
 						// remove inlined item id from path...
 						// NOTE: render.inline(..) can add this back if needed...
 						;(e instanceof BaseBrowser || e instanceof Array)
 							&& p.pop()
-
 						p = base_path.concat(p)
 
+						// children...
 						// do not go down child browsers -- use their .render2(..) 
-						;(e instanceof BaseBrowser 
+						// NOTE: doing so will require us to manually handle some 
+						// 		of the options that would otherwise be handled 
+						// 		by .walk(..)...
+						var inlined = (e instanceof BaseBrowser 
 								|| e.children instanceof BaseBrowser)
-							&& children(false)
+							&& !children(false)
+						// get children either via .walk(..) or .render2(..) 
+						// depending on item type...
+						var getChildren = function(){
+							return inlined ?
+								(l = (e.children instanceof BaseBrowser ? 
+										e.children 
+										: e)
+									.render2(options, render, i+1, p))
+								: children(true) }
 
+						// do the actual rendering...
 						return (
 							// skip...
 							// XXX 
@@ -3259,32 +3322,25 @@ var BaseBrowserPrototype = {
 							// XXX need to maintain topology...
 
 							// inlined...
-							: e instanceof BaseBrowser ?
-								render.inline(
-									e,
-									l = e.render2(options, render, i+1, p), 
-									i, p, options)
-							: e instanceof Array ?
-								render.inline(
-									e,
-									children(true), 
+							: (e instanceof BaseBrowser || e instanceof Array) ?
+								render.inline(e,
+									// handling non-propageted options...
+									!options.skipInlined ?
+										getChildren()
+										: [], 
 									i, p, options)
 
 							// nested...
-							: e.children instanceof BaseBrowser ?
+							: 'children' in e ?
 								render.nest(e, 
-									// NOTE: we handle .collapsed here as the nested
-									// 		browser is one level down and knows nothing 
-									// 		of it...
-									(options.iterateCollapsed || !e.collapsed)
-										&& (l = e.children.render2(options, render, i+1, p)),
-									i, p, options)
-							: e.children instanceof Array ?
-								render.nest(e, 
-									children(true), 
+									// handling non-propageted options...
+									(!options.skipNested 
+											&& (options.iterateCollapsed || !e.collapsed)) ?
+										getChildren()
+										: [],
 									i, p, options)
 
-							// normal item...
+							// basic item...
 							: render.elem(e, i, p, options) )
 						}, options))
 			// finalize render...
