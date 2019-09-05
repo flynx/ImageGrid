@@ -1473,11 +1473,11 @@ var BaseBrowserPrototype = {
 						// NOTE: no need to check if e.id is unique as we already 
 						// 		did this in make(..)...
 						while(id in index){
-							id = this.__id__(p, ++c)
-						}
+							id = this.__id__(p, ++c) }
 						index[id] = e
 						return index
-					}.bind(this), {}, {iterateAll: true})) },
+					}.bind(this), {}, 
+					{ iterateAll: true, includeInlinedBlocks: true })) },
 
 	// Flat item index...
 	//
@@ -1500,7 +1500,7 @@ var BaseBrowserPrototype = {
 				}
 				index[id] = e
 				return index
-			}.bind(this), {}, {iterateAll: true}) },
+			}.bind(this), {}, {iterateAll: true, includeInlinedBlocks: true}) },
 
 	// Shorthands for common item queries...
 	//
@@ -1576,7 +1576,7 @@ var BaseBrowserPrototype = {
 		return prefix ?
 			// id prefix...
 			//`${prefix} (${count || Date.now()})`
-			`${prefix}:${count || Date.now()}`
+			`${prefix}:${typeof(count) == typeof(123) ? count : Date.now()}`
 			// plain id...
 			: `item${Date.now()}` },
 
@@ -1703,6 +1703,7 @@ var BaseBrowserPrototype = {
 	// 						opts) 
 	// 					: opts)
 	// XXX revise if stage 2 is applicable to sections other than .items
+	// XXX INLINED_ID: generate id's for inlined items (inlined arrays)...
 	make: function(options){
 		var that = this
 		options = Object.assign(
@@ -2047,6 +2048,7 @@ var BaseBrowserPrototype = {
 	//
 	//
 	// XXX might be good to be able to return the partial result via stop(..)
+	// XXX INLINED_ID: need to handle inlined item id correctly...
 	walk: function(func, options){
 		var that = this
 		var [func=null, options={}, path=[], context={}] = [...arguments]
@@ -2107,6 +2109,8 @@ var BaseBrowserPrototype = {
 					|| (!iterateNonIterable && elem.noniterable) 
 					|| (!includeInlinedBlocks && inlined)
 				var p = !skipItem ?
+					// XXX get id of inlined item...
+					// XXX should we skip id of inlined item???
 					path.concat(elem.id)
 					: p
 				var item
@@ -3114,19 +3118,42 @@ var BaseBrowserPrototype = {
 	// XXX move this out???
 	// 		...should there be a placeholder renderer???
 	// XXX do we need i and path args???
+	// XXX add support for headless nested blocks...
 	__renderer__: {
 		// placeholders...
 		root: null,
 
 		// renderers...
+		/*/
+		// render paths...
 		elem: function(elem, index, path, options){
 			return path.join('/') },
-		inline: function(lst, index, path, options){
+		inline: function(elem, lst, index, path, options){
 			return lst },
+		// XXX if header is null then render a headless nested block... 
 		nest: function(header, lst, index, path, options){
 			return [
-				this.elem(header, index, path),
+				...(header ?
+					[ this.elem(header, index, path) ]
+					: []),
 				...lst ] },
+		/*/
+		// render tree...
+		elem: function(elem, index, path, options){
+			return path
+				.slice(0, -1)
+				.map(function(e){ return '    '})
+	   			.join('') + elem.id },
+		inline: function(elem, lst, index, path, options){
+			return lst },
+		// XXX if header is null then render a headless nested block... 
+		nest: function(header, lst, index, path, options){
+			return [
+				...(header ?
+					[ this.elem(header, index, path) ]
+					: []),
+				...lst ] },
+		//*/
 
 		// render life-cycle...
 		start: function(root, options){
@@ -3210,6 +3237,12 @@ var BaseBrowserPrototype = {
 						base_index += (l || []).length
 						l = []
 						i += base_index
+
+						// remove inlined item id from path...
+						// NOTE: render.inline(..) can add this back if needed...
+						;(e instanceof BaseBrowser || e instanceof Array)
+							&& p.pop()
+
 						p = base_path.concat(p)
 
 						// do not go down child browsers -- use their .render2(..) 
@@ -3228,10 +3261,12 @@ var BaseBrowserPrototype = {
 							// inlined...
 							: e instanceof BaseBrowser ?
 								render.inline(
+									e,
 									l = e.render2(options, render, i+1, p), 
 									i, p, options)
 							: e instanceof Array ?
 								render.inline(
+									e,
 									children(true), 
 									i, p, options)
 
