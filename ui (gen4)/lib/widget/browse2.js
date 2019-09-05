@@ -1791,9 +1791,6 @@ var BaseBrowserPrototype = {
 	// 						opts) 
 	// 					: opts)
 	// XXX revise if stage 2 is applicable to sections other than .items
-	// XXX INLINED_ID: generate id's for inlined items (inlined arrays)...
-	// 		...where do we store .id for arrays???
-	// 		...should the id be human-readable, something like inlined<date> ???
 	make: function(options){
 		var that = this
 		options = Object.assign(
@@ -2031,8 +2028,22 @@ var BaseBrowserPrototype = {
 	// 	.walk(null[, options])
 	// 		-> list
 	//
+	//
 	//	Walk the tree passing each elem to func(..)
+	// 	.walk(func(..))
 	// 	.walk(func(..)[, options])
+	// 		-> list
+	// 		-> res
+	//
+	//	Walk a list of items matching query (compatible with .search(..))...
+	//	.walk(query, func(..))
+	//	.walk(query, func(..), options)
+	// 		-> list
+	// 		-> res
+	//
+	//	Walk a custom list of items...
+	//	.walk([item, ...], func(..))
+	//	.walk([item, ...], func(..), options)
 	// 		-> list
 	// 		-> res
 	//
@@ -2139,10 +2150,14 @@ var BaseBrowserPrototype = {
 	//
 	//
 	// XXX might be good to be able to return the partial result via stop(..)
-	// XXX INLINED_ID: need to handle inlined item id correctly...
 	walk: function(func, options){
 		var that = this
-		var [func=null, options={}, path=[], context={}] = [...arguments]
+
+		var args = [...arguments]
+		var list = !(args[0] instanceof Function || args[0] == null) ?
+			args.shift()
+			: false
+		var [func=null, options={}, path=[], context={}] = args
 
 		// context...
 		context.root = context.root || this
@@ -2290,10 +2305,14 @@ var BaseBrowserPrototype = {
 
 		try {
 			return handleReverse(
-					sections
-						.map(function(section){
-							return that[section] || [] })
-						.flat())
+					list ?
+						(list instanceof Array ?
+							list
+							: this.search(list, options))
+						: sections
+							.map(function(section){
+								return that[section] || [] })
+							.flat())
 				.map(makeMap(path))
 				.flat() 
 
@@ -3207,12 +3226,12 @@ var BaseBrowserPrototype = {
 	
 	// XXX EXPERIMENTAL....
 	//
-	// XXX add support for headless nested blocks...
 	__renderer__: TextRenderer,
 	// XXX need:
 	// 		- section rendering... (DONE)
 	// 		- from/to/around/count support...
 	// 		- ability to render separate items/sub-trees or lists of items...
+	// 			...pass the list to .walk(..), i.e. .walk(list/query, ...)
 	render2: function(options, renderer){
 		var that = this
 
@@ -4165,6 +4184,7 @@ module.HTMLRenderer = {
 	},
 	inline: function(elem, lst, index, path, options){
 	},
+	// XXX add support for headless nested blocks...
 	nest: function(header, lst, index, path, options){
 	},
 
