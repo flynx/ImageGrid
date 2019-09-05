@@ -2932,52 +2932,6 @@ var BaseBrowserPrototype = {
 
 	// Renderers...
 	//
-	// 	.renderContext(context)
-	//
-	// 	.renderFinalize(header, items, footer, context)
-	// 	.renderList(header, items, footer, context)
-	// 	.renderNested(header, children, item, context)
-	// 	.renderNestedHeader(item, i, context)
-	// 	.renderItem(item, i, context)
-	// 	.renderGroup(items, context)
-	//
-	//
-	// NOTE: there are not to be used directly...
-	// XXX might be a good idea to move these into a separate renderer 
-	// 		object (mixin or encapsulated)...
-	renderContext: function(context){
-		return context || {} },
-	renderFinalize: function(header, items, footer, context){
-		return this.renderList(header, items, footer, context) },
-	renderList: function(header, items, footer, context){
-		return items },
-	// NOTE: to skip rendering an item/list return null...
-	// XXX should this take an empty children???
-	// 		...this would make it simpler to expand/collapse without 
-	// 		re-rendering the whole list...
-	renderNested: function(header, children, item, context){
-		return header ? 
-			this.renderGroup([
-				header, 
-				children,
-			])
-   			: children },
-	// XXX use a real blank item...
-	renderNestedBlank(children, i, context){
-		var elem = {value: '   '}
-		return this.renderNested(
-			this.renderNestedHeader(elem, i, context),
-			children, 
-			elem, 
-			context) },
-	renderNestedHeader: function(item, i, context){
-		return this.renderItem(item, i, context) },
-	// NOTE: to skip rendering an item/list return null...
-	renderItem: function(item, i, context){
-		return item },
-	renderGroup: function(items, context){
-		return items },
-
 
 	// Render state...
 	//
