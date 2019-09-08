@@ -3187,6 +3187,7 @@ var BaseBrowserPrototype = {
 	// 		- from/to/around/count support...
 	// 		- ability to render separate items/sub-trees or lists of items...
 	// 			...pass the list to .walk(..), i.e. .walk(list/query, ...)
+	// XXX revise how options are passed down the inlined/nested browsers...
 	// XXX doc...
 	render: function(options, renderer){
 		var that = this
@@ -3207,12 +3208,12 @@ var BaseBrowserPrototype = {
 			: 0
 
 		options = Object.assign(
-			Object.create(this.options || {}),
-			{ 
-				iterateNonIterable: true,
-				includeInlinedBlocks: true,
-			}, 
-			options || {})
+				Object.create(this.options || {}),
+				{ 
+					iterateNonIterable: true,
+					includeInlinedBlocks: true,
+				}, 
+				options || {})
 
 		var render = renderer || this.__renderer__
 		render = render.root == null ?
@@ -3294,6 +3295,8 @@ var BaseBrowserPrototype = {
 								(l = (e.children instanceof BaseBrowser ? 
 										e.children 
 										: e)
+									// XXX we for some reason lose part 
+									// 		of the options here...
 									.render(options, render, i+1, p))
 								: children(true) }
 
@@ -4266,7 +4269,7 @@ module.HTMLRenderer = {
 						: this.split(/\s+/g) }))
 			// special classes...
 			.concat(
-				(options.shorthandItemClasses || {})
+				(options.shorthandItemClasses || [])
 					.filter(function(cls){ 
 						return !!item[cls] })))
 
@@ -5425,7 +5428,7 @@ var HTMLBrowserPrototype = {
 						: this.split(/\s+/g) }))
 			// special classes...
 			.concat(
-				(options.shorthandItemClasses || {})
+				(options.shorthandItemClasses || [])
 					.filter(function(cls){ 
 						return !!item[cls] })))
 
