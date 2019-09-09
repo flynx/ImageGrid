@@ -4145,10 +4145,24 @@ module.HTMLRenderer = {
 
 	// secondary renderers...
 	//
-	// base dialog structure...
+	// base dialog...
+	//
+	// Foramt:
+	// 	<div class="browse-widget" tabindex="0">
+	// 		<!-- header -->
+	// 		...
+	//
+	// 		<!-- sections -->
+	// 		...
+	//
+	// 		<!-- footer -->
+	// 		...
+	// 	</div>
+	//
+	// NOTE: this expects a dict of lists of rendered elements...
 	dialog: function(sections, options){
 		var that = this
-		var {header, items, footer} = sections
+		var {header, footer, ...sections} = sections
 
 		// dialog (container)...
 		var dialog = document.createElement('div')
@@ -4158,40 +4172,52 @@ module.HTMLRenderer = {
 		dialog.addEventListener('mousedown', 
 			function(evt){ evt.stopPropagation() })
 
-		// header...
-		header 
+		// special case: header...
+		header
 			&& !options.hideListHeader
-			&& dialog.appendChild(this.dialogHeader(header, options))
-
-		// list...
-		var list = document.createElement('div')
-		list.classList.add('list', 'v-block', 'items')
-		// prevent scrollbar from grabbing focus...
-		list.addEventListener('mousedown', 
-			function(evt){ evt.stopPropagation() })
-		items
-			.forEach(function(item){
-				list.appendChild(item instanceof Array ? 
-					that.renderGroup(item) 
-					: item) })
-		dialog.appendChild(list)
-
-		// footer...
+			&& dialog.appendChild(that.section('header', header, options))
+		// sections...
+		Object.entries(sections)
+			.forEach(function([name, items]){
+				dialog.appendChild(that.section(name, items, options)) })
+		// special case: footer...
 		footer 
 			&& !options.hideListFooter
-			&& dialog.appendChild(this.dialogFooter(footer, options))
+			&& dialog.appendChild(this.section('footer', footer, options))
 
 		return dialog 
 	},
-	dialogHeader: function(items, options){
-		var elem = this.dialog({items}, options).firstChild 
-		elem.classList.replace('items', 'header')
-		return elem },
-	dialogFooter: function(items, options){
-		var elem = this.dialog({items}, options).firstChild 
-		elem.classList.replace('items', 'footer')
-		return elem },
-	// custom elements...
+
+	// section... 
+	//
+	// Format:
+	// 	<div class="list v-block name">
+	// 		<!-- elems -->
+	// 		...
+	// 	</div>
+	//
+	section: function(name, elems, options){
+		var section = document.createElement('div')
+		section.classList.add('list', 'v-block', name)
+		// prevent scrollbar from grabbing focus...
+		section.addEventListener('mousedown', 
+			function(evt){ evt.stopPropagation() })
+		elems instanceof Node ?
+			section.appendChild(elems)
+			: elems
+				.forEach(function(item){
+					section.appendChild(item) })
+		return section
+	},
+
+	// header element...
+	//
+	// same as element with the following classes added:
+	// 	- sub-list-header
+	// 	- traversable
+	// 	- collapsed 		- if item.collapsed is true
+	//
+	// NOTE: this takes an un-rendered item...
 	headerElem: function(item, index, path, options){
 		return this.elem(...arguments)
 			// update dom...
@@ -4203,6 +4229,31 @@ module.HTMLRenderer = {
 
 	// base renderers...
 	//
+	// Format:
+	// 	<div value="value_json" class="item .." tabindex="0" ..>
+	// 		<!-- value -->
+	// 		<div class="text">value_a</div>
+	// 		<div class="text">value_b</div>
+	// 		...
+	//
+	// 		<!-- buttons (optional) -->
+	// 		<div class="button">button_a_html</div>
+	// 		<div class="button">button_b_html</div>
+	// 		...
+	// 	</div>
+	//
+	// NOTE: DOM events trigger Browser events but not the other way 
+	// 		around. It is not recommended to use DOM events directly.
+	//
+	// XXX need to figure out an intuitive behavior of focus + disable/enable...
+	// 		...do we skip disabled elements?
+	// 		...can a disabled item be focused?
+	// 		...how do we collapse/expand a disabled root?
+	// 		...what do we focus when toggleing disabled?
+	// XXX handle .options.focusDisabledItems correctly...
+	// 		- tabindex -- DONE
+	// 		- ???
+	// XXX show button global/local keys...
 	elem: function(item, index, path, options){
 		var that = this
 		var browser = this.root
@@ -4504,6 +4555,13 @@ module.HTMLRenderer = {
 
 		return elem 
 	},
+
+	// Format:
+	// 	<div class="group">
+	// 		<!-- elements -->
+	// 		...
+	// 	</div>
+	//
 	inline: function(item, lst, index, path, options){
 		var e = document.createElement('div')
 		e.classList.add('group')
@@ -4513,6 +4571,16 @@ module.HTMLRenderer = {
 			.forEach(function(item){
 				e.appendChild(item) })
 		return e },
+
+	// Format:
+	// 	<div class="list">
+	// 		<!-- header element -->
+	// 		...
+	//
+	// 		<!-- elements -->
+	// 		...
+	// 	</div>
+	//
 	// XXX add support for headless nested blocks...
 	nest: function(header, lst, index, path, options){
 		var that = this
@@ -4574,6 +4642,7 @@ module.HTMLRenderer = {
 
 		return render 
 	},
+	// XXX BUG: focus is lost here for some reason...
 	finalize: function(sections, options){
 		var dialog = this.root
 
