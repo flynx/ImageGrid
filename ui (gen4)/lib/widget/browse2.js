@@ -396,7 +396,8 @@ object.mixinFlat(function(){}, {
 			.on('focus', 
 				function(){
 					e.value = this.pathArray
-					this.renderItem(e) },
+					e.update()
+				},
 				tag) 
 		return make },
 
@@ -442,7 +443,7 @@ object.mixinFlat(function(){}, {
 					e.value = focused.doc
 						|| focused.alt
 						|| '&nbsp;'
-					this.renderItem(e) },
+					e.update() },
 			tag) 
 		return make },
 
@@ -512,22 +513,22 @@ var BaseItemPrototype = {
 	// 		multiple ways to get and index...
 
 	get pathArray(){
-		var p = this.parent
-		while(p.parent instanceof BaseBrowser){
-			p = p.parent }
-		return p ? 
-			p.pathOf(this)
+		var r = (this.parent || {}).root
+		return r ? 
+			r.pathOf(this)
 			: undefined },
 	get path(){
-		return this.pathArray.join('/') },
+		return (this.pathArray || []).join('/') },
 
+	get index(){
+		var r = (this.parent || {}).root
+		return r ? 
+			r.indexOf(this)
+			: undefined },
 
-	// XXX local update/render...
-	// XXX should we use these in the main render???
 	update: function(){
-
-		// XXX
-
+		this.parent
+			&& this.parent.render(this)
 		return this
 	},
 
@@ -3177,10 +3178,8 @@ var BaseBrowserPrototype = {
 				renderer.renderFinalize(null, items, null, context)
 				// nested context -> return item list...
 				: items } },
-	/*/
+	//*/
 	
-	// XXX EXPERIMENTAL....
-	//
 	__renderer__: TextRenderer,
 	// XXX need:
 	// 		- section rendering... (DONE)
@@ -3195,8 +3194,12 @@ var BaseBrowserPrototype = {
 		// XXX args parsing...
 		// XXX
 		var args = [...arguments]
-		// XXX
-		var list
+
+		// XXX add support for item queries...
+		var list = (args[0] instanceof BaseItem || args[0] instanceof Array) ?
+			[args.shift()].flat()
+			: null
+
 		var filter
 
 		// NOTE: these only apply to the 'items' section...
@@ -3336,12 +3339,13 @@ var BaseBrowserPrototype = {
 						}, options))
 			// finalize render...
 			.run(function(){
-				return (!options.nonFinalized && render.root === that) ?
+				return (list == null 
+						&& !options.nonFinalized 
+						&& render.root === that) ?
 					render.finalize(this instanceof Array ?
 						{[section]: this}
-						: this, options)
+							: this, options)
 					: this }) }, 
-	//*/
 
 
 	// Events...
@@ -3998,21 +4002,6 @@ var HTMLItemPrototype = {
 		this.dom ?
 			this.elem.replaceWith(value)
 			: (this.dom = value)},
-
-	// XXX EXPERIMENTAL...
-	// XXX should we use these in the main render???
-	update: function(){
-		return object
-			.parent(HTMLItemPrototype.update, this).call(this, ...arguments)
-			.run(function(){
-				var parent = this.parent
-
-				// XXX needs i and context...
-				// XXX see issue with .elem above...
-				this.elem = parent.renderItem(this, 0, {})
-
-				// XXX handle children...
-			}) },
 }
 
 var HTMLItem = 
@@ -4136,9 +4125,6 @@ var updateElemClass = function(action, cls, handler){
 // XXX needs testing...
 // 		- partial rendering...
 // 		- local re-rendering...
-// 		- problems:
-// 			- re-rendering loses focus...
-// XXX doc...
 var HTMLRenderer =
 module.HTMLRenderer = {
 	__proto__: BaseRenderer,
@@ -4486,7 +4472,7 @@ module.HTMLRenderer = {
 							.forEach(function(key){
 								// XXX should we break or warn???
 								if(key in button_keys){
-									throw new Error(`renderItem(..): button key already used: ${key}`) }
+									throw new Error(`.elem(..): button key already used: ${key}`) }
 								button_keys[keyboard.joinKey(keyboard.normalizeKey(key))] = button })
 					// keep focus on the item containing the button -- i.e. if
 					// we tab out of the item focus the item we get to...
@@ -4642,7 +4628,6 @@ module.HTMLRenderer = {
 
 		return render 
 	},
-	// XXX BUG: focus is lost here for some reason...
 	finalize: function(sections, options){
 		var dialog = this.root
 
@@ -4683,11 +4668,6 @@ module.HTMLRenderer = {
 		dialog.dom = d
 
 		// set the scroll offset...
-		// XXX does not work correctly for all cases yet...
-		// XXX move this to a seporate method -- need to trigger this 
-		// 		on render that can affect scroll position, e.g. partial 
-		// 		render...
-		// XXX need to trigger the setup for this from .render(..) itself...
 		if(this.scroll_offset){
 			var ref = dialog.focused || dialog.pagetop
 			var scrolled = ref.dom.offsetParent 
@@ -4699,7 +4679,7 @@ module.HTMLRenderer = {
 		}
 
 		// keep focus where it is...
-		var focused = this.focused
+		var focused = dialog.focused
 		focused
 			&& focused.elem
 				// XXX this will trigger the focus event...
@@ -5116,622 +5096,6 @@ var HTMLBrowserPrototype = {
 	// 		should be contained within the handler...
 	__copy: function(text){
 		navigator.clipboard.writeText(text || this.path) },
-
-
-	// Renderers (DOM)...
-	//
-	// XXX add a render mode where we replace specific element's .dom...
-	// 		...this could be done via:
-	// 			.renderUpdate(..) -- like .renderFinalize(..) but replaces nodes...
-	// 		needs more thought...
-	// 		...another idea would be to make the render flow "internal", i.e. each
-	// 		item renders and places itself item "packing" is done internally 
-	// 		rather than via outer render combinators...
-	// 			- create/get root context
-	// 				- container -> create/clone context + append/replace in parent context
-	// 					- item -> create/clone + append/replace self in parent context
-	// 					- ...
-	// 			- update root context
-	// 		this approach should make the individual renderers self-contained, i.e.
-	// 		rendering a single item would update it in the main tree... (needs thought)
-	//
-	//
-	// Prepare context for maintaining scroll offset...
-	//
-	// XXX need a counterpart to this to finalize the context on any render...
-	// 		...or a way to tell .render(..) to render / re-render only 
-	// 		specific items...
-	renderContext: function(context){
-		context = context || {}
-
-		// prepare for maintaining the scroll position...
-		// XXX need to do this pre any .render*(..) call...
-		// 		...something like:
-		// 			this.getRenderContext(context)
-		// 		should do the trick...
-		// 		another way to go might be a context object, but that seems to be 
-		// 		complicating things...
-		var ref = context.scroll_reference = 
-			context.scroll_reference 
-				|| this.focused 
-				|| this.pagetop
-		context.scroll_offset = 
-			context.scroll_offset
-			|| ((ref && ref.dom && ref.dom.offsetTop) ?
-				ref.dom.offsetTop - ref.dom.offsetParent.scrollTop
-				: null)
-
-		//context.scroll_offset && console.log('renderContext:', context.scroll_offset)
-
-		return context 
-	},
-	//
-	// This also does:
-	// 	- save the rendered state to .dom 
-	// 	- wrap a list of nodes (nested list) in a div
-	// 	- setup event handling
-	// 	- init state...
-	//
-	// Format:
-	// 	if list of items passed:
-	// 		<div>
-	// 			<!-- items -->
-	// 			...
-	// 		</div>
-	// 	or same as .renderList(..)
-	//
-	// XXX set scroll offset... should it be here?
-	// 		...would be nice to universally wrap any render operation 
-	// 		in a context getter/setter that would track the root call and 
-	// 		trigger an postRender event...
-	// 		how can we Identify the root call??
-	//		...the traditional way would be a stack -- pop last elem 
-	//		means we are done...
-	//		ways to go with this:
-	//			- renderer wrapper/generator
-	//			- a 1:1 item-based render mechanic with single entry point...
-	//				...this may be a problem as some of the renderers 
-	//				can call others... (???)
-	renderFinalize: function(header, items, footer, context){
-		var that = this
-		var context = this.renderContext(context)
-
-		var d = this.renderList(header, items, footer, context)
-		var options = context.options || this.options || {}
-
-		// wrap the list (nested list) of nodes in a div...
-		if(d instanceof Array){
-			var c = document.createElement('div')
-			d.classList.add('focusable')
-			d.forEach(function(e){
-				c.appendChild(e) })
-			d = c
-		}
-		d.setAttribute('tabindex', '0')
-
-		// Setup basic event handlers...
-		// keyboard...
-		// NOTE: we are not doing: 
-		// 			d.addEventListener('keydown', this.keyPress.bind(this))
-		// 		because we are abstracting the user from DOM events and 
-		// 		directly passing them parsed keys...
-		d.addEventListener('keydown', function(evt){
-			that.keyPress(that.keyboard.event2key(evt)) })
-		// focus...
-		d.addEventListener('click', 
-			function(e){ 
-				e.stopPropagation()
-				d.focus() })
-		/* XXX this messes up the scrollbar...
-		d.addEventListener('focus',
-		   function(){
-			   that.focused
-					&& that.focused.elem.focus() })
-		//*/
-		
-
-		// XXX should this be done here or in .render(..)???
-		this.dom = d
-
-		// set the scroll offset...
-		// XXX does not work correctly for all cases yet...
-		// XXX move this to a seporate method -- need to trigger this 
-		// 		on render that can affect scroll position, e.g. partial 
-		// 		render...
-		// XXX need to trigger the setup for this from .render(..) itself...
-		if(context.scroll_offset){
-			var ref = this.focused || this.pagetop
-			var scrolled = ref.dom.offsetParent 
-			//scrolled.scrollTop = 
-			//	ref.elem.offsetTop - scrolled.scrollTop - context.scroll_offset
-			scrolled
-				&& (scrolled.scrollTop = 
-					ref.elem.offsetTop - scrolled.scrollTop - context.scroll_offset)
-		}
-
-		// keep focus where it is...
-		var focused = this.focused
-		focused
-			&& focused.elem
-				// XXX this will trigger the focus event...
-				// 		...can we do this without triggering new events???
-				.focus()
-
-		return this.dom
-	},
-	//
-	// Foramt:
-	// 	<div class="browse-widget" tabindex="0">
-	// 		<!-- header -->
-	// 		...
-	//
-	// 		<!-- list -->
-	// 		<div class="list v-block">
-	// 			<!-- items -->
-	// 			...
-	// 		</div>
-	//
-	// 		<!-- footer -->
-	// 		...
-	// 	</div>
-	//
-	renderList: function(header, items, footer, context){
-		var that = this
-		var context = this.renderContext(context)
-		var options = context.options || this.options || {}
-
-		// dialog (container)...
-		var dialog = document.createElement('div')
-		dialog.classList.add('browse-widget')
-		dialog.setAttribute('tabindex', '0')
-		// HACK?: prevent dialog from grabbing focus from item...
-		dialog.addEventListener('mousedown', 
-			function(evt){ evt.stopPropagation() })
-
-		// header...
-		header 
-			&& !options.hideListHeader
-			&& dialog.appendChild(this.renderListHeader(header, context))
-
-		// list...
-		var list = document.createElement('div')
-		list.classList.add('list', 'v-block', 'items')
-		// prevent scrollbar from grabbing focus...
-		list.addEventListener('mousedown', 
-			function(evt){ evt.stopPropagation() })
-		items
-			.forEach(function(item){
-				list.appendChild(item instanceof Array ? 
-					that.renderGroup(item) 
-					: item) })
-		dialog.appendChild(list)
-
-		// footer...
-		footer 
-			&& !options.hideListFooter
-			&& dialog.appendChild(this.renderListFooter(footer, context))
-
-		return dialog 
-	},
-	//
-	// Foramt:
-	//	<div class="path v-block">
-	// 		<!-- list -->
-	// 		<div class="list v-block header">
-	// 			<!-- items -->
-	// 			...
-	// 		</div>
-	//	</div>
-	// 	
-	// XXX populate this...
-	// XXX make this an item???
-	renderListHeader: function(items, context){
-		var elem = this.renderList(null, items, null, context).firstChild 
-		// XXX should we replace 'list' or add 'header'
-		elem.classList.replace('items', 'header')
-		return elem },
-	renderListFooter: function(items, context){
-		var elem = this.renderList(null, items, null, context).firstChild 
-		// XXX should we replace 'list' or add 'footer'
-		elem.classList.replace('items', 'footer')
-		return elem },
-	//
-	// Format:
-	// 	<div class="list">
-	// 		<!-- header (optional) -->
-	// 		...
-	//
-	// 		<!-- children (optional) -->
-	// 		...
-	// 	</div>
-	//
-	renderNested: function(header, children, item, context){
-		var that = this
-		var context = this.renderContext(context)
-		var options = context.options || this.options || {}
-
-		// container...
-		var e = document.createElement('div')
-		e.classList.add('list')
-
-		// localize events...
-		var stopPropagation = function(evt){ evt.stopPropagation() }
-		;(options.itemLocalEvents || [])
-			.forEach(function(evt){
-				e.addEventListener(evt, stopPropagation) })
-
-		// header...
-		header
-			&& e.appendChild(header)
-
-		// items...
-		children instanceof Node ?
-			e.appendChild(children)
-		: children instanceof Array ?
-			children
-				.forEach(function(item){
-					e.appendChild(item) })
-		: null
-
-		item.dom = e
-
-		return e
-	},
-	// NOTE: this is the similar to .renderItem(..)
-	renderNestedHeader: function(item, i, context){
-		var that = this
-		return this.renderItem(item, i, context)
-			// update dom...
-			.run(function(){
-				this.classList.add('sub-list-header', 'traversable')
-				item.collapsed
-					&& this.classList.add('collapsed')
-			}) },
-	//
-	// Format:
-	// 	<div class="group">
-	// 		<!-- items -->
-	// 		...
-	// 	</div>
-	//
-	renderGroup: function(items, context){
-		var context = this.renderContext(context)
-		var e = document.createElement('div')
-		e.classList.add('group')
-		items
-			// XXX is this wrong???
-			.flat(Infinity)
-			.forEach(function(item){
-				e.appendChild(item) })
-		return e },
-	//
-	// Format:
-	// 	<div value="value_json" class="item .." tabindex="0" ..>
-	// 		<!-- value -->
-	// 		<div class="text">value_a</div>
-	// 		<div class="text">value_b</div>
-	// 		...
-	//
-	// 		<!-- buttons (optional) -->
-	// 		<div class="button">button_a_html</div>
-	// 		<div class="button">button_b_html</div>
-	// 		...
-	// 	</div>
-	//
-	// NOTE: DOM events trigger Browser events but not the other way 
-	// 		around. It is not recommended to use DOM events directly.
-	//
-	// XXX need to figure out an intuitive behavior of focus + disable/enable...
-	// 		...do we skip disabled elements?
-	// 		...can a disabled item be focused?
-	// 		...how do we collapse/expand a disabled root?
-	// 		...what do we focus when toggleing disabled?
-	// XXX handle .options.focusDisabledItems correctly...
-	// 		- tabindex -- DONE
-	// 		- ???
-	// XXX show button global/local keys...
-	renderItem: function(item, i, context){
-		var that = this
-		var context = this.renderContext(context)
-		var options = (context || {}).options || this.options || {}
-		if(options.hidden && !options.renderHidden){
-			return null
-		}
-		var section = item.section || options.section
-
-		// helpers...
-		// XXX we need to more carefully test the value to avoid name clashes...
-		var resolveValue = function(value, context, exec_context){
-			var htmlhandler = typeof(value) == typeof('str') ?
-				that.parseStringHandler(value, exec_context)
-				: null
-			return value instanceof Function ?
-					value.call(that, item)
-				: htmlhandler 
-						&& htmlhandler.action in context 
-						&& context[htmlhandler.action] instanceof Function ?
-					context[htmlhandler.action]
-						.call(that, item, ...htmlhandler.arguments)
-				: value }
-		var setDOMValue = function(target, value){
-			value instanceof HTMLElement ?
-				target.appendChild(value)
-			: (typeof(jQuery) != 'undefined' && value instanceof jQuery) ?
-				value.appendTo(target)
-			: (target.innerHTML = value)
-			return target }
-		var doTextKeys = function(text, doKey){
-			return text.replace(/\$\w/g, 
-				function(k){
-					// forget the '$'...
-					k = k[1] 
-					return (doKey && doKey(k)) ?
-						`<u class="key-hint">${k}</u>`
-						: k }) }
-
-		// special-case: item.html...
-		if(item.html){
-			// NOTE: this is a bit of a cheat, but it saves us from either 
-			// 		parsing or restricting the format...
-			var tmp = document.createElement('div')
-			tmp.innerHTML = item.html
-			var elem = item.dom = tmp.firstElementChild 
-			elem.classList.add(
-				...(item['class'] instanceof Array ?
-					item['class']
-					: item['class'].split(/\s+/g)))
-			return elem 
-		}
-
-		// Base DOM...
-		var elem = document.createElement('div')
-		var text = item.text
-
-		// classes...
-		elem.classList.add(...['item']
-			// user classes...
-			.concat((item['class'] || item.cls || [])
-				// parse space-separated class strings...
-				.run(function(){
-					return this instanceof Array ?
-						this
-						: this.split(/\s+/g) }))
-			// special classes...
-			.concat(
-				(options.shorthandItemClasses || [])
-					.filter(function(cls){ 
-						return !!item[cls] })))
-
-		// attrs...
-		;(item.disabled && !options.focusDisabledItems)
-			|| elem.setAttribute('tabindex', '0')
-		Object.entries(item.attrs || {})
-			// shorthand attrs...
-			.concat((options.shorthandItemAttrs || [])
-				.map(function(key){ 
-					return [key, item[key]] }))
-			.forEach(function([key, value]){
-				value !== undefined
-					&& elem.setAttribute(key, value) })
-		;(item.value == null 
-				|| item.value instanceof Object)
-			|| elem.setAttribute('value', item.text)
-		;(item.value == null 
-				|| item.value instanceof Object 
-				|| item.alt != item.text)
-			&& elem.setAttribute('alt', item.alt)
-
-		// values...
-		text != null
-			&& (item.value instanceof Array ? 
-					item.value 
-					: [item.value])
-				// handle $keys and other stuff...
-				// NOTE: the actual key setup is done in .__preRender__(..)
-				// 		see that for more info...
-				.map(function(v){
-					// handle key-shortcuts $K...
-					v = typeof(v) == typeof('str') ?
-						doTextKeys(v, 
-							function(k){
-								return (item.keys || [])
-									.includes(that.keyboard.normalizeKey(k)) })
-						: v
-
-					var value = document.createElement('span')
-					value.classList.add('text')
-
-					// set the value...
-					setDOMValue(value, 
-						resolveValue(v, that))
-
-					elem.appendChild(value)
-				})
-
-		// system events...
-		elem.addEventListener('click', 
-			function(evt){
-				evt.stopPropagation()
-				// NOTE: if an item is disabled we retain its expand/collapse
-				// 		functionality...
-				// XXX revise...
-				item.disabled ?
-					that.toggleCollapse(item)
-					: that.open(item, text, elem) })
-		elem.addEventListener('focus', 
-			function(){ 
-				// NOTE: we do not retrigger focus on an item if it's 
-				// 		already focused...
-				that.focused !== item
-					// only trigger focus on gettable items...
-					// ...i.e. items in the main section excluding headers 
-					// and footers...
-					&& that.focus(item) })
-		elem.addEventListener('contextmenu', 
-			function(evt){ 
-				evt.preventDefault()
-				that.menu(item) })
-		// user events...
-		Object.entries(item.events || {})
-			// shorthand DOM events...
-			.concat((options.shorthandItemEvents || [])
-				.map(function(evt){ 
-					return [evt, item[evt]] }))
-			// setup the handlers...
-			.forEach(function([evt, handler]){
-				handler
-					&& elem.addEventListener(evt, handler.bind(that)) })
-
-		// buttons...
-		var button_keys = {}
-		// XXX migrate button inheritance...
-		var buttons = (item.buttons 
-				|| (section == 'header' 
-					&& (options.headerButtons || []))
-				|| (section == 'footer' 
-					&& (options.footerButtons || [])) 
-				|| options.itemButtons 
-				|| [])
-			// resolve buttons from library...
-			.map(function(button){
-				return button instanceof Array ?
-						button
-					// XXX reference the actual make(..) and not Items...
-					: Items.buttons[button] instanceof Function ?
-						[Items.buttons[button].call(that, item)].flat()
-					: Items.buttons[button] || button })
-			// NOTE: keep the order unsurprising -- first defined, first from left...
-			.reverse()
-		var stopPropagation = function(evt){ evt.stopPropagation() }
-		buttons
-			.forEach(function([html, handler, ...rest]){
-				var force = (rest[0] === true 
-						|| rest[0] === false 
-						|| rest[0] instanceof Function) ? 
-					rest.shift() 
-					: undefined
-				var metadata = rest.shift() || {}
-
-				// metadata...
-				var cls = metadata.cls || []
-				cls = cls instanceof Function ?
-					cls.call(that, item)
-					: cls
-				cls = cls instanceof Array ? 
-					cls 
-					: cls.split(/\s+/g)
-				var alt = metadata.alt
-				alt = alt instanceof Function ?
-						alt.call(that, item)
-					: alt
-				var keys = metadata.keys
-
-				var button = document.createElement('div')
-				button.classList.add('button', ...cls)
-				alt
-					&& button.setAttribute('alt', alt)
-
-				// button content...
-				var text_keys = []
-				var v = resolveValue(html, Items.buttons, {item})
-				setDOMValue(button,
-					typeof(v) == typeof('str') ?
-						doTextKeys(v,
-							function(k){
-								k = that.keyboard.normalizeKey(k)
-								return options.disableButtonSortcuts ?
-									false
-									: !text_keys.includes(k)
-										&& text_keys.push(k) })
-						: v)
-				keys = text_keys.length > 0 ?
-					(keys || []).concat(text_keys)
-					: keys
-
-				// non-disabled button...
-				if(force instanceof Function ? 
-						force.call(that, item) 
-						: (force || !item.disabled) ){
-					button.setAttribute('tabindex', '0')
-					// events to keep in buttons...
-					;(options.buttonLocalEvents || options.itemLocalEvents || [])
-						.forEach(function(evt){
-							button.addEventListener(evt, stopPropagation) })
-					// button keys...
-					keys && !options.disableButtonSortcuts
-						&& (keys instanceof Array ? keys : [keys])
-							.forEach(function(key){
-								// XXX should we break or warn???
-								if(key in button_keys){
-									throw new Error(`renderItem(..): button key already used: ${key}`) }
-								button_keys[keyboard.joinKey(keyboard.normalizeKey(key))] = button })
-					// keep focus on the item containing the button -- i.e. if
-					// we tab out of the item focus the item we get to...
-					button.addEventListener('focus', function(){
-						item.focused 
-							// only focus items in the main section, 
-							// outside of headers and footers...
-							|| that.focus(item) 
-								&& button.focus() })
-					// main button action (click/enter)...
-					// XXX should there be a secondary action (i.e. shift-enter)???
-					if(handler){
-						var func = handler instanceof Function ?
-							handler
-							// string handler -> that.<handler>(item)
-							: function(evt, ...args){
-								var a = that.parseStringHandler(
-									handler, 
-									// button handler arg namespace...
-									{
-										event: evt,
-										item: item,
-										// NOTE: if we are not focusing 
-										// 		on button click this may 
-										// 		be different from item...
-										focused: that.focused,
-										button: html,
-									})
-								that[a.action](...a.arguments) }
-
-						// handle clicks and keyboard...
-						button.addEventListener('click', func.bind(that))
-						// NOTE: we only trigger buttons on Enter and do 
-						// 		not care about other keys...
-						button.addEventListener('keydown', 
-							function(evt){
-								var k = keyboard.event2key(evt)
-								if(k.includes('Enter')){
-									event.stopPropagation()
-									func.call(that, evt, item) } }) } 
-				}
-
-				elem.appendChild(button)
-			})
-
-		// button shortcut keys...
-		Object.keys(button_keys).length > 0
-			&& elem.addEventListener('keydown', 
-				function(evt){ 
-				var k = keyboard.joinKey(keyboard.event2key(evt))
-				if(k in button_keys){
-					evt.preventDefault()
-					evt.stopPropagation()
-					button_keys[k].focus()
-					// XXX should this be optional???
-					button_keys[k].click() } })
-		
-		item.dom = elem
-		// XXX for some reason this messes up navigation...
-		// 		to reproduce:
-		// 			- select element with children
-		// 			- press right
-		// 				-> blur current elem
-		// 				-> next elem not selected...
-		//item.elem = elem
-
-		return elem 
-	},
 
 
 	// Events extensions...
