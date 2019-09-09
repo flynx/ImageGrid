@@ -4014,6 +4014,14 @@ var HTMLItemPrototype = {
 		this.dom ?
 			this.elem.replaceWith(value)
 			: (this.dom = value) },
+
+	// maintain focus...
+	update: function(){
+		var that = this
+		return object.parent(HTMLItemPrototype.update, this).call(this, ...arguments)
+			.run(function(){
+				that.focused 
+					&& that.elem.focus() }) },
 }
 
 var HTMLItem = 
@@ -4587,6 +4595,14 @@ module.HTMLRenderer = {
 	nest: function(header, lst, index, path, options){
 		var that = this
 
+		// temporarily "detach" the item from DOM...
+		// NOTE: this will prevent us from overwriting the list dom with
+		// 		the element...
+		// XXX HACK: see notes for .elem assignment below and in renderer.elem(..)
+		var old = header.dom
+		if(old){
+			delete header.__dom }
+
 		// container...
 		var e = document.createElement('div')
 		e.classList.add('list')
@@ -4599,6 +4615,15 @@ module.HTMLRenderer = {
 
 		// header...
 		// XXX make this optional...
+		// XXX this will break dom... 
+		// 		- hedaer just updated it's .dom in-tree, i.e. replacing 
+		// 			the list block...
+		// 			...this effectively deletes the old dom (i.e. list block)
+		// 			...writing to .elem should solve this stage of the issue 
+		// 			but it introduces new problems (detaching element's dom)
+		// 		- here we place it into a detached list element, completely 
+		// 			severing the connection of header to dom...
+		// XXX we need assigning to items's .elem to work correctly...
 		e.appendChild(this.headerElem(header, index, path, options))
 
 		// items...
@@ -4610,6 +4635,11 @@ module.HTMLRenderer = {
 					e.appendChild(item) })
 		: null
 
+
+		// reattach the item to DOM...
+		// XXX HACK: see notes for .elem assignment below and in renderer.elem(..)
+		old 
+			&& (header.__dom = old)
 		header.dom = e
 
 		return e
@@ -5215,9 +5245,8 @@ var HTMLBrowserPrototype = {
 	__expand__: function(){ this.update() },
 	__collapse__: function(){ this.update() },
 	/*/ 
-	// XXX make this a "local" update -- i.e. only update the subtree... 
-	__expand__: function(){ this.root.update() },
-	__collapse__: function(){ this.root.update() },
+	__expand__: function(evt, elem){ elem.update() },
+	__collapse__: function(evt, elem){ elem.update() },
 	//*/
 	__select__: updateElemClass('add', 'selected'),
 	__deselect__: updateElemClass('remove', 'selected'),
