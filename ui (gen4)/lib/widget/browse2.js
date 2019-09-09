@@ -526,9 +526,16 @@ var BaseItemPrototype = {
 			r.indexOf(this)
 			: undefined },
 
-	update: function(){
+
+	// XXX BUG: this does not work for nested header elements...
+	// 		to reproduce:
+	// 			dialog
+	// 				.get({children: true})
+	// 				.update()
+	// 		...for some reason the affected element is removed from dom...
+	update: function(options){
 		this.parent
-			&& this.parent.render(this)
+			&& this.parent.render(this, options)
 		return this
 	},
 
@@ -3182,24 +3189,26 @@ var BaseBrowserPrototype = {
 	
 	__renderer__: TextRenderer,
 	// XXX need:
-	// 		- section rendering... (DONE)
 	// 		- from/to/around/count support...
 	// 		- ability to render separate items/sub-trees or lists of items...
 	// 			...pass the list to .walk(..), i.e. .walk(list/query, ...)
+	// 			- buggy -- dialog.render(dialog.get({children: true})) broken...
+	// 			- need query support...
 	// XXX revise options handling... 
 	// XXX doc...
 	render: function(options, renderer){
 		var that = this
 
-		// XXX args parsing...
+		// args parsing...
 		// XXX
 		var args = [...arguments]
 
+		// item list...
 		// XXX add support for item queries...
 		var list = (args[0] instanceof BaseItem || args[0] instanceof Array) ?
 			[args.shift()].flat()
 			: null
-
+		// item filter...
 		var filter
 
 		// NOTE: these only apply to the 'items' section...
@@ -3209,6 +3218,8 @@ var BaseBrowserPrototype = {
 		var base_index = typeof(args[args.length-1]) == typeof(123)?
 		   	args.pop() 
 			: 0
+
+		var [options, renderer] = args
 
 		// XXX revise...
 		options = Object.assign(
@@ -3244,7 +3255,7 @@ var BaseBrowserPrototype = {
 		// used as a means to calculate lengths of nested blocks rendered 
 		// via .render(..)
 		var l
-		return ((render.root === this && section instanceof Array) ?
+		return ((list == null && render.root === this && section instanceof Array) ?
 				// render list of sections...
 				//
 				// NOTE: we will only render the section list on the top 
@@ -3345,6 +3356,7 @@ var BaseBrowserPrototype = {
 					render.finalize(this instanceof Array ?
 						{[section]: this}
 							: this, options)
+					// XXX should we call render.finalize(..) for list???
 					: this }) }, 
 
 
@@ -4001,7 +4013,7 @@ var HTMLItemPrototype = {
 	set elem(value){
 		this.dom ?
 			this.elem.replaceWith(value)
-			: (this.dom = value)},
+			: (this.dom = value) },
 }
 
 var HTMLItem = 
@@ -4530,18 +4542,21 @@ module.HTMLRenderer = {
 					// XXX should this be optional???
 					button_keys[k].click() } })
 		
-		item.dom = elem
-		// XXX for some reason this messes up navigation...
+		/*/ XXX for some reason this messes up navigation...
 		// 		to reproduce:
 		// 			- select element with children
 		// 			- press right
 		// 				-> blur current elem
 		// 				-> next elem not selected...
-		//item.elem = elem
+		item.elem = elem
+		/*/
+		item.dom = elem
+		//*/
 
 		return elem 
 	},
 
+	//
 	// Format:
 	// 	<div class="group">
 	// 		<!-- elements -->
@@ -4558,6 +4573,7 @@ module.HTMLRenderer = {
 				e.appendChild(item) })
 		return e },
 
+	//
 	// Format:
 	// 	<div class="list">
 	// 		<!-- header element -->
