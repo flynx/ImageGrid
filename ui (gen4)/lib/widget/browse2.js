@@ -4592,6 +4592,7 @@ module.HTMLRenderer = {
 	// 	</div>
 	//
 	// XXX add support for headless nested blocks...
+	// XXX HACK -- see inside...
 	nest: function(header, lst, index, path, options){
 		var that = this
 
@@ -4634,7 +4635,6 @@ module.HTMLRenderer = {
 				.forEach(function(item){
 					e.appendChild(item) })
 		: null
-
 
 		// reattach the item to DOM...
 		// XXX HACK: see notes for .elem assignment below and in renderer.elem(..)
@@ -5236,23 +5236,14 @@ var HTMLBrowserPrototype = {
 	// 		element up to reveal the expanded subtree...
 	// 		...would also be logical to "show" the expanded tree but 
 	// 		keeping the focused elem in view...
-	/* XXX there is a problem with .update() propagation up the nested 
-	// 		dialogs -- we lose context...
-	// 		...see .renderContext(..) / .renderFinalize(..) for details...
-	// 		There are two routs to make this uniform:
-	// 			1) make some events (update) root-only
-	// 			2) make local updates possible (connect .dom to parent's dom)
-	__expand__: function(){ this.update() },
-	__collapse__: function(){ this.update() },
-	/*/ 
 	__expand__: function(evt, elem){ elem.update() },
 	__collapse__: function(evt, elem){ elem.update() },
-	//*/
 	__select__: updateElemClass('add', 'selected'),
 	__deselect__: updateElemClass('remove', 'selected'),
-	// XXX would be more logical to update only the sepcific elements...
-	__disable__: updateElemClass('add', 'disabled', function(){ this.update() }),
-	__enable__: updateElemClass('remove', 'disabled', function(){ this.update() }),
+	__disable__: updateElemClass('add', 'disabled', 
+		function(evt, elem){ elem.update() }),
+	__enable__: updateElemClass('remove', 'disabled', 
+		function(evt, elem){ elem.update() }),
 	__hide__: updateElemClass('add', 'hidden'),
 	__show__: updateElemClass('remove', 'hidden'),
 
