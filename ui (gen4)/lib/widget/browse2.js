@@ -4598,7 +4598,10 @@ module.HTMLRenderer = {
 
 		// temporarily "detach" the item from DOM...
 		// NOTE: this will prevent us from overwriting the list dom with
-		// 		the element...
+		// 		the element by keeping the changes to .dom / .elem local 
+		// 		to the actual element (not affecting the DOM)...
+		// XXX should we do a stricter detach-change-attach approach to
+		// 		DOM updates???
 		// XXX HACK: see notes for .elem assignment below and in renderer.elem(..)
 		var old = header.dom
 		if(old){
