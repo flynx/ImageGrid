@@ -3977,6 +3977,7 @@ var HTMLItemClassPrototype = {
 				: elem },
 }
 
+// XXX problems with writing .dom / .elem, needs revision...
 var HTMLItemPrototype = {
 	__proto__: BaseItem.prototype,
 
@@ -4145,6 +4146,7 @@ var updateElemClass = function(action, cls, handler){
 // XXX needs testing...
 // 		- partial rendering...
 // 		- local re-rendering...
+// XXX HACK: see .nest(..)
 var HTMLRenderer =
 module.HTMLRenderer = {
 	__proto__: BaseRenderer,
