@@ -3245,8 +3245,55 @@ var BaseBrowserPrototype = {
 			section[0]
 			: section
 
-
 		// XXX from/to/around/count...
+		// XXX BUG: for some reason these shift more than one position...
+		// 		dialog.render({from: 17, count: 5}, browser.TextRenderer)
+		// 		dialog.render({from: 18, count: 5}, browser.TextRenderer)
+		var get_options = Object.assign(
+			Object.create(options),
+			{from: null, to: null, around: null,
+				iterateNonIterable: options.iterateNonIterable})
+		var normalizeIndex = function(i){
+			return (i !== undefined && typeof(i) != typeof(123)) ?
+				this.get(i, 
+					function(_, i){ return i }, 
+					get_options)
+	   			: i }.bind(this)
+		var from = normalizeIndex(options.from)
+		var to = normalizeIndex(options.to)
+		var around = normalizeIndex(options.around)
+		var count = options.count || null
+		// complete to/from based on count and/or around...
+		// NOTE: we do not care about overflow here...
+		;(from == null && count != null) 
+			&& (from = options.from = 
+				to != null ? 
+					to - count
+				: around != null ?
+					around - Math.floor(count/2)
+				: from)
+		;(to == null && count != null)
+			&& (to = options.to = 
+				from != null ? 
+					from + count
+				: around != null ?
+					around + Math.ceil(count/2)
+				: to)
+		// sanity check...
+		if(from != null && to != null && to < from){
+			throw new Error(`.render(..): options.from must be less than `
+				+`or equal to options.to. (got: from=${from} and to=${to})`) }
+		// XXX use this to check if an item is on the path to <from> and
+		// 		pass it to the skipped topology constructor...
+		var from_path = options.from_path =
+			options.from_path	
+				|| (from != null 
+					&& this.get(from, 
+						function(e, i, p){ return p }, 
+						get_options))
+		from_path = from_path instanceof Array
+			&& from_path
+
 
 		// XXX do we need filter on this level or is dialog.filter(..).render() enough?
 		// 		...the difference is filtering here will maintain topology...
@@ -3269,7 +3316,12 @@ var BaseBrowserPrototype = {
 								{
 									section: name,
 									nonFinalized: true,
-								}), 
+								},
+								// ignore partial render options in sections 
+								// other than items...
+								name != 'items' ?
+									{ to: undefined, from: undefined }
+									: {}), 
 							render, 
 							// NOTE: base_index and base_path only apply 
 							// 		to the 'items' section...
@@ -3319,9 +3371,18 @@ var BaseBrowserPrototype = {
 
 						// do the actual rendering...
 						return (
-							// skip...
-							// XXX 
-							false ?
+							// special case: nested <from> elem -> render topology only...
+							(from_path 
+									&& i < from 
+									// only for nested...
+									&& e && e.children
+									// only sub-path...
+									&& p.cmp(from_path.slice(0, p.length))) ?
+								// XXX this is wrong... 
+								render.nest(null, getChildren(), i, p, options)
+							// skip: out of range items...
+							: ((from != null && i < from) 
+									|| (to != null && i >= to)) ?
 								[]
 
 							// XXX need to maintain topology -- headless nested...
@@ -4605,7 +4666,7 @@ module.HTMLRenderer = {
 		// XXX should we do a stricter detach-change-attach approach to
 		// 		DOM updates???
 		// XXX HACK: see notes for .elem assignment below and in renderer.elem(..)
-		var old = header.dom
+		var old = header && header.dom
 		if(old){
 			delete header.__dom }
 
@@ -4620,7 +4681,6 @@ module.HTMLRenderer = {
 				e.addEventListener(evt, stopPropagation) })
 
 		// header...
-		// XXX make this optionally empty...
 		// XXX this will break dom... 
 		// 		- hedaer just updated it's .dom in-tree, i.e. replacing 
 		// 			the list block...
@@ -4630,7 +4690,10 @@ module.HTMLRenderer = {
 		// 		- here we place it into a detached list element, completely 
 		// 			severing the connection of header to dom...
 		// XXX we need assigning to items's .elem to work correctly...
-		e.appendChild(this.headerElem(header, index, path, options))
+		e.appendChild(header ?
+			this.headerElem(header, index, path, options)
+			// XXX do we need to decorate this better???
+			: document.createElement('div'))
 
 		// items...
 		lst instanceof Node ?
@@ -4645,7 +4708,8 @@ module.HTMLRenderer = {
 		// XXX HACK: see notes for .elem assignment below and in renderer.elem(..)
 		old 
 			&& (header.__dom = old)
-		header.dom = e
+		header
+			&& (header.dom = e)
 
 		return e
 	},
