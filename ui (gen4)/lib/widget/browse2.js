@@ -396,8 +396,7 @@ object.mixinFlat(function(){}, {
 			.on('focus', 
 				function(){
 					e.value = this.pathArray
-					e.update()
-				},
+					e.update() },
 				tag) 
 		return make },
 
@@ -2164,6 +2163,9 @@ var BaseBrowserPrototype = {
 		var list = !(args[0] instanceof Function || args[0] == null) ?
 			args.shift()
 			: false
+		list = list instanceof BaseItem ? 
+			[list] 
+			: list
 		var [func=null, options={}, path=[], context={}] = args
 
 		// context...
