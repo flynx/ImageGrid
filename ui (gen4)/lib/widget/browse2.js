@@ -2150,7 +2150,11 @@ var BaseBrowserPrototype = {
 	// 	}
 	//
 	//
-	// XXX might be good to be able to return the partial result via stop(..)
+	// XXX might be good to be able to return the partial result being 
+	// 		constructed via stop(..) in some way...
+	// 			stop()				-> returns current partial state...
+	// 			stop(undefined)		-> returns explicit undefined
+	// 			stop(..)
 	walk: function(func, options){
 		var that = this
 
@@ -2350,6 +2354,8 @@ var BaseBrowserPrototype = {
 	// 		// NOTE: the default is different from .walk(..)
 	// 		defaultReverse: 'full' (default) | 'tree',
 	//
+	// 		rawResults: <bool>,
+	//
 	// 		// For other supported options see docs for .walk(..)
 	// 		...
 	// 	}
@@ -2388,6 +2394,8 @@ var BaseBrowserPrototype = {
 				options) 
 			.run(makeFlatRunViewWrapper(this, options)) },
 	// XXX do we need a non-flat version of this???
+	// 		...would need a way to maintain parent if at least one item 
+	// 		is present...
 	filter: function(func, options){ 
 		var that = this
 		options = !(options || {}).defaultReverse ?
@@ -2890,8 +2898,12 @@ var BaseBrowserPrototype = {
 		return path.length == 1 ?
 			this
 			: this.get(path.slice(0, -1), options) },
+	// XXX index seems to bw wrong... 
 	positionOf: function(item, options){
-		return this.search(item == null ? this.focused : item, 
+		return this.search(
+			item == null ? 
+				this.focused 
+				: item, 
 			function(_, i, p){ 
 				return [i, p] }, 
 			Object.assign(
@@ -2900,6 +2912,15 @@ var BaseBrowserPrototype = {
 					noQueryCheck: true,
 				},
 				options || {})).concat([[-1, undefined]]).shift() },
+	// XXX BUG: 
+	// 		dialog.get(dialog.indexOf(dialog.focused)) === dialog.focused 
+	// 			...should be true but is not!!!
+	// 			... .pathOf(..) is not affected by this bug...
+	// 		dialog.search(dialog.focused, (e, i, p) => i)
+	// 			this is wrong...
+	// 		dialog.walk((e, i, p, next, stop) => e === dialog.focused && stop(i))
+	// 			this gets the correct index...
+	// 		...seems the problem is in the .search(..) default options...
 	indexOf: function(item, options){
 		return this.positionOf(item, options)[0] },
 	pathOf: function(item, options){
@@ -2935,8 +2956,7 @@ var BaseBrowserPrototype = {
 
 
 	// Renderer...
-	//
-	// Renderer constructor...
+
 	__renderer__: TextRenderer,
 
 	//
@@ -3013,13 +3033,15 @@ var BaseBrowserPrototype = {
 	// 		of actual rendering should lay on the renderer methods...
 	//
 	//
-	// XXX need:
-	// 		- from/to/around/count support -- still buggy...
-	// 		- ability to render separate items/sub-trees or lists of items...
-	// 			...pass the list to .walk(..), i.e. .walk(list/query, ...)
-	// 			- buggy -- dialog.render(dialog.get({children: true})) broken...
-	// 			- need query support...
-	// XXX do we need .render(filter(item), ...) support???
+	// NOTE: we do not need filtering here as it is best handled via:
+	// 			this
+	// 				.filter(..)
+	// 				.render()
+	// 		this approach will maintain all the functionality but lose 
+	// 		topology, doing this via .render(..) directly will maintain 
+	// 		topology but will break control and other data-driven stuff...
+	//
+	//
 	// XXX revise options handling... 
 	// XXX BUG: for some reason these shift more than one position...
 	// 		dialog.render({from: 17, count: 5}, browser.TextRenderer)
@@ -3842,6 +3864,8 @@ var HTMLItemClassPrototype = {
 				: elem },
 }
 
+// XXX should we wrap .collapsed, .disabled, .selected in props to 
+// 		auto-update an item on prop change???
 // XXX problems with writing .dom / .elem, needs revision...
 var HTMLItemPrototype = {
 	__proto__: BaseItem.prototype,
@@ -5205,7 +5229,7 @@ object.Constructor('HTMLBrowser',
 
 
 //---------------------------------------------------------------------
-// shorthands...
+// shorthands/defaults...
 
 module.Item = HTMLItem
 module.Browser = HTMLBrowser
