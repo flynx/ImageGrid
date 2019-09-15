@@ -782,7 +782,8 @@ function(options){
 // Renderers...
 
 var BaseRenderer =
-module.BaseRenderer = {
+module.BaseRenderer = 
+object.Constructor('BaseRenderer', {
 	// placeholders...
 	root: null,
 
@@ -795,24 +796,20 @@ module.BaseRenderer = {
 		throw new Error('.nest(..): Not implemented.') },
 
 	// render life-cycle...
-	//
-	// start rendering by creating a renderer instance...
-	start: function(root, options){
-		return Object.assign(
-			Object.create(this),
-			{
-				root,
-			}) },
-	// finalize the render...
 	finalize: function(sections, options){
 		return sections },
-}
+	__init__: function(root, options){
+		this.root = root
+		// XXX do we do anything with options here???
+	},
+})
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 var TextRenderer =
-module.TextRenderer = {
-	__proto__: BaseRenderer,
+module.TextRenderer = 
+object.Constructor('TextRenderer', {
+	__proto__: BaseRenderer.prototype,
 
 	elem: function(item, index, path, options){
 		return path
@@ -835,17 +832,15 @@ module.TextRenderer = {
 			.reduce(function(res, [section, lst]){
 				return res.concat(lst.join('\n')) }, [])
 			.join('\n===\n') },
-}
+})
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 var PathRenderer =
-module.PathRenderer = {
-	__proto__: TextRenderer,
+module.PathRenderer = 
+object.Constructor('PathRenderer', {
+	__proto__: TextRenderer.prototype,
 
-	// renderers...
-	//
-	// render paths...
 	elem: function(item, index, path, options){
 		return path.join('/') },
 	inline: function(item, lst, index, path, options){
@@ -857,7 +852,7 @@ module.PathRenderer = {
 				[ this.elem(header, index, path) ]
 				: []),
 			...lst ] },
-}
+})
 
 
 
@@ -2939,37 +2934,53 @@ var BaseBrowserPrototype = {
 					&& that.expand([...nodes]) }) },
 
 
-	// Renderers...
+	// Renderer...
 	//
+	// Renderer constructor...
+	__renderer__: TextRenderer,
 
-	// Render state...
 	//
-	//	.render()
-	//	.render(options[, renderer[, context]])
-	//		-> state
+	//	Render browser...
+	//	.render([options])
+	//		-> data
 	//
+	//	Render browser using specific renderer...
+	//	.render(options, renderer)
+	//	.render(options, RendererConstructor)
+	//		-> data
 	//
-	// context format:
-	// 	{
-	// 		root: <root-browser>,
-	// 		options: <options>,
-	//
-	//
-	// 		// These are the same as in options...
-	// 		//
-	// 		// NOTE: these will get set to the item indexes...
-	// 		from: <index> | <query>,
-	// 		to: <index> | <query>,
-	// 		// optional...
-	// 		// NOTE: in general we set these in options...
-	// 		//around: <index> | <query>,
-	// 		//count: <number>,
-	//
-	// 		...
-	// 	}
+	//	Re-render specific items...
+	//	.render(item[, options, ...])
+	//	.render(items[, options, ...])
+	//		// XXX
+	//		-> [data, ...]
 	//
 	//
-	// options:
+	//
+	// Partial rendering...
+	//
+	// 	Render items between A and B...
+	// 	.render({from: A, to: B, ...}, ...)
+	// 		-> data
+	//
+	// 	Render C items from A...
+	// 	.render({from: A, count: C, ...}, ...)
+	// 		-> data
+	//
+	// 	Render C items to A...
+	// 	.render({to: A, count: , ...}, ...)
+	// 		-> data
+	//
+	// 	Render C items around A...
+	// 	.render({around: A, count: , ...}, ...)
+	// 		-> data
+	//
+	// NOTE: In the signatures below A and B can either be an index or 
+	// 		a query compatible with .get(..)
+	//
+	//
+	//
+	// options format:
 	// 	{
 	// 		// Partial render parameters...
 	//		//
@@ -2994,224 +3005,33 @@ var BaseBrowserPrototype = {
 	// 		...
 	// 	}
 	//
-	//
 	// NOTE: there is no need to explicitly .make(..) the state before
 	// 		calling this as first access to .items will do so automatically...
 	// NOTE: calling this will re-render the existing state. to re-make 
 	// 		the state anew that use .update(..)...
 	// NOTE: it is not recommended to extend this. all the responsibility
 	// 		of actual rendering should lay on the renderer methods...
-	// NOTE: currently options and context are distinguished only via 
-	// 		the .options attribute...
 	//
-	// XXX use partial render for things like search....
-	// 		...current filter implementation is crude, need a way to combine/chain
-	// 		this with selectors...
-	// 		...a hacky way to do search is:
-	// 			s = dialog.search(..)
-	// 			dialog
-	// 				.render({
-	// 					filter: e => s.includes(e) })
-	// 		the downside here is this is only render, control still uses
-	// 		the full data...
-	// XXX make partial render lazy -- i.e. add/remove elements and 
-	// 		do not reconstruct the ones already present...
-	// XXX should from/to/around/count be a feature of this or of .walk(..)???
-	// XXX might be a good idea to use this.root === this instead of context.root === this
-	/*
-	render: function(options, renderer, context){
-		renderer = renderer || this
-		context = renderer.renderContext(context)
-
-		options = context.options = context.options 
-			|| Object.assign(
-				Object.create(this.options || {}),
-				{ 
-					iterateNonIterable: true,
-					includeInlinedBlocks: true,
-				}, 
-				options || {})
-
-		var section = options.section || '*'
-		section = section == '*' ?
-			options.sections
-			: section
-		section = section instanceof Array && section.length == 1 ?
-			section[0]
-			: section
-
-		var seen = options.renderUnique ?
-			(context.seen = context.seen || new Set())
-			: false
-
-		// build range bounds...
-		// use .get(..) on full (non-partial) range...
-		var get_options = Object.assign(
-			Object.create(options),
-			// XXX for some magical reason if we do not explicitly include 
-			// 		.iterateNonIterable here it is not seen down the line...
-			{from: null, to: null, around: null,
-				iterateNonIterable: options.iterateNonIterable})
-
-		// index getter...
-		var normIndex = function(i){
-			return (i === undefined || typeof(i) == typeof(123)) ?
-				i
-				: this.get(i, 
-					function(_, i){ return i }, 
-					get_options) }.bind(this)
-		// NOTE: we prefer context.from / context.to as they are more 
-		// 		likely to be normalized.
-		// 		as to the rest of the values of set we look first in the 
-		// 		options as we'll need them only if from/to are not 
-		// 		normalized...
-		var from = context.from = normIndex('from' in context ? context.from : options.from)
-		var to = context.to = normIndex('to' in context ? context.to : options.to)
-		var around = normIndex('around' in options ? options.around : context.around)
-		var count = 'count' in options ? options.count : context.count
-		// NOTE: count < 0 is the same as no count / all...
-		count = count < 0 ? 
-			null 
-			: count
-		// complete to/from based on count and/or around...
-		// NOTE: we do not care about overflow here...
-		;(from == null && count != null) 
-			&& (from = context.from = 
-				to != null ? 
-					to - count
-				: around != null ?
-					around - Math.floor(count/2)
-				: from)
-		;(to == null && count != null)
-			&& (to = context.to = 
-				from != null ? 
-					from + count
-				: around != null ?
-					around + Math.ceil(count/2)
-				: to)
-		// sanity check...
-		if(from != null && to != null && to < from){
-			throw new Error(`.render(..): context.from must be less than `
-				+`or equal to context.to. (got: from=${from} and to=${to})`) }
-
-		// XXX use this to check if an item is on the path to <from> and
-		// 		pass it to the skipped topology constructor...
-		var from_path = context.from_path =
-			context.from_path	
-				|| (from != null 
-					&& this.get(from, 
-						function(e, i, p){ return p }, 
-						get_options))
-		from_path = from_path instanceof Array
-			&& from_path
-
-		// root call -> build sections (calling .render(..) per section)...
-		if(context.root == null && section instanceof Array){
-			// NOTE: we are not passing context down to make each section
-			// 		independent of the others... (XXX ???)
-			var s = {}
-			section
-				.forEach(function(name){
-					s[name] = this.render(
-						Object.assign(
-							{},
-							options,
-							{
-								section: name,
-								nonFinalized: true,
-							}), 
-						renderer) }.bind(this))
-			// setup context for final render...
-			context.root = this
-			return (!options.nonFinalized && context.root === this) ?
-				renderer.renderFinalize(s.header, s.items, s.footer, context)
-				: s
-
-		// build specific sections...
-		} else {
-			var filter = options.filter
-			// do the walk...
-			var items = this.walk(
-				function(elem, i, path, nested){
-					return (
-						// special case: nested <from> elem -> render topology only...
-						(from_path 
-								&& i < from 
-								// only for nested...
-								&& elem && elem.children
-								// only sub-path...
-								&& path.cmp(from_path.slice(0, path.length))) ?
-							[ renderer.renderNestedBlank(nested(true), i, context) ]
-						// seen...
-						: seen instanceof Set 
-								&& (seen.has(elem) 
-									// add to seen and move to next test...
-									|| !seen.add(elem)) ?
-							[]
-						// filter -> skip unmatching...
-						: (filter && !filter.call(this, elem, i, path, section)) ?
-							[]
-						// out of range -> skip...
-						// XXX should we stop() here???
-						: ((from != null && i < from) 
-								|| (to != null && i >= to)) ?
-							[]
-						// inline (list)...
-						: elem instanceof Array ?
-							[ renderer.renderGroup(nested(true), context) ]
-						// inline (browser)...
-						: elem instanceof BaseBrowser ?
-							(nested(false), 
-								[ renderer.renderGroup(elem.render(options, renderer, context), context) ])
-						// nested...
-						: elem.children ?
-							[ renderer.renderNested(
-								renderer.renderNestedHeader(elem, i, context),
-								// NOTE: we handle .collapsed here as the nested
-								// 		browser is one level down and knows nothing 
-								// 		of it...
-								((options.iterateCollapsed || !elem.collapsed) 
-										&& elem.children instanceof BaseBrowser) ?
-									(nested(false),
-										elem.children.render(options, renderer, context))
-									: nested(true),
-								elem, 
-								context) ]
-						// normal elem...
-						: [ renderer.renderItem(elem, i, context) ] ) },
-				options) 
-
-			// finalize depending on render mode...
-			return (!options.nonFinalized && context.root === this) ?
-				// root context -> render list and return this...
-				renderer.renderFinalize(null, items, null, context)
-				// nested context -> return item list...
-				: items } },
-	//*/
-	
-	__renderer__: TextRenderer,
+	//
 	// XXX need:
 	// 		- from/to/around/count support -- still buggy...
 	// 		- ability to render separate items/sub-trees or lists of items...
 	// 			...pass the list to .walk(..), i.e. .walk(list/query, ...)
 	// 			- buggy -- dialog.render(dialog.get({children: true})) broken...
 	// 			- need query support...
+	// XXX do we need .render(filter(item), ...) support???
 	// XXX revise options handling... 
-	// XXX doc...
+	// XXX BUG: for some reason these shift more than one position...
+	// 		dialog.render({from: 17, count: 5}, browser.TextRenderer)
+	// 		dialog.render({from: 18, count: 5}, browser.TextRenderer)
 	render: function(options, renderer){
 		var that = this
-
-		// args parsing...
-		// XXX
 		var args = [...arguments]
 
 		// item list...
-		// XXX add support for item queries...
 		var list = (args[0] instanceof BaseItem || args[0] instanceof Array) ?
 			[args.shift()].flat()
 			: null
-		// item filter...
-		var filter
 
 		// NOTE: these only apply to the 'items' section...
 		var base_path = args[args.length-1] instanceof Array ?
@@ -3222,8 +3042,6 @@ var BaseBrowserPrototype = {
 			: 0
 
 		var [options, renderer] = args
-
-		// XXX revise...
 		options = Object.assign(
 			Object.create(this.options || {}),
 			{ 
@@ -3233,10 +3051,9 @@ var BaseBrowserPrototype = {
 			// NOTE: we need to get all the keys from options, including 
 			// 		inherited defaults...
 			Object.flatCopy(options || {}))
-
 		var render = renderer || this.__renderer__
 		render = render.root == null ?
-			render.start(this, options) 
+			new render(this, options) 
 			: render
 
 		var section = options.section || '*'
@@ -3247,10 +3064,7 @@ var BaseBrowserPrototype = {
 			section[0]
 			: section
 
-		// XXX from/to/around/count...
-		// XXX BUG: for some reason these shift more than one position...
-		// 		dialog.render({from: 17, count: 5}, browser.TextRenderer)
-		// 		dialog.render({from: 18, count: 5}, browser.TextRenderer)
+		// from/to/around/count...
 		var get_options = Object.assign(
 			Object.create(options),
 			{from: null, to: null, around: null,
@@ -3285,7 +3099,8 @@ var BaseBrowserPrototype = {
 		if(from != null && to != null && to < from){
 			throw new Error(`.render(..): options.from must be less than `
 				+`or equal to options.to. (got: from=${from} and to=${to})`) }
-		// XXX use this to check if an item is on the path to <from> and
+		// partial render start path...
+		// NOTE: used to check if an item is on the path to <from> and 
 		// 		pass it to the skipped topology constructor...
 		var from_path = options.from_path =
 			options.from_path	
@@ -3296,17 +3111,11 @@ var BaseBrowserPrototype = {
 		from_path = from_path instanceof Array
 			&& from_path
 
-
-		// XXX do we need filter on this level or is dialog.filter(..).render() enough?
-		// 		...the difference is filtering here will maintain topology...
-		
-
 		// used as a means to calculate lengths of nested blocks rendered 
 		// via .render(..)
 		var l
 		return ((list == null && render.root === this && section instanceof Array) ?
 				// render list of sections...
-				//
 				// NOTE: we will only render the section list on the top 
 				// 		level on all lower levels only the specific section
 				// 		is rendered for all nested browsers...
@@ -3378,15 +3187,12 @@ var BaseBrowserPrototype = {
 									&& e && e.children
 									// only sub-path...
 									&& p.cmp(from_path.slice(0, p.length))) ?
-								// XXX this is not totally correct for nested browsers....
+								// XXX BUG: this is not totally correct for nested browsers...
 								render.nest(null, getChildren(), i, p, options)
 							// skip: out of range items...
 							: ((from != null && i < from) 
 									|| (to != null && i >= to)) ?
 								[]
-
-							// XXX need to maintain topology -- headless nested...
-							
 							// inlined...
 							: (e instanceof BaseBrowser || e instanceof Array) ?
 								render.inline(e,
@@ -3395,7 +3201,6 @@ var BaseBrowserPrototype = {
 										getChildren()
 										: [], 
 									i, p, options)
-
 							// nested...
 							: 'children' in e ?
 								render.nest(e, 
@@ -3405,7 +3210,6 @@ var BaseBrowserPrototype = {
 										getChildren()
 										: [],
 									i, p, options)
-
 							// basic item...
 							: render.elem(e, i, p, options) )
 						}, options))
@@ -4209,8 +4013,9 @@ var updateElemClass = function(action, cls, handler){
 // 		- local re-rendering...
 // XXX HACK: see .nest(..)
 var HTMLRenderer =
-module.HTMLRenderer = {
-	__proto__: BaseRenderer,
+module.HTMLRenderer =
+object.Constructor('HTMLRenderer', {
+	__proto__: BaseRenderer.prototype,
 
 	// secondary renderers...
 	//
@@ -4294,7 +4099,6 @@ module.HTMLRenderer = {
 				this.classList.add('sub-list-header', 'traversable')
 				item.collapsed
 					&& this.classList.add('collapsed') }) },
-
 
 	// base renderers...
 	//
@@ -4714,7 +4518,6 @@ module.HTMLRenderer = {
 		return e
 	},
 
-
 	// life-cycle...
 	//
 	start: function(root, options){
@@ -4803,7 +4606,7 @@ module.HTMLRenderer = {
 
 		return dialog.dom
 	},
-}
+})
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
