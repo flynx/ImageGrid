@@ -2898,7 +2898,6 @@ var BaseBrowserPrototype = {
 		return path.length == 1 ?
 			this
 			: this.get(path.slice(0, -1), options) },
-	// XXX index seems to bw wrong... 
 	positionOf: function(item, options){
 		return this.search(
 			item == null ? 
@@ -2912,15 +2911,6 @@ var BaseBrowserPrototype = {
 					noQueryCheck: true,
 				},
 				options || {})).concat([[-1, undefined]]).shift() },
-	// XXX BUG: 
-	// 		dialog.get(dialog.indexOf(dialog.focused)) === dialog.focused 
-	// 			...should be true but is not!!!
-	// 			... .pathOf(..) is not affected by this bug...
-	// 		dialog.search(dialog.focused, (e, i, p) => i)
-	// 			this is wrong...
-	// 		dialog.walk((e, i, p, next, stop) => e === dialog.focused && stop(i))
-	// 			this gets the correct index...
-	// 		...seems the problem is in the .search(..) default options...
 	indexOf: function(item, options){
 		return this.positionOf(item, options)[0] },
 	pathOf: function(item, options){
