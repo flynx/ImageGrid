@@ -2679,7 +2679,7 @@ var BaseBrowserPrototype = {
 										throw Stop })
 								: pattern ]
 							// search...
-							: that.search2(pattern, ...args.slice(1)) })
+							: that.search(pattern, ...args.slice(1)) })
 					.flat()
 					.unique() 
 			} catch(e){
@@ -3034,8 +3034,27 @@ var BaseBrowserPrototype = {
 	//
 	// XXX revise options handling... 
 	// XXX BUG: for some reason these shift more than one position...
-	// 		dialog.render({from: 17, count: 5}, browser.TextRenderer)
-	// 		dialog.render({from: 18, count: 5}, browser.TextRenderer)
+	// 			dialog.render({from: 17, count: 5}, browser.TextRenderer)
+	// 			dialog.render({from: 18, count: 5}, browser.TextRenderer)
+	// 		...the indexing seems to get either messed up or not compensated 
+	// 		for...
+	// 		...count seems to have some odd effect:
+	// 			dialog
+	//				.focus('nested')
+	//				.render({around: 'focused', count: 7}, browser.TextRenderer)
+	//		and:
+	// 			dialog
+	//				.focus('nested')
+	//				.render({around: 'focused', count: 5}, browser.TextRenderer)
+	//		produce different results in terms of centering and alignment!!!
+	// XXX BUG: these falls int recursion... 
+	// 			dialog.render({around: 9, count: 5}, browser.TextRenderer)
+	// 			dialog.render({around: 8, count: 3}, browser.TextRenderer)
+	// 			...
+	// 			dialog.render({around: 7, count: 1}, browser.TextRenderer)
+	// 			dialog.render({from: 7}, browser.TextRenderer)
+	// XXX BUG: numbering is wrong when elements collapse...
+	// 		...to fix this use .update()
 	render: function(options, renderer){
 		var that = this
 		var args = [...arguments]
@@ -3077,55 +3096,53 @@ var BaseBrowserPrototype = {
 			: section
 
 		// from/to/around/count...
-		var get_options = Object.assign(
-			Object.create(options),
-			{from: null, to: null, around: null,
-				iterateNonIterable: options.iterateNonIterable})
-		var normalizeIndex = function(i){
-			return (i !== undefined && typeof(i) != typeof(123)) ?
-				this.get(i, 
-					function(_, i){ return i }, 
-					get_options)
-	   			: i }.bind(this)
-		var from = normalizeIndex(options.from)
-		var to = normalizeIndex(options.to)
-		var around = normalizeIndex(options.around)
+		var get = function(x){
+			return options[x] instanceof BaseItem ?
+				[undefined, undefined, options[x]]
+			: options[x] != null ?
+				that.get(options[x], function(e, i, p){ return [i, p, e] }, options) || []
+			: [undefined, undefined, undefined] }
+		var [f, from_path, from] = get('from')
+		var [t, _, to] = get('to')
+		var [a, _, around] = get('around')
 		var count = options.count || null
 		// complete to/from based on count and/or around...
-		// NOTE: we do not care about overflow here...
-		;(from == null && count != null) 
-			&& (from = options.from = 
-				to != null ? 
-					to - count
-				: around != null ?
-					around - Math.floor(count/2)
-				: from)
-		;(to == null && count != null)
-			&& (to = options.to = 
-				from != null ? 
-					from + count
-				: around != null ?
-					around + Math.ceil(count/2)
-				: to)
-		// sanity check...
-		if(from != null && to != null && to < from){
-			throw new Error(`.render(..): options.from must be less than `
-				+`or equal to options.to. (got: from=${from} and to=${to})`) }
+		if(count != null){
+			from = from 
+				|| this.get(
+					(f = Math.max(0, 
+						t != null ?
+							t - count
+						: a != null ?
+							a - Math.floor(count/2)
+						: 0)), 
+					options)
+			to = to 
+				|| this.get(
+					(t = f != null ?
+							f + count
+						: a != null ?
+							a + Math.ceil(count/2)
+						: -1), 
+					options) }
+		[options.from, options.to] = [from, to]
 		// partial render start path...
 		// NOTE: used to check if an item is on the path to <from> and 
 		// 		pass it to the skipped topology constructor...
-		var from_path = options.from_path =
-			options.from_path	
-				|| (from != null 
-					&& this.get(from, 
-						function(e, i, p){ return p }, 
-						get_options))
-		from_path = from_path instanceof Array
-			&& from_path
+		from_path = options.from_path = 
+			options.from_path
+				|| from && this.pathOf(from, options)
+		from_path = from_path instanceof Array && from_path
 
 		// used as a means to calculate lengths of nested blocks rendered 
 		// via .render(..)
 		var l
+		// rendering state for partial renders...
+		// NOTE: when this is null then rendering is done...
+		var rendering = render.rendering =
+			'rendering' in render ?
+				render.rendering
+				: !from
 		return ((list == null && render.root === this && section instanceof Array) ?
 				// render list of sections...
 				// NOTE: we will only render the section list on the top 
@@ -3190,20 +3207,30 @@ var BaseBrowserPrototype = {
 									.render(options, render, i+1, p))
 								: children(true) }
 
+						// maintain rendering state....
+						// NOTE: render ranges are supported only in 'items' section...
+						rendering = section != 'items' ?
+							true
+							: (render.rendering = 
+								!rendering && from === e ?
+									true
+								: rendering && to === e ?
+									// XXX should we stop() here???
+									null
+								: render.rendering)
+
 						// do the actual rendering...
 						return (
 							// special case: nested <from> elem -> render topology only...
 							(from_path 
-									&& i < from 
+									&& rendering === false
 									// only for nested...
-									&& e && e.children
+									&& e.children
 									// only sub-path...
 									&& p.cmp(from_path.slice(0, p.length))) ?
-								// XXX BUG: this is not totally correct for nested browsers...
 								render.nest(null, getChildren(), i, p, options)
 							// skip: out of range items...
-							: ((from != null && i < from) 
-									|| (to != null && i >= to)) ?
+							: !rendering ?
 								[]
 							// inlined...
 							: (e instanceof BaseBrowser || e instanceof Array) ?
