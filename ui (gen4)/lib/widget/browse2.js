@@ -3048,6 +3048,10 @@ var BaseBrowserPrototype = {
 	//		produce different results in terms of centering and alignment!!!
 	// XXX BUG: numbering is wrong when elements collapse...
 	// 		...to fix this use .update()
+	// XXX BUG: these render empty...
+	// 			dialog.render({around: 11, count: 5})
+	// 			...
+	//			dialog.render({around: 14, count: 5})
 	render: function(options, renderer){
 		var that = this
 		var args = [...arguments]
