@@ -2649,8 +2649,7 @@ var BaseBrowserPrototype = {
 		// 		an object...
 		// NOTE: this might get expensive as we call .search(..) per item...
 		// XXX needs refactoring -- feels overcomplicated...
-		var index = new Set(Object.values(this.index))
-		if(index.has(pattern) 
+		if(pattern instanceof BaseItem 
 				|| (pattern instanceof Array
 					&& !pattern
 						.reduce(function(r, e){ 
@@ -2660,7 +2659,7 @@ var BaseBrowserPrototype = {
 				.reduce(function(res, e, i, p){
 					res.set(e, [i, p])
 					return res
-				}, new Map(), {iterateCollapsed: true})
+				}, new Map(), {iterateAll: true})
 			var res
 			var Stop = new Error('Stop iteration')
 			try {
@@ -3047,12 +3046,6 @@ var BaseBrowserPrototype = {
 	//				.focus('nested')
 	//				.render({around: 'focused', count: 5}, browser.TextRenderer)
 	//		produce different results in terms of centering and alignment!!!
-	// XXX BUG: these falls int recursion... 
-	// 			dialog.render({around: 9, count: 5}, browser.TextRenderer)
-	// 			dialog.render({around: 8, count: 3}, browser.TextRenderer)
-	// 			...
-	// 			dialog.render({around: 7, count: 1}, browser.TextRenderer)
-	// 			dialog.render({from: 7}, browser.TextRenderer)
 	// XXX BUG: numbering is wrong when elements collapse...
 	// 		...to fix this use .update()
 	render: function(options, renderer){
@@ -3095,12 +3088,17 @@ var BaseBrowserPrototype = {
 			section[0]
 			: section
 
+
 		// from/to/around/count...
+		var get_opts = Object.assign(
+			Object.create(options),
+			// prevent us from hitting inlined blocks as render start/end points...
+			{includeInlinedBlocks: false})
 		var get = function(x){
 			return options[x] instanceof BaseItem ?
 				[undefined, undefined, options[x]]
 			: options[x] != null ?
-				that.get(options[x], function(e, i, p){ return [i, p, e] }, options) || []
+				that.get(options[x], function(e, i, p){ return [i, p, e] }, get_opts) || []
 			: [undefined, undefined, undefined] }
 		var [f, from_path, from] = get('from')
 		var [t, _, to] = get('to')
@@ -3116,7 +3114,7 @@ var BaseBrowserPrototype = {
 						: a != null ?
 							a - Math.floor(count/2)
 						: 0)), 
-					options)
+					get_opts)
 			to = to 
 				|| this.get(
 					(t = f != null ?
@@ -3124,15 +3122,16 @@ var BaseBrowserPrototype = {
 						: a != null ?
 							a + Math.ceil(count/2)
 						: -1), 
-					options) }
-		[options.from, options.to] = [from, to]
+					get_opts) }
+		;[options.from, options.to] = [from, to]
 		// partial render start path...
 		// NOTE: used to check if an item is on the path to <from> and 
 		// 		pass it to the skipped topology constructor...
 		from_path = options.from_path = 
 			options.from_path
-				|| from && this.pathOf(from, options)
+				|| from && this.pathOf(from, get_opts)
 		from_path = from_path instanceof Array && from_path
+
 
 		// used as a means to calculate lengths of nested blocks rendered 
 		// via .render(..)
