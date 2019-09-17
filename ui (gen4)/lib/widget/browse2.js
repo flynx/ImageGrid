@@ -2526,6 +2526,7 @@ var BaseBrowserPrototype = {
 	// 		given options in this case will be applied only to list items
 	// 		that are searched i.e. the non-items in the input list...
 	//
+	// XXX REVISE...
 	// XXX can .search(..) of a non-path array as a pattern be done in 
 	// 		a single pass???
 	// XXX add support for fuzzy match search -- match substring by default 
@@ -3052,6 +3053,9 @@ var BaseBrowserPrototype = {
 	// 			dialog.render({around: 11, count: 5})
 	// 			...
 	//			dialog.render({around: 14, count: 5})
+	//		to test faster use:
+	//			dialog.focus(() => 
+	//				dialog.render({around: 'focused', count: 5}))
 	render: function(options, renderer){
 		var that = this
 		var args = [...arguments]
