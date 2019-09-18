@@ -2422,7 +2422,7 @@ var BaseBrowserPrototype = {
 			options) 
 		return start },
 	forEach: function(func, options){ 
-		this.map2(...arguments)
+		this.map(...arguments)
 		return this },
 
 	toArray: function(options){
@@ -3031,8 +3031,6 @@ var BaseBrowserPrototype = {
 	// 		topology but will break control and other data-driven stuff...
 	//
 	// XXX revise... 
-	// XXX BUG: numbering is wrong when elements collapse...
-	// 		...to fix this use .update()
 	render: function(options, renderer){
 		var that = this
 		var args = [...arguments]
@@ -4208,8 +4206,7 @@ object.Constructor('HTMLRenderer', {
 				...(item['class'] instanceof Array ?
 					item['class']
 					: item['class'].split(/\s+/g)))
-			return elem 
-		}
+			return elem }
 
 		// Base DOM...
 		var elem = document.createElement('div')
@@ -4554,32 +4551,6 @@ object.Constructor('HTMLRenderer', {
 
 	// life-cycle...
 	//
-	start: function(root, options){
-		var render = object.parent(HTMLRenderer.start, this).call(this, root, options)
-
-		var browser = render.root
-
-		// prepare for maintaining the scroll position...
-		// XXX need to do this pre any .render*(..) call...
-		// 		...something like:
-		// 			this.getRenderContext(render)
-		// 		should do the trick...
-		// 		another way to go might be a render object, but that seems to be 
-		// 		complicating things...
-		var ref = render.scroll_reference = 
-			render.scroll_reference 
-				|| browser.focused 
-				|| browser.pagetop
-		render.scroll_offset = 
-			render.scroll_offset
-			|| ((ref && ref.dom && ref.dom.offsetTop) ?
-				ref.dom.offsetTop - ref.dom.offsetParent.scrollTop
-				: null)
-
-		//render.scroll_offset && console.log('renderContext:', render.scroll_offset)
-
-		return render 
-	},
 	finalize: function(sections, options){
 		var dialog = this.root
 
@@ -4639,6 +4610,33 @@ object.Constructor('HTMLRenderer', {
 				.focus()
 
 		return dialog.dom
+	},
+	// XXX is this needed with partial render???
+	__init__: function(root, options){
+		var render = object.parent(HTMLRenderer.prototype.__init__, this).call(this, root, options)
+
+		var browser = this.root
+
+		// prepare for maintaining the scroll position...
+		// XXX need to do this pre any .render*(..) call...
+		// 		...something like:
+		// 			this.getRenderContext(render)
+		// 		should do the trick...
+		// 		another way to go might be a render object, but that seems to be 
+		// 		complicating things...
+		var ref = this.scroll_reference = 
+			this.scroll_reference 
+				|| browser.focused 
+				|| browser.pagetop
+		this.scroll_offset = 
+			this.scroll_offset
+			|| ((ref && ref.dom && ref.dom.offsetTop) ?
+				ref.dom.offsetTop - ref.dom.offsetParent.scrollTop
+				: null)
+
+		//this.scroll_offset && console.log('renderContext:', this.scroll_offset)
+
+		return render 
 	},
 })
 
@@ -5049,6 +5047,24 @@ var HTMLBrowserPrototype = {
 	__copy: function(text){
 		navigator.clipboard.writeText(text || this.path) },
 
+	// XXX need a better name...
+	_updateDOMItems: function(){
+		var c = 0
+		this.forEach(function(e){
+			// shortcut number hint...
+			if(c < 10 && !e.disabled && !e.hidden){
+				var a = e.attrs = e.attrs || {}
+				c = a['shortcut-number'] = (++c) % 10
+				e.elem 
+					&& e.elem.setAttribute('shortcut-number', c)
+
+			// cleanup...
+			} else {
+				delete (e.attrs || {})['shortcut-number']
+				e.elem 
+					&& e.elem.removeAttribute('shortcut-number')
+			}
+		}) },
 
 	// Events extensions...
 	//
@@ -5068,6 +5084,7 @@ var HTMLBrowserPrototype = {
 			// shortcut number hint...
 			// NOTE: these are just hints, the actual keys are handled 
 			// 		in .keybindings...
+			// XXX move this to the renderer...
 			if(i < 10 && !e.disabled && !e.hidden){
 				var attrs = e.attrs = e.attrs || {}
 				attrs['shortcut-number'] = (++i) % 10
