@@ -107,7 +107,7 @@ function createWindow(){
 	// disable default menu...
 	win.setMenu(null)
 
-	win.openDevTools()
+	//win.openDevTools()
 
 
 	// and load the index.html of the app.
