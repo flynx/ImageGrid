@@ -34,6 +34,18 @@
 
 <script>
 if(window.require){
+	Object.defineProperty(window, 'STARTUP_DEVTOOLS_TIMEOUT', {
+		get: function(){
+			return parseInt(localStorage.STARTUP_DEVTOOLS_TIMEOUT || 5000) },
+		set: function(value){
+			if(value == null){
+				delete localStorage.STARTUP_DEVTOOLS_TIMEOUT
+				return
+			}
+			value = parseInt(value)
+			;(value || value == 0)
+				&& (localStorage.STARTUP_DEVTOOLS_TIMEOUT = value) }, })
+
 	window.__devtools_failsafe = setTimeout(function(){
 		// nw...
 		if(window.nw){
@@ -45,7 +57,7 @@ if(window.require){
 				require('electron').remote.getCurrentWindow().openDevTools()
 			} catch(err){ }
 		}
-	}, 5000)
+	}, STARTUP_DEVTOOLS_TIMEOUT)
 }
 </script>
 
