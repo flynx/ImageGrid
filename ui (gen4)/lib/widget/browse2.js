@@ -790,6 +790,7 @@ object.Constructor('BaseRenderer', {
 	// component renderers...
 	elem: function(item, index, path, options){
 		throw new Error('.elem(..): Not implemented.') },
+	// NOTE: if this gets an empty list this should return an empty list...
 	inline: function(item, lst, index, path, options){
 		throw new Error('.inline(..): Not implemented.') },
 	nest: function(header, lst, index, path, options){
@@ -2488,8 +2489,6 @@ var BaseBrowserPrototype = {
 	//
 	// options format:
 	// 	{
-	// 		noIdentityCheck: <bool>,
-	//
 	// 		noQueryCheck: <bool>,
 	//
 	// 		...
@@ -2733,7 +2732,7 @@ var BaseBrowserPrototype = {
 				var res = (elem
 						&& (test === true 
 							// identity check...
-							|| (!options.noIdentityCheck 
+							|| (pattern instanceof BaseItem
 								&& pattern === elem)
 							// test...
 							|| (test 
@@ -3033,29 +3032,8 @@ var BaseBrowserPrototype = {
 	//
 	//
 	// XXX revise options handling... 
-	// XXX BUG: for some reason these shift more than one position...
-	// 			dialog.render({from: 17, count: 5}, browser.TextRenderer)
-	// 			dialog.render({from: 18, count: 5}, browser.TextRenderer)
-	// 		...the indexing seems to get either messed up or not compensated 
-	// 		for...
-	// 		...count seems to have some odd effect:
-	// 			dialog
-	//				.focus('nested')
-	//				.render({around: 'focused', count: 7}, browser.TextRenderer)
-	//		and:
-	// 			dialog
-	//				.focus('nested')
-	//				.render({around: 'focused', count: 5}, browser.TextRenderer)
-	//		produce different results in terms of centering and alignment!!!
 	// XXX BUG: numbering is wrong when elements collapse...
 	// 		...to fix this use .update()
-	// XXX BUG: these render empty...
-	// 			dialog.render({around: 11, count: 5})
-	// 			...
-	//			dialog.render({around: 14, count: 5})
-	//		to test faster use:
-	//			dialog.focus(() => 
-	//				dialog.render({around: 'focused', count: 5}))
 	render: function(options, renderer){
 		var that = this
 		var args = [...arguments]
@@ -3096,11 +3074,10 @@ var BaseBrowserPrototype = {
 			section[0]
 			: section
 
-
 		// from/to/around/count...
 		var get_opts = Object.assign(
 			Object.create(options),
-			// prevent us from hitting inlined blocks as render start/end points...
+			// prevent hitting inlined block containers as render start/end points...
 			{includeInlinedBlocks: false})
 		var get = function(x){
 			return options[x] instanceof BaseItem ?
@@ -3110,7 +3087,7 @@ var BaseBrowserPrototype = {
 			: [undefined, undefined, undefined] }
 		var [f, from_path, from] = get('from')
 		var [t, _, to] = get('to')
-		var [a, _, around] = get('around')
+		var a = get('around')[0]
 		var count = options.count || null
 		// complete to/from based on count and/or around...
 		if(count != null){
@@ -3216,15 +3193,17 @@ var BaseBrowserPrototype = {
 
 						// maintain rendering state....
 						// NOTE: render ranges are supported only in 'items' section...
-						rendering = section != 'items' ?
-							true
-							: (render.rendering = 
+						rendering = section != 'items'
+							|| (render.rendering = 
 								!rendering && from === e ?
 									true
 								: rendering && to === e ?
-									// XXX should we stop() here???
 									null
 								: render.rendering)
+						// XXX should we stop here?
+						// 		...we'll need stop() to return the incomplete list...
+						//rendering === null 
+						//	&& stop()
 
 						// do the actual rendering...
 						return (
@@ -3236,8 +3215,13 @@ var BaseBrowserPrototype = {
 									// only sub-path...
 									&& p.cmp(from_path.slice(0, p.length))) ?
 								render.nest(null, getChildren(), i, p, options)
-							// skip: out of range items...
-							: !rendering ?
+							// skip out of range items...
+							: (rendering == null
+									// but keep inlined blocks before the rendering starts...
+									// NOTE: they will not render anything if no 
+									// 		items are provided...
+									|| (!rendering
+										&& !(e instanceof BaseBrowser || e instanceof Array))) ?
 								[]
 							// inlined...
 							: (e instanceof BaseBrowser || e instanceof Array) ?
@@ -4487,6 +4471,8 @@ object.Constructor('HTMLRenderer', {
 	// 	</div>
 	//
 	inline: function(item, lst, index, path, options){
+		if(lst.length == 0){
+			return lst }
 		var e = document.createElement('div')
 		e.classList.add('group')
 		lst
