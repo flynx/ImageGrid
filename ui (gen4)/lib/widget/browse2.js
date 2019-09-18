@@ -3030,19 +3030,21 @@ var BaseBrowserPrototype = {
 	// 		topology, doing this via .render(..) directly will maintain 
 	// 		topology but will break control and other data-driven stuff...
 	//
-	//
-	// XXX revise options handling... 
+	// XXX revise... 
 	// XXX BUG: numbering is wrong when elements collapse...
 	// 		...to fix this use .update()
 	render: function(options, renderer){
 		var that = this
 		var args = [...arguments]
 
-		// item list...
+		// parse args...
 		var list = (args[0] instanceof BaseItem || args[0] instanceof Array) ?
 			[args.shift()].flat()
 			: null
-
+		var [options, renderer] = 
+			(args[0] instanceof BaseRenderer || args[0] instanceof Function) ?
+				[null, args.shift()]
+				: args
 		// NOTE: these only apply to the 'items' section...
 		var base_path = args[args.length-1] instanceof Array ?
 		   	args.pop() 
@@ -3051,7 +3053,6 @@ var BaseBrowserPrototype = {
 		   	args.pop() 
 			: 0
 
-		var [options, renderer] = args
 		options = Object.assign(
 			Object.create(this.options || {}),
 			{ 
@@ -3158,6 +3159,20 @@ var BaseBrowserPrototype = {
 				: this.walk(
 					...(list || []),
 					function(e, i, p, children){
+						// maintain rendering state....
+						// NOTE: render ranges are supported only in 'items' section...
+						rendering = section != 'items'
+							|| (render.rendering = 
+								!rendering && from === e ?
+									true
+								: rendering && to === e ?
+									null
+								: render.rendering)
+						// XXX should we stop here?
+						// 		...we'll need stop() to return the incomplete list...
+						//rendering === null 
+						//	&& stop()
+
 						// index...
 						// NOTE: since we let the nested browsers render sections
 						// 		of the list, we also need to compensate for the 
@@ -3168,7 +3183,6 @@ var BaseBrowserPrototype = {
 
 						// path...
 						// remove inlined item id from path...
-						// NOTE: render.inline(..) can add this back if needed...
 						;(e instanceof BaseBrowser || e instanceof Array)
 							&& p.pop()
 						p = base_path.concat(p)
@@ -3191,23 +3205,9 @@ var BaseBrowserPrototype = {
 									.render(options, render, i+1, p))
 								: children(true) }
 
-						// maintain rendering state....
-						// NOTE: render ranges are supported only in 'items' section...
-						rendering = section != 'items'
-							|| (render.rendering = 
-								!rendering && from === e ?
-									true
-								: rendering && to === e ?
-									null
-								: render.rendering)
-						// XXX should we stop here?
-						// 		...we'll need stop() to return the incomplete list...
-						//rendering === null 
-						//	&& stop()
-
 						// do the actual rendering...
 						return (
-							// special case: nested <from> elem -> render topology only...
+							// special case: nested from -> render topology...
 							(from_path 
 									&& rendering === false
 									// only for nested...
