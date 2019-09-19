@@ -2665,10 +2665,14 @@ var BaseBrowserPrototype = {
 							return r && typeof(e) != typeof({}) }, true))){
 			// reverse index...
 			index = this
-				.reduce(function(res, e, i, p){
-					res.set(e, [i, p])
-					return res
-				}, new Map(), {iterateAll: true})
+				.reduce(
+					function(res, e, i, p){
+						res.set(e, [i, p])
+						return res }, 
+					new Map(), 
+					Object.assign(
+						Object.flatCopy(options || {}),
+						{iterateAll: true}))
 			var res
 			var Stop = new Error('Stop iteration')
 			try {
@@ -2687,7 +2691,10 @@ var BaseBrowserPrototype = {
 										throw Stop })
 								: pattern ]
 							// search...
-							: that.search(pattern, ...args.slice(1)) })
+							: !(pattern instanceof BaseItem) ?
+								that.search(pattern, ...args.slice(1)) 
+							// not found...
+							: [] })
 					.flat()
 					.unique() 
 			} catch(e){
@@ -4074,7 +4081,7 @@ var updateElemClass = function(action, cls, handler){
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-// Renderer...
+// HTML Renderer...
 
 // XXX HACK: see .nest(..)
 var HTMLRenderer =
@@ -4694,7 +4701,6 @@ var HTMLBrowserPrototype = {
 	__item__: HTMLItem,
 	__renderer__: HTMLRenderer,
 
-
 	options: {
 		__proto__: BaseBrowser.prototype.options,
 
@@ -5167,7 +5173,7 @@ var HTMLBrowserPrototype = {
 						block: 'nearest',
 					})
 				})
-				// set focus...
+				// XXX do we need this???
 				.focus() },
 	__blur__: function(evt, elem){
 		var that = this
