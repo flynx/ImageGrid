@@ -526,17 +526,25 @@ var BaseItemPrototype = {
 			: undefined },
 
 
-	// XXX BUG: this does not work for nested header elements...
-	// 		to reproduce:
-	// 			dialog
-	// 				.get({children: true})
-	// 				.update()
-	// 		...for some reason the affected element is removed from dom...
+	// NOTE: these should not clash with user-supplied handlers ('update' does not)...
 	update: function(options){
 		this.parent
 			&& this.parent.render(this, options)
-		return this
-	},
+		return this },
+	/* XXX this is disabled to avoid user confusion when a user item 
+	// 		event handler would not call/replicate the top-level (this)
+	// 		functionality and this break code relying on it...
+	// 		...for this to work well need to either:
+	// 			- separate item options form the item object,
+	// 			- force the user to follow strict protocols,
+	// 			- use a proxy when accessing items (reverse of #1) 
+	// 		XXX this also applies to .update(..) above...
+	focus: function(){ 
+		arguments.length == 0 
+			&& this.parent
+			&& this.parent.focus(this)
+		return this },
+	//*/
 
 
 	__init__(...state){
@@ -3818,6 +3826,7 @@ object.Constructor('BaseBrowser',
 
 
 //---------------------------------------------------------------------
+// HTML-specific UI...
 
 var KEYBOARD_CONFIG =
 module.KEYBOARD_CONFIG = {
