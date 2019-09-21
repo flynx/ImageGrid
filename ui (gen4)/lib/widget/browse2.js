@@ -527,6 +527,10 @@ var BaseItemPrototype = {
 
 
 	// NOTE: these should not clash with user-supplied handlers ('update' does not)...
+	//
+	// XXX BUG: calling this on a nested/inlined browser will mess things up...
+	// 		...the issue seems to be with root options not being available
+	// 		for partial render in a nested context...
 	update: function(options){
 		this.parent
 			&& this.parent.render(this, options)
