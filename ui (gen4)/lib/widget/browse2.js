@@ -533,7 +533,7 @@ var BaseItemPrototype = {
 	// 		for partial render in a nested context...
 	// 		...one way to fix this would be to make the options inheritance
 	// 		protocol more strict:
-	// 			- if no options given use defaults
+	// 			- if no options given use defaults (i.e. this.options)
 	// 			- if options given use as-is
 	// 			- defaults are taken from this.options if not present 
 	update: function(options){
