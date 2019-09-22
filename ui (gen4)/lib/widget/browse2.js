@@ -531,6 +531,11 @@ var BaseItemPrototype = {
 	// XXX BUG: calling this on a nested/inlined browser will mess things up...
 	// 		...the issue seems to be with root options not being available
 	// 		for partial render in a nested context...
+	// 		...one way to fix this would be to make the options inheritance
+	// 		protocol more strict:
+	// 			- if no options given use defaults
+	// 			- if options given use as-is
+	// 			- defaults are taken from this.options if not present 
 	update: function(options){
 		this.parent
 			&& this.parent.render(this, options)
