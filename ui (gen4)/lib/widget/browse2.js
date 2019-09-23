@@ -536,6 +536,14 @@ var BaseItemPrototype = {
 	// 			- if no options given use defaults (i.e. this.options)
 	// 			- if options given use as-is
 	// 			- defaults are taken from this.options if not present 
+	//
+	// 		to reproduce:
+	//			dialog.disable('2')	
+	//		or:
+	//			dialog.disable('B/C/D/a')	
+	//
+	//		but this works OK:
+	//			dialog.disable('nested/2')
 	update: function(options){
 		this.parent
 			&& this.parent.render(this, options)
