@@ -542,6 +542,8 @@ var BaseItemPrototype = {
 	//		or:
 	//			dialog.disable('B/C/D/a')	
 	//
+	//		...in both cases the whole nested browser disappears...
+	//
 	//		but this works OK:
 	//			dialog.disable('nested/2')
 	update: function(options){
