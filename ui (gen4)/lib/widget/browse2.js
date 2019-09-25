@@ -546,6 +546,9 @@ var BaseItemPrototype = {
 	//
 	//		but this works OK:
 	//			dialog.disable('nested/2')
+	//
+	//		This might also be a side effect of the .dom / .elem set of 
+	//		issues...
 	update: function(options){
 		this.parent
 			&& this.parent.render(this, options)
