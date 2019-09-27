@@ -44,6 +44,7 @@ while true ; do
 			echo "			default: $BASE"
 			echo "	--rsync		use rsync (default)"
 			echo "	--cp		use cp"
+			# XXX add post-compression options...
 			echo
 			exit
 			;;
@@ -99,6 +100,9 @@ while true ; do
 			echo "Enter) copy drive ${DRIVE}"
 		fi
 		echo "2) build."
+		# XXX compression...
+		#echo "3) compresion is `[[ $COMPRESS ]] && echo "on" || echo "off" `"
+		#echo "4) quit."
 		echo "3) quit."
 		read -p ": " RES
 	
@@ -126,7 +130,12 @@ while true ; do
 				LAST=1
 				break
 				;;
+#			3)
+#				COMPRESS=`[[ ! $COMPRESS ]] && echo 1 || echo ""`
+#				continue
+#				;;
 
+#			4)
 			3)
 				exit
 				;;
@@ -166,7 +175,7 @@ while true ; do
 
 	mkdir -vp "$DIR"
 
-	echo "Copying files from ${BASE}/${DRIVE}..."
+	echo "Copying files from ${BASE}/${DRIVE} (`du -hs "${BASE}/${DRIVE}" | cut -f 1`)..."
 	$COPY $COPYFLAGS ${BASE}/${DRIVE}/* "$DIR"
 	echo "Copying files: done."
 
@@ -186,5 +195,13 @@ if [[ ! $MULTI || $LAST ]] ; then
 	./process-archive.sh $COMMON_FLAG "$BASE_DIR"
 	echo "Building archive: done."
 fi
+
+
+# XXX post processing -- compress archive...
+#if [[ $COMPRESS ]] ; then
+#	echo "Compressing archive..."
+#	./compress-archive.sh "$BASE_DIR"
+#	echo "Compressing archive: done."
+#fi
 
 
