@@ -1,6 +1,31 @@
 #!/bin/bash
 
+
+
+
+
 DIR=`pwd`
+
+printhelp(){
+	echo "Usage: `basename $0` [ARGUMENTS] [PATH]"
+	echo
+	echo "Arguments:"
+	echo "	-h --help	- print this help and exit."
+	echo
+}
+
+while true ; do
+	case $1 in
+		-h|--help)
+			printhelp
+			exit
+			;;
+		*)
+			break
+			;;
+	esac
+done
+
 
 
 exifup(){

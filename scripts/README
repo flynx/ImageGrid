@@ -1,5 +1,18 @@
+sync-flash.sh
+	Syncs a camera flash card to an archive folder.
+
+	Dependencies:
+		- process-archive.sh
+		- compress-archive.sh (optional)
+		- bash
+
+	For more info see:
+		sync-flash.sh --help
+	
+
 process-archive.sh
-	Processes and prepares the archive folder for viewing.
+	Processes and prepares the archive folder for viewing via
+	ImageGrid.Viewer.
 
 	Dependencies:
 		- exiftool
@@ -9,17 +22,19 @@ process-archive.sh
 
 	XXX add self dependency check...
 
+	For more info see:
+		process-archive.sh --help
 
-process-archive.bat -- windows version of process-archive.sh (partial)
 
+compress-archive.sh
+	compresses raw files.
 
-sync-flash.sh
-	Syncs a camera flash card to an archive folder.
+	By default this will NTFS compress sony ARW files, but other
+	compression methods and raw formats are supported...
 
-	Dependencies:
-		- process-archive.sh
-		- bash
-	
+	For more info see:
+		compress-archive.sh --help
+
 
 update-exif.sh
 	Updates processed preview metadata from appropriate .PSD files.
@@ -27,11 +42,19 @@ update-exif.sh
 	Dependencies:
 		- exiv2 (to be deprecated)
 
+	For more info see:
+		update-exif.sh --help
+
+
+
+---
 
 flatten.sh
 	Flatten flickr/instagram favorite folder structure created by 
 	ifttt appropriately renaming files.
 		./<author>/<filename> -> ./ALL/<author> - <filename>
+
+
 
 
 vips-tn.sh
@@ -40,5 +63,5 @@ cleannwcache.bat
 
 extract-metadata.sh
 
-
+process-archive.bat -- windows version of process-archive.sh (partial)
 

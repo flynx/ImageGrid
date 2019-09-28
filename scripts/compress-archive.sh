@@ -29,11 +29,11 @@ printhelp(){
 	echo "Arguments:"
 	echo "	-h --help	- print this help and exit."
 	echo
-	echo "	-bz -bzip2	- use bzip2 to compress (default)."
-	echo "	-gz -gzip	- use gzip to compress."
-	echo "	-c -compact	- use ntfs compression."
+	echo "	-bz -bzip2	- use bzip2 to compress`[[ $ARCH == $ARCH_BZIP2 ]] && echo " (default)" || echo ""`."
+	echo "	-gz -gzip	- use gzip to compress`[[ $ARCH == $ARCH_GZIP ]] && echo " (default)" || echo ""`."
+	echo "	-c -compact	- use ntfs compression`[[ $ARCH == $ARCH_NTFS ]] && echo " (default)" || echo ""`."
 	echo
-	echo "	-ext EXT	- set file extension to compress (default: ARW)"
+	echo "	-ext EXT	- set file extension to compress (default: ${EXT})"
 	echo "			  NOTE: only one -ext is supported now".
 	echo
 }
