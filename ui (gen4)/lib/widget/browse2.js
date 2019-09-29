@@ -549,6 +549,11 @@ var BaseItemPrototype = {
 	//
 	//		This might also be a side effect of the .dom / .elem set of 
 	//		issues...
+	//
+	//		This issue seems to go away after expanding/collapsing the
+	//		nested item several times, the buttons are gone but the 
+	//		subtrees stop vanishing on update -- could this be related 
+	//		to .dom/.elem again???
 	update: function(options){
 		this.parent
 			&& this.parent.render(this, options)
