@@ -5,7 +5,8 @@ COUNT=1
 TITLE=""
 
 RSYNC=rsync
-RSYNCFLAGS="-arptgoA --info=progress2,flist --human-readable"
+#RSYNCFLAGS="-arptgoA --info=progress2,flist --human-readable"
+RSYNCFLAGS="-arpt --info=progress2,flist --human-readable"
 
 CP=cp
 CPFLAGS=-Rpfv
@@ -13,6 +14,10 @@ CPFLAGS=-Rpfv
 # override default...
 COPY=$RSYNC
 COPYFLAGS=$RSYNCFLAGS
+
+COMPRESSOR=./compress-archive.sh
+COMPRESS=1
+
 
 # base mount dir...
 # systems with /mnt
@@ -40,10 +45,20 @@ while true ; do
 			echo "			single shoot."
 			echo "	-l|-last	last flash card in set, run"
 			echo "			process-archive.sh after copying."
-			echo "	-b|-base	the base dir to look for drives in"
+			echo "	-b|-base BASE	the base dir to look for drives in"
 			echo "			default: $BASE"
 			echo "	--rsync		use rsync (default)"
 			echo "	--cp		use cp"
+			if ! [ -z $COMPRESSOR ] ; then
+				echo "	--compress	toggle archive compression"
+				echo "			default: `[[ $COMPRESS ]] && echo "on" || echo "off"`"
+			fi
+			# notes...
+			echo
+			if ! [ -z $COMPRESSOR ] ; then
+				echo "NOTE: the index is fully usable during the compression stage"
+			fi
+			echo "NOTE: cp under Cygwin may messup permissions, use rsync."
 			echo
 			exit
 			;;
@@ -61,17 +76,24 @@ while true ; do
 			shift
 			;;
 		-b|-base|--base)
-			BASE=1
-			shift
+			BASE=$2
+			shift 2
 			;;
 		-cp|--cp)
 			COPY=cp
 			COPYFLAGS=-Rpfv
+			shift
 			break
 			;;
 		-rsync|--rsync)
 			COPY=$RSYNC
 			COPYFLAGS=$RSYNCFLAGS
+			shift
+			break
+			;;
+		-compress|--compress)
+			COMPRESS=`[[ $COMPRESS ]] && echo "" || echo 1`
+			shift
 			break
 			;;
 		*)
@@ -99,7 +121,12 @@ while true ; do
 			echo "Enter) copy drive ${DRIVE}"
 		fi
 		echo "2) build."
-		echo "3) quit."
+		if ! [ -z $COMPRESSOR ] ; then
+			echo "3) compresion is `[[ $COMPRESS ]] && echo "on" || echo "off"`"
+			echo "4) quit."
+		else
+			echo "3) quit."
+		fi
 		read -p ": " RES
 	
 		case $RES in
@@ -126,8 +153,15 @@ while true ; do
 				LAST=1
 				break
 				;;
-
 			3)
+				if ! [ -z $COMPRESSOR ] ; then
+					COMPRESS=`[[ ! $COMPRESS ]] && echo 1 || echo ""`
+				else
+					exit
+				fi
+				continue
+				;;
+			4)
 				exit
 				;;
 
@@ -136,6 +170,17 @@ while true ; do
 				DRIVE=$RES
 				;;
 		esac
+	fi
+
+	# sanity check...
+	if ! [ -e "${BASE}/${DRIVE}" ] ; then
+		echo
+		echo "ERR: ${BASE}/${DRIVE}: does not exist, nothing to copy."
+		echo
+		if [[ $INTERACTIVE || ! $DRIVE ]] ; then
+			continue
+		fi
+		exit
 	fi
 
 	# XXX do a real three digit count...
@@ -166,7 +211,7 @@ while true ; do
 
 	mkdir -vp "$DIR"
 
-	echo "Copying files from ${BASE}/${DRIVE}..."
+	echo "Copying files from ${BASE}/${DRIVE} (`du -hs "${BASE}/${DRIVE}" | cut -f 1`)..."
 	$COPY $COPYFLAGS ${BASE}/${DRIVE}/* "$DIR"
 	echo "Copying files: done."
 
@@ -187,4 +232,13 @@ if [[ ! $MULTI || $LAST ]] ; then
 	echo "Building archive: done."
 fi
 
+if [[ $COMPRESS ]] ; then
+	echo "Compressing archive..."
+	${COMPRESSOR} "$BASE_DIR"
+	echo "Compressing archive: done."
+fi
 
+
+echo "`basename "$0"`: done."
+
+# vim:set nowrap :

@@ -524,17 +524,52 @@ var BaseItemPrototype = {
 			: undefined },
 
 
-	// XXX BUG: this does not work for nested header elements...
+	// NOTE: these should not clash with user-supplied handlers ('update' does not)...
+	//
+	// XXX BUG: calling this on a nested/inlined browser will mess things up...
+	// 		...the issue seems to be with root options not being available
+	// 		for partial render in a nested context...
+	// 		...one way to fix this would be to make the options inheritance
+	// 		protocol more strict:
+	// 			- if no options given use defaults (i.e. this.options)
+	// 			- if options given use as-is
+	// 			- defaults are taken from this.options if not present 
+	//
 	// 		to reproduce:
-	// 			dialog
-	// 				.get({children: true})
-	// 				.update()
-	// 		...for some reason the affected element is removed from dom...
+	//			dialog.disable('2')	
+	//		or:
+	//			dialog.disable('B/C/D/a')	
+	//
+	//		...in both cases the whole nested browser disappears...
+	//
+	//		but this works OK:
+	//			dialog.disable('nested/2')
+	//
+	//		This might also be a side effect of the .dom / .elem set of 
+	//		issues...
+	//
+	//		This issue seems to go away after expanding/collapsing the
+	//		nested item several times, the buttons are gone but the 
+	//		subtrees stop vanishing on update -- could this be related 
+	//		to .dom/.elem again???
 	update: function(options){
 		this.parent
 			&& this.parent.render(this, options)
-		return this
-	},
+		return this },
+	/* XXX this is disabled to avoid user confusion when a user item 
+	// 		event handler would not call/replicate the top-level (this)
+	// 		functionality and this break code relying on it...
+	// 		...for this to work well need to either:
+	// 			- separate item options form the item object,
+	// 			- force the user to follow strict protocols,
+	// 			- use a proxy when accessing items (reverse of #1) 
+	// 		XXX this also applies to .update(..) above...
+	focus: function(){ 
+		arguments.length == 0 
+			&& this.parent
+			&& this.parent.focus(this)
+		return this },
+	//*/
 
 
 	__init__(...state){
@@ -785,6 +820,9 @@ object.Constructor('BaseRenderer', {
 	// placeholders...
 	root: null,
 
+	isRendered: function(){
+		throw new Error('.isRendered(..): Not implemented.') },
+
 	// component renderers...
 	elem: function(item, index, path, options){
 		throw new Error('.elem(..): Not implemented.') },
@@ -809,6 +847,9 @@ var TextRenderer =
 module.TextRenderer = 
 object.Constructor('TextRenderer', {
 	__proto__: BaseRenderer.prototype,
+
+	// always render...
+	isRendered: function(){ return false },
 
 	elem: function(item, index, path, options){
 		return path
@@ -839,6 +880,9 @@ var PathRenderer =
 module.PathRenderer = 
 object.Constructor('PathRenderer', {
 	__proto__: TextRenderer.prototype,
+
+	// always render...
+	isRendered: function(){ return false },
 
 	elem: function(item, index, path, options){
 		return path.join('/') },
@@ -2654,10 +2698,14 @@ var BaseBrowserPrototype = {
 							return r && typeof(e) != typeof({}) }, true))){
 			// reverse index...
 			index = this
-				.reduce(function(res, e, i, p){
-					res.set(e, [i, p])
-					return res
-				}, new Map(), {iterateAll: true})
+				.reduce(
+					function(res, e, i, p){
+						res.set(e, [i, p])
+						return res }, 
+					new Map(), 
+					Object.assign(
+						Object.flatCopy(options || {}),
+						{iterateAll: true}))
 			var res
 			var Stop = new Error('Stop iteration')
 			try {
@@ -2676,7 +2724,10 @@ var BaseBrowserPrototype = {
 										throw Stop })
 								: pattern ]
 							// search...
-							: that.search(pattern, ...args.slice(1)) })
+							: !(pattern instanceof BaseItem) ?
+								that.search(pattern, ...args.slice(1)) 
+							// not found...
+							: [] })
 					.flat()
 					.unique() 
 			} catch(e){
@@ -2945,6 +2996,13 @@ var BaseBrowserPrototype = {
 	// Renderer...
 
 	__renderer__: TextRenderer,
+
+	isRendered: function(renderer){
+		var render = renderer || this.__renderer__
+		render = render.root == null ?
+			new render(this, this.options) 
+			: render
+		return render.isRendered() },
 
 	//
 	//	Render browser...
@@ -3594,19 +3652,39 @@ var BaseBrowserPrototype = {
 	// XXX should we force calling update if options are given???
 	// 		...and should full get passed if at least one call in sequence
 	// 		got a full=true???
-	__update_full: undefined,
+	// XXX supported mdoes:
+	// 		'full' | true	- make - render - post-render
+	// 		'normal'		- render - post-render
+	// 		'partial'		- post-render
+	__update_mode: undefined,
 	__update_args: undefined,
 	__update_timeout: undefined,
 	__update_max_timeout: undefined,
 	update: makeEventMethod('update', 
-		function(evt, full, options){
-			options = 
-				(full && full !== true && full !== false) ? 
-					full 
-					: options
-			full = full === options ? 
-				false 
-				: full
+		function(evt, mode, options){
+			var modes = [
+				'full', 
+				'normal', 
+				'partial',
+			]
+
+			options = mode instanceof Object ?
+				mode
+				: options
+			mode = mode === options ? 
+					'normal' 
+				: mode === true ?
+					'full'
+				: mode
+			// sanity check...
+			if(!modes.includes(mode)){
+				throw new Error(`.update(..): unsupported mode: ${mode}`) }
+			var m = this.__update_mode
+			// if the queued mode is deeper than the requested, ignore the requested...
+			if(m != null && modes.indexOf(mode) > modes.indexOf(m)){
+				return this }
+
+			// queue update...
 			// NOTE: we can't simply use _update(..) closure for this as
 			// 		it can be called out of two contexts (timeout and 
 			// 		max_timeout), one (timeout) is renewed on each call 
@@ -3616,14 +3694,14 @@ var BaseBrowserPrototype = {
 			// 		its setTimeout(..)...
 			// 		storing the arguments in .__update_args would remove
 			// 		this inconsistency...
+			this.__update_mode = mode
 			var args = this.__update_args = [
-				[evt, full, 
+				[evt, mode, 
 					...(options ? 
 						[options] 
 						: [])], 
 				options]
-			this.__update_full = (full && args) 
-				|| this.__update_full
+
 			var timeout = (options || {}).updateTimeout
 				|| this.options.updateTimeout
 			var max_timeout = (options || {}).updateMaxDelay
@@ -3637,20 +3715,22 @@ var BaseBrowserPrototype = {
 				delete this.__update_timeout }.bind(this)
 			var _update = function(){
 				_clear_timers()
-				var full = !!this.__update_full
-				var [args, opts] = this.__update_full 
-					|| this.__update_args 
+				var mode = this.__update_mode
+				var [args, opts] = this.__update_args
 
-				delete this.__update_full
+				delete this.__update_mode
 				delete this.__update_args
 
-				full 
+				// make...
+				modes.indexOf(mode) <= modes.indexOf('full')
 					&& this.make(opts) 
-				var context = {}
-				this
-					// XXX this needs access to render context....
-					.preRender(opts, (opts || {}).renderer, context)
-					.render(opts, (opts || {}).renderer, context) 
+				// render...
+				;(!this.isRendered((opts || {}).renderer)
+						|| modes.indexOf(mode) <= modes.indexOf('normal'))
+					&& this
+						.preRender(opts, (opts || {}).renderer)
+						.render(opts, (opts || {}).renderer) 
+				// update...
 				this.trigger(...args) }.bind(this)
 			var _update_n_delay = function(){
 				// call...
@@ -3771,6 +3851,7 @@ object.Constructor('BaseBrowser',
 
 
 //---------------------------------------------------------------------
+// HTML-specific UI...
 
 var KEYBOARD_CONFIG =
 module.KEYBOARD_CONFIG = {
@@ -4034,16 +4115,16 @@ var updateElemClass = function(action, cls, handler){
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-// Renderer...
+// HTML Renderer...
 
-// XXX needs testing...
-// 		- partial rendering...
-// 		- local re-rendering...
 // XXX HACK: see .nest(..)
 var HTMLRenderer =
 module.HTMLRenderer =
 object.Constructor('HTMLRenderer', {
 	__proto__: BaseRenderer.prototype,
+
+	isRendered: function(){ 
+		return !!this.root.dom },
 
 	// secondary renderers...
 	//
@@ -4654,7 +4735,6 @@ var HTMLBrowserPrototype = {
 	__item__: HTMLItem,
 	__renderer__: HTMLRenderer,
 
-
 	options: {
 		__proto__: BaseBrowser.prototype.options,
 
@@ -5045,29 +5125,28 @@ var HTMLBrowserPrototype = {
 	__copy: function(text){
 		navigator.clipboard.writeText(text || this.path) },
 
-	// XXX need a better name...
-	_updateDOMItems: function(){
+
+	// Events extensions...
+	//
+	// XXX should tweaking DOM be done here or in the renderer???
+	__update__: function(){
 		var c = 0
 		this.forEach(function(e){
 			// shortcut number hint...
 			if(c < 10 && !e.disabled && !e.hidden){
 				var a = e.attrs = e.attrs || {}
-				c = a['shortcut-number'] = (++c) % 10
 				e.elem 
-					&& e.elem.setAttribute('shortcut-number', c)
-
+					&& e.elem.setAttribute('shortcut-number', 
+						a['shortcut-number'] = (c+1) % 10)
 			// cleanup...
 			} else {
 				delete (e.attrs || {})['shortcut-number']
 				e.elem 
 					&& e.elem.removeAttribute('shortcut-number')
 			}
+			c++
 		}) },
-
-	// Events extensions...
-	//
 	// NOTE: this will also kill any user-set keys for disabled/hidden items...
-	//
 	// XXX also handle global button keys...
 	__preRender__: function(evt, options, renderer, context){
 		var that = this
@@ -5079,18 +5158,6 @@ var HTMLBrowserPrototype = {
 
 		var i = 0
 		this.map(function(e){
-			// shortcut number hint...
-			// NOTE: these are just hints, the actual keys are handled 
-			// 		in .keybindings...
-			// XXX move this to the renderer...
-			if(i < 10 && !e.disabled && !e.hidden){
-				var attrs = e.attrs = e.attrs || {}
-				attrs['shortcut-number'] = (++i) % 10
-			// cleanup...
-			} else {
-				delete (e.attrs || {})['shortcut-number']
-			}
-			
 			// handle item keys...
 			if(!e.disabled && !e.hidden){
 				;((e.value instanceof Array ? 
@@ -5140,7 +5207,7 @@ var HTMLBrowserPrototype = {
 						block: 'nearest',
 					})
 				})
-				// set focus...
+				// XXX do we need this???
 				.focus() },
 	__blur__: function(evt, elem){
 		var that = this
@@ -5157,14 +5224,22 @@ var HTMLBrowserPrototype = {
 	// 		element up to reveal the expanded subtree...
 	// 		...would also be logical to "show" the expanded tree but 
 	// 		keeping the focused elem in view...
-	__expand__: function(evt, elem){ elem.update() },
-	__collapse__: function(evt, elem){ elem.update() },
+	__expand__: function(evt, elem){ 
+		elem.update() 
+		this.update('partial') },
+	__collapse__: function(evt, elem){
+		elem.update() 
+		this.update('partial') },
 	__select__: updateElemClass('add', 'selected'),
 	__deselect__: updateElemClass('remove', 'selected'),
 	__disable__: updateElemClass('add', 'disabled', 
-		function(evt, elem){ elem.update() }),
+		function(evt, elem){
+			elem.update() 
+			this.update('partial') }),
 	__enable__: updateElemClass('remove', 'disabled', 
-		function(evt, elem){ elem.update() }),
+		function(evt, elem){
+			elem.update() 
+			this.update('partial') }),
 	__hide__: updateElemClass('add', 'hidden'),
 	__show__: updateElemClass('remove', 'hidden'),
 
