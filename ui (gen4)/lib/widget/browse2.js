@@ -16,6 +16,8 @@ var widget = require('./widget')
 
 /*********************************************************************/
 
+
+
 //---------------------------------------------------------------------
 // Helpers...
 
@@ -545,8 +547,7 @@ var BaseItemPrototype = {
 	//		but this works OK:
 	//			dialog.disable('nested/2')
 	//
-	//		This might also be a side effect of the .dom / .elem set of 
-	//		issues...
+	//		Q: can this be a side effect of the .dom / .elem set of issues???
 	//
 	//		This issue seems to go away after expanding/collapsing the
 	//		nested item several times, the buttons are gone but the 
