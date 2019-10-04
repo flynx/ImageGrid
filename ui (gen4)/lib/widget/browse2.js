@@ -547,12 +547,15 @@ var BaseItemPrototype = {
 	//		but this works OK:
 	//			dialog.disable('nested/2')
 	//
-	//		Q: can this be a side effect of the .dom / .elem set of issues???
-	//
 	//		This issue seems to go away after expanding/collapsing the
 	//		nested item several times, the buttons are gone but the 
 	//		subtrees stop vanishing on update -- could this be related 
 	//		to .dom/.elem again???
+	//
+	//		...there are likely two issues at play here:
+	//			1) the options related stuff -- non-rendered buttons...
+	//			2) .dom/.elem related stuff -- .update() removes buttons...
+	//
 	update: function(options){
 		this.parent
 			&& this.parent.render(this, options)
