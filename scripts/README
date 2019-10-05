@@ -1,3 +1,18 @@
+This folder containse a set of scripts used to maintain an image
+archive/index and related tasks...
+
+
+TODO:
+- migrate all index-related tasks to ImageGrid.Viewer
+- make ImageGrid.Viewer scriptable
+- make the rest of the scritps runnable from ImageGrid.Viewer
+
+
+
+---
+
+Archiving and index construction:
+
 sync-flash.sh
 	Syncs a camera flash card to an archive folder.
 
@@ -49,19 +64,25 @@ update-exif.sh
 
 ---
 
+Misc scripts:
+
+
 flatten.sh
 	Flatten flickr/instagram favorite folder structure created by 
 	ifttt appropriately renaming files.
 		./<author>/<filename> -> ./ALL/<author> - <filename>
 
 
-
-
 vips-tn.sh
+
 
 cleannwcache.bat
 
+
 extract-metadata.sh
 
+
 process-archive.bat -- windows version of process-archive.sh (partial)
+
+
 
