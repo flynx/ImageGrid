@@ -555,7 +555,6 @@ var BaseItemPrototype = {
 	//		...there are likely two issues at play here:
 	//			1) the options related stuff -- non-rendered buttons...
 	//			2) .dom/.elem related stuff -- .update() removes buttons...
-	//
 	update: function(options){
 		this.parent
 			&& this.parent.render(this, options)
