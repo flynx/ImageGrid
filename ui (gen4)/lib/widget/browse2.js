@@ -256,13 +256,13 @@ object.mixinFlat(function(){}, {
 	// 	])
 	// 	
 	nest: function(item, list, options){
-		options = options || {}
+		options = Object.flatCopy(options || {})
 		//options = Object.assign(Object.create(this.options || {}), options || {})
 		options = Object.assign({},
 			{ children: list instanceof Array ?
 				collectItems(this, list)
 				: list },
-			options)
+			Object.flatCopy(options || {}))
 		return item === this ?
 			((this.last().children = options.children), this)
 			: this(item, options) },
@@ -554,6 +554,9 @@ var BaseItemPrototype = {
 	//
 	//		...there are likely two issues at play here:
 	//			1) the options related stuff -- non-rendered buttons...
+	//				...try and rework all the option handling to either 
+	//				avoid inheritance (via .flatCopy(..)) or to work it 
+	//				into recursion correctly...
 	//			2) .dom/.elem related stuff -- .update() removes buttons...
 	update: function(options){
 		this.parent
@@ -1842,7 +1845,7 @@ var BaseBrowserPrototype = {
 		var that = this
 		options = Object.assign(
 			Object.create(this.options || {}), 
-			options || {})
+			Object.flatCopy(options || {}))
 
 		// sections to make...
 		var sections = options.section == '*' ?
@@ -1989,7 +1992,7 @@ var BaseBrowserPrototype = {
 					options ? 
 						Object.assign(
 							Object.create(that.options || {}), 
-							options || {}) 
+							Object.flatCopy(options || {}))
 						: null)
 
 				// if make was not called use the .__items__(..) return value...
@@ -2229,7 +2232,7 @@ var BaseBrowserPrototype = {
 		// options...
 		options = Object.assign(
 			Object.create(this.options || {}),
-			options)
+			Object.flatCopy(options))
 		// options.reverse...
 		var reverse = options.reverse === true ? 
 			(options.defaultReverse || 'mixed') 
@@ -3841,7 +3844,7 @@ var BaseBrowserPrototype = {
 		// options (optional)...
 		this.options = Object.assign(
 			Object.create(this.options || {}), 
-			args[0] || {}) },
+			Object.flatCopy(args[0] || {})) },
 }
 
 
