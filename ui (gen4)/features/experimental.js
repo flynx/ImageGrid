@@ -121,6 +121,72 @@ var ExperimentActions = actions.Actions({
 	unsavedChanges: ['- Experimental/',
 		function(){
 		}],
+
+
+
+	// construction of new "virtual images"...
+	//
+	// XXX should this be restricted to collections???
+	// XXX should these be importable???
+	// 		i.e. exported as json to <title>.virt and imported back...
+	// 		...might be a good idea to add custom import/export handlers...
+	// 
+	// XXX do better arg processing -- handle metadata correctly...
+	// XXX add export support for this type of stuff...
+	// XXX add default named templates...
+	// XXX add svg templates...
+	// 		- blank (white/black/gray/...)
+	// 		- title
+	// 		- text
+	// XXX move to 'virtual-images' feature...
+	makeVirtualImage: ['Experimental/',
+		function(ref, offset, metadata){
+			ref = ref || 'current'
+			offset = offset || 'after'	
+			offset = offset == 'after' ? 
+					1 
+				: offset == 'before' ? 
+					0
+				: typeof(offset) == typeof(123) ?
+					offset
+				: 0
+			// XXX revise...
+			metadata = arguments[arguments.length-1] instanceof Object ?
+				arguments[arguments.length-1]
+				: null
+
+			var data = this.data
+
+			ref = data.getImage(ref)
+			var r = data.getRibbon(ref)
+
+			var gid = data.newGID()
+
+			// place image into data...
+			var order = data.order
+			order.splice(order.indexOf(ref)+offset,0, gid)
+			var ribbon = data.ribbons[r]
+			ribbon.splice(ribbon.indexOf(ref)+offset,0, gid)
+
+			// update data...
+			data.updateImagePositions()
+
+			// update metadata...
+			metadata
+				&& (this.images[gid] = metadata)
+
+			// focus new image...
+			// NOTE: this should update the view too...
+			this.focusImage(gid)
+		}],
+	// XXX
+	makeVirtualBlank: ['Experimental/',
+		function(){
+		}],
+	// XXX
+	makeVirtualText: ['Experimental/',
+		function(){
+		}],
 })
 
 var ExperimentFeature = 
