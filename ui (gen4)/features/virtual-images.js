@@ -27,6 +27,7 @@ var VirtualImagesActions = actions.Actions({
 	// 
 	// XXX do better arg processing -- handle metadata correctly...
 	// XXX add export support for this type of stuff...
+	// 		text -> file.txt
 	// XXX add default named templates...
 	// XXX add svg templates???
 	makeVirtualBlock: ['- Virtual/',
@@ -92,10 +93,6 @@ var VirtualImagesActions = actions.Actions({
 				text: text || '',
 			}) }],
 
-	// XXX virtual block editor UI...
-	// XXX
-
-
 	// XXX export...
 })
 
@@ -119,11 +116,13 @@ module.VirtualImages = core.ImageGridFeatures.Feature({
 
 
 
-
 //---------------------------------------------------------------------
 
 var VirtualImagesUIActions = actions.Actions({
+
+	// XXX virtual block editor UI...
 	// XXX
+
 })
 
 var VirtualImagesUI = 
