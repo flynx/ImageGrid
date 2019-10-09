@@ -71,7 +71,8 @@ var VirtualImagesActions = actions.Actions({
 			this.focusImage(gid)
 		}],
 
-	// XXX
+	makeVirtualBlankBefore: ['Virtual/Add blank before',
+		'makeVirtualBlank: $0 "before"'],
 	makeVirtualBlank: ['Virtual/Add blank after',
 		core.doc``,
 		//{ browseMode: function(){ return !this.collection && 'disabled' }, },
@@ -80,7 +81,10 @@ var VirtualImagesActions = actions.Actions({
 				type: 'virtual',
 				path: null, 
 			}) }],
-	makeVirtualText: ['Virtual/Add text block after',
+
+	makeVirtualTextBefore: ['Virtual/Add text before',
+		'makeVirtualText: $0 $1 "before"'],
+	makeVirtualText: ['Virtual/Add text after',
 		core.doc`
 
 			NOTE: this was not designed for complex HTML, only use simple 
