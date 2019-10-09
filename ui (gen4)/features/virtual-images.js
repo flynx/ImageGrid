@@ -123,12 +123,78 @@ module.VirtualImages = core.ImageGridFeatures.Feature({
 //---------------------------------------------------------------------
 
 var VirtualImagesUIActions = actions.Actions({
+	config: {
+		'virtual-text-fit-area-threshold': 100,
+	},
+
+	__virtual_block_processors__: {
+		// The default handler is designed to process plain or lightly 
+		// formatted text.
+		//
+		// This will:
+		// 	- replace '\n' with '<br>'
+		// 	- adjust font size to fit the image block
+		//
+		// NOTE: the processor is allowed to only modify image block 
+		// 		content, anything else would require cleanup...
+		// XXX might be a good idea to add action param to enable 
+		// 		handlers to do things like 'setup', 'cleanup', ...	
+		default: function(image, dom){
+			if(!image.text){
+				return dom }
+
+			// threshold after which we try to fill the volume...
+			var C = this.config['virtual-text-fit-area-threshold'] || 100
+
+			// construct a basic text element...
+			var text = document.createElement('div')
+			text.innerHTML = image.text
+				.replace(/\n/g, '<br>\n')
+			dom[0].innerHTML = ''
+			dom[0].appendChild(text)
+
+			// scale the text if it is small...
+			var R = dom[0].offsetHeight * 0.8
+			var r = image.text.length > C ?
+				Math.max(
+					text.offsetWidth, 
+					text.offsetHeight, 
+					// keep large text blocks roughly square-ish...
+					Math.sqrt(text.scrollHeight * text.scrollWidth))
+				: Math.max(
+					text.offsetWidth, 
+					text.offsetHeight, 
+					text.scrollHeight,
+					text.scrollWidth)
+			var s = R/r
+			text.style.fontSize = `${ 100*s }%`
+			// prioritize width... 
+			text.style.width = '100%'
+
+			return dom
+		},
+	},
+	updateVirtualBlock: ['- Virtual/',
+		function(gid, dom, image){
+			image = image || this.images[gid] || {}
+
+			if(image.type != 'virtual'){
+				return actions.UNDEFINED }
+
+			var p = (this.__virtual_block_processors__ 
+				|| VirtualImagesUIActions.__virtual_block_processors__
+				|| {})
+			p = p[image.format] || p['default']
+			return p instanceof Function ?
+				p.call(this, image, dom) 
+				: dom }],
+
 
 	// XXX virtual block editor UI...
 	// XXX
-
 })
 
+// NOTE: this is independent of 'virtual-images'...
 var VirtualImagesUI = 
 module.VirtualImagesUI = core.ImageGridFeatures.Feature({
 	title: '',
@@ -137,47 +203,25 @@ module.VirtualImagesUI = core.ImageGridFeatures.Feature({
 	tag: 'ui-virtual-images',
 	depends: [
 		'ui',
-		'virtual-images'
+	],
+	suggested: [
+		'virtual-images',
 	],
 
 	actions: VirtualImagesUIActions, 
 
 	handlers: [
 		['updateImage',
-			function(res, gid, img){
+			function(_, gid, dom){
 				var image = this.images[gid] || {}
 
 				// set image content...
 				if(image.type == 'virtual' && image.text){
-					var text = document.createElement('div')
-					text.innerHTML = image.text
-					img[0].innerHTML = ''
-					img[0].appendChild(text)
-
-					// threshold after which we try to fill the volume...
-					var C = 100
-
-					// scale the text if it is small...
-					var R = img[0].offsetHeight * 0.8
-					var r = image.text.length > C ?
-						Math.max(
-							text.offsetWidth, 
-							text.offsetHeight, 
-							// keep large text blocks roughly square-ish...
-							Math.sqrt(text.scrollHeight * text.scrollWidth))
-						: Math.max(
-							text.offsetWidth, 
-							text.offsetHeight, 
-							text.scrollHeight,
-							text.scrollWidth)
-					var s = R/r
-					text.style.fontSize = `${ 100*s }%`
-					// prioritize width... 
-					text.style.width = '100%'
+					this.updateVirtualBlock(gid, dom, image)
 
 				// clear reused image content...
-				} else if(img[0].innerHTML != ''){
-					img[0].innerHTML = ''
+				} else if(dom[0].innerHTML != ''){
+					dom[0].innerHTML = ''
 				}
 			}],
 	],
