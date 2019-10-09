@@ -495,6 +495,12 @@ module.ImagesPrototype = {
 		//gid = gid == null ? getImageGID(): gid
 		//size = size == null ? getVisibleImageSize('max') : size
 		img_data = img_data == null ? this[gid] : img_data
+		img_data = img_data || IMAGE_DATA
+
+		// if path is explicitly null there are no previews...
+		if(img_data.path === null){
+			return undefined
+		}
 
 		// if no usable images are available use STUB data...
 		if(!img_data 

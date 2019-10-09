@@ -1514,126 +1514,12 @@ var RibbonsPrototype = {
 	// 		.correctImageProportionsForRotation(..)
 	//
 	// 		.updateImageIndicators(..)
-	_updateImage: function(image, gid, size, sync){
-		image = (image == '*' ? this.viewer.find(IMAGE)
-			: image == null 
-				|| typeof(image) == typeof('str') ? this.getImage(image)
-			: $(image))
-		sync = sync == null ? this.load_img_sync : sync
-		size = size == null ? this.getVisibleImageSize('max') : size
-
-		var that = this
-		return $(image.map(function(){
-			var image = this instanceof String 
-					|| typeof(this) == typeof('str') 
-				? that.getImage(this+'') 
-				: $(this)
-			if(image.length == 0){
-				return
-			}
-			var old_gid = that.elemGID(image)
-
-			// same image -- update...
-			if(old_gid == gid || gid == null){
-				var gid = old_gid
-
-			// reuse for different image -- reconstruct...
-			} else {
-				// remove old marks...
-				if(typeof(old_gid) == typeof('str')){
-					that.getImageMarks(old_gid).remove()
-				}
-				// reset gid...
-				image
-					.attr('gid', JSON.stringify(gid)
-						// this removes the extra quots...
-						.replace(/^"(.*)"$/g, '$1'))
-					.css({
-						// clear the old preview...
-						'background-image': '',
-					})
-			}
-
-			// if no images data defined drop out...
-			if(that.images == null){
-				return image[0]
-			}
-
-			// get the image data...
-			var img_data = that.images[gid]
-			if(img_data == null){
-				img_data = images.IMAGE_DATA
-			}
-
-			// if we are a group, get the cover...
-			// NOTE: groups can be nested...
-			var seen = []
-			while(img_data.type == 'group'){
-				// error, recursive group...
-				if(seen.indexOf(img_data.id) >= 0){
-					img_data = images.IMAGE_DATA
-					console.error('Recursive group:', gid)
-					break
-				}
-				seen.push(img_data.id)
-
-				img_data = that.images[img_data.cover]
-			}
-
-			// image state...
-			//that.rotateImage(image, img_data.orientation == null ? 0 : img_data.orientation)
-			//that.flipImage(image, img_data.flipped == null ? [] : img_data.flipped)
-			image.attr({
-				orientation: img_data.orientation == null ? '' : img_data.orientation*1,
-				flipped: (img_data.flipped == null ? [] : img_data.flipped).join(', '),
-			})
-
-			// preview...
-			var p_url = that.images.getBestPreview(img_data.id, size, img_data, true).url
-
-			// update the preview if it's a new image or...
-			// XXX this should be pushed as far back as possible...
-			if(old_gid != gid 
-					// the new preview (p_url) is different to current...
-					// NOTE: this may not work correctly for relative urls...
-					|| image.css('background-image').indexOf(util.path2url(p_url)) < 0){
-				// sync load...
-				if(sync){
-					that._loadImagePreviewURL(image, p_url)
-
-				// async load...
-				} else {
-					// NOTE: storing the url in .data() makes the image load the 
-					// 		last requested preview and in a case when we manage to 
-					// 		call updateImage(...) on the same element multiple times 
-					// 		before the previews get loaded...
-					// 		...setting the data().loading is sync while loading an 
-					// 		image is not, and if several loads are done in sequence
-					// 		there is no guarantee that they will happen in the same
-					// 		order as requested...
-					image.data().loading = p_url
-					setTimeout(function(){ 
-						that._loadImagePreviewURL(image, image.data().loading)
-					}, 0)
-				}
-			}
-
-			// NOTE: this only has effect on non-square image blocks...
-			// XXX this needs the loaded image, thus should be done right
-			// 		after preview loading...
-			// XXX preview loading is async, is this the right 
-			// 		place for this??
-			// 		...this is also done in .rotateImage(..) above...
-			that.correctImageProportionsForRotation(image)
-
-			// marks and other indicators...
-			that.updateImageIndicators(gid, image)
-
-			return image[0]
-		}))
-	},
+	//
 	// XXX add options for images to preload and only then do the update...
 	// XXX really slow for very large numbers of input images/gids...
+	// XXX add support for basic image templating here...
+	// 		...templates for blank images, text blocks and other stuff,
+	// 		this would best be done by simply filling in SVG templates...
 	updateImage: function(image, gid, size, sync, callback){
 		var that = this
 		var imgs = this.viewer.find(IMAGE)
@@ -1729,8 +1615,13 @@ var RibbonsPrototype = {
 			//will_change.push('transform')
 
 			// stage background image update...
-			var p_url = that.images.getBestPreview(img_data.id, size, img_data, true).url
-			if(old_gid != gid 
+			// XXX add support for basic templating here...
+			var p_url = (that.images.getBestPreview(img_data.id, size, img_data, true) || {}).url
+			// no preview -> reset bg...
+			if(p_url == null){
+				image[0].style.backgroundImage = ''
+
+			} else if(old_gid != gid 
 					// the new preview (p_url) is different to current...
 					// NOTE: this may not work correctly for relative urls...
 					|| image.css('background-image').indexOf(util.path2url(p_url)) < 0){

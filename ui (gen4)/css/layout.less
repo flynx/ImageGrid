@@ -695,14 +695,38 @@ stretching in width... */
 
 	box-sizing: border-box;
 	color: white;
-
-	text-shadow: black 0.1em 0.1em 0.4em, black 0.1em 0.1em;
+	/* XXX do we need this???
+	text-shadow: 
+		black 0.1em 0.1em 0.4em, 
+		black 0.1em 0.1em; */
 
 	/* NOTE: we can't set the bg color here because it will get 
 	 	affected by filters... */
 	background: no-repeat 50% transparent;
 	background-size: contain;
 	border: solid @image-border transparent;
+}
+
+.image {
+	padding: @single-image-indicator-size;
+}
+.image div {
+	display: block;
+	position: absolute;
+
+	max-width: @image-tile-size;
+	width: auto;
+	max-height: @image-tile-size;
+	height: auto;
+
+	left: 50%;
+	top: 50%;
+	transform: translate(-50%,-50%);
+
+	white-space: normal;
+	text-align: center;
+	text-overflow: ellipsis;
+	/*font-size: 2vh;*/
 }
 
 .crisp-resize .image {
@@ -2042,7 +2066,10 @@ progress:not(value)::-webkit-progress-bar {
 /* XXX this is by no means final... */
 /*@import "theme-light";*/
 
-.viewer,
+.light.single-image-mode.viewer .image,
+.light.transparent-ribbon.viewer .image {
+	color: black;
+}
 .light.viewer,
 .light.viewer .overlay-block .background {
 	background: white;

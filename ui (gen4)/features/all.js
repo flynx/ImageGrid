@@ -48,6 +48,9 @@ require('features/external-editor')
 require('features/metadata')
 require('features/meta')
 
+// XXX EXPERIMENTAL...
+require('features/virtual-images')
+
 require('features/experimental')
 require('features/tests')
 require('features/demo')
