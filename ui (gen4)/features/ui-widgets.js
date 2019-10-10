@@ -348,7 +348,8 @@ module.uiContainer = function(func){
 // 	- mark the action as a container
 //
 // The container will:
-// 	- trigger the client's close event on close
+// 	- trigger client's 'attached' event when attached to container
+// 	- trigger client's 'close' event on close
 //
 // XXX not sure how the click is handled here...
 // XXX pass options???
@@ -398,6 +399,7 @@ module.makeUIContainer = function(make){
 				// XXX is this the right way to go???
 				.on('click', function(evt){ 
 					that.modal && that.modal.focus() })
+				.trigger('attached', o)
 
 		return o
 			// focus the new dialog...

@@ -292,6 +292,8 @@ module.MetadataReader = core.ImageGridFeatures.Feature({
 // 			- ...
 var MetadataUIActions = actions.Actions({
 	config: {
+		'metadata-preview-size': 150,
+
 		'metadata-auto-select-modes': [
 			'none',
 			'on select',
@@ -341,12 +343,19 @@ var MetadataUIActions = actions.Actions({
 	//
 	// XXX should we replace 'mode' with nested set of metadata???
 	// XXX make this support multiple images...
-	showMetadata: ['Image/Metadata2...',
+	// XXX make things editable only in when edit is loaded...
+	showMetadata: ['Image/Metadata...',
 		widgets.makeUIDialog(function(image, mode){
 			var that = this
 			image = this.data.getImage(image)
 			mode = mode || 'disabled'
 			data = this.images[image]
+
+			var preview_size = this.config['metadata-preview-size'] || 150
+
+			var _normalize = typeof(path) != 'undefined' ? 
+				path.normalize
+				: function(e){ return e.replace(/\/\.\//, '') }
 
 			return browse.makeLister(null, 
 				function(p, make){
@@ -355,8 +364,21 @@ var MetadataUIActions = actions.Actions({
 					// 		this is done to keep the ref to make(..) up-to-date...
 					make.dialog.wait = function(){
 						make.Separator()
-						make.Spinner() 
-					}
+						make.Spinner() }
+					// XXX BUG: this when attached is stealing marks from 
+					// 		the original image in ribbon and sows them in 
+					// 		the dialog...
+					// 		...need to avoid both!
+					make.dialog.updatePreview = function(){
+						var preview = this.preview = this.preview || that.ribbons.createImage(image)
+						return that.ribbons.updateImage(preview, image, preview_size, false,
+							function([p]){
+								p.classList.add('clone', 'preview')
+								p.style.height = preview_size +'px'
+								p.style.width = preview_size +'px'
+							}) }
+
+					make(['Preview:', this.updatePreview()])
 
 					// essentials...
 					make(['$GID: ', image])
@@ -384,9 +406,6 @@ var MetadataUIActions = actions.Actions({
 
 					if(data){
 						// some abstractions...
-						var _normalize = typeof(path) != 'undefined' ? 
-							path.normalize
-							: function(e){ return e.replace(/\/\.\//, '') }
 						var _basename = typeof(path) != 'undefined' ?
 							path.basename
 							: function(e){ return e.split(/[\\\/]/g).pop() }
@@ -445,6 +464,8 @@ var MetadataUIActions = actions.Actions({
 					cls: 'table-view',
 					showDisabled: false,
 				})
+				.on('attached', function(){
+					this.updatePreview() })
 				// select value of current item...
 				.on('select', function(evt, elem){
 					that.config['metadata-auto-select-mode'] == 'on select'
@@ -452,6 +473,8 @@ var MetadataUIActions = actions.Actions({
 				.close(function(){
 					// XXX handle comment and tag changes...
 					// XXX
+
+					that.refresh(image)
 				})
 		})],
 

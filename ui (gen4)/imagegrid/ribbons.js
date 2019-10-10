@@ -591,12 +591,12 @@ var BaseRibbonsPrototype = {
 		// get the base image...
 		// current...
 		if(target == null || target == 'current') {
-			img = this.viewer.find('.current.image')
+			img = this.viewer.find('.current'+IMAGE)
 
 		// gid...
 		} else if(typeof(target) == typeof('str')){
 			//return this.viewer.find('.image[gid="'+JSON.stringify(target)+'"]')
-			img = this.viewer.find('.image[gid='+JSON.stringify(target)+']')
+			img = this.viewer.find(IMAGE+'[gid='+JSON.stringify(target)+']')
 		}
 
 		// we got a collection...
@@ -1447,18 +1447,16 @@ var RibbonsPrototype = {
 	},
 
 	// XXX is .__image_updaters the right way to go???
-	updateImageIndicators: function(gid, image){
+	callImageUpdaters: function(gid, image){
 		gid = gid == null ? this.elemGID() : gid
 		image = image == null ? this.getImage() : $(image)
 
 		// collect marks...
 		image.after(this.getImageMarks(gid))
 
-		if(this.__image_updaters != null){
-			this.__image_updaters.forEach(function(update){
-				update(gid, image)
-			})
-		}
+		;(this.__image_updaters || [])
+			.forEach(function(update){
+				update(gid, image) })
 
 		return image
 	},
@@ -1496,6 +1494,8 @@ var RibbonsPrototype = {
 	//
 	// NOTE: this can update collections of images by passing either a 
 	// 		list of gids, images or a jQuery collection...
+	// NOTE: pre_updaters_callback if given is called after image is fully
+	// 		constructed but before .callImageUpdaters(..) is called...
 	//
 	// If this is set to true image previews will be loaded synchronously...
 	load_img_sync: false,
@@ -1513,14 +1513,14 @@ var RibbonsPrototype = {
 	// 		._loadImagePreviewURL(..)
 	// 		.correctImageProportionsForRotation(..)
 	//
-	// 		.updateImageIndicators(..)
+	// 		.callImageUpdaters(..)
 	//
 	// XXX add options for images to preload and only then do the update...
 	// XXX really slow for very large numbers of input images/gids...
 	// XXX add support for basic image templating here...
 	// 		...templates for blank images, text blocks and other stuff,
 	// 		this would best be done by simply filling in SVG templates...
-	updateImage: function(image, gid, size, sync, callback){
+	updateImage: function(image, gid, size, sync, pre_updaters_callback){
 		var that = this
 		var imgs = this.viewer.find(IMAGE)
 
@@ -1546,7 +1546,6 @@ var RibbonsPrototype = {
 		size = size == null ? this.getVisibleImageSize('max') : size
 
 		var update = {}
-		//var marks = {}
 
 		// build update data...
 		image.map(function(_, image){
@@ -1563,7 +1562,6 @@ var RibbonsPrototype = {
 				style: {},
 			}
 			var reset_preview = false
-			//var will_change = []
 
 			// same image -- update...
 			if(old_gid == gid || gid == null){
@@ -1573,11 +1571,8 @@ var RibbonsPrototype = {
 			// reuse for different image -- reconstruct...
 			} else {
 				// remove old marks...
-				if(typeof(old_gid) == typeof('str')){
-					// XXX
-					//marks[old_gid] = that.getImageMarks(old_gid)
-					that.getImageMarks(old_gid).remove()
-				}
+				typeof(old_gid) == typeof('str')
+					&& that.getImageMarks(old_gid).remove()
 				// reset gid...
 				data.attrs = {
 					gid: JSON.stringify(gid)
@@ -1649,16 +1644,7 @@ var RibbonsPrototype = {
 					}, 0)
 				}
 			}
-
-			callback 
-				&& callback.call(that, image, data)
-
-			//image[0].style.willChange = will_change.join(', ')
 		})
-
-		// clear marks...
-		//Object.values(marks)
-		//	.forEach(function(m){ m.remove() })
 
 		var W = this.viewer.innerWidth()
 		var H = this.viewer.innerHeight()
@@ -1675,9 +1661,9 @@ var RibbonsPrototype = {
 			css && img.css(css)
 
 			that.correctImageProportionsForRotation(img, W, H)
-			that.updateImageIndicators(data.gid, img)
-
-			//_img.style.willChange = '' 
+			pre_updaters_callback 
+				&& pre_updaters_callback.call(that, image, data)
+			that.callImageUpdaters(data.gid, img)
 
 			return _img
 		}))
@@ -2228,7 +2214,7 @@ var RibbonsPrototype = {
 	// NOTE: overflowing offset will focus first/last image.
 	focusImage: function(target){
 		var cur = this.viewer
-			.find('.current.image')
+			.find('.current'+IMAGE)
 		var next = this.getImage(target)
 
 		cur.removeClass('current')

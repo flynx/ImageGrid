@@ -168,6 +168,7 @@ var VirtualImagesUIActions = actions.Actions({
 					text.scrollHeight,
 					text.scrollWidth)
 			var s = R/r
+
 			text.style.fontSize = `${ 100*s }%`
 			// prioritize width... 
 			text.style.width = '100%'
@@ -191,6 +192,7 @@ var VirtualImagesUIActions = actions.Actions({
 				: dom }],
 
 	// XXX add text format selection...
+	// XXX make things editable only when edit is loaded...
 	metadataSection: [
 		{ sortedActionPriority: 80 },
 		function(make, gid, image){
@@ -206,6 +208,7 @@ var VirtualImagesUIActions = actions.Actions({
 				reset_on_commit: false,
 				editdone: function(evt, value){
 					image.text = value 
+					make.dialog.updatePreview()
 					that.refresh(gid)
 				},
 			})

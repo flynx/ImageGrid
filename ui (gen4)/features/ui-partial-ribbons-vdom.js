@@ -94,7 +94,7 @@ var Ribbons = {
 	//placeRibbon: null,
 	//placeImage: null,
 
-	updateImageIndicators: null,
+	callImageUpdaters: null,
 	_loadImagePreviewURL: null,
 	//load_img_sync: null,
 	updateImage: null,
