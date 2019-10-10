@@ -706,6 +706,20 @@ var TagUIActions = actions.Actions({
 		// XXX
 	},
 
+	metadataSection: [
+		{ sortedActionPriority: 80 },
+		function(make, gid, image){
+			var that = this
+
+			make(['Tags:', 
+				function(){
+					return that.data.getTags(gid).join(', ') }], 
+				{ 
+					open: function(){ 
+						that.showTagCloud(gid) 
+							.close(function(){
+								make.dialog.update() }) }, 
+				}) }],
 })
 
 

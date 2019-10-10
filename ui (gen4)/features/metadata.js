@@ -341,113 +341,148 @@ var MetadataUIActions = actions.Actions({
 	//
 	// XXX should we replace 'mode' with nested set of metadata???
 	// XXX make this support multiple images...
-	// XXX add support for .metadataSection(make) action to construct a section...
-	showMetadata: ['Image/Metadata...',
+	showMetadata: ['Image/Metadata2...',
 		widgets.makeUIDialog(function(image, mode){
-		//function(image, mode){
 			var that = this
 			image = this.data.getImage(image)
 			mode = mode || 'disabled'
+			data = this.images[image]
 
+			return browse.makeLister(null, 
+				function(p, make){
+					// helper...
+					// NOTE: we intentionally rewrite this on each update,
+					// 		this is done to keep the ref to make(..) up-to-date...
+					make.dialog.wait = function(){
+						make.Separator()
+						make.Spinner() 
+					}
+
+					// essentials...
+					make(['$GID: ', image])
+					// NOTE: these are 1-based and not 0-based...
+					make(['Index (ribbon): ', 
+						that.data.getImageOrder('ribbon', image) + 1
+						+'/'+ 
+						that.data.getImages(image).len])
+					// show this only when cropped...
+					make(['Index (global): ', 
+						that.data.getImageOrder(image) + 1
+						+'/'+ 
+						that.data.getImages('all').len])
+					// crop-specific stuff...
+					;(that.crop_stack && that.crop_stack.len > 0)
+						&& make(['Index (crop): ', 
+							that.data.getImageOrder('loaded', image) + 1
+							+'/'+ 
+							that.data.getImages('loaded').len])
+					// ribbons order...
+					make(['Ribbon: ',
+						that.data.getRibbonOrder(image) + 1
+						+'/'+
+						Object.keys(that.data.ribbons).length])	
+
+					if(data){
+						// some abstractions...
+						var _normalize = typeof(path) != 'undefined' ? 
+							path.normalize
+							: function(e){ return e.replace(/\/\.\//, '') }
+						var _basename = typeof(path) != 'undefined' ?
+							path.basename
+							: function(e){ return e.split(/[\\\/]/g).pop() }
+						var _dirname = typeof(path) != 'undefined' ?
+							function(e){ return path.normalize(path.dirname(e)) }
+							: function(e){ 
+								return _normalize(e.split(/[\\\/]/g).slice(0, -1).join('/')) }
+
+						make.Separator()
+						// paths...
+						data.path 
+							&& make(['File $Name: ', 
+								_basename(data.path)])
+							&& make(['Parent $Directory: ', 
+								_dirname((data.base_path || '.') +'/'+ data.path)])
+							&& make(['Full $Path: ', 
+								_normalize((data.base_path || '.') +'/'+ data.path)])
+						// times...
+						data.birthtime 
+							&& make(['Date created: ', 
+								data.birthtime && new Date(data.birthtime).toShortDate()])
+						data.ctime
+							&& make(['- ctime: ', 
+								data.ctime && new Date(data.ctime).toShortDate()],
+								{disabled: true})
+						data.mtime
+							&& make(['- mtime: ',
+								data.mtime && new Date(data.mtime).toShortDate()],
+								{disabled: true})
+						data.atime
+							&& make(['- atime: ', 
+								data.atime && new Date(data.atime).toShortDate()],
+								{disabled: true})
+					}
+
+					// comment...
+					make.Editable(['$Comment: ', 
+						function(){ 
+							return data && data.comment || '' }], 
+						{
+							start_on: 'open',
+							edit_text: 'last',
+							multiline: true,
+							reset_on_commit: false,
+							editdone: function(evt, value){
+								if(value.trim() == ''){
+									return }
+								data = that.images[image] = that.images[image] || {}
+								data.comment = value
+							},
+						}) 
+
+					// get other sections...
+					that.callSortedAction('metadataSection', make, image, data, mode)
+				}, {
+					cls: 'table-view',
+					showDisabled: false,
+				})
+				// select value of current item...
+				.on('select', function(evt, elem){
+					that.config['metadata-auto-select-mode'] == 'on select'
+						&& $(elem).find('.text').last().selectText() })
+				.close(function(){
+					// XXX handle comment and tag changes...
+					// XXX
+				})
+		})],
+
+	metadataSection: ['- Image/',
+		{ sortedActionPriority: 'normal' },
+		core.notUserCallable(function(make, gid, image, mode){
+			var that = this
+			var metadata = this.getMetadata(gid) || {} 
 			var field_order = this.config['metadata-field-order'] || []
 			var x = field_order.length + 1
 
-			// get image metadata...
-			var metadata = this.getMetadata(image) || {} 
-			var img = this.images && this.images[image] || null
+			make.dialog.updateMetadata = 
+				function(metadata){
+					metadata = metadata || that.getMetadata()
 
-			// helpers...
-			var _cmp = function(a, b){
-				a = field_order.indexOf(a[0]
-					.replace(/\$(\w)/g, '$1')
-					.replace(/^- |: $/g, ''))
-				a = a == -1 ? x : a
-				b = field_order.indexOf(b[0]
-					.replace(/\$(\w)/g, '$1')
-					.replace(/^- |: $/g, ''))
-				b = b == -1 ? x : b
-				return a - b
-			}
+					// build new data set and update view...
+					//this.options.data = _buildInfoList(image, metadata)
+					this.update()
 
-			var _buildInfoList = function(image, metadata){
-				// XXX move these to an info feature...
-				// base fields...
-				var base = [
-					['$GID: ', image],
-					// NOTE: these are 1-based and not 0-based...
-					['Index (ribbon): ', 
-						that.data.getImageOrder('ribbon', image) + 1
-						+'/'+ 
-						that.data.getImages(image).len],
-					// show this only when cropped...
-					['Index (global): ', 
-						that.data.getImageOrder(image) + 1
-						+'/'+ 
-						that.data.getImages('all').len],
-				]
-				// crop-specific stuff...
-				if(that.crop_stack && that.crop_stack.len > 0){
-					base = base.concat([
-						['Index (crop): ', 
-							that.data.getImageOrder('loaded', image) + 1
-							+'/'+ 
-							that.data.getImages('loaded').len],
-					])
-				}
-				// fields that expect that image data is available...
-				var info = ['---']
-				if(img){
-					// some abstractions...
-					// XXX should these be here???
-					var _normalize = typeof(path) != 'undefined' ? 
-						path.normalize
-						: function(e){ return e.replace(/\/\.\//, '') }
-					var _basename = typeof(path) != 'undefined' ?
-						path.basename
-						: function(e){ return e.split(/[\\\/]/g).pop() }
-					var _dirname = typeof(path) != 'undefined' ?
-						function(e){ return path.normalize(path.dirname(e)) }
-						: function(e){ 
-							return _normalize(e.split(/[\\\/]/g).slice(0, -1).join('/')) }
-
-					// paths...
-					img.path 
-						&& base.push(['File $Name: ', 
-							_basename(img.path)])
-						&& base.push(['Parent $Directory: ', 
-							_dirname((img.base_path || '.') +'/'+ img.path)])
-						&& base.push(['Full $Path: ', 
-							_normalize((img.base_path || '.') +'/'+ img.path)])
-
-					// times...
-					img.birthtime 
-						&& base.push(['Date created: ', 
-							img.birthtime && new Date(img.birthtime).toShortDate()])
-					img.ctime
-						&& base.push(['- ctime: ', 
-							img.ctime && new Date(img.ctime).toShortDate()])
-					img.mtime
-						&& base.push(['- mtime: ',
-							img.mtime && new Date(img.mtime).toShortDate()])
-					img.atime
-						&& base.push(['- atime: ', 
-							img.atime && new Date(img.atime).toShortDate()])
+					return this
 				}
 
-				// comment and tags...
-				info.push(['$Comment: ', 
-					function(){ return img && img.comment || '' }]) 
-
-				info.push(['$Tags: ', 
-					function(){ return that.data.getTags().join(', ') || '' }])
-
-				// build fields...
-				var fields = []
-				Object.keys(metadata).forEach(function(k){
+			// build fields...
+			var fields = []
+			Object.keys(metadata)
+				.forEach(function(k){
 					var n =  k
 						// convert camel-case to human-case ;)
 						.replace(/([A-Z]+)/g, ' $1')
 						.capitalize()
+					var opts = {}
 
 					// skip metadata stuff in short mode...
 					if(mode != 'full' 
@@ -456,89 +491,34 @@ var MetadataUIActions = actions.Actions({
 							return
 
 						} else if(mode == 'disabled') {
-							n = '- ' + n
+							opts.disabled = true
 						}
 					}
 
-					fields.push([ n + ': ', metadata[k] ])
+					fields.push([
+						[ n + ': ', metadata[k] ], 
+						opts,
+					])
 				})
 
-				// sort fields...
-				base.sort(_cmp)
-				fields.sort(_cmp)
-
-				// add separator to base...
-				fields.length > 0 && info.push('---')
-
-				return base
-					.concat(info)
-					.concat(fields)
-			}
-
-			// XXX might be a good idea to directly bind ctrl-c to copy value...
-			var o = browse.makeList(
-					null,
-					_buildInfoList(image, metadata),
-					{
-						showDisabled: false,
-					})
-				// select value of current item...
-				.on('select', function(evt, elem){
-					if(that.config['metadata-auto-select-mode'] == 'on select'){
-						$(elem).find('.text').last().selectText()
-					}
-				})
-				// XXX start editing onkeydown...
-				.on('keydown', function(){
-					// XXX Enter + editable -> edit (only this???)
-				})
-				// path selected...
-				.open(function(evt, path){ 
-					event.preventDefault()
-
-					var editable = that.config['metadata-editable-fields']
-
-					var text = o.filter(path).find('.text')
-
-					var field = text.first().text()
-						.trim()
-						// remove the trailing ':'
-						.slice(0, -1)
-					var elem = text.last()
-
-					// handle select...
-					if(that.config['metadata-auto-select-mode'] == 'on open'){
-						elem.selectText()
-					}
-
-					// skip non-editable fields...
-					if(editable.indexOf(field) >= 0){
-						elem.makeEditable({
-							activate: true,
-							clear_on_edit: false,
-							//blur_on_abort: false,
-							//blur_on_commit: false,
-						})
-					}
-				})
-				.on('close', function(){
-					// XXX
-				})
-
-			o.dom.addClass('table-view')
-
-			o.updateMetadata = function(metadata){
-				metadata = metadata || that.getMetadata()
-
-				// build new data set and update view...
-				this.options.data = _buildInfoList(image, metadata)
-				this.update()
-
-				return this
-			}
-
-			return o
-		})]
+			// make fields...
+			fields
+				.sort(function(a, b){
+					a = field_order.indexOf(a[0][0]
+						.replace(/\$(\w)/g, '$1')
+						.replace(/^- |: $/g, ''))
+					a = a == -1 ? x : a
+					b = field_order.indexOf(b[0][0]
+						.replace(/\$(\w)/g, '$1')
+						.replace(/^- |: $/g, ''))
+					b = b == -1 ? x : b
+					return a - b })
+				.run(function(){
+					this.length > 0
+						&& make.Separator() })
+				.forEach(function(e){
+					make(...e) })
+		})],
 })
 
 var MetadataUI = 
@@ -573,27 +553,23 @@ module.MetadataFSUI = core.ImageGridFeatures.Feature({
 
 	handlers: [
 		// Read metadata and when done update the list...
-		// XXX should we show what we can and wait for metadata load (current
-		// 		state) or wait and show everything in one go???
 		['showMetadata.pre',
 			function(image){
 				var that = this
 				var reader = this.readMetadata(image)
 
-				return reader && function(client){
-					var data = client.options.data
+				return reader 
+					&& function(client){
+						// add a loading indicator...
+						// NOTE: this will get overwritten when calling .updateMetadata()
+						client.wait()
 
-					// add a loading indicator...
-					// NOTE: this will get overwritten when calling .updateMetadata()
-					data.push('---')
-					data.push('...')
-					client.update()
-
-					reader.then(function(data){
-						client.updateMetadata()
-					})
-				}
-			}],
+						reader
+							.then(function(data){
+								client.updateMetadata() })
+							.catch(function(){
+								client.update() })
+					} }],
 	],
 })
 

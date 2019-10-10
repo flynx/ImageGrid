@@ -108,10 +108,10 @@ module.VirtualImages = core.ImageGridFeatures.Feature({
 	tag: 'virtual-images',
 	depends: [
 		'edit',
-		// XXX
 	],
 	suggested: [
 		'ui-virtual-images',
+		'ui-virtual-images-edit',
 	],
 
 	actions: VirtualImagesActions, 
@@ -128,7 +128,7 @@ var VirtualImagesUIActions = actions.Actions({
 	},
 
 	__virtual_block_processors__: {
-		// The default handler is designed to process plain or lightly 
+		// Text handler is designed to process plain or lightly 
 		// formatted text.
 		//
 		// This will:
@@ -137,9 +137,10 @@ var VirtualImagesUIActions = actions.Actions({
 		//
 		// NOTE: the processor is allowed to only modify image block 
 		// 		content, anything else would require cleanup...
+		//
 		// XXX might be a good idea to add action param to enable 
 		// 		handlers to do things like 'setup', 'cleanup', ...	
-		default: function(image, dom){
+		text: function(image, dom){
 			if(!image.text){
 				return dom }
 
@@ -184,14 +185,33 @@ var VirtualImagesUIActions = actions.Actions({
 			var p = (this.__virtual_block_processors__ 
 				|| VirtualImagesUIActions.__virtual_block_processors__
 				|| {})
-			p = p[image.format] || p['default']
+			p = p[image.format] || p['text']
 			return p instanceof Function ?
 				p.call(this, image, dom) 
 				: dom }],
 
+	// XXX add text format selection...
+	metadataSection: [
+		{ sortedActionPriority: 80 },
+		function(make, gid, image){
+			var that = this
+			if(!image || image.type != 'virtual'){
+				return }
 
-	// XXX virtual block editor UI...
-	// XXX
+			make.Separator()
+			make.Editable(['Te$xt:', image.text], {
+				start_on: 'open',
+				edit_text: 'last',
+				multiline: true,
+				reset_on_commit: false,
+				editdone: function(evt, value){
+					image.text = value 
+					that.refresh(gid)
+				},
+			})
+			// XXX add format selection...
+			make(['Format:', image.format || 'text'])
+		}],
 })
 
 // NOTE: this is independent of 'virtual-images'...
@@ -206,6 +226,7 @@ module.VirtualImagesUI = core.ImageGridFeatures.Feature({
 	],
 	suggested: [
 		'virtual-images',
+		'ui-virtual-images-edit',
 	],
 
 	actions: VirtualImagesUIActions, 
@@ -227,6 +248,30 @@ module.VirtualImagesUI = core.ImageGridFeatures.Feature({
 	],
 })
 
+
+
+//---------------------------------------------------------------------
+
+var VirtualImagesEditUIActions = actions.Actions({
+	// XXX virtual block editor...
+	// XXX
+})
+
+// NOTE: this is independent of 'virtual-images'...
+var VirtualImagesEditUI = 
+module.VirtualImagesEditUI = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-virtual-images-edit',
+	depends: [
+		'ui',
+		'ui-virtual-images',
+		'virtual-images',
+	],
+
+	actions: VirtualImagesEditUIActions, 
+})
 
 
 

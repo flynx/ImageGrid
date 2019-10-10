@@ -375,6 +375,10 @@ function(text, options){
 				.trigger(
 					options.abort_on_deselect !== false ? 'edit-abort' : 'edit-commit', editable.text())
 		})
+	
+	options.multiline
+		&& getEditable()
+			.css('white-space', 'pre-line')
 
 	stop_propagation
 		&& elem

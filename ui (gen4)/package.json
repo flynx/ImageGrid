@@ -20,15 +20,15 @@
   "dependencies": {
     "app-module-path": "^1.0.6",
     "async-json": "0.0.2",
-    "commander": "^2.20.0",
-    "electron": "^5.0.8",
+    "commander": "^2.20.1",
+    "electron": "^5.0.11",
     "exiftool": "^0.0.3",
     "fs-extra": "^7.0.1",
     "fs-walk": "^0.0.1",
     "generic-walk": "^1.4.0",
     "glob": "^7.1.4",
     "guarantee-events": "^1.0.0",
-    "ig-actions": "^3.23.0",
+    "ig-actions": "^3.24.1",
     "ig-features": "^3.4.0",
     "ig-object": "^2.0.0",
     "moment": "^2.24.0",
@@ -37,7 +37,7 @@
     "requirejs-plugins": "^1.0.2",
     "sharp": "^0.22.1",
     "strip-json-comments": "^2.0.1",
-    "v8-compile-cache": "^2.0.3",
+    "v8-compile-cache": "^2.1.0",
     "wildglob": "^0.1.1"
   },
   "optionalDependencies": {
@@ -48,7 +48,7 @@
     "react-dom": "^15.6.2"
   },
   "devDependencies": {
-    "less": "^3.9.0"
+    "less": "^3.10.3"
   },
   "bin": {
     "ig": "ig.js"

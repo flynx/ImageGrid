@@ -281,7 +281,10 @@ if(typeof(jQuery) != typeof(undefined)){
 					} else if(n == 'Enter' 
 							&& !options.multiline){
 						evt.preventDefault()
-						that.trigger('edit-commit', that[0].innerText)
+						that.trigger('edit-commit', 
+							that.length == 1 ? 
+								that[0].innerText 
+								: that.toArray().map(function(e){ return e.innerText }))
 
 					// done -- multi-line...
 					} else if(options.multiline 
@@ -290,7 +293,10 @@ if(typeof(jQuery) != typeof(undefined)){
 								!(evt.ctrlKey || evt.shiftKey || evt.metaKey) 
 								: (evt.ctrlKey || evt.shiftKey || evt.metaKey)) ){
 						evt.preventDefault()
-						that.trigger('edit-commit', that[0].innerText)
+						that.trigger('edit-commit', 
+							that.length == 1 ? 
+								that[0].innerText 
+								: that.toArray().map(function(e){ return e.innerText }))
 
 					// multi-line keep keys...
 					} else if(options.multiline 
@@ -311,7 +317,10 @@ if(typeof(jQuery) != typeof(undefined)){
 						return
 					} else if(n == 'Up' || n == 'Down'){
 						evt.preventDefault()
-						that.trigger('edit-commit', that[0].innerText)
+						that.trigger('edit-commit', 
+							that.length == 1 ? 
+								that[0].innerText 
+								: that.toArray().map(function(e){ return e.innerText }))
 
 					// continue handling...
 					} else if(options.propagate_unhandled_keys){
