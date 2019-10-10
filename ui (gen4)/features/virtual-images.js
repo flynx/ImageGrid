@@ -82,21 +82,6 @@ var VirtualImagesActions = actions.Actions({
 				path: null, 
 			}) }],
 
-	makeVirtualTextBefore: ['Virtual/Add text before',
-		'makeVirtualText: $0 $1 "before"'],
-	makeVirtualText: ['Virtual/Add text after',
-		core.doc`
-
-			NOTE: this was not designed for complex HTML, only use simple 
-				formatted text.`,
-		//{ browseMode: function(){ return !this.collection && 'disabled' }, },
-		function(text, ref, offset){
-			this.makeVirtualBlock(ref, offset, {
-				type: 'virtual',
-				path: null, 
-				text: text || '',
-			}) }],
-
 	// XXX export...
 })
 
