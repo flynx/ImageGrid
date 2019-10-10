@@ -536,6 +536,7 @@ body {
 }
 .metadata-view .preview.image {
 	border: rgba(200, 200, 200, 0.3) 1px solid;
+	visibility: visible !important;
 }
 
 

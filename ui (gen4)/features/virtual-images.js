@@ -193,6 +193,10 @@ var VirtualImagesUIActions = actions.Actions({
 				reset_on_commit: false,
 				editdone: function(evt, value){
 					image.text = value 
+					// mark image as changed...
+					that.markChanged 
+						&& that.markChanged('images', [gid])
+					// refresh views...
 					make.dialog.updatePreview()
 					that.refresh(gid)
 				},

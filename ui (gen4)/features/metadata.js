@@ -463,6 +463,9 @@ var MetadataUIActions = actions.Actions({
 									return }
 								data = that.images[image] = that.images[image] || {}
 								data.comment = value
+								// mark image as changed...
+								that.markChanged 
+									&& that.markChanged('images', [image])
 							},
 						}) 
 
