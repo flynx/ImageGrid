@@ -538,6 +538,12 @@ body {
 	visibility: visible !important;
 }
 
+.metadata-view .text+.text {
+	font-style: italic;
+}
+.metadata-view .text+.text+.text {
+	margin-left: 0.5em;
+}
 
 
 /* DEBUG stuff... */

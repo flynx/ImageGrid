@@ -711,7 +711,7 @@ var TagUIActions = actions.Actions({
 		function(make, gid, image){
 			var that = this
 
-			make(['Tags:', 
+			make(['$Tags:', 
 				function(){
 					return that.data.getTags(gid).join(', ') }], 
 				{ 

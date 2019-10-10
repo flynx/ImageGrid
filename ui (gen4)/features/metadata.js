@@ -382,34 +382,35 @@ var MetadataUIActions = actions.Actions({
 							}) }
 
 					// preview...
-					make(['Preview:', this.updatePreview()], {
-						cls: 'preview',
-					})
+					make(['Preview:', this.updatePreview()], 
+						{ cls: 'preview' })
 					make.Separator()
 
 					// essentials...
 					make(['$GID: ', image])
 					// NOTE: these are 1-based and not 0-based...
-					make(['Index (ribbon): ', 
+					make(['Index: ',
+						// ribbon...
 						that.data.getImageOrder('ribbon', image) + 1
-						+'/'+ 
-						that.data.getImages(image).len])
-					// show this only when cropped...
-					make(['Index (global): ', 
-						that.data.getImageOrder(image) + 1
-						+'/'+ 
-						that.data.getImages('all').len])
-					// crop-specific stuff...
-					;(that.crop_stack && that.crop_stack.len > 0)
-						&& make(['Index (crop): ', 
-							that.data.getImageOrder('loaded', image) + 1
 							+'/'+ 
-							that.data.getImages('loaded').len])
-					// ribbons order...
-					make(['Ribbon: ',
+							that.data.getImages(image).len
+							+ 'R',
+						// crop...
+						...((that.crop_stack && that.crop_stack.len > 0) ?
+							[that.data.getImageOrder('loaded', image) + 1
+							+'/'+ 
+							that.data.getImages('loaded').len
+							+ 'C']
+							: []),
+						// global...
+						that.data.getImageOrder(image) + 1
+							+'/'+ 
+							that.data.getImages('all').len
+							+ 'G', ])
+					make(['Ribbon:',
 						that.data.getRibbonOrder(image) + 1
 						+'/'+
-						Object.keys(that.data.ribbons).length])	
+						Object.keys(that.data.ribbons).length])
 
 					make.Separator()
 
