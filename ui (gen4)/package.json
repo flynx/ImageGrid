@@ -28,7 +28,7 @@
     "generic-walk": "^1.4.0",
     "glob": "^7.1.4",
     "guarantee-events": "^1.0.0",
-    "ig-actions": "^3.24.1",
+    "ig-actions": "^3.24.2",
     "ig-features": "^3.4.0",
     "ig-object": "^2.0.0",
     "moment": "^2.24.0",
