@@ -524,6 +524,22 @@ body {
 
 
 
+/* metadata view */
+/* remove preview text and center image... */
+.metadata-view .item.preview {
+	text-align: center;
+	opacity: 1;
+}
+.metadata-view .preview .text {
+	left: 50%;
+	display: none;
+}
+.metadata-view .preview.image {
+	border: rgba(200, 200, 200, 0.3) 1px solid;
+}
+
+
+
 /* DEBUG stuff... */
 .container-center {
 	position: absolute;

@@ -381,7 +381,9 @@ var MetadataUIActions = actions.Actions({
 								},
 							}) }
 
-					make(['Preview:', this.updatePreview()])
+					make(['Preview:', this.updatePreview()], {
+						cls: 'preview',
+					})
 
 					// essentials...
 					make(['$GID: ', image])
@@ -407,6 +409,8 @@ var MetadataUIActions = actions.Actions({
 						+'/'+
 						Object.keys(that.data.ribbons).length])	
 
+					make.Separator()
+
 					if(data){
 						// some abstractions...
 						var _basename = typeof(path) != 'undefined' ?
@@ -417,7 +421,6 @@ var MetadataUIActions = actions.Actions({
 							: function(e){ 
 								return _normalize(e.split(/[\\\/]/g).slice(0, -1).join('/')) }
 
-						make.Separator()
 						// paths...
 						data.path 
 							&& make(['File $Name: ', 
@@ -464,7 +467,7 @@ var MetadataUIActions = actions.Actions({
 					// get other sections...
 					that.callSortedAction('metadataSection', make, image, data, mode)
 				}, {
-					cls: 'table-view',
+					cls: 'table-view metadata-view',
 					showDisabled: false,
 				})
 				.on('attached', function(){
