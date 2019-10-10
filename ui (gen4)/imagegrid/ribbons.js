@@ -1447,7 +1447,7 @@ var RibbonsPrototype = {
 	},
 
 	// XXX is .__image_updaters the right way to go???
-	callImageUpdaters: function(gid, image){
+	callImageUpdaters: function(gid, image, options){
 		gid = gid == null ? this.elemGID() : gid
 		image = image == null ? this.getImage() : $(image)
 
@@ -1456,7 +1456,7 @@ var RibbonsPrototype = {
 
 		;(this.__image_updaters || [])
 			.forEach(function(update){
-				update(gid, image) })
+				update(gid, image, options) })
 
 		return image
 	},
@@ -1492,6 +1492,14 @@ var RibbonsPrototype = {
 	//	.updateImage('*')
 	//		-> image
 	//
+	//
+	// options format:
+	// 	{
+	// 		nochrome: <bool>,
+	//
+	// 		pre_updaters_callback: <function>,
+	// 	}
+	//
 	// NOTE: this can update collections of images by passing either a 
 	// 		list of gids, images or a jQuery collection...
 	// NOTE: pre_updaters_callback if given is called after image is fully
@@ -1520,9 +1528,12 @@ var RibbonsPrototype = {
 	// XXX add support for basic image templating here...
 	// 		...templates for blank images, text blocks and other stuff,
 	// 		this would best be done by simply filling in SVG templates...
-	updateImage: function(image, gid, size, sync, pre_updaters_callback){
+	updateImage: function(image, gid, size, sync, options){
 		var that = this
 		var imgs = this.viewer.find(IMAGE)
+
+		options = options || {}
+		var pre_updaters_callback = options.pre_updaters_callback
 
 		// reduce the length of input image set...
 		// NOTE: this will make things substantially faster for very large
@@ -1534,8 +1545,7 @@ var RibbonsPrototype = {
 						|| image.indexOf(that.elemGID(img)) >= 0 })
 				.map(function(_, img){
 					return that.elemGID(img) })
-				.toArray()
-		}
+				.toArray() }
 		// normalize...
 		image = image == '*' ? 
 				imgs
@@ -1663,7 +1673,7 @@ var RibbonsPrototype = {
 			that.correctImageProportionsForRotation(img, W, H)
 			pre_updaters_callback 
 				&& pre_updaters_callback.call(that, image, data)
-			that.callImageUpdaters(data.gid, img)
+			that.callImageUpdaters(data.gid, img, options)
 
 			return _img
 		}))

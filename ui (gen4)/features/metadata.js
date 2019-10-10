@@ -366,16 +366,16 @@ var MetadataUIActions = actions.Actions({
 						make.Separator()
 						make.Spinner() }
 					// XXX BUG: this when attached is stealing marks from 
-					// 		the original image in ribbon and sows them in 
-					// 		the dialog...
-					// 		...need to avoid both!
+					// 		the original image in ribbon...
 					make.dialog.updatePreview = function(){
 						var preview = this.preview = this.preview || that.ribbons.createImage(image)
-						return that.ribbons.updateImage(preview, image, preview_size, false,
-							function([p]){
-								p.classList.add('clone', 'preview')
-								p.style.height = preview_size +'px'
-								p.style.width = preview_size +'px'
+						return that.ribbons.updateImage(preview, image, preview_size, false, {
+								nochrome: true,
+								pre_updaters_callback: function([p]){
+									p.classList.add('clone', 'preview')
+									p.style.height = preview_size +'px'
+									p.style.width = preview_size +'px'
+								},
 							}) }
 
 					make(['Preview:', this.updatePreview()])

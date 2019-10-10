@@ -474,10 +474,11 @@ module.ImageMarksUI = core.ImageGridFeatures.Feature({
 			function(ribbon){ this.reload(true) }],
 
 		// XXX is this the right way to go???
-		['updateImage', function(_, gid, img){
+		['updateImage', function(_, gid, img, options){
 			// NOTE: we are not using .toggleMark(..) here as this 
 			// 		does not need to depend on the 'edit' feature...
-			this.ribbons
+			!(options || {}).nochrome
+				&& this.ribbons
 				&& this.ribbons
 					.toggleImageMark(
 						gid, 
@@ -592,8 +593,9 @@ module.ImageBookmarksUI = core.ImageGridFeatures.Feature({
 
 	handlers: [
 		// XXX is this the right way to go???
-		['updateImage', function(_, gid, img){
-			this.ribbons
+		['updateImage', function(_, gid, img, options){
+			!(options || {}).nochrome
+				&& this.ribbons
 				&& this.ribbons
 					.toggleImageMark(
 						gid, 
