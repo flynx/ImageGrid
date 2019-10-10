@@ -381,9 +381,11 @@ var MetadataUIActions = actions.Actions({
 								},
 							}) }
 
+					// preview...
 					make(['Preview:', this.updatePreview()], {
 						cls: 'preview',
 					})
+					make.Separator()
 
 					// essentials...
 					make(['$GID: ', image])
