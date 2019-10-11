@@ -176,7 +176,6 @@ var VirtualImagesUIActions = actions.Actions({
 				p.call(this, image, dom) 
 				: dom }],
 
-	// XXX add text format selection...
 	// XXX make things editable only when edit is loaded...
 	metadataSection: [
 		{ sortedActionPriority: 80 },
@@ -201,8 +200,18 @@ var VirtualImagesUIActions = actions.Actions({
 					that.refresh(gid)
 				},
 			})
-			// XXX add format selection...
-			make(['Format:', image.format || 'text'])
+			make(['Format:', image.format || 'text'], {
+				open: function(){
+					this.selectTextFormat(gid) }, 
+			})
+		}],
+	// XXX is there a point in showing this when there is 1 format only???
+	selectTextFormat: ['Virtual/Text format...',
+		{ browseMode: function(){ 
+			return (this.image || {}).type != 'virtual' && 'disabled' }, },
+		function(gid){
+			// XXX show a list of keys from __virtual_block_processors__
+			// XXX
 		}],
 })
 
