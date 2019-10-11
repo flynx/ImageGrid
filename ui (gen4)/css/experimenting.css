@@ -525,11 +525,19 @@ body {
 
 /* metadata view */
 /* remove preview text and center image... */
+.metadata-view .item.index {
+	text-align: center;
+}
 .metadata-view .item.preview {
 	text-align: center;
 	opacity: 1;
 }
+.metadata-view .index .text,
 .metadata-view .preview .text {
+	float: initial;
+}
+.metadata-view .index .text:first-child,
+.metadata-view .preview .text:first-child {
 	left: 50%;
 	display: none;
 }
@@ -542,7 +550,13 @@ body {
 	font-style: italic;
 }
 .metadata-view .text+.text+.text {
-	margin-left: 0.5em;
+	margin-left: 1em;
+}
+.metadata-view small span {
+	opacity: 0.7;
+}
+.metadata-view small small {
+	opacity: 0.5;
 }
 
 

@@ -384,35 +384,63 @@ var MetadataUIActions = actions.Actions({
 					// preview...
 					make(['Preview:', this.updatePreview()], 
 						{ cls: 'preview' })
-					make.Separator()
-
-					// essentials...
-					make(['$GID: ', image])
 					// NOTE: these are 1-based and not 0-based...
-					make(['Index: ',
-						// ribbon...
-						that.data.getImageOrder('ribbon', image) + 1
-							+'/'+ 
-							that.data.getImages(image).len
-							+ 'R',
-						// crop...
-						...((that.crop_stack && that.crop_stack.len > 0) ?
-							[that.data.getImageOrder('loaded', image) + 1
-							+'/'+ 
-							that.data.getImages('loaded').len
-							+ 'C']
-							: []),
-						// global...
-						that.data.getImageOrder(image) + 1
-							+'/'+ 
-							that.data.getImages('all').len
-							+ 'G', ])
-					make(['Ribbon:',
-						that.data.getRibbonOrder(image) + 1
-						+'/'+
-						Object.keys(that.data.ribbons).length])
-
+					make(['Position: ', 
+						$('<small>')
+							.addClass('text')
+							.css({
+								whiteSpace: 'pre',
+							})
+							.html([
+								// ribbon...
+								that.data.getImageOrder('ribbon', image) + 1
+									+'/'+ 
+									that.data.getImages(image).len
+									+ '<small>R</small>',
+								...((that.crop_stack && that.crop_stack.len > 0) ?
+									// crop...
+									[that.data.getImageOrder('loaded', image) + 1
+										+'/'+ 
+										that.data.getImages('loaded').len
+										+ '<small>C</small>']
+									// global...
+									: [that.data.getImageOrder(image) + 1
+										+'/'+ 
+										that.data.getImages('all').len
+										+ '<small>G</small>']),
+								// ribbon...
+								'<span>R:</span>'+
+									(that.data.getRibbonOrder(image) + 1)
+									+'/'+
+									Object.keys(that.data.ribbons).length,
+							].join('   ')) ],
+						{ cls: 'index' })
 					make.Separator()
+
+					// comment...
+					make.Editable(['$Comment: ', 
+						function(){ 
+							return data && data.comment || '' }], 
+						{
+							start_on: 'open',
+							edit_text: 'last',
+							multiline: true,
+							reset_on_commit: false,
+							editdone: function(evt, value){
+								if(value.trim() == ''){
+									return }
+								data = that.images[image] = that.images[image] || {}
+								data.comment = value
+								// mark image as changed...
+								that.markChanged 
+									&& that.markChanged('images', [image])
+							},
+						}) 
+					make.Separator()
+
+					// gid...
+					make(['$GID: ', image])
+
 
 					if(data){
 						// some abstractions...
@@ -449,26 +477,6 @@ var MetadataUIActions = actions.Actions({
 								data.atime && new Date(data.atime).toShortDate()],
 								{disabled: true})
 					}
-
-					// comment...
-					make.Editable(['$Comment: ', 
-						function(){ 
-							return data && data.comment || '' }], 
-						{
-							start_on: 'open',
-							edit_text: 'last',
-							multiline: true,
-							reset_on_commit: false,
-							editdone: function(evt, value){
-								if(value.trim() == ''){
-									return }
-								data = that.images[image] = that.images[image] || {}
-								data.comment = value
-								// mark image as changed...
-								that.markChanged 
-									&& that.markChanged('images', [image])
-							},
-						}) 
 
 					// get other sections...
 					that.callSortedAction('metadataSection', make, image, data, mode)
