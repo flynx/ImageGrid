@@ -12,25 +12,27 @@ var features = require('lib/features')
 
 var core = require('features/core')
 
+var widgets = require('features/ui-widgets')
+
+var browse = require('lib/widget/browse')
+
 
 
 /*********************************************************************/
 
-// XXX revise menu placement...
+// XXX should these be sortable and how???
+// 		...relative placement (i.e. "before <GID>")???
+// XXX should these be importable from fs???
+// 		i.e. exported as json to <title>.virt and imported back...
+// 		...might be a good idea to add custom import/export handlers...
+// 
 var VirtualBlocksActions = actions.Actions({
 	// construction of new "virtual images"...
 	//
-	// XXX should this be restricted to collections???
-	// XXX should these be importable from fs???
-	// 		i.e. exported as json to <title>.virt and imported back...
-	// 		...might be a good idea to add custom import/export handlers...
-	// 
 	// XXX do better arg processing -- handle metadata correctly...
 	// XXX add export support for this type of stuff...
 	// 		text -> file.txt
-	// XXX add default named templates...
-	// XXX add svg templates???
-	makeVirtualBlock: ['- Virtual/',
+	makeVirtualBlock: ['- $Virtual block/',
 		function(ref, offset, metadata){
 			ref = ref || 'current'
 			offset = offset || 'after'	
@@ -65,22 +67,30 @@ var VirtualBlocksActions = actions.Actions({
 			// update metadata...
 			metadata
 				&& (this.images[gid] = metadata)
+			this.markChanged
+				&& this.markChanged('images', [gid])
 
 			// focus new image...
 			// NOTE: this should update the view too...
 			this.focusImage(gid)
 		}],
 
-	makeVirtualBlankBefore: ['Virtual/Add blank before',
-		'makeVirtualBlank: $0 "before"'],
-	makeVirtualBlank: ['Virtual/Add blank after',
-		core.doc``,
-		//{ browseMode: function(){ return !this.collection && 'disabled' }, },
+	// XXX this is enabled only in crop mode as there is no way to delete 
+	// 		a block but possible to create one...
+	// 		...should we add a .removeBlock(..) action???
+	makeVirtualBlank: ['Virtual block/50:Add blank $after',
+		core.doc`
+		
+		`,
+		{ browseMode: function(){ return !this.collection && 'disabled' }, },
 		function(ref, offset){
 			this.makeVirtualBlock(ref, offset, {
 				type: 'virtual',
 				path: null, 
 			}) }],
+	makeVirtualBlankBefore: ['Virtual block/51:Add blank $before',
+		{ browseMode: 'makeVirtualBlank', },
+		'makeVirtualBlank: $0 "before"'],
 
 	// XXX export...
 })
@@ -162,7 +172,7 @@ var VirtualBlocksUIActions = actions.Actions({
 			return dom
 		},
 	},
-	updateVirtualBlock: ['- Virtual/',
+	updateVirtualBlock: ['- Virtual block/',
 		function(gid, dom, image){
 			image = image || this.images[gid] || {}
 
@@ -177,7 +187,6 @@ var VirtualBlocksUIActions = actions.Actions({
 				p.call(this, image, dom) 
 				: dom }],
 
-	// XXX make things editable only when edit is loaded...
 	metadataSection: [
 		{ sortedActionPriority: 80 },
 		function(make, gid, image){
@@ -186,33 +195,11 @@ var VirtualBlocksUIActions = actions.Actions({
 				return }
 
 			make.Separator()
-			make.Editable(['Te$xt:', image.text], {
-				start_on: 'open',
-				edit_text: 'last',
-				multiline: true,
-				reset_on_commit: false,
-				editdone: function(evt, value){
-					image.text = value 
-					// mark image as changed...
-					that.markChanged 
-						&& that.markChanged('images', [gid])
-					// refresh views...
-					make.dialog.updatePreview()
-					that.refresh(gid)
-				},
-			})
-			make(['Format:', image.format || 'text'], {
-				open: function(){
-					this.selectTextFormat(gid) }, 
-			})
-		}],
-	// XXX is there a point in showing this when there is 1 format only???
-	selectTextFormat: ['Virtual/Text format...',
-		{ browseMode: function(){ 
-			return (this.image || {}).type != 'virtual' && 'disabled' }, },
-		function(gid){
-			// XXX show a list of keys from __virtual_block_processors__
-			// XXX
+			this.editVirtualBlockText ?
+				// editable... 
+				this.editVirtualBlockText(make, gid, image)
+				// view only...
+				: make(['Te$xt:', image.text])
 		}],
 })
 
@@ -255,8 +242,48 @@ module.VirtualBlocksUI = core.ImageGridFeatures.Feature({
 //---------------------------------------------------------------------
 
 var VirtualBlocksEditUIActions = actions.Actions({
-	// XXX virtual block editor...
-	// XXX
+	// XXX this is a good candidate for inlineing (browse2)
+	// XXX should we also add a preview (preview constructor from metadata)???
+	// XXX should we do a sanity check for image type???
+	editVirtualBlockText: ['Virtual block/$Edit text...',
+		{ browseMode: function(){ 
+			return (this.image || {}).type != 'virtual' && 'disabled' }, },
+		widgets.makeUIDialog(function(gid){
+			var that = this
+
+			var _make = function(make, gid, image){
+				make.Editable(['Te$xt:', image.text], {
+					start_on: 'open',
+					edit_text: 'last',
+					multiline: true,
+					reset_on_commit: false,
+					editdone: function(evt, value){
+						image.text = value 
+						// mark image as changed...
+						that.markChanged 
+							&& that.markChanged('images', [gid])
+						// refresh views...
+						make.dialog.updatePreview
+							&& make.dialog.updatePreview()
+						that.refresh(gid)
+					}, }) }
+
+			// XXX should this be a more specific test???
+			return arguments[0] instanceof Function?
+				// inline...
+				_make.call(this, ...arguments)
+				// dialog...
+				: browse.makeLister(null, 
+					function(p, make){
+						var gid = gid || that.current
+						var data = data || that.images[gid]
+
+						_make(make, gid, data) 
+					}, {
+						cls: 'table-view',
+					})
+					.close(function(){
+						that.refresh(gid) }) })],
 })
 
 // NOTE: this is independent of 'virtual-blocks'...

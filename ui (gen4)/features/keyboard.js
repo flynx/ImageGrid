@@ -358,6 +358,7 @@ module.GLOBAL_KEYBOARD = {
 		Menu: 'showContextMenu',
 		//alt_I: 'Menu',
 		alt_I: 'browseActions: "/Image/" -- Image menu...',
+		alt_V: 'browseActions: "/Virtual block/" -- Virtual block menu...',
 		alt_R: 'browseActions: "/Ribbon/" -- Ribbon menu...',
 
 

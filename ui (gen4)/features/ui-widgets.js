@@ -1372,6 +1372,7 @@ var BrowseActionsActions = actions.Actions({
 				'Image/55:.*flip.*',
 				'Image/-70:---',
 				'Image/-70:.*remove.*',
+			'$Virtual block',
 			'$Ribbon',
 				'Ribbon/-70:---',
 				'Ribbon/-70:.*remove.*',
