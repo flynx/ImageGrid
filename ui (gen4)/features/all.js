@@ -49,7 +49,7 @@ require('features/metadata')
 require('features/meta')
 
 // XXX EXPERIMENTAL...
-require('features/virtual-images')
+require('features/virtual-blocks')
 
 require('features/experimental')
 require('features/tests')

@@ -17,7 +17,7 @@ var core = require('features/core')
 /*********************************************************************/
 
 // XXX revise menu placement...
-var VirtualImagesActions = actions.Actions({
+var VirtualBlocksActions = actions.Actions({
 	// construction of new "virtual images"...
 	//
 	// XXX should this be restricted to collections???
@@ -85,21 +85,21 @@ var VirtualImagesActions = actions.Actions({
 	// XXX export...
 })
 
-var VirtualImages = 
-module.VirtualImages = core.ImageGridFeatures.Feature({
+var VirtualBlocks = 
+module.VirtualBlocks = core.ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
-	tag: 'virtual-images',
+	tag: 'virtual-blocks',
 	depends: [
 		'edit',
 	],
 	suggested: [
-		'ui-virtual-images',
-		'ui-virtual-images-edit',
+		'ui-virtual-blocks',
+		'ui-virtual-blocks-edit',
 	],
 
-	actions: VirtualImagesActions, 
+	actions: VirtualBlocksActions, 
 
 })
 
@@ -107,8 +107,9 @@ module.VirtualImages = core.ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 
-var VirtualImagesUIActions = actions.Actions({
+var VirtualBlocksUIActions = actions.Actions({
 	config: {
+		// Threshold text length at which 
 		'virtual-text-fit-area-threshold': 100,
 	},
 
@@ -169,7 +170,7 @@ var VirtualImagesUIActions = actions.Actions({
 				return actions.UNDEFINED }
 
 			var p = (this.__virtual_block_processors__ 
-				|| VirtualImagesUIActions.__virtual_block_processors__
+				|| VirtualBlocksUIActions.__virtual_block_processors__
 				|| {})
 			p = p[image.format] || p['text']
 			return p instanceof Function ?
@@ -215,22 +216,22 @@ var VirtualImagesUIActions = actions.Actions({
 		}],
 })
 
-// NOTE: this is independent of 'virtual-images'...
-var VirtualImagesUI = 
-module.VirtualImagesUI = core.ImageGridFeatures.Feature({
+// NOTE: this is independent of 'virtual-blocks'...
+var VirtualBlocksUI = 
+module.VirtualBlocksUI = core.ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
-	tag: 'ui-virtual-images',
+	tag: 'ui-virtual-blocks',
 	depends: [
 		'ui',
 	],
 	suggested: [
-		'virtual-images',
-		'ui-virtual-images-edit',
+		'virtual-blocks',
+		'ui-virtual-blocks-edit',
 	],
 
-	actions: VirtualImagesUIActions, 
+	actions: VirtualBlocksUIActions, 
 
 	handlers: [
 		['updateImage',
@@ -253,25 +254,25 @@ module.VirtualImagesUI = core.ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 
-var VirtualImagesEditUIActions = actions.Actions({
+var VirtualBlocksEditUIActions = actions.Actions({
 	// XXX virtual block editor...
 	// XXX
 })
 
-// NOTE: this is independent of 'virtual-images'...
-var VirtualImagesEditUI = 
-module.VirtualImagesEditUI = core.ImageGridFeatures.Feature({
+// NOTE: this is independent of 'virtual-blocks'...
+var VirtualBlocksEditUI = 
+module.VirtualBlocksEditUI = core.ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
-	tag: 'ui-virtual-images-edit',
+	tag: 'ui-virtual-blocks-edit',
 	depends: [
 		'ui',
-		'ui-virtual-images',
-		'virtual-images',
+		'ui-virtual-blocks',
+		'virtual-blocks',
 	],
 
-	actions: VirtualImagesEditUIActions, 
+	actions: VirtualBlocksEditUIActions, 
 })
 
 

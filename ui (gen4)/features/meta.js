@@ -160,7 +160,7 @@ core.ImageGridFeatures.Feature('imagegrid-testing', [
 	'ui-introspection',
 	'ui-single-image',
 	'ui-slideshow',
-	'ui-virtual-images',
+	'ui-virtual-blocks',
 	'ui-preview-filters',
 	'url-history',
 	'external-editor',
