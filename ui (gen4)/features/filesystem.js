@@ -2258,6 +2258,7 @@ var FileSystemWriterActions = actions.Actions({
 									logger && logger.emit('queued', to)
 
 									var res = include_virtual 
+										&& !img.do_not_export
 										&& !fse.existsSync(to)
 										&& outputFile(to, img.text || '')
 

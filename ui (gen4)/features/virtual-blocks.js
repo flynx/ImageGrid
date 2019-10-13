@@ -19,12 +19,27 @@ var browse = require('lib/widget/browse')
 
 
 /*********************************************************************/
-
+//
+// Virtual Block Format (Image):
+// 	{
+// 		// block type...
+// 		type: 'virtual',
+//
+// 		// Block text (optional)...
+// 		text: <String>,
+//
+// 		// if true this block will not be exported...
+// 		do_not_export: <bool>,
+//
+// 		// optional image attributes...
+// 		// for more info see: imagegrid/images.js
+// 		...
+// 	}
+//
 // XXX should these be sortable and how???
 // 		...relative placement (i.e. "before <GID>")???
-// XXX should these be importable from fs???
-// 		i.e. exported as json to <title>.virt and imported back...
-// 		...might be a good idea to add custom import/export handlers...
+// XXX should the export mechanism be extensible???
+// 		...i.e. some way to identify the block and get it's ext and file content...
 // 
 var VirtualBlocksActions = actions.Actions({
 	// construction of new "virtual images"...
