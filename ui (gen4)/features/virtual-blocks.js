@@ -28,9 +28,6 @@ var browse = require('lib/widget/browse')
 // 		// Block text (optional)...
 // 		text: <String>,
 //
-// 		// if true this block will not be exported...
-// 		do_not_export: <bool>,
-//
 // 		// optional image attributes...
 // 		// for more info see: imagegrid/images.js
 // 		...
@@ -262,7 +259,7 @@ var VirtualBlocksEditUIActions = actions.Actions({
 	// XXX this is a good candidate for inlineing (browse2)
 	// XXX should we also add a preview (preview constructor from metadata)???
 	// XXX should we do a sanity check for image type???
-	editVirtualBlockText: ['Virtual block/$Edit text...',
+	editVirtualBlockText: ['Virtual block/$Edit...',
 		{ browseMode: function(){ 
 			return (this.image || {}).type != 'virtual' && 'disabled' }, },
 		widgets.makeUIDialog(function(gid){
