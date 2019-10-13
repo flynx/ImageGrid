@@ -20,22 +20,6 @@ var browse = require('lib/widget/browse')
 
 /*********************************************************************/
 //
-// Virtual Block Format (Image):
-// 	{
-// 		// block type...
-// 		type: 'virtual',
-//
-// 		// Block text (optional)...
-// 		text: <String>,
-//
-// 		// export constructor action...
-// 		// XXX not implemented yet...
-// 		//export: <action>,
-//
-// 		// optional image attributes...
-// 		// for more info see: imagegrid/images.js
-// 		...
-// 	}
 //
 // XXX should these be sortable and how???
 // 		...relative placement (i.e. "before <GID>")???
@@ -55,9 +39,39 @@ var VirtualBlocksActions = actions.Actions({
 	// construction of new "virtual images"...
 	//
 	// XXX add undo...
-	// XXX do better arg processing -- handle metadata correctly...
+	// XXX do better arg processing -- handle data correctly...
 	makeVirtualBlock: ['- $Virtual block/',
-		function(ref, offset, metadata){
+		core.doc`
+
+			Virtual Block Format (Image):
+				{
+					// block type...
+					type: 'virtual',
+
+					// Block name (optional)...
+					//
+					// NOTE: this is a standard Image attribute used to generate 
+					//		exported image filename...
+					// NOTE: if it is required to change exported file extension 
+					//		from '.txt' add the extension to the name...
+					//			Example:
+					//				name: 'virtual-image.tex'
+					name: <String>,
+
+					// Block text (optional)...
+					text: <String>,
+
+					// export constructor action...
+					//
+					// XXX not implemented yet...
+					//export: <action>,
+
+					// optional image attributes...
+					// for more info see: imagegrid/images.js
+					...
+				}
+			`,
+		function(ref, offset, data){
 			ref = ref || 'current'
 			offset = offset || 'after'	
 			offset = offset == 'after' ? 
@@ -68,7 +82,7 @@ var VirtualBlocksActions = actions.Actions({
 					offset
 				: 0
 			// XXX revise...
-			metadata = arguments[arguments.length-1] instanceof Object ?
+			data = arguments[arguments.length-1] instanceof Object ?
 				arguments[arguments.length-1]
 				: null
 
@@ -88,9 +102,9 @@ var VirtualBlocksActions = actions.Actions({
 			// update data...
 			data.updateImagePositions()
 
-			// update metadata...
-			metadata
-				&& (this.images[gid] = metadata)
+			// update data...
+			data
+				&& (this.images[gid] = data)
 			this.markChanged
 				&& this
 					.markChanged('data')
@@ -278,7 +292,7 @@ module.VirtualBlocksUI = core.ImageGridFeatures.Feature({
 
 var VirtualBlocksEditUIActions = actions.Actions({
 	// XXX this is a good candidate for inlineing (browse2)
-	// XXX should we also add a preview (preview constructor from metadata)???
+	// XXX should we also add a preview (preview constructor from features/metadata.js)???
 	// XXX should we do a sanity check for image type???
 	editVirtualBlockText: ['Virtual block/$Edit...',
 		{ browseMode: function(){ 
