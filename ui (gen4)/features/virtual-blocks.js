@@ -71,7 +71,7 @@ var VirtualBlocksActions = actions.Actions({
 					...
 				}
 			`,
-		function(ref, offset, data){
+		function(ref, offset, img){
 			ref = ref || 'current'
 			offset = offset || 'after'	
 			offset = offset == 'after' ? 
@@ -82,7 +82,7 @@ var VirtualBlocksActions = actions.Actions({
 					offset
 				: 0
 			// XXX revise...
-			data = arguments[arguments.length-1] instanceof Object ?
+			img = arguments[arguments.length-1] instanceof Object ?
 				arguments[arguments.length-1]
 				: null
 
@@ -103,8 +103,8 @@ var VirtualBlocksActions = actions.Actions({
 			data.updateImagePositions()
 
 			// update data...
-			data
-				&& (this.images[gid] = data)
+			img
+				&& (this.images[gid] = img)
 			this.markChanged
 				&& this
 					.markChanged('data')

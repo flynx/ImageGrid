@@ -484,8 +484,8 @@ var MetadataUIActions = actions.Actions({
 					cls: 'table-view metadata-view',
 					showDisabled: false,
 				})
-				.on('attached', function(){
-					this.updatePreview() })
+				.on('attached', function(){ this.updatePreview() })
+				.on('update', function(){ this.updatePreview() })
 				// select value of current item...
 				.on('select', function(evt, elem){
 					that.config['metadata-auto-select-mode'] == 'on select'
