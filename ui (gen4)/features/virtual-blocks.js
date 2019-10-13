@@ -48,11 +48,13 @@ var browse = require('lib/widget/browse')
 // 			exportPreview(..)
 // 			exportText(..)
 // 			...
+// XXX add undo...
 //
 // 
 var VirtualBlocksActions = actions.Actions({
 	// construction of new "virtual images"...
 	//
+	// XXX add undo...
 	// XXX do better arg processing -- handle metadata correctly...
 	makeVirtualBlock: ['- $Virtual block/',
 		function(ref, offset, metadata){
@@ -115,8 +117,6 @@ var VirtualBlocksActions = actions.Actions({
 	makeVirtualBlankBefore: ['Virtual block/51:Add blank $before',
 		{ browseMode: 'makeVirtualBlank', },
 		'makeVirtualBlank: $0 "before"'],
-
-	// XXX export...
 })
 
 var VirtualBlocks = 
@@ -145,6 +145,15 @@ var VirtualBlocksUIActions = actions.Actions({
 	config: {
 		// Threshold text length at which 
 		'virtual-text-fit-area-threshold': 100,
+
+		// Editable virtual block fields...
+		//
+		// XXX if we need to add types try and re-use existing editor 
+		// 		constructors in features/ui-widgets.js....
+		'virtual-text-fields': {
+			'Tit$le': 'name',
+			'Te$xt': 'text',
+		},
 	},
 
 	__virtual_block_processors__: {
@@ -223,7 +232,9 @@ var VirtualBlocksUIActions = actions.Actions({
 				// editable... 
 				this.editVirtualBlockText(make, gid, image)
 				// view only...
-				: make(['Te$xt:', image.text])
+				: Object.entries(this.config['virtual-text-fields'] || {})
+					.forEach(function([title, attr]){
+						make([title +':', image[attr]]) })
 		}],
 })
 
@@ -276,21 +287,31 @@ var VirtualBlocksEditUIActions = actions.Actions({
 			var that = this
 
 			var _make = function(make, gid, image){
-				make.Editable(['Te$xt:', image.text], {
-					start_on: 'open',
-					edit_text: 'last',
-					multiline: true,
-					reset_on_commit: false,
-					editdone: function(evt, value){
-						image.text = value 
-						// mark image as changed...
-						that.markChanged 
-							&& that.markChanged('images', [gid])
-						// refresh views...
-						make.dialog.updatePreview
-							&& make.dialog.updatePreview()
-						that.refresh(gid)
-					}, }) }
+				var Editable = function(title, attr){
+					make.Editable([title +':', image[attr] || ''], {
+						start_on: 'open',
+						edit_text: 'last',
+						multiline: true,
+						reset_on_commit: false,
+						editdone: function(evt, value){
+							if(value == ''){
+								delete image[attr]
+							} else {
+								image[attr] = value 
+							}
+
+							// mark image as changed...
+							that.markChanged 
+								&& that.markChanged('images', [gid])
+							// refresh views...
+							make.dialog.updatePreview
+								&& make.dialog.updatePreview()
+							that.refresh(gid)
+						}, }) }
+				// build the list...
+				Object.entries(that.config['virtual-text-fields'] || {})
+					.forEach(function([title, attr]){
+						Editable(title, attr) }) }
 
 			// XXX should this be a more specific test???
 			return arguments[0] instanceof Function?

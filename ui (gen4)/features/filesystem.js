@@ -1991,8 +1991,12 @@ var FileSystemWriterActions = actions.Actions({
 
 	// XXX document data format...
 	// XXX should %T / %I be global or current crop???
-	// XXX add support of %(fav)l for level dir...
-	// XXX set length of %g in options...
+	// XXX add comments...
+	// 		%comment - add comment if present
+	// 		%(...%comment )comment - add comment if present
+	// 		...need a better name...
+	// XXX add tags/keywords... 
+	// 		%(tag|...)k - if image is tagged with tag add text
 	formatImageName: ['- File/',
 		core.doc`
 
@@ -2135,6 +2139,9 @@ var FileSystemWriterActions = actions.Actions({
 					/%\(([^)]*)\)m/, tags.indexOf('marked') >= 0 ? '$1' : '')
 				.replace(
 					/%\(([^)]*)\)b/, tags.indexOf('bookmark') >= 0 ? '$1' : '')
+				// XXX
+				//.replace(
+				//	/%\(([^)]*)\)k/, tags.indexOf('bookmark') >= 0 ? '$1' : '')
 
 				// conflicts...
 				.replace(
@@ -2250,7 +2257,7 @@ var FileSystemWriterActions = actions.Actions({
 
 								// handle virtual blocks...
 								if(img.type == 'virtual'){
-									name = img.ext ? 
+									name = (img.ext || pathlib.extname(name) != '') ? 
 										name 
 										: name +'.txt'
 									to = img_dir +'/'+ name
