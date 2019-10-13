@@ -28,6 +28,10 @@ var browse = require('lib/widget/browse')
 // 		// Block text (optional)...
 // 		text: <String>,
 //
+// 		// export constructor action...
+// 		// XXX not implemented yet...
+// 		//export: <action>,
+//
 // 		// optional image attributes...
 // 		// for more info see: imagegrid/images.js
 // 		...
@@ -36,14 +40,20 @@ var browse = require('lib/widget/browse')
 // XXX should these be sortable and how???
 // 		...relative placement (i.e. "before <GID>")???
 // XXX should the export mechanism be extensible???
-// 		...i.e. some way to identify the block and get it's ext and file content...
+// 		...i.e. some way to identify the block and get its .ext and file content...
+// 		one way to do this is to add an attr:
+// 			export: <action(gid, data)>
+// 		...this could also be a generic API, not specific to 'virtual-blocks'
+// 		implementing such export actions as:
+// 			exportPreview(..)
+// 			exportText(..)
+// 			...
+//
 // 
 var VirtualBlocksActions = actions.Actions({
 	// construction of new "virtual images"...
 	//
 	// XXX do better arg processing -- handle metadata correctly...
-	// XXX add export support for this type of stuff...
-	// 		text -> file.txt
 	makeVirtualBlock: ['- $Virtual block/',
 		function(ref, offset, metadata){
 			ref = ref || 'current'
@@ -89,8 +99,8 @@ var VirtualBlocksActions = actions.Actions({
 			this.focusImage(gid)
 		}],
 
-	// XXX this is enabled only in crop mode as there is no way to delete 
-	// 		a block but possible to create one...
+	// XXX this is enabled only in collection view as there is no way 
+	// 		to delete a block but possible to create one...
 	// 		...should we add a .removeBlock(..) action???
 	makeVirtualBlank: ['Virtual block/50:Add blank $after',
 		core.doc`
