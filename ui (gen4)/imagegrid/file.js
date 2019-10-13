@@ -161,11 +161,7 @@ function(func){
 		var args = [...arguments]
 		return new Promise(function(resolve, reject){
 			func.apply(that, args.concat([function(err, res){
-				return err ? reject(err) : resolve(res)
-			}]))
-		})
-	}
-}
+				return err ? reject(err) : resolve(res) }])) }) } }
 
 var loadFile = denodeify(fse.readFile)
 var writeFile = denodeify(fse.writeFile)

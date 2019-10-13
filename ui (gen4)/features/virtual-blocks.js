@@ -68,7 +68,9 @@ var VirtualBlocksActions = actions.Actions({
 			metadata
 				&& (this.images[gid] = metadata)
 			this.markChanged
-				&& this.markChanged('images', [gid])
+				&& this
+					.markChanged('data')
+					.markChanged('images', [gid])
 
 			// focus new image...
 			// NOTE: this should update the view too...
@@ -301,6 +303,7 @@ module.VirtualBlocksEditUI = core.ImageGridFeatures.Feature({
 
 	actions: VirtualBlocksEditUIActions, 
 })
+
 
 
 

@@ -43,6 +43,8 @@ var browseWalk = require('lib/widget/browse-walk')
 if(typeof(process) != 'undefined'){
 	var copy = file.denodeify(fse.copy)
 	var ensureDir = file.denodeify(fse.ensureDir)
+	var outputFile = file.denodeify(fse.outputFile)
+	var createFile = file.denodeify(fse.createFile)
 }
 
 
@@ -1565,6 +1567,9 @@ var FileSystemWriterActions = actions.Actions({
 		'export-path': null,
 		'export-paths': [],
 
+		'export-include-virtual': true,
+		'export-clean-target': true,
+
 		// NOTE: file extension is added automatically...
 		// NOTE: see .formatImageName(..) for format docs...
 		'export-preview-name-pattern': '%(fav)l%n%(-%c)c',
@@ -1616,6 +1621,28 @@ var FileSystemWriterActions = actions.Actions({
 		],
 		'export-preview-size-limit': 'no limit',
 	},
+
+	// XXX should this be sync???
+	backupDir: ['- File/',
+		function(path, logger){
+			// XXX get a logger...
+			logger = logger || this.logger
+			logger = logger && logger.push('Backup')
+
+			do{
+				var d = Date.timeStamp()
+				var backup_dir = `${pathlib.dirname(path)}/.${pathlib.basename(path)}.${d}`
+			} while(fse.existsSync(backup_dir))
+
+			logger && logger.emit(backup_dir)
+
+			fse.moveSync(path, backup_dir)
+
+			typeof(process) != 'undefined' 
+				&& (process.platform == 'win32' 
+					|| process.platform == 'win64')
+				&& child_process
+					.spawn('attrib', ['+h', backup_dir]) }],
 
 	// Save index...
 	//
@@ -1722,7 +1749,7 @@ var FileSystemWriterActions = actions.Actions({
 	// XXX handle .image.path and other stack files...
 	// XXX local collections???
 	exportIndex: ['- File/Export/Export index',
-		function(path, max_size, include_orig, logger){
+		function(path, max_size, include_orig, clean_target_dir, logger){
 			var that = this
 			logger = logger || this.logger
 			logger = logger && logger.push('Export index')
@@ -1739,6 +1766,15 @@ var FileSystemWriterActions = actions.Actions({
 			// XXX resolve env variables in path...
 			// 		...also add ImageGrid specifics: $IG_INDEX, ...
 			// XXX
+			
+			// clear/backup target...
+			clean_target_dir = clean_target_dir === undefined ? 
+				this.config['export-clean-target'] 
+				: clean_target_dir
+			clean_target_dir
+				&& fse.existsSync(path)
+				&& this.backupDir(path, logger)
+
 
 			// resolve relative paths...
 			if(/^(\.\.?[\\\/]|[^\\\/])/.test(path) 
@@ -2025,11 +2061,19 @@ var FileSystemWriterActions = actions.Actions({
 			}
 			gid = gid || this.current
 			var ribbon = this.data.getRibbon(gid)
+			data = Object.assign({}, 
+				this.images[gid] || {}, 
+				data)
 
-			var img = this.images[gid]
-			name = name || pathlib.basename(img.path || (img.name + img.ext))
+			name = name 
+				|| pathlib.basename(
+					data.path || ((data.name || '') + (data.ext || '')))
+			name = name == '' ? 
+				gid 
+				: name
 			var ext = pathlib.extname(name)
-			var to_ext = data.ext || ext
+			var to_ext = data.ext 
+				|| ext
 
 			var tags = data.tags || this.data.getTags(gid)
 
@@ -2123,12 +2167,14 @@ var FileSystemWriterActions = actions.Actions({
 	// XXX stop the process on errors...
 	// XXX use tasks...
 	// XXX check global index ('%I') in crop...
+	// XXX add option to "clean" destination...
+	// 		...i.e. if destination exists then move it to .removed/<date>/
 	exportDirs: ['- File/Export/Export ribbons as directories',
 		core.doc`Export ribbons as directories
 
 		NOTE: see .formatImageName(..) for pattern syntax details.
 		`,
-		function(path, pattern, level_dir, size, logger){
+		function(path, pattern, level_dir, size, include_virtual, clean_target_dir, logger){
 			logger = logger || this.logger
 			logger = logger && logger.push('Export dirs')
 			var that = this
@@ -2156,6 +2202,17 @@ var FileSystemWriterActions = actions.Actions({
 				: (level_dir || this.config['export-level-directory-name'] || 'fav')
 			size = size || this.config['export-preview-size'] || 1000
 			pattern = pattern || this.config['export-preview-name-pattern'] || '%f'
+			include_virtual = include_virtual === undefined ?
+				this.config['export-include-virtual']
+				: include_virtual
+
+			// clear/backup target...
+			clean_target_dir = clean_target_dir === undefined ? 
+				this.config['export-clean-target'] 
+				: clean_target_dir
+			clean_target_dir
+				&& fse.existsSync(to_dir)
+				&& this.backupDir(to_dir, logger)
 
 			// check if we have naming conflicts...
 			var conflicts = this.imageNameConflicts()
@@ -2180,19 +2237,6 @@ var FileSystemWriterActions = actions.Actions({
 
 							that.data.ribbons[ribbon].forEach(function(gid){
 								var img = that.images[gid]
-								// NOTE: we are intentionally losing image dir 
-								// 		name here -- we do not need to preserve 
-								// 		topology when exporting...
-								var img_name = pathlib.basename(img.path || (img.name + img.ext))
-
-								// get best preview...
-								var from = (img.base_path || base_dir) 
-										+'/'
-										+ that.images.getBestPreview(gid, size).url
-
-
-								// XXX see if we need to make a preview (sharp)
-								// XXX
 
 								// XXX get/form image name... 
 								// XXX might be a good idea to connect this to the info framework...
@@ -2204,16 +2248,49 @@ var FileSystemWriterActions = actions.Actions({
 										conflicts: conflicts.conflicts,
 									})
 
-								var to = img_dir +'/'+ name
+								// handle virtual blocks...
+								if(img.type == 'virtual'){
+									name = img.ext ? 
+										name 
+										: name +'.txt'
+									to = img_dir +'/'+ name
 
-								logger && logger.emit('queued', to)
+									logger && logger.emit('queued', to)
+
+									var res = include_virtual 
+										&& !fse.existsSync(to)
+										&& outputFile(to, img.text || '')
+
+								// normal images...
+								} else {
+									// NOTE: we are intentionally losing image dir 
+									// 		name here -- we do not need to preserve 
+									// 		topology when exporting...
+									var img_name = pathlib.basename(img.path || (img.name + img.ext))
+
+									// get best preview...
+									var from = (img.base_path || base_dir) 
+											+'/'
+											+ that.images.getBestPreview(gid, size).url
+
+
+									// XXX see if we need to make a preview (sharp)
+									// XXX
+
+									var to = img_dir +'/'+ name
+
+									logger && logger.emit('queued', to)
+
+									var res = !fse.existsSync(to)
+										&& copy(from, to)
+								}
 
 								// destination exists...
-								if(fse.existsSync(to)){
+								if(!res){
 									logger && logger.emit('skipping', to)
 
 								} else {
-									return copy(from, to)
+									return res 
 										.then(function(){
 											logger && logger.emit('done', to) })
 										.catch(function(err){
@@ -2301,6 +2378,7 @@ var FileSystemWriterUIActions = actions.Actions({
 				data: [
 					'base_path',
 					'target_dir',
+					'clean_target_dir',
 					// XXX need to add options to size: 'none',
 					// XXX use closest preview instead of hi-res when 
 					// 		this is set...
@@ -2317,8 +2395,10 @@ var FileSystemWriterUIActions = actions.Actions({
 				data: [
 					'pattern',
 					'size',
+					'include_virtual',
 					'base_path',
 					'target_dir',
+					'clean_target_dir',
 					// XXX add option to disable this...
 					//'level_dir',
 				],
@@ -2606,6 +2686,28 @@ var FileSystemWriterUIActions = actions.Actions({
 						})
 				})
 		},
+		'include_virtual': function(actions, make, parent){
+			var elem = make([
+					'Include $virtual: ', 
+					actions.config['export-include-virtual'] ?
+						'yes' 
+						: 'no'], 
+				{ open: function(){
+					var v = actions.config['export-include-virtual'] = 
+						!actions.config['export-include-virtual'] 
+					elem.find('.text').last()
+						.text(v ? 'yes' : 'no') }, }) },
+		'clean_target_dir': function(actions, make, parent){
+			var elem = make([
+					'$Clean target: ', 
+					actions.config['export-clean-target'] ?
+						'yes' 
+						: 'no'], 
+				{ open: function(){
+					var v = actions.config['export-clean-target'] = 
+						!actions.config['export-clean-target'] 
+					elem.find('.text').last()
+						.text(v ? 'yes' : 'no') }, }) },
 	},
 	// XXX update export state: index, crop, image...
 	// XXX should this be visible directly???
