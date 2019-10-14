@@ -2176,6 +2176,7 @@ var FileSystemWriterActions = actions.Actions({
 	// XXX check global index ('%I') in crop...
 	// XXX add option to "clean" destination...
 	// 		...i.e. if destination exists then move it to .removed/<date>/
+	//
 	exportDirs: ['- File/Export/Export ribbons as directories',
 		core.doc`Export ribbons as directories
 
