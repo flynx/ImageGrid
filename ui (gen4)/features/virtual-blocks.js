@@ -214,7 +214,9 @@ var VirtualBlocksUIActions = actions.Actions({
 
 			text.style.fontSize = `${ 100*s }%`
 			// prioritize width... 
-			text.style.width = '100%'
+			text.style.width = '95%'
+			image.text.length > C
+				&& (text.style.textAlign = 'justify')
 
 			return dom
 		},
