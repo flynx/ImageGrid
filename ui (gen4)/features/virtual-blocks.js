@@ -11,10 +11,10 @@ var actions = require('lib/actions')
 var features = require('lib/features')
 
 var core = require('features/core')
+var browse = require('lib/widget/browse')
 
 var widgets = require('features/ui-widgets')
 
-var browse = require('lib/widget/browse')
 
 
 
@@ -23,6 +23,8 @@ var browse = require('lib/widget/browse')
 //
 // XXX should these be sortable and how???
 // 		...relative placement (i.e. "before <GID>")???
+// 		.....might be a good idea to add option to "pair" images as a 
+// 		generic sort thing -- is this grouping???
 // XXX should the export mechanism be extensible???
 // 		...i.e. some way to identify the block and get its .ext and file content...
 // 		one way to do this is to add an attr:
@@ -211,16 +213,26 @@ var VirtualBlocksUIActions = actions.Actions({
 					text.scrollHeight,
 					text.scrollWidth)
 			var s = R/r
-
 			text.style.fontSize = `${ 100*s }%`
+
 			// prioritize width... 
 			text.style.width = '95%'
+
+			// justify larger blocks...
 			image.text.length > C
 				&& (text.style.textAlign = 'justify')
 
 			return dom
 		},
+
+		/* XXX
+		html: function(image, dom){},
+		svg: function(image, dom){},
+		markdown: function(image, dom){},
+		pwiki: function(image, dom){},
+		//*/
 	},
+	// XXX add format auto-detection -- first line announce (a-la pWiki)...
 	updateVirtualBlock: ['- Virtual block/',
 		function(gid, dom, image){
 			image = image || this.images[gid] || {}
