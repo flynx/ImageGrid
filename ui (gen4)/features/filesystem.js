@@ -2314,6 +2314,7 @@ var FileSystemWriterActions = actions.Actions({
 					return res
 				}))
 		}]
+
 })
 
 
@@ -2804,6 +2805,27 @@ var FileSystemWriterUIActions = actions.Actions({
 		'exportDialog: "index"'],
 	exportImagesDialog: ['File/Export $images...', 
 		'exportDialog: "images"'],
+
+
+	// XXX export using a preset...
+	// 		- display a list of presets accessible with 1-9 keys + title 
+	// 			hotkeys...
+	// 			a-la collection list + location history...
+	// 			- edit, remove buttons
+	// 			- sortable
+	// 			- pinnable?
+	// 			- fixed number???
+	// 			- select last used
+	// 		- use .exportDialog(..) as preset editor
+	// 			- add optional 'title'
+	// 		- "New/Custom..." button
+	// 		- single image mode:
+	// 			- disable index exporting for single images
+	// 		- add option to export only current image from any view...
+	exportPresets: ['- File/Export...',
+		widgets.makeUIDialog(function(mode){
+			// XXX
+		})],
 })
 
 
