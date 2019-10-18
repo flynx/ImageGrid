@@ -2413,6 +2413,19 @@ var FileSystemWriterUIActions = actions.Actions({
 				],
 			},
 		},
+
+		// XXX format:
+		// 	[
+		// 		{
+		// 			// XXX key in .config['export-dialog-modes']
+		// 			type: <preset-tipe>,
+		// 			...
+		// 		}
+		// 	]
+		// XXX should this be a dict or a list???
+		// 		...a dict would require keys (gid/title??)
+		// XXX should this api be accessible from outside the ui???
+		'export-presets': [],
 	},
 
 	// XXX this needs feedback...
@@ -2828,10 +2841,21 @@ var FileSystemWriterUIActions = actions.Actions({
 	// 		- single image mode:
 	// 			- disable index exporting for single images
 	// 		- add option to export only current image from any view...
+	// XXX need a means to save/manage/run presets...
 	exportPresets: ['- File/Export...',
 		widgets.makeUIDialog(function(mode){
 			// XXX
 		})],
+
+	// XXX these do note need the ui -- move to a separate feature...
+	// XXX these are essentially the same as the history API, make a 
+	// 		generic list manager???
+	saveExportPreset: ['- File/', 
+		function(){}],
+	deleteExportPreset: ['- File/', 
+		function(){}],
+	runExportPreset: ['- File/', 
+		function(){}],
 })
 
 
