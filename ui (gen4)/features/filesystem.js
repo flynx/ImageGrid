@@ -2814,6 +2814,12 @@ var FileSystemWriterUIActions = actions.Actions({
 	// 			- edit, remove buttons
 	// 			- sortable
 	// 			- pinnable?
+	// 				...thought of prioritizing based on path (relative vs. 
+	// 				absolute) but this seems to be wrong...
+	// 				prioritizing based on title (optional) is logical 
+	// 				on the other hand, but not sure if having a title here
+	// 				is a good idea in the first place -- overcomplicating things
+	// 				...having a note/comment on the other hand is a good idea...
 	// 			- fixed number???
 	// 			- select last used
 	// 		- use .exportDialog(..) as preset editor
