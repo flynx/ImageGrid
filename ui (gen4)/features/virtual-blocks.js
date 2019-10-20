@@ -45,6 +45,14 @@ var VirtualBlocksActions = actions.Actions({
 	makeVirtualBlock: ['- $Virtual block/',
 		core.doc`
 
+				.makeVirtualBlock(reference, offset, data)
+					-> this
+
+				.makeVirtualBlock(reference, 'after', data)
+				.makeVirtualBlock(reference, 'before', data)
+					-> this
+
+
 			Virtual Block Format (Image):
 				{
 					// block type...
@@ -133,6 +141,14 @@ var VirtualBlocksActions = actions.Actions({
 	makeVirtualBlankBefore: ['Virtual block/51:Add blank $before',
 		{ browseMode: 'makeVirtualBlank', },
 		'makeVirtualBlank: $0 "before"'],
+
+	cloneVirtualBlock: ['Virtual block/Clone block...',
+		function(ref, offset, img){
+			var img = Object.assign({}, 
+				this.images[this.data.getImage(ref)] || {}, 
+				img || {})
+			delete img.gid
+			this.makeVirtualBlock(ref, offset, img) }],
 })
 
 var VirtualBlocks = 
@@ -357,6 +373,19 @@ var VirtualBlocksEditUIActions = actions.Actions({
 					})
 					.close(function(){
 						that.refresh(gid) }) })],
+
+	// XXX virtual block templates...
+	cloneVirtualBlockFromTemplate: ['Virtual block/Clone from...',
+		function(){ 
+		}],
+	saveVirtualBlockAs Template: ['Virtual block/Save as template',
+		function(gid){
+		}],
+
+	// XXX list existing non-blank v-blocks...
+	cloneVirtualBlockFrom: ['Virtual block/Clone from...',
+		function(){ 
+		}],
 })
 
 // NOTE: this is independent of 'virtual-blocks'...
