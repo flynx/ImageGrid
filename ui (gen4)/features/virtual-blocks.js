@@ -378,7 +378,7 @@ var VirtualBlocksEditUIActions = actions.Actions({
 	cloneVirtualBlockFromTemplate: ['Virtual block/Clone from...',
 		function(){ 
 		}],
-	saveVirtualBlockAs Template: ['Virtual block/Save as template',
+	saveVirtualBlockAsTemplate: ['Virtual block/Save as template',
 		function(gid){
 		}],
 
