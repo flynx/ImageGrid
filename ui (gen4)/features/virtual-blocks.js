@@ -128,7 +128,7 @@ var VirtualBlocksActions = actions.Actions({
 	// XXX this is enabled only in collection view as there is no way 
 	// 		to delete a block but possible to create one...
 	// 		...should we add a .removeBlock(..) action???
-	makeVirtualBlank: ['Virtual block/50:Add blank $after',
+	makeVirtualBlank: ['Virtual block/80:Add blank $after',
 		core.doc`
 		
 		`,
@@ -138,11 +138,12 @@ var VirtualBlocksActions = actions.Actions({
 				type: 'virtual',
 				path: null, 
 			}) }],
-	makeVirtualBlankBefore: ['Virtual block/51:Add blank $before',
+	makeVirtualBlankBefore: ['Virtual block/81:Add blank $before',
 		{ browseMode: 'makeVirtualBlank', },
 		'makeVirtualBlank: $0 "before"'],
 
-	cloneVirtualBlock: ['Virtual block/Clone block...',
+	cloneVirtualBlock: ['Virtual block/80:$Clone block...',
+		{ browseMode: 'editVirtualBlock' },
 		function(ref, offset, img){
 			var img = Object.assign({}, 
 				this.images[this.data.getImage(ref)] || {}, 
@@ -272,9 +273,9 @@ var VirtualBlocksUIActions = actions.Actions({
 				return }
 
 			make.Separator()
-			this.editVirtualBlockText ?
+			this.editVirtualBlock ?
 				// editable... 
-				this.editVirtualBlockText(make, gid, image)
+				this.editVirtualBlock(make, gid, image)
 				// view only...
 				: Object.entries(this.config['virtual-text-fields'] || {})
 					.forEach(function([title, attr]){
@@ -324,7 +325,7 @@ var VirtualBlocksEditUIActions = actions.Actions({
 	// XXX this is a good candidate for inlineing (browse2)
 	// XXX should we also add a preview (preview constructor from features/metadata.js)???
 	// XXX should we do a sanity check for image type???
-	editVirtualBlockText: ['Virtual block/$Edit...',
+	editVirtualBlock: ['Virtual block/$Edit...',
 		{ browseMode: function(){ 
 			return (this.image || {}).type != 'virtual' && 'disabled' }, },
 		widgets.makeUIDialog(function(gid){
@@ -375,17 +376,19 @@ var VirtualBlocksEditUIActions = actions.Actions({
 						that.refresh(gid) }) })],
 
 	// XXX virtual block templates...
-	cloneVirtualBlockFromTemplate: ['Virtual block/Clone from...',
+	cloneVirtualBlockFromTemplate: ['- Virtual block/Clone from...',
 		function(){ 
 		}],
-	saveVirtualBlockAsTemplate: ['Virtual block/Save as template',
+	saveVirtualBlockAsTemplate: ['- Virtual block/Save as template',
 		function(gid){
 		}],
 
 	// XXX list existing non-blank v-blocks...
-	cloneVirtualBlockFrom: ['Virtual block/Clone from...',
+	cloneVirtualBlockFrom: ['- Virtual block/Clone...',
 		function(){ 
 		}],
+
+	// XXX add alias to remove virtual block...
 })
 
 // NOTE: this is independent of 'virtual-blocks'...
