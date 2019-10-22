@@ -376,7 +376,11 @@ var VirtualBlocksEditUIActions = actions.Actions({
 						that.refresh(gid) }) })],
 
 	// XXX virtual block templates...
-	cloneVirtualBlockFromTemplate: ['- Virtual block/Clone from...',
+	// XXX should these be loaded as a ribbon/collection???
+	// 		...a collection seems to have all the needed functionality
+	// 		but there are still quiestions:
+	// 			- stored globally (config), locally (index) or something in the middle (collection)?
+	cloneVirtualBlockFromTemplate: ['- Virtual block/Clone from template...',
 		function(){ 
 		}],
 	saveVirtualBlockAsTemplate: ['- Virtual block/Save as template',
