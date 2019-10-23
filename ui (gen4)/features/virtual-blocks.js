@@ -81,6 +81,7 @@ var VirtualBlocksActions = actions.Actions({
 					...
 				}
 			`,
+		{ browseMode: function(){ return !this.collection && 'disabled' }, },
 		function(ref, offset, img){
 			ref = ref || 'current'
 			offset = offset || 'after'	
@@ -132,7 +133,7 @@ var VirtualBlocksActions = actions.Actions({
 		core.doc`
 		
 		`,
-		{ browseMode: function(){ return !this.collection && 'disabled' }, },
+		{ browseMode: 'makeVirtualBlock' },
 		function(ref, offset){
 			this.makeVirtualBlock(ref, offset, {
 				type: 'virtual',
@@ -143,13 +144,42 @@ var VirtualBlocksActions = actions.Actions({
 		'makeVirtualBlank: $0 "before"'],
 
 	cloneVirtualBlock: ['Virtual block/80:$Clone block...',
-		{ browseMode: 'editVirtualBlock' },
+		{ browseMode: function(){ 
+			return (this.image || {}).type != 'virtual' && 'disabled' }, },
 		function(ref, offset, img){
 			var img = Object.assign({}, 
 				this.images[this.data.getImage(ref)] || {}, 
 				img || {})
 			delete img.gid
 			this.makeVirtualBlock(ref, offset, img) }],
+
+	// crop...
+	cropVirtualBlocks: ['Virtual block|Crop/Crop virtual blocks',
+		core.doc`Crop virtual blocks...
+
+			Crop virtual blocks...
+			.cropVirtualBlocks()
+			.cropVirtualBlocks('keep')
+				-> this
+
+			Crop virtiual bloks out...
+			.cropVirtualBlocks('skip')
+				-> this
+
+		`,
+		{ browseMode: 'makeVirtualBlock' },
+		function(mode){
+			var that = this
+			mode = mode || 'keep'
+			return this.crop(this.data.order
+				.filter(function(gid){ 
+					img = that.images[gid] || {}
+					return mode == 'keep' ? 
+						img.type == 'virtual'
+						: img.type != 'virtual' })) }],
+	cropVirtualBlocksOut: ['Virtual block|Crop/Crop virtual blocks out',
+		{ browseMode: 'cropVirtualBlocks' },
+		'cropVirtualBlocks: "skip"'],
 })
 
 var VirtualBlocks = 
@@ -326,8 +356,7 @@ var VirtualBlocksEditUIActions = actions.Actions({
 	// XXX should we also add a preview (preview constructor from features/metadata.js)???
 	// XXX should we do a sanity check for image type???
 	editVirtualBlock: ['Virtual block/$Edit...',
-		{ browseMode: function(){ 
-			return (this.image || {}).type != 'virtual' && 'disabled' }, },
+		{ browseMode: 'cloneVirtualBlock' },
 		widgets.makeUIDialog(function(gid){
 			var that = this
 
