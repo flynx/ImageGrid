@@ -38,6 +38,21 @@ var widgets = require('features/ui-widgets')
 //
 // 
 var VirtualBlocksActions = actions.Actions({
+
+	// XXX do we need to pre-cache this???
+	get virtual(){
+		var that = this
+		return this.data.order
+			.filter(function(gid){ 
+				img = that.images[gid] || {}
+				return img.type == 'virtual' }) },
+	get nonVirtual(){
+		var that = this
+		return this.data.order
+			.filter(function(gid){ 
+				img = that.images[gid] || {}
+				return img.type != 'virtual' }) },
+
 	// construction of new "virtual images"...
 	//
 	// XXX add undo...
@@ -154,29 +169,26 @@ var VirtualBlocksActions = actions.Actions({
 			this.makeVirtualBlock(ref, offset, img) }],
 
 	// crop...
-	cropVirtualBlocks: ['Virtual block|Crop/Crop virtual blocks',
+	cropVirtualBlocks: ['Virtual block|Crop/$Crop $virtual blocks',
 		core.doc`Crop virtual blocks...
 
-			Crop virtual blocks...
+			Crop (keep) virtual blocks...
 			.cropVirtualBlocks()
 			.cropVirtualBlocks('keep')
 				-> this
 
-			Crop virtiual bloks out...
+			Crop virtual bloks out...
 			.cropVirtualBlocks('skip')
 				-> this
 
 		`,
 		{ browseMode: 'makeVirtualBlock' },
 		function(mode){
-			var that = this
 			mode = mode || 'keep'
-			return this.crop(this.data.order
-				.filter(function(gid){ 
-					img = that.images[gid] || {}
-					return mode == 'keep' ? 
-						img.type == 'virtual'
-						: img.type != 'virtual' })) }],
+			return this.crop(
+				mode == 'keep' ?
+					this.virtual
+					: this.nonVirtual) }],
 	cropVirtualBlocksOut: ['Virtual block|Crop/Crop virtual blocks out',
 		{ browseMode: 'cropVirtualBlocks' },
 		'cropVirtualBlocks: "skip"'],
