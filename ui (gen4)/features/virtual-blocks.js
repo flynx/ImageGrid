@@ -138,7 +138,7 @@ var VirtualBlocksActions = actions.Actions({
 	// XXX this is enabled only in collection view as there is no way 
 	// 		to delete a block but possible to create one...
 	// 		...should we add a .removeBlock(..) action???
-	makeVirtualBlank: ['Virtual block/80:Add blank $after',
+	makeVirtualBlank: ['Virtual block/Add blank $after',
 		core.doc`
 		
 		`,
@@ -148,11 +148,11 @@ var VirtualBlocksActions = actions.Actions({
 				type: 'virtual',
 				path: null, 
 			}) }],
-	makeVirtualBlankBefore: ['Virtual block/81:Add blank $before',
+	makeVirtualBlankBefore: ['Virtual block/Add blank $before',
 		{ browseMode: 'makeVirtualBlank', },
 		'makeVirtualBlank: $0 "before"'],
 
-	cloneVirtualBlock: ['Virtual block/80:$Clone block...',
+	cloneVirtualBlock: ['Virtual block/$Clone block',
 		{ browseMode: function(){ 
 			return (this.image || {}).type != 'virtual' && 'disabled' }, },
 		function(ref, offset, img){
@@ -164,7 +164,7 @@ var VirtualBlocksActions = actions.Actions({
 
 	// crop...
 	// XXX would be nice to avoid these and just register a list and context...
-	cropVirtualBlocks: ['Virtual block|Crop/$Crop $virtual blocks',
+	cropVirtualBlocks: ['Virtual block|Crop/$Crop $virtual $blocks',
 		{ browseMode: 'makeVirtualBlock' },
 		'crop: "virtual" ...'],
 	cropVirtualBlocksOut: ['Virtual block|Crop/Crop virtual blocks out',
@@ -172,9 +172,12 @@ var VirtualBlocksActions = actions.Actions({
 		'crop: "!virtual" ...'],
 
 	// marks...
-	toggleMarkVirtualBlocks: ['Virtual block|Mark/-50:Toggle $mark on $virtual blocks',
+	toggleMarkVirtualBlocks: ['Virtual block|Mark/Toggle $mark on $virtual blocks',
 		{ browseMode: 'makeVirtualBlock' },
 		'toggleMark: "virtual"'],
+
+	// remove...
+	// XXX alias to "remove from crop/collection" ???
 })
 
 var VirtualBlocks = 
@@ -413,7 +416,7 @@ var VirtualBlocksEditUIActions = actions.Actions({
 
 	// XXX list existing non-blank v-blocks...
 	cloneVirtualBlockFrom: ['- Virtual block/Clone...',
-		function(){ 
+		function(position){ 
 		}],
 
 	// XXX add alias to remove virtual block...
