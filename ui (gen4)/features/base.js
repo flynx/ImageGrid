@@ -1401,6 +1401,14 @@ module.CropActions = actions.Actions({
 			.crop(data, false)
 				-> this
 
+			Make a crop of this[attr] gid list...
+			.crop(attr)
+				-> this
+
+			Make a crop excluding this[attr] gid list...
+			.crop(!attr)
+				-> this
+
 
 		NOTE: this is used as a basis for all the crop operations, so 
 			there is no need to bind to anything but this to handle a 
@@ -1412,6 +1420,16 @@ module.CropActions = actions.Actions({
 		{undo: 'uncrop'},
 		function(list, flatten){ 
 			list = list || this.data.getImages()
+			// gid list attr...
+			list = list in this ?
+				this[list]
+				: list
+			// reverse gid list attr...
+			if(typeof(list) == typeof('str') && list[0] == '!'){
+				var skip = new Set(this[list.slice(1)])
+				list = this.data.order
+					.filter(function(gid){
+						return !skip.has(gid) }) }
 
 			this.crop_stack = this.crop_stack || []
 			this.crop_stack.push(this.data)

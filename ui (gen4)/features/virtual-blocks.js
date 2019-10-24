@@ -46,12 +46,6 @@ var VirtualBlocksActions = actions.Actions({
 			.filter(function(gid){ 
 				img = that.images[gid] || {}
 				return img.type == 'virtual' }) },
-	get nonVirtual(){
-		var that = this
-		return this.data.order
-			.filter(function(gid){ 
-				img = that.images[gid] || {}
-				return img.type != 'virtual' }) },
 
 	// construction of new "virtual images"...
 	//
@@ -169,29 +163,18 @@ var VirtualBlocksActions = actions.Actions({
 			this.makeVirtualBlock(ref, offset, img) }],
 
 	// crop...
+	// XXX would be nice to avoid these and just register a list and context...
 	cropVirtualBlocks: ['Virtual block|Crop/$Crop $virtual blocks',
-		core.doc`Crop virtual blocks...
-
-			Crop (keep) virtual blocks...
-			.cropVirtualBlocks()
-			.cropVirtualBlocks('keep')
-				-> this
-
-			Crop virtual bloks out...
-			.cropVirtualBlocks('skip')
-				-> this
-
-		`,
 		{ browseMode: 'makeVirtualBlock' },
-		function(mode){
-			mode = mode || 'keep'
-			return this.crop(
-				mode == 'keep' ?
-					this.virtual
-					: this.nonVirtual) }],
+		'crop: "virtual" ...'],
 	cropVirtualBlocksOut: ['Virtual block|Crop/Crop virtual blocks out',
 		{ browseMode: 'cropVirtualBlocks' },
-		'cropVirtualBlocks: "skip"'],
+		'crop: "!virtual" ...'],
+
+	// marks...
+	toggleMarkVirtualBlocks: ['Virtual block|Mark/-50:Toggle $mark on $virtual blocks',
+		{ browseMode: 'makeVirtualBlock' },
+		'toggleMark: "virtual"'],
 })
 
 var VirtualBlocks = 

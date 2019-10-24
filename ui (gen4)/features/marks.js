@@ -30,6 +30,8 @@ var ui = require('features/ui')
 // 		'ribbon'	- current ribbon
 // 		ribbon		- specific ribbon (gid)
 // 		Array
+// 		attr
+// 		!attr
 //
 // NOTE: of no data is defined this will not have any effect...
 // NOTE: we are not using the vanilla toggler here as it can't handle 
@@ -74,6 +76,17 @@ function makeTagTogglerAction(tag){
 
 	// the action...
 	var action = function(target, action){
+		// gid list attr...
+		target = target in this ?
+			this[target]
+			: target
+		// reverse gid list attr...
+		if(typeof(target) == typeof('str') && target[0] == '!'){
+			var skip = new Set(this[target.slice(1)])
+			target = this.data.order
+				.filter(function(gid){
+					return !skip.has(gid) }) }
+
 		// special case: no data...
 		if(this.data == null){
 			return action == '??' ? ['off', 'on'] : 'off'
@@ -255,7 +268,8 @@ var ImageMarkActions = actions.Actions({
 	cropMarked: ['Mark|Crop/Crop $marked images',
 		{browseMode: function(target){ 
 			return this.marked.length == 0 && 'disabled' }},
-		function(flatten){ this.cropTagged('marked', flatten) }],
+		'crop: "marked" ...'],
+		//function(flatten){ this.cropTagged('marked', flatten) }],
 		//function(flatten){ this.cropTagged('marked', 'any', flatten) }],
 
 	removeMarkedFromCrop: ['Mark|Crop/Remove marked from crop',
@@ -302,20 +316,23 @@ module.ImageMarks = core.ImageGridFeatures.Feature({
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
 var ImageMarkEditActions = actions.Actions({
-	// Common use-cases:
-	// 	Toggle mark on current image
-	// 	.toggleMark()
-	//
-	// 	Mark current ribbon
-	// 	.toggleMark('ribbon', 'on')
-	//
-	// 	Unmark all loaded images
-	// 	.toggleMark('loaded', 'off')
-	//
-	// 	Invert marks on current ribbon
-	// 	.toggleMark('ribbon')
-	//
+	// XXX should this be like .crop(..) and accept attr name???
 	toggleMark: ['Mark|Image/Image $mark',
+		core.doc`
+
+		 	Toggle mark on current image
+		 	.toggleMark()
+		
+		 	Mark current ribbon
+		 	.toggleMark('ribbon', 'on')
+		
+		 	Unmark all loaded images
+		 	.toggleMark('loaded', 'off')
+		
+		 	Invert marks on current ribbon
+		 	.toggleMark('ribbon')
+		
+		`,
 		undoTag('toggleMark'),
 		makeTagTogglerAction('marked')],
 	toggleMarkBlock: ['Mark/Invert $block marks',
@@ -518,8 +535,9 @@ var ImageBookmarkActions = actions.Actions({
 	cropBookmarked: ['Bookmark|Crop/Crop $bookmarked images',
 		{browseMode: function(target){ 
 			return this.bookmarked.length == 0 && 'disabled' }},
+		'crop: "bookmarked" ...'],
 		//function(flatten){ this.cropTagged('bookmark', 'any', flatten) }],
-		function(flatten){ this.cropTagged('bookmark', flatten) }],
+		//function(flatten){ this.cropTagged('bookmark', flatten) }],
 })
 
 // NOTE: this is usable without ribbons...
