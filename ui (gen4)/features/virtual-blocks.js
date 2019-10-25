@@ -158,6 +158,9 @@ var VirtualBlocksActions = actions.Actions({
 			this.focusImage(gid)
 		}],
 	makeVirtualBlockBefore: ['Virtual block/Add blank $before',
+		core.doc`Add block before...
+		
+			This is the same as .makeVirtualBlock(.., 'before', ..)`,
 		{ browseMode: 'makeVirtualBlock', },
 		'makeVirtualBlock: $0 "before" ...'],
 
