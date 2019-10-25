@@ -51,15 +51,31 @@ var VirtualBlocksActions = actions.Actions({
 	//
 	// XXX add undo...
 	// XXX do better arg processing -- handle data correctly...
-	makeVirtualBlock: ['- $Virtual block/',
-		core.doc`
+	makeVirtualBlock: ['Virtual block/Add blank $after',
+		core.doc`Add virtual block...
 
+				Add virtual block after current image...
+				.makeVirtualBlock()
+				.makeVirtualBlock('current')
+				.makeVirtualBlock('current', 'after')
+					-> this
+
+				Add virtual block before current image...
+				.makeVirtualBlock('current')
+				.makeVirtualBlock('current', 'after')
+
+				Add virtual block at offset relative to reference image,
+				optionally containing data...
+				.makeVirtualBlock(reference, offset)
 				.makeVirtualBlock(reference, offset, data)
 					-> this
 
-				.makeVirtualBlock(reference, 'after', data)
-				.makeVirtualBlock(reference, 'before', data)
-					-> this
+			NOTE: reference if not given defaults to 'current'
+			NOTE: data if not given will default to:
+				{
+					type: 'virtual',
+					path: null,
+				}
 
 
 			Virtual Block Format (Image):
@@ -104,7 +120,14 @@ var VirtualBlocksActions = actions.Actions({
 			// XXX revise...
 			img = arguments[arguments.length-1] instanceof Object ?
 				arguments[arguments.length-1]
-				: null
+				: undefined
+			img = img === null ? 
+				img 
+				: Object.assign({
+						type: 'virtual', 
+						path: null,
+					},
+					img || {})
 
 			var data = this.data
 
@@ -134,23 +157,9 @@ var VirtualBlocksActions = actions.Actions({
 			// NOTE: this should update the view too...
 			this.focusImage(gid)
 		}],
-
-	// XXX this is enabled only in collection view as there is no way 
-	// 		to delete a block but possible to create one...
-	// 		...should we add a .removeBlock(..) action???
-	makeVirtualBlank: ['Virtual block/Add blank $after',
-		core.doc`
-		
-		`,
-		{ browseMode: 'makeVirtualBlock' },
-		function(ref, offset){
-			this.makeVirtualBlock(ref, offset, {
-				type: 'virtual',
-				path: null, 
-			}) }],
-	makeVirtualBlankBefore: ['Virtual block/Add blank $before',
-		{ browseMode: 'makeVirtualBlank', },
-		'makeVirtualBlank: $0 "before"'],
+	makeVirtualBlockBefore: ['Virtual block/Add blank $before',
+		{ browseMode: 'makeVirtualBlock', },
+		'makeVirtualBlock: $0 "before" ...'],
 
 	cloneVirtualBlock: ['Virtual block/$Clone block',
 		{ browseMode: function(){ 
