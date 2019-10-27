@@ -414,11 +414,19 @@ var VirtualBlocksEditUIActions = actions.Actions({
 					.close(function(){
 						that.refresh(gid) }) })],
 
-	// XXX virtual block templates...
+	// virtual block templates...
+	//
 	// XXX should these be loaded as a ribbon/collection???
 	// 		...a collection seems to have all the needed functionality
-	// 		but there are still quiestions:
-	// 			- stored globally (config), locally (index) or something in the middle (collection)?
+	// 		but there are still questions:
+	// 			- stored globally (config), locally (index) or something 
+	// 				in the middle (collection)?
+	//		...on the other hand a pure collection is a bad match here as it
+	//		necessitates a context change out of the user context and back
+	//		which is a really bad thing...
+	//		...this could be done via:
+	//			- dialog w. previews (a-la metadata)
+	//			- floating ribbon (in a dialog)
 	cloneVirtualBlockFromTemplate: ['- Virtual block/Clone from template...',
 		function(){ 
 		}],
