@@ -421,12 +421,14 @@ var VirtualBlocksEditUIActions = actions.Actions({
 	// 		but there are still questions:
 	// 			- stored globally (config), locally (index) or something 
 	// 				in the middle (collection)?
+	// 			- how do we handle this collection .images???
 	//		...on the other hand a pure collection is a bad match here as it
 	//		necessitates a context change out of the user context and back
 	//		which is a really bad thing...
 	//		...this could be done via:
 	//			- dialog w. previews (a-la metadata)
 	//			- floating ribbon (in a dialog)
+	//		this can be implemented as a hidden collection...
 	cloneVirtualBlockFromTemplate: ['- Virtual block/Clone from template...',
 		function(){ 
 		}],
