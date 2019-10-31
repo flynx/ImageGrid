@@ -1690,6 +1690,9 @@ module.CropActions = actions.Actions({
 			gids = gids || 'current'
 			gids = gids instanceof Array ? gids : [gids] 
 
+			// NOTE: we are not using .data.clear(gids) here as we do not 
+			// 		want to remove gids from .data.order, we'll only touch 
+			// 		ribbons...
 			gids
 				// clear ribbons...
 				.filter(function(gid){ 
