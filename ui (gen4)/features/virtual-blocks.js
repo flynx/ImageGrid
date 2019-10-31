@@ -26,14 +26,6 @@ var widgets = require('features/ui-widgets')
 // 		.....might be a good idea to add option to "pair" images as a 
 // 		generic sort thing -- is this grouping???
 // XXX should the export mechanism be extensible???
-// 		...i.e. some way to identify the block and get its .ext and file content...
-// 		one way to do this is to add an attr:
-// 			export: <action(gid, data)>
-// 		...this could also be a generic API, not specific to 'virtual-blocks'
-// 		implementing such export actions as:
-// 			exportPreview(..)
-// 			exportText(..)
-// 			...
 // XXX add undo...
 //
 // 
