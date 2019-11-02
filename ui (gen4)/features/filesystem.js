@@ -1748,6 +1748,13 @@ var FileSystemWriterActions = actions.Actions({
 	// XXX what should happen if no path is given???
 	// XXX handle .image.path and other stack files...
 	// XXX local collections???
+	//
+	// XXX BUG: this does not remove previews correctly...
+	// 		to reproduce:
+	// 			open: L:\media\img\my\2019
+	// 			exportIndex: with max_size=400
+	// 				-> main preview is not replaced
+	// 				-> preivew size 350px not copied but kept in index...
 	exportIndex: ['- File/Export/Export index',
 		function(path, max_size, include_orig, clean_target_dir, logger){
 			var that = this
@@ -1854,8 +1861,7 @@ var FileSystemWriterActions = actions.Actions({
 									.slice(0, -1)
 									.join('.')
 							// other name...
-							: img.name
-					}
+							: img.name }
 
 					// update path...
 					to_path = img.path = pathlib.join(base, name)
@@ -1886,13 +1892,15 @@ var FileSystemWriterActions = actions.Actions({
 							// no size limit or match...
 							if(!max_size || parseInt(res) <= max_size){
 								// get the biggest remaining preview...
-								max = max == null || parseInt(res) > parseInt(max) ?
+								max = (max == null 
+										|| parseInt(res) > parseInt(max)) ?
 									res
 									: max
 								return true
 							}
 
 							// skip and remove...
+							delete previews[res]
 							replace_orig = true
 						})
 						// get paths...
@@ -1960,7 +1968,6 @@ var FileSystemWriterActions = actions.Actions({
 									.catch(function(err){
 										logger && logger.emit('error', err) }))
 							}
-
 						})
 				}
 			})
@@ -1970,21 +1977,21 @@ var FileSystemWriterActions = actions.Actions({
 
 			// NOTE: if we are to use .saveIndex(..) here, do not forget
 			// 		to reset .changes
-			queue.push(file.writeIndex(
-					index.index,
-					index_path, 
-					index.date,
-					this.config['index-filename-template'], 
-					logger)
-					//logger || this.logger)
+			queue.push(
+					file.writeIndex(
+						index.index,
+						index_path, 
+						index.date,
+						this.config['index-filename-template'], 
+						logger)
+						//logger || this.logger)
 				// set hidden file attribute on Windows...
 				.then(function(){
 					typeof(process) != 'undefined' 
 						&& (process.platform == 'win32' 
 							|| process.platform == 'win64')
 						&& child_process
-							.spawn('attrib', ['+h', index_path])
-				}))
+							.spawn('attrib', ['+h', index_path]) }))
 
 			return Promise.all(queue)
 		}],
