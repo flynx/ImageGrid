@@ -103,19 +103,21 @@ function(images, sizes, base_path, target_tpl, callback){
 					
 						// make the actual previews...
 						return img.clone()
-							.resize(res, res)
-							.max()
+							.resize({
+								width: res,
+								height: res,
+								fit: 'inside',
+							})
 							.withMetadata()
 							.toFile(full)
 								.then(function(){
-									callback && callback(null, {
-										status: 'done', 
-										gid: gid, 
-										res: res, 
-										path: rel,
-										orientation: metadata.orientation,
-									})
-								})
+									callback 
+										&& callback(null, {
+											status: 'done', 
+											gid: gid, 
+											res: res, 
+											path: rel,
+											orientation: metadata.orientation, }) })
 					})
 			}))
 		})

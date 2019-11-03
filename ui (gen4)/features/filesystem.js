@@ -1755,6 +1755,12 @@ var FileSystemWriterActions = actions.Actions({
 	// 			exportIndex: with max_size=400
 	// 				-> main preview is not replaced
 	// 				-> preivew size 350px not copied but kept in index...
+	// 		temporary workaround:
+	//			ig.getPreviews('*')
+	//				.then(function(){
+	//					ig.markChanged('images')
+	//					console.log('done.') })
+	// 			
 	exportIndex: ['- File/Export/Export index',
 		function(path, max_size, include_orig, clean_target_dir, logger){
 			var that = this
