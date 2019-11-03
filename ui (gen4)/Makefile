@@ -248,6 +248,7 @@ FEATURES_DIR = features
 WORKERS_DIR = workers
 IMAGES_DIR = images
 
+LICENSE = LICENSE
 BUILD_INFO = $(BUILD_DIR)/INFO
 PROJECT_FILES = package.json
 # get all .css build targets, in addition, get all the .less files and 
@@ -577,13 +578,16 @@ $(BUILD_DIR)/$(APP_NAME)/: $(PROJECT_FILES) \
 		$(wildcard $(FEATURES_DIR)/*.js) \
 		$(wildcard $(LIB_DIR)/*.js) $(wildcard $(LIB_DIR)/widget/*.js) \
 		$(wildcard $(DOMAIN_DIR)/*.js) \
-		$(BUILD_INFO)
+		$(BUILD_INFO) \
+		$(LICENSE)
 	$(MD) "$@"
 	cp -r $(PROJECT_FILES) $(JS_FILES) $(HTML_FILES) \
 		$(CFG_DIR) $(LIB_DIR) $(EXT_LIB_DIR) $(FEATURES_DIR) \
 		$(DOMAIN_DIR) $(WORKERS_DIR) $(CSS_DIR) $(IMAGES_DIR) \
 		$(BUILD_INFO) \
+		$(LICENSE) \
 		"$(BUILD_DIR)/$(APP_NAME)"
+	cp $(LICENSE) "$(BUILD_DIR)/"
 	# cleanup vim swap files...
 	# NOTE: we need to do this as we copy whole directories...
 	cd "$@" ; \
@@ -659,10 +663,10 @@ $(BUILD_DIR)/app.asar: $(PACK_FULL)
 # XXX need to setup app icons...
 .PRECIOUS: $(BUILD_DIR)/$(APP_NAME)-%/
 $(BUILD_DIR)/$(APP_NAME)-%/: $(TARGET_DIR)/$(ELECTRON_DIST) \
-		$(BUILD_DIR)/app.asar $(BUILD_INFO)
+		$(BUILD_DIR)/app.asar $(BUILD_INFO) $(LICENSE)
 	unzip -u "$<" -d "$@" 
 	cp -r $(BUILD_DIR)/app.asar* "$@/$(ASAR_PATH)/"
-	cp -f "$(BUILD_INFO)" "$@/"
+	cp -f "$(BUILD_INFO)" "$(LICENSE)" "$@/"
 	# remove default_app.asar...
 	$(RM) "$@/$(ASAR_PATH)/default_app.asar"
 #	# setup app icon...
@@ -684,10 +688,15 @@ $(BUILD_DIR)/$(APP_NAME)-%.in-place.zip: $(TARGET_DIR)/$(ELECTRON_DIST) \
 #	# XXX
 	# remove default_app.asar...
 	$(call zipDelFrom,"$(BUILD_DIR)",$@.tmp,"$(ASAR_PATH)/default_app.asar")
-	# add app.asar...
+	# rename electron stuff...
+	zipnote "$@.tmp" \
+		| sed 's/\(^@ LICENSE\)$$/\1\n@=LICENSE.electron/' \
+		| sed 's/\(^@ version\)$$/\1\n@=version.electron/' \
+		| zipnote -w "$@.tmp"
+	# add app.asar and friends...
 	$(MD) "$(BUILD_DIR)/$(ASAR_PATH)"
 	cp -r $(BUILD_DIR)/app.asar* "$(BUILD_DIR)/$(ASAR_PATH)/"
-	$(call zipFrom,"$(BUILD_DIR)",$@.tmp,"$(ASAR_PATH)" "$(notdir $(BUILD_INFO))")
+	$(call zipFrom,"$(BUILD_DIR)",$@.tmp,"$(ASAR_PATH)" "$(notdir $(BUILD_INFO))" "$(LICENSE)")
 	# rename app in zip...
 	zipnote "$@.tmp" \
 		| sed 's/\(^@ $(ELECTRON_BIN)$(EXT)\)\(.*$$\)/\1\2\n@=$(APP_BIN)$(EXT)\2/' \
