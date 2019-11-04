@@ -255,7 +255,15 @@ PROJECT_FILES = package.json
 # replace .less with .css making them build targets...
 CSS_FILES := $(patsubst %.less,%.css,$(wildcard css/*.less))
 HTML_FILES := $(wildcard *.html)
-JS_FILES := $(wildcard *.js)
+ROOT_JS_FILES := $(wildcard *.js)
+# NOTE: this is only used for make change/dependency tracking checking...
+JS_FILES := $(ROOT_JS_FILES) \
+	$(wildcard $(DOMAIN_DIR)/*.js) \
+	$(wildcard $(FEATURES_DIR)/*.js) \
+	$(wildcard $(WORKERS_DIR)/*.js) \
+	$(wildcard $(LIB_DIR)/*.js) \
+	$(wildcard $(LIB_DIR)/*/*.js) \
+	$(wildcard $(EXT_LIB_DIR)/*.js)
 
 INCLUDE_NODE_MODULES = ig-object ig-actions ig-features
 # XXX do we actually use preact???
@@ -577,13 +585,10 @@ $(NODE_DIR): package.json
 # build app dir...
 $(BUILD_DIR)/$(APP_NAME)/: $(PROJECT_FILES) \
 		$(JS_FILES) $(CSS_FILES) $(HTML_FILES) \
-		$(wildcard $(FEATURES_DIR)/*.js) \
-		$(wildcard $(LIB_DIR)/*.js) $(wildcard $(LIB_DIR)/widget/*.js) \
-		$(wildcard $(DOMAIN_DIR)/*.js) \
 		$(BUILD_INFO) \
 		$(LICENSE)
 	$(MD) "$@"
-	cp -r $(PROJECT_FILES) $(JS_FILES) $(HTML_FILES) \
+	cp -r $(PROJECT_FILES) $(ROOT_JS_FILES) $(HTML_FILES) \
 		$(CFG_DIR) $(LIB_DIR) $(EXT_LIB_DIR) $(FEATURES_DIR) \
 		$(DOMAIN_DIR) $(WORKERS_DIR) $(CSS_DIR) $(IMAGES_DIR) \
 		$(BUILD_INFO) \
