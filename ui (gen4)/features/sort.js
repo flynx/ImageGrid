@@ -80,6 +80,11 @@ module.SortActions = actions.Actions({
 			'Name (natural number order)': 
 				'name-leading-sequence name path',
 
+			'Ribbon order':
+				'sort-via-ribbons keep-position',
+			'Reverse ribbon order':
+				'sort-via-ribbons-reverse keep-position',
+
 			// aliases...
 			'example-sort-alias':
 				'Date "File date" Name',
@@ -144,20 +149,28 @@ module.SortActions = actions.Actions({
 					// remove quotes...
 					.replace(/^(["'])([^'"]*)(\1)$/, '$2')
 				var m = that.config['sort-methods'][name]
-					|| (that.__sort_methods__ && that.__sort_methods__[name])
+					|| (that.__sort_methods__ 
+						&& that.__sort_methods__[name])
 					|| SortActions.__sort_methods__[name]
-				return typeof(m) == typeof('str') ? splitMethods(m) : m
-			}
+				return typeof(m) == typeof('str') ? 
+					splitMethods(m) 
+					: m }
 
 			// return a single method...
 			if(!(methods instanceof Array)){
-				return actions.ASIS(get(methods) || null)
+				return actions.ASIS(
+					get(methods) 
+					|| that.getSortMethods(splitMethods(methods))
+					|| null)
 			}
 
 			// return multiple methods...
 			var res = {}
 			methods
-				.forEach(function(m){ res[m] = get(m) })
+				.forEach(function(m){ 
+					res[m] = m == 'reverse' ?
+						(res[m] || []).concat([m])
+						: get(m) })
 			return res
 		}],
 	// XXX should this count 'reverese' arity???
@@ -174,15 +187,22 @@ module.SortActions = actions.Actions({
 		`,
 		function(method, seen){
 			var that = this
+			var reverse = false
 			seen = seen || []
 			if(seen.indexOf(method) >= 0){
-				throw new Error('Sort method loop detected.')
-			}
+				throw new Error('Sort method loop detected.') }
 			var methods = that.config['sort-methods'] || []
 
 			return (method instanceof Array ? 
 					method 
-					: that.getSortMethods(method))
+					: that.getSortMethods(method)
+						.run(function(){
+							return Object.entries(this)
+								.map(function([key, value]){
+									return value == null ? 
+										key 
+										: value })
+								.flat() }))
 				.map(function(method){ 
 					var a = SortActions.__sort_methods__[method]
 						|| (that.__sort_methods__ && that.__sort_methods__[method])
@@ -195,6 +215,13 @@ module.SortActions = actions.Actions({
 						: a instanceof Array ?
 							a
 						: method })
+				// count reverse arity...
+				.filter(function(e){
+					reverse = e == 'reverse' ? !reverse : reverse
+					return e != 'reverse' })
+				.concat(reverse ? 
+					'reverse' 
+					: [])
 				.flat() }],
 
 	// Custom sort methods...
@@ -316,21 +343,50 @@ module.SortActions = actions.Actions({
 				return (index[a] || 0) - (index[b] || 0) }
 		},
 
+		// Keep image order in each ribbon the same but sort ribbons (i.e. 
+		// images within ribbons) in ribbon order...
+		//
+		// e.g. all images in ribbon N are after images of ribbon <N 
+		// and before images in ribbons >N
+		'sort-via-ribbons': function(reverse){
+			var that = this
+			var index = new Map(
+				this.data.ribbon_order
+					.run(function(){
+						return reverse ?
+							this.slice().reverse()
+							: this })
+					.map(function(gid){
+						return that.data.ribbons[gid] })
+					.flat()
+					.compact()
+					.map(function(e, i){ 
+						return [e, i] }))
+			return function(a, b){
+				a = index.get(a)
+				b = index.get(b)
+				return (a === undefined || b === undefined) ?
+					0
+					: a - b } },
+		'sort-via-ribbons-reverse': function(){
+			return SortActions.__sort_methods__['sort-via-ribbons'].call(this, true) },
+
 		// This is specifically designed to terminate sort methods to prevent
 		// images that are not relevant to the previous order to stay in place
+		//
+		// If this is explicitly included then 'reverse' order is ignored.
 		//
 		// XXX need to test how will this affect a set of images where part
 		// 		of the set is sortable an part is not...
 		// XXX legacy: this is added to every sort automatically...
 		// 		...do we still need this here???
 		'keep-position': function(){
+			var order = new Map(
+				this.data.order
+					.map(function(e, i){ 
+						return [e, i] }))
 			return function(a, b){
-				a = this.data.order.indexOf(a)
-				b = this.data.order.indexOf(b)
-
-				return a - b
-			}
-		},
+				return order.get(a) - order.get(b) } },
 	},
 	// XXX would be nice to be able to sort a list of gids or a section
 	// 		of images...
@@ -398,25 +454,24 @@ module.SortActions = actions.Actions({
 
 			// special case: 'update'
 			method = method == 'update' ? [] : method
-
 			// defaults...
 			method = method 
 				|| ((this.config['default-sort'] || 'image-date')
 					+ (this.config['default-sort-order'] == 'reverse' ? ' reverse' : ''))
 
 			// set sort method in data...
-			this.data.sort_method = typeof(method) == typeof('str') ? method : method.join(' ')
+			this.data.sort_method = typeof(method) == typeof('str') ? 
+				method 
+				: method.join(' ')
 
-			method = this.expandSortMethod(method)
+			method = this.expandSortMethod(method + (reverse ? ' reverse' : ''))
 
 			// get the reverse arity...
-			var i = method.indexOf('reverse')
-			while(i >=0){
-				reverse = !reverse
-
-				method.splice(i, 1)
-				i = method.indexOf('reverse')
-			}
+			reverse = method[method.length - 1] == 'reverse'
+			reverse
+				&& method.pop()
+			reverse = reverse 
+				&& !method.includes('keep-position')
 
 			// can't sort if we know nothing about .images
 			if(method && method.length > 0 && (!this.images || this.images.length == 0)){
@@ -428,6 +483,8 @@ module.SortActions = actions.Actions({
 				// remove duplicate methods...
 				// XXX should we keep the last occurrence or the first occurrence???
 				.unique()
+				.concat(['keep-position'])
+				.tailUnique()
 				.map(function(m){
 					return (SortActions.__sort_methods__[m]
 						|| (that.__sort_methods__ && that.__sort_methods__[m])
@@ -461,15 +518,7 @@ module.SortActions = actions.Actions({
 								} else {
 									return +1
 								}
-							}}).call(that) 
-				})
-				// terminator: keep current position...
-				.concat([function(a, b){
-					a = that.data.order.indexOf(a)
-					b = that.data.order.indexOf(b)
-
-					return a - b
-				}])
+							}}).call(that) })
 
 			// prepare the cmp function...
 			var cmp = method.length == 1 ? 
@@ -537,46 +586,22 @@ module.SortActions = actions.Actions({
 			// XXX need to refactor the toggler a bit to make the 
 			// 		signature simpler... (???)
 			function(mode, _, reverse){ 
-				reverse = reverse == 'reverse' || reverse
+				reverse = reverse || ''
+				reverse = reverse === true ? 'reverse' : reverse
 				var cache = this.data.sort_cache = this.data.sort_cache || {}
 				var method = this.data.sort_method
 
 				// cache sort order...
-				if(method == 'Manual'){
-					this.saveOrder(method)
+				method == 'Manual'
+					&& this.saveOrder(method)
 
-				} else if(method && !(method in cache)){
-					this.cacheOrder()
-				}
-
-				var sort = `"${mode}"`+ (reverse ? ' reverse' : '')
-
-				// cached order...
-				// XXX use load cache action...
-				if(mode in cache
-						|| sort in cache){
-					var order = (cache[mode] || cache[sort]).slice()
-					// invalid cache -> sort...
-					if(order.length != this.data.order.length){
-						// drop the cached order...
-						delete cache[ mode in cache ? mode : sort ]
-						this.sortImages(sort)
-
-					// load cache...
-					} else {
-						this.data.order = order 
-						this.sortImages('update' + (reverse ? ' reverse' : ''))
-						this.data.sort_method = mode
-					}
+				var sort = `"${mode}" `+ reverse
 
 				// saved sort order...
-				} else if(this.data.sort_order 
-						&& mode in this.data.sort_order){
-					this.loadOrder(mode, reverse)
-
-				} else {
-					this.sortImages(sort)
-				}
+				;(this.data.sort_order 
+						&& mode in this.data.sort_order) ?
+					this.loadOrder(mode, reverse == 'reverse')
+					: this.sortImages(sort)
 			})],
 
 	// XXX add drop/load actions...
@@ -810,6 +835,7 @@ var SortUIActions = actions.Actions({
 
 	// XXX should we be able to edit modes??? 
 	// XXX should this be a toggler???
+	// XXX add "New from current order..."
 	sortDialog: ['Edit|Sort/Sort images...',
 		widgets.makeUIDialog(function(){
 			var that = this

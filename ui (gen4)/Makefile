@@ -538,14 +538,16 @@ PACK_FULL = $(BUILD_DIR)/$(APP_NAME)/ $(BUILD_DIR)/$(APP_NAME)/$(NODE_DIR)
 # build date...
 # NOTE: this depends on lots of stuff so as to be updated in case any of
 # 	the dependencies are touched...
+# XXX add nw version option...
 $(BUILD_INFO): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 		$(JS_FILES) $(CSS_FILES) $(HTML_FILES)
 	$(MD) "$(@D)"
 	@echo "Build info:"
 	@echo "$(APP_NAME)" | tee $(BUILD_INFO)
-	@echo "$(VERSION)" | tee -a $(BUILD_INFO)
-	@echo "$(DATE)" | tee -a $(BUILD_INFO)
-	@echo "$(COMMIT)" | tee -a $(BUILD_INFO)
+	@echo "version: $(VERSION)" | tee -a $(BUILD_INFO)
+	@echo "date: $(DATE)" | tee -a $(BUILD_INFO)
+	@echo "commit: $(COMMIT)" | tee -a $(BUILD_INFO)
+	@echo "electron: $(ELECTRON_VERSION)" | tee -a $(BUILD_INFO)
 
 
 %.css: %.less
@@ -686,12 +688,12 @@ $(BUILD_DIR)/$(APP_NAME)-%.in-place.zip: $(TARGET_DIR)/$(ELECTRON_DIST) \
 	cp "$<" "$@.tmp"
 #	# setup app icon...
 #	# XXX
-	# remove default_app.asar...
+	# remove default_app.asar and misc stuff...
 	$(call zipDelFrom,"$(BUILD_DIR)",$@.tmp,"$(ASAR_PATH)/default_app.asar")
+	$(call zipDelFrom,"$(BUILD_DIR)",$@.tmp,"version")
 	# rename electron stuff...
 	zipnote "$@.tmp" \
 		| sed 's/\(^@ LICENSE\)$$/\1\n@=LICENSE.electron/' \
-		| sed 's/\(^@ version\)$$/\1\n@=version.electron/' \
 		| zipnote -w "$@.tmp"
 	# add app.asar and friends...
 	$(MD) "$(BUILD_DIR)/$(ASAR_PATH)"

@@ -144,13 +144,17 @@ Array.prototype.toMap = function(normalize){
 //
 // NOTE: we are not using an Object as an index here as an Array can 
 // 		contain any type of item while Object keys can only be strings...
-// NOTE: for an array containing only strings use a much faster .uniqueStrings(..)
 // NOTE: this may not work on IE...
 Array.prototype.unique = function(normalize){
 	return normalize ? 
 		[...new Map(this.map(function(e){ return [normalize(e), e] })).values()]
-		: [...(new Set(this))] }
-
+		: [...new Set(this)] }
+Array.prototype.tailUnique = function(normalize){
+	return this
+		.slice()
+		.reverse()
+		.unique(normalize)
+		.reverse() }
 
 // Compare two arrays...
 //
