@@ -1762,7 +1762,6 @@ var FileSystemWriterActions = actions.Actions({
 	//					console.log('done.') })
 	// XXX when no previews present this should create at least one file
 	// 		of max_size...
-	// 			
 	exportIndex: ['- File/Export/Export index',
 		function(path, max_size, include_orig, clean_target_dir, logger){
 			var that = this
