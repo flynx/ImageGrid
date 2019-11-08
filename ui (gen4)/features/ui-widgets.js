@@ -964,7 +964,7 @@ var EditorActions = actions.Actions({
 	makeEditor: ['- Interface/',
 		makeUIDialog(function(spec, callback){
 			// XXX
-		}],
+		})],
 
 })
 
