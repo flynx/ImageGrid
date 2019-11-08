@@ -175,8 +175,7 @@ function(cls, cfg, parent){
 			} else {
 				this.dom.find('.'+ cls.join('.')).remove()
 			}
-		})
-}
+		}) }
 
 
 
@@ -201,8 +200,7 @@ function(list, elem, callback, options){
 				// 		...at this point this will select the first elem
 				// 		with text which can be a different elem...
 				.then(function(){ list.select(elem.text()) })
-		})
-}
+		}) }
 
 
 
@@ -324,8 +322,7 @@ function(actions, list, list_key, value_key, options, setup){
 		actions.Overlay(o)
 
 		return o
-	}
-}
+	} }
 
 
 
@@ -339,8 +336,7 @@ function(actions, list, list_key, value_key, options, setup){
 var uiContainer =
 module.uiContainer = function(func){
 	func.__container__ = true
-	return func
-}
+	return func }
 
 // Make a container constructor wrapper...
 //
@@ -406,8 +402,7 @@ module.makeUIContainer = function(make){
 			// NOTE: fixes the same bug as .client.on('close', ...) above, 
 			// 		see note for that...
 			.focus()
-	})
-}
+	}) }
 
 
 // Mark action as a dialog...
@@ -415,8 +410,7 @@ module.makeUIContainer = function(make){
 var uiDialog =
 module.uiDialog = function(func){
 	func.__dialog__ = true
-	return func
-}
+	return func }
 
 // Make a dialog constructor wrapper...
 //
@@ -473,8 +467,7 @@ module.makeUIDialog = function(a, b){
 		return this[container].apply(this, 
 				[dialog].concat(cargs))
 			.client
-	})
-}
+	}) }
 
 var makeDrawer = function(direction){
 	return makeUIContainer(function(dialog, options){
@@ -499,8 +492,7 @@ var makeDrawer = function(direction){
 		})
 
 		return d
-	})
-}
+	}) }
 
 
 
@@ -543,8 +535,7 @@ function makeListEditorDialog(list, options){
 			}, {
 				cls: options.cls,
 			})
-	})
-}
+	}) }
 
 // Make .config list editor dialog...
 // 
@@ -583,8 +574,7 @@ function makeConfigListEditorDialog(path, options){
 			(cur[key] || []).slice()
 
 		return list
-	}, options)
-}
+	}, options) }
 
 
 
@@ -707,8 +697,7 @@ var DialogsActions = actions.Actions({
 				.on('close', function(){
 					var o = that.modal
 					o && o.focus()	
-				})
-		})],
+				}) })],
 	Drawer: ['- Interface/',
 		makeDrawer('bottom')],
 	BottomDrawer: ['- Interface/',
@@ -965,6 +954,38 @@ module.Dialogs = core.ImageGridFeatures.Feature({
 
 
 
+//---------------------------------------------------------------------
+
+var EditorActions = actions.Actions({
+
+	__editor_item_constructors__: {
+	},
+
+	makeEditor: ['- Interface/',
+		makeUIDialog(function(spec, callback){
+			// XXX
+		}],
+
+})
+
+var Editor =
+module.Editor = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-editor',
+	depends: [
+		'ui',
+	],
+
+	actions: EditorActions,
+
+	handlers: [
+	],
+})
+
+
+
 /*********************************************************************/
 
 // XXX do not use the global ig for link click handling...
@@ -992,9 +1013,7 @@ function(features, text){
 		'g')
 	return text
 		.replace(features, function(match, a, b, c){
-			return a + feature2lnk(b) + c
-		})
-}
+			return a + feature2lnk(b) + c }) }
 
 var js2html =
 module.js2html =
@@ -1015,8 +1034,7 @@ function(doc, skip_linking){
 		.replace(/(\/\/.*)\n/g, '<span class="comment">$1</span>\n')
 		// notes...
 		.replace(/NOTE:/g, '<b>NOTE:</b>')
-		.replace(/XXX/g, '<span class="warning">XXX</span>')
-}
+		.replace(/XXX/g, '<span class="warning">XXX</span>') }
 	
 // XXX do not use the global ig for link click handling...
 var doc2html =
@@ -1029,9 +1047,7 @@ function(doc, skip_linking){
 			function(match, a, b, c){
 				return (skip_linking == '*' || skip_linking.indexOf(c) >= 0) ?
 					`${a}<i>${b}</i>`
-					: `${a}<a href="#" onclick="ig.showDoc('${c}')">${b}</a>`
-			})
-}
+					: `${a}<a href="#" onclick="ig.showDoc('${c}')">${b}</a>` }) }
 
 
 var UIIntrospectionActions = actions.Actions({
