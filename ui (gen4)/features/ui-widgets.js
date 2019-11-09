@@ -1037,10 +1037,11 @@ var EditorActions = actions.Actions({
 	// 	]
 	//
 	// XXX does this need a callback???
+	// XXX revise access to .__editor_fields__...
+	// 		...should we merge the prototype set with the instance???
 	makeEditorBlock: ['- Interface/',
 		function(spec, make){
 			var that = this
-			// XXX revise...
 			var fields = this.__editor_fields__ 
 				|| EditorActions.__editor_fields__
 				|| {}
