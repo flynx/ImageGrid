@@ -958,9 +958,100 @@ module.Dialogs = core.ImageGridFeatures.Feature({
 
 var EditorActions = actions.Actions({
 
-	__editor_item_constructors__: {
+	// format:
+	// 	{
+	// 		<type>: function(id, make, options){},
+	// 		...
+	// 	}
+	//
+	__editor_fields__: {
+		// generic field...
+		//
+		// options format:
+		// 	{
+		// 		// NOTE: if this is not set then the id is used...
+		// 		title: <str>,
+		//
+		// 		value: <value> | <func>,
+		// 		editable: <bool>,
+		//
+		// 		list: <array> | <func(value)>,
+		// 		list_button: <str>,
+		//
+		// 		doc: <str> | <func>, 
+		//
+		// 		// callback called when value is changed...
+		// 		// XXX should this check/normalize/...
+		// 		set: <func>,
+		//
+		// 		...
+		// 	}
+		//
+		// XXX we need:
+		// 		- id
+		// 		- dialog ref (make.dialog)
+		// 		- actions ref (this)
+		// 		- make
+		// 		- options
+		// 			- initial value
+		// 			- history 
+		// 			- callback
+		// XXX Q: when do we get the data???
+		field: function(actions, make, options){
+			console.log('>>>>', options.type, make, options)
+		},
+
+		text: function(actions, make, options){
+			this.field(actions, make, 
+				Object.assign(
+					{
+						type: 'text',
+					},
+					options))
+		},
+		select: function(actions, make, options){
+			this.field(actions, make, 
+				Object.assign(
+					{
+						type: 'select',
+					},
+					options))
+		},
+
+		// XXX todo:
+		// 		- date
+		//		- ...
 	},
 
+	//
+	// spec format:
+	// 	[
+	// 		<text>,
+	//
+	// 		{
+	// 			type: <type>
+	// 			...
+	// 		},
+	//
+	// 		...
+	// 	]
+	//
+	// XXX does this need a callback???
+	makeEditorBlock: ['- Interface/',
+		function(spec, make){
+			var that = this
+			// XXX revise...
+			var fields = this.__editor_fields__ 
+				|| EditorActions.__editor_fields__
+				|| {}
+			;(spec || [])
+				.map(function(field){
+					field instanceof Object ?
+						fields[field.type](that, make, field)
+						: make(field) }) 
+			return make }],
+
+	// XXX the callback is called to get initial data and to update/save it...
 	makeEditor: ['- Interface/',
 		makeUIDialog(function(spec, callback){
 			// XXX
@@ -979,9 +1070,6 @@ module.Editor = core.ImageGridFeatures.Feature({
 	],
 
 	actions: EditorActions,
-
-	handlers: [
-	],
 })
 
 
