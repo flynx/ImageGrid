@@ -964,6 +964,9 @@ var EditorActions = actions.Actions({
 	// 		...
 	// 	}
 	//
+	// NOTE: we are not supporting aliases here as we need to pass strings
+	// 		as-is into .makeEditorBlock(..)'s spec to be able to create things
+	// 		like '---' -> <hr> and other stuff...
 	__editor_fields__: {
 		// generic field...
 		//
@@ -998,7 +1001,8 @@ var EditorActions = actions.Actions({
 		// 			- callback
 		// XXX Q: when do we get the data???
 		field: function(actions, make, options){
-			console.log('>>>>', options.type, make, options)
+			// XXX
+			make([options.title, options.value], options)
 		},
 
 		text: function(actions, make, options){
@@ -1017,6 +1021,14 @@ var EditorActions = actions.Actions({
 					},
 					options))
 		},
+		toggle: function(actions, make, options){
+			this.field(actions, make, 
+				Object.assign(
+					{
+						type: 'toggle',
+					},
+					options))
+		},
 
 		// XXX todo:
 		// 		- date
@@ -1024,40 +1036,74 @@ var EditorActions = actions.Actions({
 	},
 
 	//
+	//	Make an editor dialog...
+	//	.makeEditor(spec, callback)
+	//		-> dialog
+	//
+	//	Make an editor dialog section...
+	//	.makeEditor(make, spec, callback)
+	//		-> make
+	//
+	//
 	// spec format:
 	// 	[
 	// 		<text>,
 	//
 	// 		{
-	// 			type: <type>
+	// 			type: <type>,
+	//
+	// 			id: <str>,
+	// 			title: <str>,
+	//
+	// 			value: <str>,
+	//
 	// 			...
 	// 		},
 	//
 	// 		...
 	// 	]
 	//
-	// XXX does this need a callback???
-	// XXX revise access to .__editor_fields__...
-	// 		...should we merge the prototype set with the instance???
-	makeEditorBlock: ['- Interface/',
-		function(spec, make){
-			var that = this
-			var fields = this.__editor_fields__ 
-				|| EditorActions.__editor_fields__
-				|| {}
-			;(spec || [])
-				.map(function(field){
-					field instanceof Object ?
-						fields[field.type](that, make, field)
-						: make(field) }) 
-			return make }],
-
-	// XXX the callback is called to get initial data and to update/save it...
 	makeEditor: ['- Interface/',
 		makeUIDialog(function(spec, callback){
-			// XXX
-		})],
-
+			var _make = function(make, spec){
+				var that = this
+				var fields = this.__editor_fields__ 
+					|| EditorActions.__editor_fields__
+					|| {}
+				;(spec || [])
+					.forEach(function(field){
+						// array...
+						field instanceof Array ?
+							make(...field)
+						// spec...
+						: field instanceof Object ?
+							fields[field.type](that, make, field)
+						// other...
+						: make(field) }) 
+				return make }
+			var _callback = callback
+				&& function(spec){
+					return callback(
+						spec.reduce(function(res, e){
+							var id = e.id || e.title
+							id != undefined
+								&& (res[id] = e.value)
+							return res }, {}) ) } 
+			
+			return arguments[0] instanceof Function?
+				// inline...
+				_make.call(this, ...arguments)
+				// dialog...
+				: browse.makeLister(null, 
+					function(p, make){
+						_make(make, spec) 
+					}, {
+						cls: 'table-view',
+					})
+					// pass the results...
+					.close(function(){
+						_callback
+							&& _callback(spec)	}) })],
 })
 
 var Editor =
