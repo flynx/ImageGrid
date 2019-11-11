@@ -1035,35 +1035,55 @@ var EditorActions = actions.Actions({
 		//		- ...
 	},
 
-	//
-	//	Make an editor dialog...
-	//	.makeEditor(spec, callback)
-	//		-> dialog
-	//
-	//	Make an editor dialog section...
-	//	.makeEditor(make, spec, callback)
-	//		-> make
-	//
-	//
-	// spec format:
-	// 	[
-	// 		<text>,
-	//
-	// 		{
-	// 			type: <type>,
-	//
-	// 			id: <str>,
-	// 			title: <str>,
-	//
-	// 			value: <str>,
-	//
-	// 			...
-	// 		},
-	//
-	// 		...
-	// 	]
-	//
 	makeEditor: ['- Interface/',
+		core.doc`Make editor dialog or editor section...
+
+			Make an editor dialog...
+			.makeEditor(spec)
+			.makeEditor(spec, callback)
+				-> dialog
+			
+			Make an editor dialog section...
+			.makeEditor(make, spec)
+			.makeEditor(make, spec, callback)
+				-> make
+
+
+		 spec format:
+			[
+				// make a simple text element...
+				//
+				// same as: make(<text>)
+				<text>,
+				[<text>],
+		
+				// call make(..) with args...
+				//
+				// same as: make(...[ .. ])
+				//
+				// NOTE: to explicitly pass an array object to make wrap it 
+				//		in an array, e.g. [['text', 'value']]
+				[ .. ],
+		
+
+				// make a field...
+				{
+					type: <type>,
+		
+					id: <str>,
+					title: <str>,
+		
+					value: <str>,
+		
+					...
+				},
+		
+				...
+			]
+
+
+		
+		`,
 		makeUIDialog(function(spec, callback){
 			var _make = function(make, spec){
 				var that = this
@@ -1084,11 +1104,17 @@ var EditorActions = actions.Actions({
 			var _callback = callback
 				&& function(spec){
 					return callback(
+						// get the field-value pairs...
 						spec.reduce(function(res, e){
 							var id = e.id || e.title
 							id != undefined
 								&& (res[id] = e.value)
-							return res }, {}) ) } 
+							return res }, {}), 
+						// NOTE: technically we do not need to pass this
+						// 		through as we are mutating the data inside
+						// 		but passing it here is cleaner than forcing
+						// 		the user to get it via closure...
+						spec) } 
 			
 			return arguments[0] instanceof Function?
 				// inline...
