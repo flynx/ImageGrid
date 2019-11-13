@@ -968,7 +968,7 @@ var EditorActions = actions.Actions({
 	// 		as-is into .makeEditorBlock(..)'s spec to be able to create things
 	// 		like '---' -> <hr> and other stuff...
 	__editor_fields__: {
-		// generic field...
+		// Generic field...
 		//
 		// options format:
 		// 	{
@@ -979,29 +979,6 @@ var EditorActions = actions.Actions({
 		// 		// value...
 		// 		//
 		// 		value: <value> | <func([value])>,
-		//
-		// 		values: <array> | <func([values])>,
-		//
-		// 		// XXX not implemented...
-		// 		value_editable: <bool>,
-		//
-		//
-		// 		// value list dialog...
-		// 		//
-		// 		// NOTE: <opts> is a .showList(..) / .showEditableList(..) 
-		// 		//		compatible options object...
-		// 		list: false | <opts> | <func(cur, callback(val))>,
-		//
-		// 		list_editable: <bool>,
-		//
-		// 		// XXX not implemented...
-		// 		list_button: <str>,
-		//
-		//
-		//		// if true will not call make.dialog.update() on value 
-		//		// update...
-		//		// XXX revise...
-		//		doNotAutoUpdateDialog: <bool>,
 		//
 		//
 		// 		// XXX not implemented...
@@ -1037,13 +1014,45 @@ var EditorActions = actions.Actions({
 			], options)
 		},
 
+		// Editable field...
+		//
 		// XXX need to set .value...
-		editable: function(actions, make, options){
-			return this.field(actions, make.Editable, options) },
+		//editable: function(actions, make, options){},
 
+		// value toggle...
+		//
+		// options format:
+		// 	{
+		// 		values: <array> | <func([values])>,
+		//
+		// 		// XXX not implemented...
+		// 		value_editable: <bool>,
+		//
+		//
+		// 		// value list dialog...
+		// 		//
+		// 		// NOTE: <opts> is a .showList(..) / .showEditableList(..) 
+		// 		//		compatible options object...
+		// 		list: false | <opts> | <func(cur, callback(val))>,
+		//
+		// 		list_editable: <bool>,
+		//
+		// 		// XXX not implemented...
+		// 		list_button: <str>,
+		//
+		//
+		//		// if true will not call make.dialog.update() on value 
+		//		// update...
+		//		// XXX revise...
+		//		doNotAutoUpdateDialog: <bool>,
+		//
+		// 	}
+		//
 		toggle: function(actions, make, options){
 			this.field(actions, make, 
 				Object.assign(
+					// XXX not sure about this...
+					options,
 					{
 						type: 'toggle',
 
@@ -1136,48 +1145,109 @@ var EditorActions = actions.Actions({
 									: 'off' } })))
 		},
 
+		// attribute value toggle...
+		//
 		// options format:
 		// 	{
+		// 		obj: <obj> | <func>,
 		// 		key: <str>,
+		//
 		// 		values_key: [<value>, ...],
 		// 		value_dict: {
 		// 			<key>: <value>,
 		// 			...
 		// 		},
-		// 		callback: <func(mode, value)>,
+		//
+		// 		live_update: <bool>,
+		// 		callback: <func(value, values)>,
+		// 		read_only: <bool>,
 		//
 		// 		...
 		// 	}
 		//
-		// XXX should this be a more generic .attributeToggle(..) ???
-		configToggle: function(actions, make, options){
+		// XXX should we support dialog.close(..)'s reject mode here???
+		attrToggle: function(actions, make, options){
+			var update = function(){
+				if(!options.read_only){
+					var obj = options.obj instanceof Function ?
+						options.obj.call(actions)
+						: options.obj
+					'__value' in options
+						//&& (options.value = obj[options.key] = options.__value)
+						&& (obj[options.key] = options.__value)
+					'__values' in options
+						//&& (options.values = obj[options.values_key] = options.__values) }
+						&& (obj[options.values_key] = options.__values) }
+				options.callback
+					&& options.callback.call(actions, obj, options.__value, options.__values) }
+
+			make.dialog.close(function(){
+				options.live_update
+					|| update() })
+
 			this.toggle(actions, make, 
 				Object.assign(
+					// XXX not sure about this...
+					options,
 					{
+						// XXX PROBLEM: the value of this does not get 
+						// 		propagated to the original options...
+						//__value: null,
 						value: function(value){
+							var obj = options.obj instanceof Function ?
+								options.obj.call(actions)
+								: options.obj
 							var d = options.value_dict
-							var mode = arguments.length == 0 ? 'get' : 'set'
-							// get and normalize...
-							value = mode == 'get' ? 
-								actions.config[options.key] 
-								: value
-							value = d ? d[value] : value
-							// set and return...
-							value = mode == 'set' ?
-								(actions.config[options.key] = value)
-								: value 
-							// callback...
-							// XXX revise...
-							options.callback
-								&& options.callback.call(actions, mode, value)
+							// get...
+							value = arguments.length > 0 ?
+									value
+								: '__value' in options ?
+									options.__value
+								: d ?
+									d[obj[options.key]]
+								: obj[options.key]
+							// set...
+							arguments.length != 0
+								&& (options.__value = value)
+								// live mode...
+								&& options.live_update
+									&& update()
 							return value },
-						// XXX
+						//__values: null,
 						values: function(value){
+							var obj = options.obj instanceof Function ?
+								options.obj.call(actions)
+								: options.obj
 							return arguments.length == 0 ?
-								actions.config[options.values_key] 
-								: (actions.config[options.values_key] = value) },
+									('__values' in options ?
+										options.__values
+										: obj[options.values_key].slice())
+								: (options.__values = value) },
 					},
 					options)) },
+
+
+
+		// Config editable value...
+		//
+		// XXX 
+		//configEditable: function(){},
+
+
+		// Config value toggle...
+		//
+		configToggle: function(actions, make, options){
+			this.attrToggle(actions, make, 
+				Object.assign(
+					// XXX not sure about this...
+					options,
+					{
+						obj: function(){
+							return actions.config }
+					},
+					options)) },
+
+
 
 		// XXX todo:
 		// 		- date
@@ -1259,7 +1329,9 @@ var EditorActions = actions.Actions({
 						spec.reduce(function(res, e){
 							var id = e.id || e.title
 							id != undefined
-								&& (res[id] = e.value)
+								&& (res[id] = e.value instanceof Function ? 
+									e.value.call(that) 
+									: e.value)
 							return res }, {}), 
 						// NOTE: technically we do not need to pass this
 						// 		through as we are mutating the data inside
@@ -1280,7 +1352,10 @@ var EditorActions = actions.Actions({
 					// pass the results...
 					.close(function(){
 						_callback
-							&& _callback(spec)	}) })],
+							&& _callback(spec)
+						// XXX fixing a double .close() bug...
+						_callback = null 
+					}) })],
 
 
 	// XXX move this to examples.js
@@ -1291,19 +1366,11 @@ var EditorActions = actions.Actions({
 					// basic field...
 					[['Basic static field: ', 'value']],
 
-					/*/ XXX
-					{
-						type: 'editable',
-						title: 'String: ',
-						value: '',
-					},
-					//*/
-
-					// toggle...
 					{
 						type: 'toggle',
 						title: '$Toggle: ',
 					},
+
 					{
 						type: 'toggle',
 						title: 'Direct toggle: ',
@@ -1331,6 +1398,11 @@ var EditorActions = actions.Actions({
 						title: 'Theme: ',
 						key: 'theme',
 						values_key: 'themes',
+
+						// optional stuff...
+						live_update: true,
+						callback: function(cfg, value){
+							this.toggleTheme(value) },
 					},
 
 				], 
