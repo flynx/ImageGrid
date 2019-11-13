@@ -975,17 +975,38 @@ var EditorActions = actions.Actions({
 		// 		// NOTE: if this is not set then the id is used...
 		// 		title: <str>,
 		//
-		// 		value: <value> | <func>,
-		// 		editable: <bool>,
 		//
-		// 		list: <array> | <func(value)>,
+		// 		// value...
+		// 		//
+		// 		value: <value> | <func([value])>,
+		//
+		// 		values: <array> | <func([values])>,
+		//
+		// 		// XXX not implemented...
+		// 		value_editable: <bool>,
+		//
+		//
+		// 		// value list dialog...
+		// 		//
+		// 		// NOTE: <opts> is a .showList(..) / .showEditableList(..) 
+		// 		//		compatible options object...
+		// 		list: false | <opts> | <func(cur, callback(val))>,
+		//
+		// 		list_editable: <bool>,
+		//
+		// 		// XXX not implemented...
 		// 		list_button: <str>,
 		//
+		//
+		//		// if true will not call make.dialog.update() on value 
+		//		// update...
+		//		// XXX revise...
+		//		doNotAutoUpdateDialog: <bool>,
+		//
+		//
+		// 		// XXX not implemented...
 		// 		doc: <str> | <func>, 
 		//
-		// 		// callback called when value is changed...
-		// 		// XXX should this check/normalize/...
-		// 		set: <func>,
 		//
 		// 		...
 		// 	}
@@ -1001,34 +1022,162 @@ var EditorActions = actions.Actions({
 		// 			- callback
 		// XXX Q: when do we get the data???
 		field: function(actions, make, options){
-			// XXX
-			make([options.title, options.value], options)
+			make([
+				options.title, 
+				options.value instanceof Function ?
+					options.value.call(actions)
+					// NOTE: when .field(..) is called indirectly via one of 
+					// 		the other field constructors this will not affect
+					// 		the actual .value as options is cloned at this 
+					// 		point.
+					// 		This is an intended side-effect as setup should 
+					// 		not have any effect on the value...
+					// 		XXX revise...
+					: options.value
+			], options)
 		},
 
-		text: function(actions, make, options){
-			this.field(actions, make, 
-				Object.assign(
-					{
-						type: 'text',
-					},
-					options))
-		},
-		select: function(actions, make, options){
-			this.field(actions, make, 
-				Object.assign(
-					{
-						type: 'select',
-					},
-					options))
-		},
+		// XXX need to set .value...
+		editable: function(actions, make, options){
+			return this.field(actions, make.Editable, options) },
+
 		toggle: function(actions, make, options){
 			this.field(actions, make, 
 				Object.assign(
 					{
 						type: 'toggle',
+
+						open: function(evt){
+							var values = options.values instanceof Function ?
+									options.values.call(actions)
+								: options.values ?
+									options.values	
+								: ['off', 'on']
+
+							var elem = $(this).find('.text').last()
+							var current = elem.text()
+
+							var set = function(v){
+								// normalize...
+								v = values.includes(v) ?
+									v
+									: values[0]
+								// update the value...
+								options.value instanceof Function ?
+									(v = options.value.call(actions, v))
+									: (options.value = v)
+								elem.text(v)
+								// update dialog...
+								options.doNotAutoUpdateDialog
+									|| make.dialog.update() }
+
+							// editable list or more than 2 values -> show value list...
+							if(options.list_editable 
+									|| (values.length > 2 
+										&& options.list !== false)){
+								// call options.list(..)
+								if(options.list instanceof Function){
+									options.list.call(actions, current, set)
+
+								// normal list...
+								} else {
+									// XXX mark the current value???
+									var o = actions[
+											options.list_editable ? 
+												'showEditableList' 
+												: 'showList'](
+										values, 
+										Object.assign({
+												path: current,
+												open: function(v){
+													// update value...
+													// XXX current is [[value]], check 
+													// 		the upstream if this is correct...
+													current = v[0][0]
+													// NOTE: this is done first 
+													// 		to update values...
+													o.close()
+													// update callable values...
+													options.list_editable 
+														&& options.values instanceof Function 
+														&& options.values.call(actions, values) },
+												close: function(){
+													// NOTE: set(..) should be 
+													// 		called after all the
+													// 		dialog stuff is done...
+													setTimeout(function(){ set(current) }) },
+											}, 
+											options.list !== true ? 
+												options.list 
+												: {}) ) }
+
+							// directly toggle next value...
+							} else {
+								// XXX should we be able to toggle values back???
+								set(values[(values.indexOf(current) + 1) % values.length]) }
+						},
 					},
-					options))
+					options
+						// normalize value...
+						.run(function(){
+							if(!(this.value instanceof Function)){
+								var values = options.values instanceof Function ?
+										options.values.call(actions)
+									: options.values ?
+										options.values	
+									: ['off', 'on']
+								this.value = 
+									this.value === undefined ?
+										values[0]
+									: values.includes(this.value) ?
+										this.value
+									: this.value ?
+										'on'
+									: 'off' } })))
 		},
+
+		// options format:
+		// 	{
+		// 		key: <str>,
+		// 		values_key: [<value>, ...],
+		// 		value_dict: {
+		// 			<key>: <value>,
+		// 			...
+		// 		},
+		// 		callback: <func(mode, value)>,
+		//
+		// 		...
+		// 	}
+		//
+		// XXX should this be a more generic .attributeToggle(..) ???
+		configToggle: function(actions, make, options){
+			this.toggle(actions, make, 
+				Object.assign(
+					{
+						value: function(value){
+							var d = options.value_dict
+							var mode = arguments.length == 0 ? 'get' : 'set'
+							// get and normalize...
+							value = mode == 'get' ? 
+								actions.config[options.key] 
+								: value
+							value = d ? d[value] : value
+							// set and return...
+							value = mode == 'set' ?
+								(actions.config[options.key] = value)
+								: value 
+							// callback...
+							// XXX revise...
+							options.callback
+								&& options.callback.call(actions, mode, value)
+							return value },
+						// XXX
+						values: function(value){
+							return arguments.length == 0 ?
+								actions.config[options.values_key] 
+								: (actions.config[options.values_key] = value) },
+					},
+					options)) },
 
 		// XXX todo:
 		// 		- date
@@ -1085,6 +1234,8 @@ var EditorActions = actions.Actions({
 		
 		`,
 		makeUIDialog(function(spec, callback){
+			var that = this
+
 			var _make = function(make, spec){
 				var that = this
 				var fields = this.__editor_fields__ 
@@ -1122,7 +1273,7 @@ var EditorActions = actions.Actions({
 				// dialog...
 				: browse.makeLister(null, 
 					function(p, make){
-						_make(make, spec) 
+						_make.call(that, make, spec) 
 					}, {
 						cls: 'table-view',
 					})
@@ -1130,6 +1281,61 @@ var EditorActions = actions.Actions({
 					.close(function(){
 						_callback
 							&& _callback(spec)	}) })],
+
+
+	// XXX move this to examples.js
+	testEditor: ['Test/Universal $editor test...',
+		uiDialog(function(spec, callback){
+			return this.makeEditor(
+				spec || [
+					// basic field...
+					[['Basic static field: ', 'value']],
+
+					/*/ XXX
+					{
+						type: 'editable',
+						title: 'String: ',
+						value: '',
+					},
+					//*/
+
+					// toggle...
+					{
+						type: 'toggle',
+						title: '$Toggle: ',
+					},
+					{
+						type: 'toggle',
+						title: 'Direct toggle: ',
+						values: ['a', 'b', 'c'],
+						list: false,
+					},
+
+					{
+						type: 'toggle',
+						title: '$List toggle: ',
+						values: ['first', 'second', 'third', 'last'],
+					},
+
+					{
+						type: 'toggle',
+						title: '$Editable list toggle: ',
+						values: ['sortable', 'renamable', 'removable', 'extendable'],
+						list_editable: true,
+					},
+
+					'---',
+
+					{
+						type: 'configToggle',
+						title: 'Theme: ',
+						key: 'theme',
+						values_key: 'themes',
+					},
+
+				], 
+				callback || function(res, spec){
+					console.log('EDITED:', res, spec) }) })],
 })
 
 var Editor =
