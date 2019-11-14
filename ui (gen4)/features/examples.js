@@ -824,12 +824,97 @@ var ExampleUIActions = actions.Actions({
 	exampleDialogListerL: ['Test/Combined dialog & lister (lister mode)/*',
 		'exampleDialogLister: ...'],
 
+
 	testList: ['Test/List/*',
 		function(path, make){ return function(){
 			make('A')
 			make('B')
 			make('C')
 		} }],
+
+
+	exampleEditor: ['Test/Universal $editor...',
+		widgets.uiDialog(function(spec, callback){
+			return this.makeEditor(
+				spec || [
+					// basic field...
+					[['Basic static field: ', 'value']],
+
+					{ title: '$Toggle: ',
+						type: 'toggle', },
+					{ title: 'Direct toggle: ',
+						type: 'toggle',
+						values: ['a', 'b', 'c'],
+						list: false, },
+					{ title: '$List toggle: ',
+						type: 'toggle',
+						values: ['first', 'second', 'third', 'last'], },
+					{ title: '$Editable list toggle: ',
+						type: 'toggle',
+						values: ['sortable', 'renamable', 'removable', 'extendable'],
+						list_editable: true, },
+
+					'---',
+
+					{ title: 'Theme (config): ',
+						type: 'configToggle',
+						key: 'theme',
+						values_key: 'themes',
+						// optional...
+						live_update: true,
+						callback: function(cfg, value){
+							this.toggleTheme(value) }, },
+					{ title: 'Theme (toggler): ',
+						type: 'toggler',
+						toggler: 'toggleTheme',
+						// optional...
+						live_update: true, },
+					{ title: 'Slideshow direction: ',
+						type: 'toggler',
+						toggler: 'toggleSlideshowDirection', },
+				], 
+				callback || function(res, spec){
+					console.log('EDITED:', res, spec) }) })],
+	exampleEmbededEditor: ['Test/Universal editor (embeded)...',
+		widgets.makeUIDialog(function(){
+			var that = this
+			var spec
+
+			return browse.makeLister(null, function(_, make){
+
+					that.makeEditor(make, 
+						// NOTE: we need to maintain the data between updates...
+						spec = spec 
+							|| [
+								{ title: '$Toggle: ',
+									type: 'toggle', },
+								{ title: 'Direct toggle: ',
+									type: 'toggle',
+									values: ['a', 'b', 'c'],
+									list: false, },
+								{ title: '$List toggle: ',
+									type: 'toggle',
+									values: ['first', 'second', 'third', 'last'], },
+								{ title: '$Editable list toggle: ',
+									type: 'toggle',
+									values: ['sortable', 'renamable', 'removable', 'extendable'],
+									list_editable: true, }, 
+								'---',
+								{ title: 'Theme (toggler): ',
+									type: 'toggler',
+									toggler: 'toggleTheme',
+									// optional...
+									live_update: true, },
+								// XXX BUG: toggler with two values does not seem to work...
+								{ title: 'Slideshow direction: ',
+									type: 'toggler',
+									toggler: 'toggleSlideshowDirection', },
+							])
+
+					make.Separator()
+
+					make('Done', {open: function(){ make.dialog.close() }})
+				}, { cls: 'table-view' }) })],
 })
 
 var ExampleUI = 

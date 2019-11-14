@@ -84,7 +84,9 @@ function makeSimpleAction(direction){
 //---------------------------------------------------------------------
 // NOTE: all item constructors/helpers abide by either the new-style 
 // 		make protocol, i.e. make(content[, options]) or their own...
-var Items = module.items = function(){}
+var Items = 
+module.items = 
+module.Make = function(){}
 
 // Empty list place holder...
 //
@@ -2790,6 +2792,11 @@ var BrowserPrototype = {
 		}
 
 		make.__proto__ = Items
+		Object.defineProperty(make, 'constructor', {
+			value: Items,
+			enumerable: false,
+		})
+		
 		// align the dialog...
 		make.done = function(){
 			var s = l.find('.selected')			

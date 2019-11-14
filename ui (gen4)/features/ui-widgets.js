@@ -453,6 +453,11 @@ module.makeUIDialog = function(a, b){
 	return uiDialog(function(){
 		var args = [...arguments]
 
+		// we passed a make(..) function...
+		// XXX revise...
+		if(args[0] instanceof Function && args[0].constructor === browse.Make){
+			return actions.ASIS(make.call(this, ...args)) }
+
 		// see if the first arg is a container spec...
 		var container = !(args[0] instanceof Array) && this.isUIContainer(args[0]) ?
 			args.shift()
@@ -988,18 +993,8 @@ var EditorActions = actions.Actions({
 		// 		...
 		// 	}
 		//
-		// XXX we need:
-		// 		- id
-		// 		- dialog ref (make.dialog)
-		// 		- actions ref (this)
-		// 		- make
-		// 		- options
-		// 			- initial value
-		// 			- history 
-		// 			- callback
-		// XXX Q: when do we get the data???
 		field: function(actions, make, options){
-			make([
+			return make([
 				options.title, 
 				options.value instanceof Function ?
 					options.value.call(actions)
@@ -1011,8 +1006,7 @@ var EditorActions = actions.Actions({
 					// 		not have any effect on the value...
 					// 		XXX revise...
 					: options.value
-			], options)
-		},
+			], options) },
 
 		// Editable field...
 		//
@@ -1046,12 +1040,14 @@ var EditorActions = actions.Actions({
 		//		// XXX revise...
 		//		doNotAutoUpdateDialog: <bool>,
 		//
+		//		...
 		// 	}
 		//
+		//
+		// NOTE: this extends .filed(..)
 		toggle: function(actions, make, options){
-			this.field(actions, make, 
+			return this.field(actions, make, 
 				Object.assign(
-					// XXX not sure about this...
 					options,
 					{
 						type: 'toggle',
@@ -1067,6 +1063,12 @@ var EditorActions = actions.Actions({
 							var current = elem.text()
 
 							var set = function(v){
+								// get current value...
+								v = arguments.length > 0 ? 
+										v
+									: options.value instanceof Function ?
+										options.value.call(actions)
+									: options.value 
 								// normalize...
 								v = values.includes(v) ?
 									v
@@ -1142,28 +1144,50 @@ var EditorActions = actions.Actions({
 										this.value
 									: this.value ?
 										'on'
-									: 'off' } })))
-		},
+									: 'off' } }))) },
 
 		// attribute value toggle...
 		//
 		// options format:
 		// 	{
+		// 		// object on which the attribute manipulations are done...
 		// 		obj: <obj> | <func>,
+		//
+		// 		// attribute name/key...
 		// 		key: <str>,
 		//
-		// 		values_key: [<value>, ...],
-		// 		value_dict: {
-		// 			<key>: <value>,
-		// 			...
-		// 		},
+		// 		// attribute values source attribute/key...
+		// 		values_key: <key>,
 		//
+		//
+		// 		// attribute value translation dict/func...
+		// 		value_translate: 
+		// 			<func(value)> 
+		// 			| {
+		// 				<key>: <value>,
+		// 				...
+		// 			},
+		//
+		//
+		// 		// if true the update is made on value change...
 		// 		live_update: <bool>,
+		//
+		//
+		// 		// callback if set, called after an update is made...
 		// 		callback: <func(value, values)>,
+		//
+		//
+		// 		// if set this will not update the config...
+		// 		//
+		// 		// NOTE: callback(..) is still called so the user can take
+		// 		//		care of updating manually...
 		// 		read_only: <bool>,
 		//
 		// 		...
 		// 	}
+		//
+		//
+		// NOTE: this extends .toggle(..)
 		//
 		// XXX should we support dialog.close(..)'s reject mode here???
 		attrToggle: function(actions, make, options){
@@ -1173,36 +1197,34 @@ var EditorActions = actions.Actions({
 						options.obj.call(actions)
 						: options.obj
 					'__value' in options
-						//&& (options.value = obj[options.key] = options.__value)
 						&& (obj[options.key] = options.__value)
 					'__values' in options
-						//&& (options.values = obj[options.values_key] = options.__values) }
 						&& (obj[options.values_key] = options.__values) }
 				options.callback
 					&& options.callback.call(actions, obj, options.__value, options.__values) }
 
-			make.dialog.close(function(){
-				options.live_update
-					|| update() })
+			make.dialog
+				.close(function(){
+					options.live_update
+						|| update() })
 
-			this.toggle(actions, make, 
+			return this.toggle(actions, make, 
 				Object.assign(
-					// XXX not sure about this...
 					options,
 					{
-						// XXX PROBLEM: the value of this does not get 
-						// 		propagated to the original options...
 						//__value: null,
 						value: function(value){
 							var obj = options.obj instanceof Function ?
 								options.obj.call(actions)
 								: options.obj
-							var d = options.value_dict
+							var d = options.value_translate
 							// get...
 							value = arguments.length > 0 ?
 									value
 								: '__value' in options ?
 									options.__value
+								: d instanceof Function ?
+									d.call(actions, obj[options.key])
 								: d ?
 									d[obj[options.key]]
 								: obj[options.key]
@@ -1213,6 +1235,7 @@ var EditorActions = actions.Actions({
 								&& options.live_update
 									&& update()
 							return value },
+
 						//__values: null,
 						values: function(value){
 							var obj = options.obj instanceof Function ?
@@ -1227,6 +1250,50 @@ var EditorActions = actions.Actions({
 					options)) },
 
 
+		//
+		// options format:
+		// 	{
+		//		toggler: <toggler-name>,
+		//
+		//		...
+		// 	}
+		//
+		toggler: function(actions, make, options){
+			var update = function(){
+				'__value' in options
+					&& actions[options.toggler](options.__value) }
+
+			make.dialog
+				.close(function(){
+					options.live_update
+						|| update() })
+
+			return this.toggle(actions, make, 
+				Object.assign(
+					options,
+					{
+						//__value: null,
+						value: function(value){
+							// get...
+							value = arguments.length > 0 ?
+									value
+								: '__value' in options ?
+									options.__value
+								: actions[options.toggler]('?')
+							// set...
+							arguments.length > 0
+								&& (options.__value = value)
+							// live...
+							options.live_update
+								&& update() 
+							return value },
+						values: function(value){
+							return actions[options.toggler]('??') },
+						list_editable: false,
+					},
+					options)) },
+
+
 
 		// Config editable value...
 		//
@@ -1236,15 +1303,14 @@ var EditorActions = actions.Actions({
 
 		// Config value toggle...
 		//
+		// NOTE: this is the same as .attrToggle(..) but sets options.obj
+		// 		to actions.config...
 		configToggle: function(actions, make, options){
-			this.attrToggle(actions, make, 
+			return this.attrToggle(actions, make, 
 				Object.assign(
-					// XXX not sure about this...
 					options,
-					{
-						obj: function(){
-							return actions.config }
-					},
+					{ obj: function(){
+							return actions.config } },
 					options)) },
 
 
@@ -1306,8 +1372,9 @@ var EditorActions = actions.Actions({
 		makeUIDialog(function(spec, callback){
 			var that = this
 
-			var _make = function(make, spec){
+			var _build = function(make, spec, cb){
 				var that = this
+				callback = cb
 				var fields = this.__editor_fields__ 
 					|| EditorActions.__editor_fields__
 					|| {}
@@ -1318,7 +1385,7 @@ var EditorActions = actions.Actions({
 							make(...field)
 						// spec...
 						: field instanceof Object ?
-							fields[field.type](that, make, field)
+							fields[field.type || 'field'](that, make, field)
 						// other...
 						: make(field) }) 
 				return make }
@@ -1338,76 +1405,24 @@ var EditorActions = actions.Actions({
 						// 		but passing it here is cleaner than forcing
 						// 		the user to get it via closure...
 						spec) } 
-			
-			return arguments[0] instanceof Function?
+
+			return arguments[0] instanceof Function ?
 				// inline...
-				_make.call(this, ...arguments)
+				_build.call(this, ...arguments)
 				// dialog...
 				: browse.makeLister(null, 
 					function(p, make){
-						_make.call(that, make, spec) 
-					}, {
+						_build.call(that, make, spec, callback) 
+					}, { 
 						cls: 'table-view',
-					})
-					// pass the results...
-					.close(function(){
-						_callback
-							&& _callback(spec)
-						// XXX fixing a double .close() bug...
-						_callback = null 
+						close: function(){
+							_callback
+								&& _callback(spec)
+							// prevent calling the callback more than once...
+							// XXX fixing a double .close() bug...
+							_callback = null 
+						},
 					}) })],
-
-
-	// XXX move this to examples.js
-	testEditor: ['Test/Universal $editor test...',
-		uiDialog(function(spec, callback){
-			return this.makeEditor(
-				spec || [
-					// basic field...
-					[['Basic static field: ', 'value']],
-
-					{
-						type: 'toggle',
-						title: '$Toggle: ',
-					},
-
-					{
-						type: 'toggle',
-						title: 'Direct toggle: ',
-						values: ['a', 'b', 'c'],
-						list: false,
-					},
-
-					{
-						type: 'toggle',
-						title: '$List toggle: ',
-						values: ['first', 'second', 'third', 'last'],
-					},
-
-					{
-						type: 'toggle',
-						title: '$Editable list toggle: ',
-						values: ['sortable', 'renamable', 'removable', 'extendable'],
-						list_editable: true,
-					},
-
-					'---',
-
-					{
-						type: 'configToggle',
-						title: 'Theme: ',
-						key: 'theme',
-						values_key: 'themes',
-
-						// optional stuff...
-						live_update: true,
-						callback: function(cfg, value){
-							this.toggleTheme(value) },
-					},
-
-				], 
-				callback || function(res, spec){
-					console.log('EDITED:', res, spec) }) })],
 })
 
 var Editor =

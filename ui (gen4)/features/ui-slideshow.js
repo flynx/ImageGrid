@@ -139,7 +139,7 @@ var SlideshowActions = actions.Actions({
 			suspended_timer || this.suspendSlideshowTimer()
 
 			// XXX might be a good idea to make this generic...
-			var _makeToggleHandler = function(toggler){
+			var _makeToggleHandler = function(o, toggler){
 				return function(){
 					var txt = $(this).find('.text').first().text()
 					that[toggler]()
@@ -150,7 +150,7 @@ var SlideshowActions = actions.Actions({
 				}
 			}
 
-			var o = browse.makeLister(null, function(path, make){
+			return browse.makeLister(null, function(path, make){
 					make(['$Interval: ', 
 							function(){ return that.config['slideshow-interval'] }])
 						.on('open', function(){
@@ -158,17 +158,17 @@ var SlideshowActions = actions.Actions({
 
 					make(['$Direction: ', 
 							function(){ return that.config['slideshow-direction'] }])
-						.on('open', _makeToggleHandler('toggleSlideshowDirection'))
+						.on('open', _makeToggleHandler(make.dialog, 'toggleSlideshowDirection'))
 					make(['$Looping: ', 
 							function(){ return that.config['slideshow-looping'] }])
-						.on('open', _makeToggleHandler('toggleSlideshowLooping'))
+						.on('open', _makeToggleHandler(make.dialog, 'toggleSlideshowLooping'))
 
 					// Start/stop...
 					make([function(){ 
 							return that.toggleSlideshow('?') == 'on' ? '$Stop' : '$Start' }])
 						.on('open', function(){
 							that.toggleSlideshow()
-							o.close()
+							make.dialog.close()
 						})
 				},
 				{
@@ -180,9 +180,65 @@ var SlideshowActions = actions.Actions({
 					suspended_timer 
 						|| that.resetSlideshowTimer()
 				})
-
-			return o
 		})],
+	slideshowDialog2: ['Slideshow/Slideshow (new)...',
+		widgets.makeUIDialog(function(){
+			var that = this
+			// suspend the timer if it's not suspended outside...
+			var suspended_timer = this.__slideshow_timer == 'suspended'
+			suspended_timer 
+				|| this.suspendSlideshowTimer()
+			var spec
+
+			return browse.makeLister(null, 
+				function(path, make){
+					// fields...
+					that.makeEditor(make, 
+						spec = spec 
+							|| [
+								// XXX move this to the interval editor... 
+								{ title: '$Interval: ', 
+									type: 'configToggle',
+									key: 'slideshow-interval',
+									values_key: 'slideshow-intervals',
+									/* XXX 
+									list: function(cur, set){
+										this.slideshowIntervalDialog() 
+											.close(function(){
+												// XXX this works only once per dialog instance...
+												set() }) }, },
+									/*/
+									values_key: 'slideshow-intervals',
+									list_editable: true,
+									list: {
+										length_limit: that.config['slideshow-interval-max-count'],
+										check: Date.str2ms,
+										unique: Date.str2ms,
+										normalize: function(e){ return e.trim() },
+										sort: function(a, b){
+											return Date.str2ms(a) - Date.str2ms(b) },
+										sortable: false, }, },
+									//*/
+								{ title: '$Direction: ',
+									type: 'toggler',
+									toggler: 'toggleSlideshowDirection', },
+								{ title: '$Looping: ',
+									type: 'toggler',
+									toggler: 'toggleSlideshowLooping', }, ])
+					// Start/stop...
+					make([function(){ 
+							return that.toggleSlideshow('?') == 'on' ? '$Stop' : '$Start' }], 
+						{ open: function(){
+								that.toggleSlideshow()
+								make.dialog.close() } })
+				},{
+					path: that.toggleSlideshow('?') == 'on' ? 'Stop' : 'Start',
+					cls: 'table-view tail-action',
+					close: function(){
+						// reset the timer if it was not suspended outside...
+						suspended_timer 
+							|| that.resetSlideshowTimer() },	
+				}) })],
 	slideshowButtonAction: ['- Slideshow/',
 		core.doc`Slideshow button action
 
