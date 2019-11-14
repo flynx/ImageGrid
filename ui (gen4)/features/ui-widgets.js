@@ -1385,6 +1385,8 @@ var EditorActions = actions.Actions({
 
 
 		
+		NOTE: for examples see: .exampleEditor(..) and .exampleEmbededEditor(..)
+			of 'ui-action-examples' feature...
 		`,
 		makeUIDialog(function(spec, callback){
 			var that = this

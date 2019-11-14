@@ -176,7 +176,6 @@ core.ImageGridFeatures.Feature('imagegrid-testing', [
 
 
 	//----------------------------------------------------- testing ---
-	'ui-editor',
 	'experiments',
 	'-tests',
 

@@ -46,11 +46,10 @@ module.GLOBAL_KEYBOARD = {
 		Esc: 'toggleSlideshow: "off" -- Exit slideshow',
 		Enter: 'slideshowDialog',
 
-		// XXX do we need a spearate slideshow paused mode???
 		Space: 'toggleSlideshowTimer',
-		// XXX not sure about these yet...
-		//Left: 'resetSlideshowTimer',
-		//Right: 'resetSlideshowTimer',
+
+		Left: 'resetSlideshowTimer',
+		Right: 'resetSlideshowTimer',
 		Home: 'resetSlideshowTimer',
 		End: 'resetSlideshowTimer',
 

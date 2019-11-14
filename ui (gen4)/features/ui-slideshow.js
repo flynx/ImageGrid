@@ -134,11 +134,6 @@ var SlideshowActions = actions.Actions({
 		widgets.makeUIDialog(function(){
 			var that = this
 			var spec
-			// suspend the timer if it's not suspended outside...
-			var suspended_timer = this.__slideshow_timer == 'suspended'
-			suspended_timer 
-				|| this.suspendSlideshowTimer()
-
 			return browse.makeLister(null, 
 				function(path, make){
 					// fields...
@@ -170,10 +165,6 @@ var SlideshowActions = actions.Actions({
 				},{
 					path: that.toggleSlideshow('?') == 'on' ? 'Stop' : 'Start',
 					cls: 'table-view tail-action',
-					// reset the timer if it was not suspended outside...
-					close: function(){
-						suspended_timer 
-							|| that.resetSlideshowTimer() },	
 				}) })],
 	slideshowButtonAction: ['- Slideshow/',
 		core.doc`Slideshow button action
@@ -194,11 +185,10 @@ var SlideshowActions = actions.Actions({
 	
 	// settings...
 	// NOTE: these are disabled as they are repeated in the slideshow dialog...
-	// XXX do we need both this and .slideshowDialog(???)???
 	slideshowIntervalDialog: ['- Slideshow/Slideshow $interval...',
-		widgets.makeUIDialog(function(parent){
+		widgets.makeUIDialog(function(){
 			var that = this
-			var dialog = widgets.makeConfigListEditor(
+			return widgets.makeConfigListEditor(
 				that, 
 				'slideshow-intervals',
 				'slideshow-interval', 
@@ -209,28 +199,7 @@ var SlideshowActions = actions.Actions({
 					normalize: function(e){ return e.trim() },
 					sort: function(a, b){
 						return Date.str2ms(a) - Date.str2ms(b) },
-				})
-				.on('start', function(){
-					// suspend the timer if it's not suspended outside...
-					this.__slideshow_timer == 'suspended'
-						|| this.suspendSlideshowTimer()
-				})
-				.on('close', function(){
-					// reset the timer if it was not suspended outside...
-					this.__slideshow_timer == 'suspended'
-						|| that.resetSlideshowTimer()
-
-					if(parent){
-						var txt = parent.select('!').find('.text').first().text()
-
-						parent.update()
-							.then(function(){ 
-								txt != ''
-									&& parent.select(txt) })
-					}
-				})
-			return dialog
-		})],
+				}) })],
 	toggleSlideshowDirection: ['- Slideshow/Slideshow $direction',
 		core.makeConfigToggler('slideshow-direction', ['forward', 'reverse'])],
 	toggleSlideshowLooping: ['- Slideshow/Slideshow $looping',
@@ -239,17 +208,16 @@ var SlideshowActions = actions.Actions({
 	toggleSlideshowPauseOnBlur: ['Interface|Slideshow/Slideshow pause on app blur',
 		core.makeConfigToggler('slideshow-pause-on-blur', ['on', 'off'])],
 
-	// XXX make these stack-like...
 	resetSlideshowTimer: ['- Slideshow/Reset slideshow timer',
 		function(){
-			this.__slideshow_timer && this.toggleSlideshow('on') }],
+			this.__slideshow_timer 
+				&& this.toggleSlideshowTimer('?') != 'paused'
+				&& this.toggleSlideshow('on') }],
 	suspendSlideshowTimer: ['- Slideshow/Suspend slideshow timer',
 		function(){
 			if(this.__slideshow_timer){
 				clearInterval(this.__slideshow_timer)
-				this.__slideshow_timer = 'suspended'
-			}
-		}],
+				this.__slideshow_timer = 'suspended' } }],
 
 	toggleSlideshowTimer: ['Slideshow/Pause or resume running slideshow',
 		core.doc`
@@ -277,7 +245,7 @@ var SlideshowActions = actions.Actions({
 					return 'paused'
 
 				} else {
-					this.resetSlideshowTimer() 
+					this.toggleSlideshow('on') 
 					return 'running'
 				}
 			}, 
@@ -301,6 +269,7 @@ module.Slideshow = core.ImageGridFeatures.Feature({
 	depends: [
 		'ui',
 		'ui-control',
+		'ui-editor',
 		'ui-single-image',
 	],
 
