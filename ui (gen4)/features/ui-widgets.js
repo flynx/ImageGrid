@@ -960,6 +960,7 @@ module.Dialogs = core.ImageGridFeatures.Feature({
 
 
 //---------------------------------------------------------------------
+// Universal editor...
 
 var EditorActions = actions.Actions({
 
@@ -1442,6 +1443,10 @@ var EditorActions = actions.Actions({
 							_callback = null 
 						},
 					}) })],
+
+
+	// XXX add editors for config lists and values...
+	// XXX
 })
 
 var Editor =
