@@ -972,23 +972,24 @@ var EditorActions = actions.Actions({
 	// NOTE: we are not supporting aliases here as we need to pass strings
 	// 		as-is into .makeEditorBlock(..)'s spec to be able to create things
 	// 		like '---' -> <hr> and other stuff...
+	//
+	// XXX should we support dialog.close(..)'s reject mode???
 	__editor_fields__: {
 		// Generic field...
 		//
 		// options format:
 		// 	{
+		// 		type: <type>,
+		//
 		// 		// NOTE: if this is not set then the id is used...
 		// 		title: <str>,
-		//
 		//
 		// 		// value...
 		// 		//
 		// 		value: <value> | <func([value])>,
 		//
-		//
 		// 		// XXX not implemented...
 		// 		doc: <str> | <func>, 
-		//
 		//
 		// 		...
 		// 	}
@@ -1018,6 +1019,9 @@ var EditorActions = actions.Actions({
 		// options format:
 		// 	{
 		// 		values: <array> | <func([values])>,
+		//
+		// 		// if true this will only alow setting .value from .values...
+		// 		nonstrict: <bool>,
 		//
 		// 		// XXX not implemented...
 		// 		value_editable: <bool>,
@@ -1053,15 +1057,12 @@ var EditorActions = actions.Actions({
 						type: 'toggle',
 
 						open: function(evt){
-							var values = options.values instanceof Function ?
+							var getValues = function(){
+								return options.values instanceof Function ?
 									options.values.call(actions)
 								: options.values ?
 									options.values	
-								: ['off', 'on']
-
-							var elem = $(this).find('.text').last()
-							var current = elem.text()
-
+								: ['off', 'on'] }
 							var set = function(v){
 								// get current value...
 								v = arguments.length > 0 ? 
@@ -1070,17 +1071,34 @@ var EditorActions = actions.Actions({
 										options.value.call(actions)
 									: options.value 
 								// normalize...
-								v = values.includes(v) ?
-									v
-									: values[0]
+								// NOTE: we are re-getting the values here 
+								// 		as it can get updated in options.list(..)
+								// 		or via options.values(..)...
+								if(!options.nonstrict){
+									var values = getValues()
+									v = values.includes(v) ?
+										v
+										: values[0] }
 								// update the value...
-								options.value instanceof Function ?
-									(v = options.value.call(actions, v))
-									: (options.value = v)
+								// NOTE: we update the local value iff set(..)
+								// 		got an explicit value argument...
+								// 		calling set(..) will not store anything,
+								// 		just update the current state, either to
+								// 		the already stored value or to the output
+								// 		of .value(..)...
+								arguments.length > 0
+									&& (options.value instanceof Function ?
+										(v = options.value.call(actions, v))
+										: (options.value = v))
 								elem.text(v)
 								// update dialog...
 								options.doNotAutoUpdateDialog
 									|| make.dialog.update() }
+
+
+							var elem = $(this).find('.text').last()
+							var current = elem.text()
+							var values = getValues()
 
 							// editable list or more than 2 values -> show value list...
 							if(options.list_editable 
@@ -1188,8 +1206,6 @@ var EditorActions = actions.Actions({
 		//
 		//
 		// NOTE: this extends .toggle(..)
-		//
-		// XXX should we support dialog.close(..)'s reject mode here???
 		attrToggle: function(actions, make, options){
 			var update = function(){
 				if(!options.read_only){
@@ -1250,6 +1266,7 @@ var EditorActions = actions.Actions({
 					options)) },
 
 
+		// Toggler-based field...
 		//
 		// options format:
 		// 	{
