@@ -814,12 +814,10 @@ var DialogsActions = actions.Actions({
 		`,
 		makeUIDialog(function(list, options){
 			options = Object.create(options || {})
-
 			// defaults...
 			options.sortable = options.sortable === undefined ? 
 				true 
 				: options.sortable
-
 			return browse.makeLister(null, 
 				function(path, make){
 					make.EditableList(list, options)
@@ -1338,17 +1336,17 @@ var EditorActions = actions.Actions({
 		//		- ...
 	},
 
-	makeEditor: ['- Interface/',
+	showEditor: ['- Interface/',
 		core.doc`Make editor dialog or editor section...
 
 			Make an editor dialog...
-			.makeEditor(spec)
-			.makeEditor(spec, callback)
+			.showEditor(spec)
+			.showEditor(spec, callback)
 				-> dialog
 			
 			Make an editor dialog section...
-			.makeEditor(make, spec)
-			.makeEditor(make, spec, callback)
+			.showEditor(make, spec)
+			.showEditor(make, spec, callback)
 				-> make
 
 
@@ -1443,10 +1441,6 @@ var EditorActions = actions.Actions({
 							_callback = null 
 						},
 					}) })],
-
-
-	// XXX add editors for config lists and values...
-	// XXX
 })
 
 var Editor =
@@ -1457,6 +1451,7 @@ module.Editor = core.ImageGridFeatures.Feature({
 	tag: 'ui-editor',
 	depends: [
 		'ui',
+		'ui-dialogs',
 	],
 
 	actions: EditorActions,

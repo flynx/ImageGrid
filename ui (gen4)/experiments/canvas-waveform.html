@@ -1,6 +1,40 @@
 <!DOCTYPE html>
 <html>
 <style>
+
+
+.graph {
+	position: relative;
+	display: inline-block;
+
+	width: attr(image-width);
+	height: attr(graph-height);
+}
+.graph canvas {
+	width: 100%;
+	height: 100%;
+}
+.graph .controls {
+	display: inline-block;
+	position: absolute;
+	top: 2px;
+	right: 2px;
+}
+.graph .controls button {
+	background: transparent;
+	border: none;
+	color: white;
+	opacity: 0.7;
+}
+.graph .controls button.current {
+	text-decoration: underline;
+	opacity: 0.9;
+}
+.graph .controls button:hover {
+	opacity: 1;
+}
+
+
 </style>
 
 <script src="../ext-lib/jquery.js"></script>
@@ -18,22 +52,22 @@ Filters.getPixels = function(img, w, h){
 	var w = w || img.width
 	var h = h || img.height
 	var c = this.getCanvas(w, h)
-	var ctx = c.getContext('2d')
+	var context = c.getContext('2d')
 	if(img == null){
-		ctx.rect(0, 0, w, h)
-		ctx.fillStyle = "black"
-		ctx.fill()
+		context.rect(0, 0, w, h)
+		context.fillStyle = "black"
+		context.fill()
 	} else {
-		ctx.drawImage(img, 0, 0, w, h)
+		context.drawImage(img, 0, 0, w, h)
 	}
-	return ctx.getImageData(0,0,c.width,c.height)
+	return context.getImageData(0,0,c.width,c.height)
 }
 Filters.setPixels = function(c, data, w, h){
 	c.width = data.width
 	c.height = data.height
-	var ctx = c.getContext('2d')
-	ctx.putImageData(data, 0, 0)
-	//ctx.drawImage(data, 0, 0, w, h)
+	var context = c.getContext('2d')
+	context.putImageData(data, 0, 0)
+	//context.drawImage(data, 0, 0, w, h)
 }
 
 
@@ -218,11 +252,63 @@ var histogram = function(img, canvas, mode){
 	Filters.setPixels(canvas, w)
 }
 
-var start = function(){
-	waveform(document.getElementById('input'), document.getElementById('waveform'), 'color')
-	histogram(document.getElementById('input'), document.getElementById('histogram'), 'color')
+var makeWaveform = function(img, mode, controls){
+	// XXX
+	var type = 'waveform'
+	var graph = waveform
+
+	var buttons
+
+	var update = function(mode){
+		mode = mode || 'color'
+		graph(img, canvas, mode)
+		;(buttons || [])
+			.forEach(function(b){
+				b.classList.contains(mode) ?
+					b.classList.add('current') 
+					: b.classList.remove('current') }) } 
+
+	// container...
+	var container = document.createElement('div')
+	container.classList.add('graph', type)
+	// canvas...
+	var canvas = document.createElement('canvas')
+	container.appendChild(canvas)
+	// controls...
+	if(controls || controls === undefined){
+		var controls = document.createElement('div')
+		controls.classList.add('controls')
+		// buttons...
+		buttons = ['luminance', 'color', 'R', 'G', 'B']
+			.map(function(m){
+				var button = document.createElement('button')
+				button.innerText = m
+				button.classList.add(m)
+				button.onclick = 
+					function(){ update(m) }
+				controls.appendChild(button) 
+				return button })
+		container.appendChild(controls) }
+
+	// meta stuff...
+	container.setAttribute('graph-width', canvas.width)
+	container.setAttribute('graph-height', canvas.height)
+	container.setAttribute('image-width', img.width)
+	container.setAttribute('image-height', img.height)
+
+	update(mode)
+
+	return container
 }
 
+
+
+var start = function(){
+	//waveform(document.getElementById('input'), document.getElementById('waveform'), 'color')
+	//histogram(document.getElementById('input'), document.getElementById('histogram'), 'color')
+
+	document.body.appendChild(makeWaveform(document.getElementById('input')))
+}
 
 </script>
 
@@ -230,6 +316,8 @@ var start = function(){
 
 
 <img id="input" src="../images/splash-800x500.jpg" onload="start()"/>
+
+<!--
 <br>
 <canvas id="waveform"></canvas>
 <br>
@@ -247,6 +335,13 @@ var start = function(){
 <button onclick="histogram(getElementById('input'), getElementById('histogram'), 'R')">R</button>
 <button onclick="histogram(getElementById('input'), getElementById('histogram'), 'G')">G</button>
 <button onclick="histogram(getElementById('input'), getElementById('histogram'), 'B')">B</button>
+-->
+
+
+<br>
+<br>
+<br>
+
 
 </body>
 </html>

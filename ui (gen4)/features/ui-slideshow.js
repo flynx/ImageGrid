@@ -137,7 +137,7 @@ var SlideshowActions = actions.Actions({
 			return browse.makeLister(null, 
 				function(path, make){
 					// fields...
-					that.makeEditor(make, 
+					that.showEditor(make, 
 						spec = spec 
 							|| [
 								{ title: '$Interval: ', 
