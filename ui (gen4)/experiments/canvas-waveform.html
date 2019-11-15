@@ -286,6 +286,7 @@ var histogram = function(img, canvas, mode, color){
 }
 
 // XXX make defaults externally savable -- options???
+// XXX add support for img URL...
 var makeWaveform = function(img, mode, color, controls){
 	mode = mode || 'color'
 
@@ -306,6 +307,16 @@ var makeWaveform = function(img, mode, color, controls){
 				b.classList.contains(m) ?
 					b.classList.add('current') 
 					: b.classList.remove('current') }) } 
+
+	// handle img urls...
+	if(typeof(img) == typeof('str')){
+		var src = img
+		img = document.createElement('img')
+		img.onload = function(){
+			container.setAttribute('image-width', img.width)
+			container.setAttribute('image-height', img.height)
+			update() }
+		img.src = src }
 
 	// container...
 	var container = document.createElement('div')
@@ -345,7 +356,7 @@ var makeWaveform = function(img, mode, color, controls){
 	container.setAttribute('image-height', img.height)
 
 	// init...
-	update(mode)
+	update()
 
 	return container
 }
@@ -358,6 +369,8 @@ var start = function(){
 
 	//document.body.appendChild(makeWaveform(document.getElementById('input'), 'color', 'normalized'))
 	document.body.appendChild(makeWaveform(document.getElementById('input')))
+
+	document.body.appendChild(makeWaveform('../images/splash-800x500.jpg'))
 }
 
 </script>
