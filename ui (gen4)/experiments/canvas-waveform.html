@@ -30,6 +30,18 @@
 	text-decoration: underline;
 	opacity: 0.9;
 }
+.graph .controls button.R:hover,
+.graph .controls button.current.R {
+	background: red;
+}
+.graph .controls button.G:hover,
+.graph .controls button.current.G {
+	background: green;
+}
+.graph .controls button.B:hover,
+.graph .controls button.current.B {
+	background: blue;
+}
 .graph .controls button:hover {
 	opacity: 1;
 }
@@ -162,8 +174,9 @@ Filters.histogram = function(pixels, mode){
 }
 
 
-Filters.waveform = function(pixels, mode){
+Filters.waveform = function(pixels, mode, color){
 	mode = mode || 'luminance'
+	color = color || 'match'
 
 	var w = pixels.width
 
@@ -203,6 +216,9 @@ Filters.waveform = function(pixels, mode){
 
 		var c
 		var j
+		var f
+		var x
+		var y
 
 		if(mode == 'luminance'){
 			// CIE luminance for RGB
@@ -213,22 +229,39 @@ Filters.waveform = function(pixels, mode){
 		} else {
 
 			if(mode == 'color' || mode == 'R'){
+				f = 0.2126
+				x = 1
+				y = 2
 				j = pos(i, r)
 				c = count[j] = (count[j] || 0) + m
 				od[j] = c * gain
 			}
 
 			if(mode == 'color' || mode == 'G'){
+				f = 0.7152
+				x = -1
+				y = 1
 				j = pos(i, g) + 1
 				c = count[j] = (count[j] || 0) + m
 				od[j] = c * gain
 			}
 
 			if(mode == 'color' || mode == 'B'){
+				f = 0.0722
+				x = -2
+				y = -1
 				j = pos(i, b) + 2
 				c = count[j] = (count[j] || 0) + m
 				od[j] = c * gain
 			}
+
+			// normalize...
+			mode != 'color'
+				&& (color == 'white' ?
+						(od[j+x] = od[j+y] = c * gain)
+					: color == 'normalized' ?
+						(od[j+x] = od[j+y] = c * gain/2 * (1-f))
+					: null)
 		}
 	}
 
@@ -238,33 +271,39 @@ Filters.waveform = function(pixels, mode){
 
 var WAVEFORM_SIZE = 1000
 
-var waveform = function(img, canvas, mode){
+var waveform = function(img, canvas, mode, color){
 	var d = Filters.getPixels(img, WAVEFORM_SIZE)
-	var w = Filters.waveform(d, mode)
+	var w = Filters.waveform(d, mode, color)
 	Filters.setPixels(canvas, w)
 }
 
 var HISTOGRAM_SIZE = 1000
 
-var histogram = function(img, canvas, mode){
+var histogram = function(img, canvas, mode, color){
 	var d = Filters.getPixels(img)
 	var w = Filters.histogram(d, mode)
 	Filters.setPixels(canvas, w)
 }
 
-var makeWaveform = function(img, mode, controls){
-	// XXX
+// XXX make defaults externally savable -- options???
+var makeWaveform = function(img, mode, color, controls){
+	mode = mode || 'color'
+
+	var color_modes = ['white', 'normalized', 'color']
+	color = color || color_modes[0]
+
+	// XXX configurable...
 	var type = 'waveform'
 	var graph = waveform
 
 	var buttons
 
-	var update = function(mode){
-		mode = mode || 'color'
-		graph(img, canvas, mode)
+	var update = function(m){
+		m = m || mode || 'color'
+		graph(img, canvas, m, color)
 		;(buttons || [])
 			.forEach(function(b){
-				b.classList.contains(mode) ?
+				b.classList.contains(m) ?
 					b.classList.add('current') 
 					: b.classList.remove('current') }) } 
 
@@ -284,10 +323,19 @@ var makeWaveform = function(img, mode, controls){
 				var button = document.createElement('button')
 				button.innerText = m
 				button.classList.add(m)
-				button.onclick = 
-					function(){ update(m) }
+				button.onclick = function(){ 
+					update(mode = m) }
 				controls.appendChild(button) 
 				return button })
+		// color mode switch...
+		var button = document.createElement('button')
+		button.innerText = '('+ color[0] +')'
+		button.onclick = function(){ 
+			color = color_modes[(color_modes.indexOf(color) + 1) % color_modes.length]
+			this.innerText = '('+ color[0] +')'
+			update() }
+		controls.appendChild(button) 
+		// add to block...
 		container.appendChild(controls) }
 
 	// meta stuff...
@@ -296,6 +344,7 @@ var makeWaveform = function(img, mode, controls){
 	container.setAttribute('image-width', img.width)
 	container.setAttribute('image-height', img.height)
 
+	// init...
 	update(mode)
 
 	return container
@@ -307,6 +356,7 @@ var start = function(){
 	//waveform(document.getElementById('input'), document.getElementById('waveform'), 'color')
 	//histogram(document.getElementById('input'), document.getElementById('histogram'), 'color')
 
+	//document.body.appendChild(makeWaveform(document.getElementById('input'), 'color', 'normalized'))
 	document.body.appendChild(makeWaveform(document.getElementById('input')))
 }
 
