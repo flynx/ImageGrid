@@ -113,7 +113,8 @@ Filters.grayscale = function(pixels, args){
 }
 
 // XXX need to resize this...
-Filters.histogram = function(pixels, mode){
+Filters.histogram = function(pixels, mode, color){
+	color = color || 'fill'
 	mode = mode || 'luminance'
 
 	var w = 255 
@@ -140,35 +141,34 @@ Filters.histogram = function(pixels, mode){
 
 		} else {
 			if(mode == 'color' || mode == 'R'){
-				count[r*4] = (count[r*4] || 0) + 1
-			}
+				count[r*4] = (count[r*4] || 0) + 1 }
 			if(mode == 'color' || mode == 'G'){
-				count[g*4+1] = (count[g*4+1] || 0) + 1
-			}
+				count[g*4+1] = (count[g*4+1] || 0) + 1 }
 			if(mode == 'color' || mode == 'B'){
-				count[b*4+2] = (count[b*4+2] || 0) + 1
-			}
-		}
+				count[b*4+2] = (count[b*4+2] || 0) + 1 } }
 	}
 
 	var m = 255 / Math.max(...count.filter(function(){ return true }))
 
 	var pos = function(i, value){
 		return (
-			// horixontal position...
+			// horizontal position...
 			i*4 
 			// value vertical offset...
 			+ (255-Math.round(value*m))*w*4) }
 
+	// XXX would be nice to have an option to draw full columns...
 	count.forEach(function(v, i){
 		var j = pos(i/4, v)
-		od[j] = 255
-
-		// correct for blue visibility...
-		if(mode != 'luminance' && (i-2)%4 == 0){
-			od[j-1] = od[j-2] = 180
-		}
-	})
+		while(j < od.length){
+			j += w*4
+			od[j] = 255
+			if(color == 'point'){
+				// correct for blue visibility...
+				mode != 'luminance' 
+					&& (i-2)%4 == 0
+					&& (od[j-1] = od[j-2] = 180) 
+				break } } })
 
 	return out
 }
@@ -176,7 +176,7 @@ Filters.histogram = function(pixels, mode){
 
 Filters.waveform = function(pixels, mode, color){
 	mode = mode || 'luminance'
-	color = color || 'match'
+	color = color || 'normalized'
 
 	var w = pixels.width
 
@@ -266,20 +266,16 @@ Filters.waveform = function(pixels, mode, color){
 
 
 var WAVEFORM_SIZE = 1000
-
 var waveform = function(img, canvas, mode, color){
 	var d = Filters.getPixels(img, WAVEFORM_SIZE)
 	var w = Filters.waveform(d, mode, color)
-	Filters.setPixels(canvas, w)
-}
+	Filters.setPixels(canvas, w) }
 
 var HISTOGRAM_SIZE = 1000
-
 var histogram = function(img, canvas, mode, color){
 	var d = Filters.getPixels(img)
-	var w = Filters.histogram(d, mode)
-	Filters.setPixels(canvas, w)
-}
+	var w = Filters.histogram(d, mode, color)
+	Filters.setPixels(canvas, w) }
 
 // XXX should we make this a web components???
 //		+ would make everything transparent
@@ -382,43 +378,27 @@ var start = function(){
 
 //---------------------------------------------------------------------
 
-
-/* XXX for some reason this does not work...
-var igImageGraph = function(){ 
-	// XXX how do we call super here???
-	//HTMLElement.call(this, ...arguments)
-}
-//igImageGraph.__proto__ = HTMLElement
-igImageGraph.prototype = {
-	__proto__: HTMLElement.prototype,
-	//constructor: igImageGraph,
-
-	get observedAttributes() {
-		return ['src'] },
-
-	get src(){},
-	set src(value){},
-
-	//attributeChangedCallback: function(name, from, to){
-	//},
-
-	//connectedCallback: function(){ },
-	//disconnectedCallback: function(){ },
-
-}
-/*/
+// XXX can't get the non-class version to work...
+// XXX for some reason this takes some time to draw... slower than makeWaveform(..)
 class igImageGraph extends HTMLElement {
+	graphs = {
+		waveform,
+		histogram,
+	}
+	modes = ['luminance', 'color', 'R', 'G', 'B']
+	color_modes = ['normalized', 'white', 'point']
+
 	constructor(src){
 		super()
-
 		// shadow DOM
-		var shadow = this.attachShadow({mode: 'open'})
+		var shadow = this.__shadow = 
+			this.attachShadow({mode: 'open'})
 		shadow.appendChild(
 			document.getElementById('ig-image-graph')
-				.content.cloneNode(true))
-
-		this.update()
-	}
+				.content.cloneNode(true)) }
+	connectedCallback(){
+		this.update_controls()
+		this.update() }
 
 	// attributes...
 	get observedAttributes(){
@@ -426,40 +406,146 @@ class igImageGraph extends HTMLElement {
 			'src', 
 			'mode', 
 			'color',
-			'controls',
+			'nocontrols',
+			'graph',
 		]}
-
-	get src(){}
-	set src(value){}
-
-	get mode(){}
-	set mode(value){}
-
-	get color(){}
-	set color(value){}
-
-	get controls(){}
-	set controls(value){}
-
 	attributeChangedCallback(name, from, to){
-		this.update()
+		name == 'nocontrols'
+			&& this.update_controls()
+		this.update() }
+	get graph(){
+		return this.getAttribute('graph') || 'waveform' }
+	set graph(value){
+		value in this.graphs
+			&& this.setAttribute('graph', value)
+		value == ''
+			&& this.removeAttribute('graph') 
+		this.update() }
+	get src(){
+		return this.getAttribute('src') }
+	set src(value){
+		var that = this
+		this.__update_handler = this.__update_handler 
+			|| this.update.bind(this)
+		var url = typeof(value) == typeof('str')
+		// get/create image...
+		var img = this.image = 
+			url ?
+				(this.image || document.createElement('img'))
+				: value
+		img.removeEventListener('load', this.__update_handler)
+		img.addEventListener('load', this.__update_handler)
+		// set .src and img.src...
+		this.setAttribute('src', 
+			url ? 
+				(img.src = value)
+				: img.src)
+	}
+	get mode(){
+		return this.getAttribute('mode') || 'color' }
+	set mode(value){
+		this.modes.includes(value)	
+			&& this.setAttribute('mode', value) 
+		value === undefined
+			&& this.removeAttribute('color') 
+		this.update_controls()
+		this.update() }
+	get color(){
+		return this.getAttribute('color') || 'normalized' }
+	set color(value){
+		this.color_modes.includes(value)	
+			&& this.setAttribute('color', value) 
+		value === undefined
+			&& this.removeAttribute('color') 
+		this.update() }
+	get nocontrols(){
+		return this.getAttribute('nocontrols') != null }
+	set nocontrols(value){
+		value ?
+			this.setAttribute('nocontrols', '')
+   			: this.removeAttribute('nocontrols') 
+		this.update_controls()
+		this.update() }
+
+	// API...
+	update_controls(){
+		var that = this
+		var mode = this.mode
+
+		var controls = this.__shadow.querySelector('.controls')
+		controls.innerHTML = ''
+		// modes...
+		var buttons = (this.nocontrols ? 
+				[] 
+				: this.modes)
+			// mode buttons...
+			.map(function(m){
+				var button = document.createElement('button')
+				button.innerText = m
+				button.classList.add(m, ...(m == mode ? ['current'] : []))
+				button.onclick = function(){ 
+					that.mode = m }
+				return button })
+			.concat([
+				/* 
+				// color mode switch...
+				function(){
+					var button = document.createElement('button')
+					button.innerText = '('+ that.color[0] +')'
+					button.onclick = function(){ 
+						that.color = that.color_modes[
+							(that.color_modes.indexOf(that.color) + 1) 
+								% that.color_modes.length]
+						this.innerText = '('+ that.color[0] +')' }
+					return button }(),
+					//*/
+				// reload...
+				function(){
+					var button = document.createElement('button')
+					button.classList.add('update')
+					button.innerHTML = '&#10227;'
+					button.onclick = function(){ that.update() }
+					return button }(),
+			])
+			.reverse()
+			.forEach(function(button){
+				controls.appendChild(button) })
+		return this
+	}
+	update(){
+		var that = this
+		var mode = this.mode
+
+		// controls...
+		// remove...
+		if(!this.nocontrols){
+			var controls = this.__shadow.querySelector('.controls')
+			// current button state...
+			var button = controls.querySelector('button.'+this.mode) 
+			button 
+				&& button.classList.add('current')
+		}
+
+		// XXX configurable...
+		var type = this.graph
+		var graph = this.graphs[type]
+
+		var canvas = this.__shadow.querySelector('canvas')
+
+		if(this.image){
+			graph(this.image, canvas, this.mode, this.color)
+
+		} else if(this.src){
+			this.src = this.src
+		}
+
+		return this
 	}
 
 	// events...
 	// XXX
-
-
-	// API...
-	update(){
-		// XXX
-		//	- add/update/remove controls
-	}
 }
-//*/
 window.customElements.define('ig-image-graph', igImageGraph)
-
-
-
 
 
 
@@ -468,8 +554,55 @@ window.customElements.define('ig-image-graph', igImageGraph)
 
 <template id="ig-image-graph">
 	<style>
+		:host {
+			position: relative;
+			display: inline-block;
+
+			background: black;
+
+			width: attr(image-width);
+			height: attr(graph-height);
+		}
+		:host canvas {
+			width: 100%;
+			height: 100%;
+		}
+		:host .controls {
+			display: inline-block;
+			position: absolute;
+			top: 2px;
+			right: 2px;
+			left: 2px;
+		}
+		:host .controls button {
+			background: transparent;
+			border: none;
+			color: white;
+			opacity: 0.7;
+			float: right;
+		}
+		:host .controls button.current {
+			text-decoration: underline;
+			opacity: 0.9;
+		}
+		:host .controls button.R:hover,
+		:host .controls button.current.R {
+			background: red;
+		}
+		:host .controls button.G:hover,
+		:host .controls button.current.G {
+			background: green;
+		}
+		:host .controls button.B:hover,
+		:host .controls button.current.B {
+			background: blue;
+		}
+		:host .controls button:hover {
+			opacity: 1;
+		}
 	</style>
 	<canvas class="graph"></canvas>
+	<div class="controls"></div>
 </template>
 
 
@@ -481,11 +614,11 @@ window.customElements.define('ig-image-graph', igImageGraph)
 <br>
 
 <ig-image-graph 
+	graph="histogram"
 	src="../images/splash-800x500.jpg"
-	graph="waveform"
 	mode="color"
 	color="normalized" 
-	controls="yes" />
+></ig-image-graph>
 
 
 <!--
