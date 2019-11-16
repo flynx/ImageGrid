@@ -213,12 +213,8 @@ Filters.waveform = function(pixels, mode, color){
 		var r = d[i]
 		var g = d[i+1]
 		var b = d[i+2]
+		var c, j, f, x, y
 
-		var c
-		var j
-		var f
-		var x
-		var y
 
 		if(mode == 'luminance'){
 			// CIE luminance for RGB
@@ -285,13 +281,18 @@ var histogram = function(img, canvas, mode, color){
 	Filters.setPixels(canvas, w)
 }
 
-// XXX make defaults externally savable -- options???
-// XXX add support for img URL...
-var makeWaveform = function(img, mode, color, controls){
-	mode = mode || 'color'
+// XXX should we make this a web components???
+//		+ would make everything transparent
+//			- add a tag
+//			- edit props
+//			- handle events
+//		- not sure what is the differenence practically...
+var makeWaveform = function(img, options){
+	var color_modes = ['normalized', 'white', 'color']
 
-	var color_modes = ['white', 'normalized', 'color']
-	color = color || color_modes[0]
+	options = options || {}
+	options.mode = options.mode || 'color'
+	options.color = options.color || color_modes[0]
 
 	// XXX configurable...
 	var type = 'waveform'
@@ -300,8 +301,8 @@ var makeWaveform = function(img, mode, color, controls){
 	var buttons
 
 	var update = function(m){
-		m = m || mode || 'color'
-		graph(img, canvas, m, color)
+		m = options.mode = m || options.mode
+		graph(img, canvas, m, options.color)
 		;(buttons || [])
 			.forEach(function(b){
 				b.classList.contains(m) ?
@@ -321,6 +322,8 @@ var makeWaveform = function(img, mode, color, controls){
 	// container...
 	var container = document.createElement('div')
 	container.classList.add('graph', type)
+	// XXX not sure why would we need shadow dom here...
+	//var shadow = container.attachShadow({mode: 'open'})
 	// canvas...
 	var canvas = document.createElement('canvas')
 	container.appendChild(canvas)
@@ -335,15 +338,17 @@ var makeWaveform = function(img, mode, color, controls){
 				button.innerText = m
 				button.classList.add(m)
 				button.onclick = function(){ 
-					update(mode = m) }
+					update(m) }
 				controls.appendChild(button) 
 				return button })
 		// color mode switch...
 		var button = document.createElement('button')
-		button.innerText = '('+ color[0] +')'
+		button.innerText = '('+ options.color[0] +')'
 		button.onclick = function(){ 
-			color = color_modes[(color_modes.indexOf(color) + 1) % color_modes.length]
-			this.innerText = '('+ color[0] +')'
+			options.color = color_modes[
+				(color_modes.indexOf(options.color) + 1) 
+					% color_modes.length]
+			this.innerText = '('+ options.color[0] +')'
 			update() }
 		controls.appendChild(button) 
 		// add to block...
@@ -373,12 +378,115 @@ var start = function(){
 	document.body.appendChild(makeWaveform('../images/splash-800x500.jpg'))
 }
 
+
+
+//---------------------------------------------------------------------
+
+
+/* XXX for some reason this does not work...
+var igImageGraph = function(){ 
+	// XXX how do we call super here???
+	//HTMLElement.call(this, ...arguments)
+}
+//igImageGraph.__proto__ = HTMLElement
+igImageGraph.prototype = {
+	__proto__: HTMLElement.prototype,
+	//constructor: igImageGraph,
+
+	get observedAttributes() {
+		return ['src'] },
+
+	get src(){},
+	set src(value){},
+
+	//attributeChangedCallback: function(name, from, to){
+	//},
+
+	//connectedCallback: function(){ },
+	//disconnectedCallback: function(){ },
+
+}
+/*/
+class igImageGraph extends HTMLElement {
+	constructor(src){
+		super()
+
+		// shadow DOM
+		var shadow = this.attachShadow({mode: 'open'})
+		shadow.appendChild(
+			document.getElementById('ig-image-graph')
+				.content.cloneNode(true))
+
+		this.update()
+	}
+
+	// attributes...
+	get observedAttributes(){
+		return [
+			'src', 
+			'mode', 
+			'color',
+			'controls',
+		]}
+
+	get src(){}
+	set src(value){}
+
+	get mode(){}
+	set mode(value){}
+
+	get color(){}
+	set color(value){}
+
+	get controls(){}
+	set controls(value){}
+
+	attributeChangedCallback(name, from, to){
+		this.update()
+	}
+
+	// events...
+	// XXX
+
+
+	// API...
+	update(){
+		// XXX
+		//	- add/update/remove controls
+	}
+}
+//*/
+window.customElements.define('ig-image-graph', igImageGraph)
+
+
+
+
+
+
 </script>
+
+
+<template id="ig-image-graph">
+	<style>
+	</style>
+	<canvas class="graph"></canvas>
+</template>
+
 
 <body>
 
 
 <img id="input" src="../images/splash-800x500.jpg" onload="start()"/>
+
+<br>
+
+<ig-image-graph 
+	src="../images/splash-800x500.jpg"
+	graph="waveform"
+	mode="color"
+	color="normalized" 
+	controls="yes" />
+
 
 <!--
 <br>
@@ -408,3 +516,4 @@ var start = function(){
 
 </body>
 </html>
+<!-- vim:set ts=4 sw=4 : -->
