@@ -960,6 +960,25 @@ module.Dialogs = core.ImageGridFeatures.Feature({
 //---------------------------------------------------------------------
 // Universal editor...
 
+
+// XXX EXPERIMENT...
+// 		- how do we handle the ImageGrid context here (i.e. actions)???
+// 			...one way would be to split the fields into two levels, the 
+// 			generic and the domain-specific...
+// XXX REVISE...
+browse.items.Field = 
+function(actions, options){
+	return this([
+		options.title, 
+		options.value instanceof Function ?
+			options.value(actions)
+			: options.value
+	], options) }
+
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
 var EditorActions = actions.Actions({
 
 	// format:

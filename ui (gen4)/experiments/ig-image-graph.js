@@ -266,18 +266,6 @@ igImageGraph_template = `
 		text-decoration: underline;
 		opacity: 0.9;
 	}
-	:host .controls button.R:hover,
-	:host .controls button.current.R {
-		background: red;
-	}
-	:host .controls button.G:hover,
-	:host .controls button.current.G {
-		background: green;
-	}
-	:host .controls button.B:hover,
-	:host .controls button.current.B {
-		background: blue;
-	}
 	:host .controls button:hover {
 		opacity: 1;
 	}
