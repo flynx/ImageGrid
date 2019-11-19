@@ -962,6 +962,8 @@ module.Dialogs = core.ImageGridFeatures.Feature({
 
 
 // XXX EXPERIMENT...
+// 		- which is more logical the generic make.Field(..) or the 
+// 			.__editor_fields__ API???
 // 		- how do we handle the ImageGrid context here (i.e. actions)???
 // 			...one way would be to split the fields into two levels, the 
 // 			generic and the domain-specific...
