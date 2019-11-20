@@ -963,10 +963,14 @@ module.Dialogs = core.ImageGridFeatures.Feature({
 
 // XXX EXPERIMENT...
 // 		- which is more logical the generic make.Field(..) or the 
-// 			.__editor_fields__ API???
+// 			.makeEditor(..) and friends???
 // 		- how do we handle the ImageGrid context here (i.e. actions)???
 // 			...one way would be to split the fields into two levels, the 
 // 			generic and the domain-specific...
+// 			...one way could be something like:
+// 				make.setGetterContext(context)
+// 			and in all the getters use:
+// 				getter.call(make.getterContext, ...)
 // XXX REVISE...
 browse.items.Field = 
 function(actions, options){
