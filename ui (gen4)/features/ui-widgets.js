@@ -527,20 +527,17 @@ var makeListEditorDialog =
 module.makeListEditorDialog =
 function makeListEditorDialog(list, options){
 	options = options || {}
-
 	return makeUIDialog(function(){
 		var lst = list instanceof Function ?
 			list.call(this)
 			: list
-
 		// NOTE: this will edit the list in place...
 		return browse.makeLister(null, 
 			function(_, make){
 				make.EditableList(lst, options)
 			}, {
 				cls: options.cls,
-			})
-	}) }
+			}) }) }
 
 // Make .config list editor dialog...
 // 
