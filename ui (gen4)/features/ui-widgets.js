@@ -959,30 +959,153 @@ module.Dialogs = core.ImageGridFeatures.Feature({
 
 
 // XXX EXPERIMENT...
-// 		- which is more logical the generic make.Field(..) or the 
-// 			.makeEditor(..) and friends???
-// 			or should we have both??
-// 			...there is merit in having a "storable" dialog so regardless 
-// 			of the final architecture, it would be logical to have:
-// 				- simple generic Array / Object / JSON constructors...
-// 				- storable "full" format constructors...
-// 				- the make(..) and friends API for custom stuff...
-// 		- how do we handle the ImageGrid context here (i.e. actions)???
-// 			...one way would be to split the fields into two levels, the 
-// 			generic and the domain-specific...
-// 			...one way could be something like:
-// 				make.setGetterContext(context)
-// 			and in all the getters use:
-// 				getter.call(make.getterContext, ...)
+// 		Q: What should we use as context for the getters and callbacks?
+// 		...there are several ways to go:
+// 			- "this" generic make object + manual binding
+// 				+ generic, already implemented...
+// 				- requires manual binding...
+// 			- explicit context in arguments or options
+// 				- breaks the general API...
+// 			- a context manager API...
+// 				- complexity...
+// XXX Q: do we actually need .Field(..), it does everything make(..) 
+// 		does already???
+// XXX Q: should title/value args be optional???
 // XXX REVISE...
 browse.items.Field = 
-function(actions, options){
+function(title, value, options){
+	options = options || {}
+	Object.assign(
+		options, 
+		{
+			title, 
+			value,
+		})
 	return this([
-		options.title, 
+		title, 
 		options.value instanceof Function ?
-			options.value(actions)
-			: options.value
+			options.value(this)
+			: options.value 
 	], options) }
+
+// XXX need to open a list dialog (currently context is used)...
+browse.items.Toggle = 
+function(title, value, options){
+	var that = this
+	return this.Field(title, value,
+		Object.assign(
+			options,
+			{
+				type: 'toggle',
+
+				open: function(evt){
+					var getValues = function(){
+						return options.values instanceof Function ?
+							options.values.call(actions)
+						: options.values ?
+							options.values	
+						: ['off', 'on'] }
+					var set = function(v){
+						// get current value...
+						v = arguments.length > 0 ? 
+								v
+							: options.value instanceof Function ?
+								options.value.call(actions)
+							: options.value 
+						// normalize...
+						// NOTE: we are re-getting the values here 
+						// 		as it can get updated in options.list(..)
+						// 		or via options.values(..)...
+						if(!options.nonstrict){
+							var values = getValues()
+							v = values.includes(v) ?
+								v
+								: values[0] }
+						// update the value...
+						// NOTE: we update the local value iff set(..)
+						// 		got an explicit value argument...
+						// 		calling set(..) will not store anything,
+						// 		just update the current state, either to
+						// 		the already stored value or to the output
+						// 		of .value(..)...
+						arguments.length > 0
+							&& (options.value instanceof Function ?
+								(v = options.value.call(actions, v))
+								: (options.value = v))
+						elem.text(v)
+						// update dialog...
+						options.doNotAutoUpdateDialog
+							|| that.dialog.update() }
+
+
+					var elem = $(this).find('.text').last()
+					var current = elem.text()
+					var values = getValues()
+
+					// editable list or more than 2 values -> show value list...
+					if(options.list_editable 
+							|| (values.length > 2 
+								&& options.list !== false)){
+						// call options.list(..)
+						if(options.list instanceof Function){
+							options.list.call(actions, current, set)
+
+						// normal list...
+						} else {
+							// XXX where do we get these when context in make(..)
+							// XXX mark the current value???
+							var o = actions[
+									options.list_editable ? 
+										'showEditableList' 
+										: 'showList'](
+								values, 
+								Object.assign({
+										path: current,
+										open: function(v){
+											// update value...
+											// XXX current is [[value]], check 
+											// 		the upstream if this is correct...
+											current = v[0][0]
+											// NOTE: this is done first 
+											// 		to update values...
+											o.close()
+											// update callable values...
+											options.list_editable 
+												&& options.values instanceof Function 
+												&& options.values.call(actions, values) },
+										close: function(){
+											// NOTE: set(..) should be 
+											// 		called after all the
+											// 		dialog stuff is done...
+											setTimeout(function(){ set(current) }) },
+									}, 
+									options.list !== true ? 
+										options.list 
+										: {}) ) }
+
+					// directly toggle next value...
+					} else {
+						// XXX should we be able to toggle values back???
+						set(values[(values.indexOf(current) + 1) % values.length]) }
+				},
+			},
+			options
+				// normalize value...
+				.run(function(){
+					if(!(this.value instanceof Function)){
+						var values = options.values instanceof Function ?
+								options.values.call(actions)
+							: options.values ?
+								options.values	
+							: ['off', 'on']
+						this.value = 
+							this.value === undefined ?
+								values[0]
+							: values.includes(this.value) ?
+								this.value
+							: this.value ?
+								'on'
+							: 'off' } }))) }
 
 
 
