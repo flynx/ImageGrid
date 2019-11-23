@@ -989,6 +989,8 @@ function(title, value, options){
 	], options) }
 
 // XXX need to open a list dialog (currently context is used)...
+// 		...this can be set via options.list but would be nice to provide 
+// 		a reasonable default...
 browse.items.Toggle = 
 function(title, value, options){
 	var that = this
@@ -1106,6 +1108,19 @@ function(title, value, options){
 							: this.value ?
 								'on'
 							: 'off' } }))) }
+
+
+
+// XXX like .makeEditor(..) but local to make(..) (i.e. generic)...
+// XXX should this use any fields available to make(..) or just the editor???
+// 		...currently seems that making this fully generic would be more
+// 		logical but would require a better name -- .Batch(..) ???
+//browse.items.makeEditor =
+browse.items.Batch =
+function(spec, callback){
+	// XXX
+}
+
 
 
 
