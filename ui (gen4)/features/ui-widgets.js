@@ -971,6 +971,8 @@ module.Dialogs = core.ImageGridFeatures.Feature({
 // XXX Q: do we actually need .Field(..), it does everything make(..) 
 // 		does already???
 // XXX Q: should title/value args be optional???
+// 		...and should we break the make(..) convention of passing an arg 
+// 		array for multiple .text blocks, i.e. make([title, value], ...)??
 // XXX REVISE...
 browse.items.Field = 
 function(title, value, options){
