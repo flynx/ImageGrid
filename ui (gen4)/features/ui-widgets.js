@@ -968,6 +968,7 @@ module.Dialogs = core.ImageGridFeatures.Feature({
 // 				- breaks the general API...
 // 			- a context manager API... (REJECTED?)
 // 				- complexity...
+// 		Q: should we add domain specific fields here too???
 // XXX Q: do we actually need .Field(..), it does everything make(..) 
 // 		does already???
 // XXX Q: should title/value args be optional???
