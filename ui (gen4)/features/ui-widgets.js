@@ -969,6 +969,11 @@ module.Dialogs = core.ImageGridFeatures.Feature({
 // 			- a context manager API... (REJECTED?)
 // 				- complexity...
 // 		Q: should we add domain specific fields here too???
+// 			...would be nice to be able to add domains to make(..), e.g.:
+// 				make.Domain('ig')
+// 				make.ig.attrToggle = function(..){ ... }
+// 			the goal is to preserve the make(..) context in sub calls, see
+// 			browse.items.Domain(..) implemented below...
 // XXX Q: do we actually need .Field(..), it does everything make(..) 
 // 		does already???
 // XXX Q: should title/value args be optional???
@@ -1111,6 +1116,28 @@ function(title, value, options){
 								'on'
 							: 'off' } }))) }
 
+
+// XXX EXPERIMENTAL...
+// 		this is global domain, can we add field domains to specific contexts???
+// 		...this may pose a problem if we reuse a lib in several contexts within 
+// 		one app...
+// 		...not sure how critical this is at this point...
+// XXX move this to browse???
+browse.items.Domain = function(name, obj){
+	var that = this
+	var sub = function(){
+		return that(...arguments) }
+	sub.__proto__ = that
+	obj
+		&& Object.assign(sub, obj)
+	return that[name] = sub }
+
+
+browse.items.Domain('ig', {
+	attrToggle: function(){
+		// XXX
+	},
+})
 
 
 // XXX like .makeEditor(..) but local to make(..) (i.e. generic)...
