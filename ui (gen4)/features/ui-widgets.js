@@ -1124,16 +1124,15 @@ function(title, value, options){
 // 		...not sure how critical this is at this point...
 // XXX move this to browse???
 browse.items.Domain = function(name, obj){
-	var that = this
 	var sub = function(){
-		return that(...arguments) }
-	sub.__proto__ = that
+		return this(...arguments) }
+	sub.__proto__ = this
 	obj
 		&& Object.assign(sub, obj)
-	return that[name] = sub }
+	return (this[name] = sub) }
 
 
-browse.items.Domain('ig', {
+browse.items.Domain('form', {
 	attrToggle: function(){
 		// XXX
 	},
