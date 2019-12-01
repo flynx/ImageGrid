@@ -958,6 +958,51 @@ module.Dialogs = core.ImageGridFeatures.Feature({
 // Universal editor...
 
 
+// XXX EXPERIMENTAL...
+//
+//	.makeContext(name[, obj])
+//	.makeContext(name, func[, obj])
+//
+//
+// XXX context of context will not work...
+// XXX move this to browse???
+browse.items.makeContext = function(name, obj){
+	// parse args...
+	var args = [...arguments]
+	name = args.shift()
+	var func = args[0] instanceof Function ? 
+		args.shift()
+		: null
+	obj = args.shift() || {}
+
+	var make = function(parent, context){
+		var f = function(){ 
+			return func ?
+				func.call(this.__make || this, ...arguments)
+				: this.call(this.__make || this, ...arguments) }
+		context
+			&& (f = f.bind(context))
+		f.__proto__ = parent 
+		Object.assign(f, obj)
+		return f }
+
+	// make the handler...
+	var n = '__'+ name
+	Object.defineProperty(this, name, {
+		get: function(){
+			this.__make == null
+				&& (this.__make = this)
+
+			return this.hasOwnProperty(n) ?
+				this[n]
+				: (this[n] = make(this, this))
+		},
+	})
+
+	return (this[name] = make(this)) }
+
+
+
 // XXX EXPERIMENT...
 // 		Q: What should we use as context for the getters and callbacks?
 // 		...there are several ways to go:
@@ -979,29 +1024,33 @@ module.Dialogs = core.ImageGridFeatures.Feature({
 // XXX Q: should title/value args be optional???
 // 		...and should we break the make(..) convention of passing an arg 
 // 		array for multiple .text blocks, i.e. make([title, value], ...)??
-browse.items.Field = 
-function(title, value, options){
-	options = options || {}
-	Object.assign(
-		options, 
-		{
+//browse.items.Field = 
+browse.items.makeContext('field',
+	function(title, value, options){
+		options = options || {}
+		Object.assign(
+			options, 
+			{
+				title, 
+				value,
+			})
+		return this([
 			title, 
-			value,
-		})
-	return this([
-		title, 
-		options.value instanceof Function ?
-			options.value(this)
-			: options.value 
-	], options) }
+			options.value instanceof Function ?
+				options.value(this)
+				: options.value 
+		], options) })
+
+
 
 // XXX need to open a list dialog (currently context is used)...
 // 		...this can be set via options.list but would be nice to provide 
 // 		a reasonable default...
-browse.items.Toggle = 
+browse.items.field.Toggle = 
 function(title, value, options){
 	var that = this
-	return this.Field(title, value,
+	options = options || {}
+	return this.field(title, value,
 		Object.assign(
 			options,
 			{
@@ -1117,34 +1166,13 @@ function(title, value, options){
 							: 'off' } }))) }
 
 
-// XXX EXPERIMENTAL...
-// 		this is global domain, can we add field domains to specific contexts???
-// 		...this may pose a problem if we reuse a lib in several contexts within 
-// 		one app...
-// 		...not sure how critical this is at this point...
-// XXX move this to browse???
-browse.items.Domain = function(name, obj){
-	var sub = function(){
-		return this(...arguments) }
-	sub.__proto__ = this
-	obj
-		&& Object.assign(sub, obj)
-	return (this[name] = sub) }
-
-
-browse.items.Domain('form', {
-	attrToggle: function(){
-		// XXX
-	},
-})
-
 
 // XXX like .makeEditor(..) but local to make(..) (i.e. generic)...
 // XXX should this use any fields available to make(..) or just the editor???
 // 		...currently seems that making this fully generic would be more
 // 		logical but would require a better name -- .Batch(..) ???
 //browse.items.makeEditor =
-browse.items.Batch =
+browse.items.field.Batch =
 function(spec, callback){
 	// XXX
 }

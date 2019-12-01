@@ -833,9 +833,11 @@ var ExampleUIActions = actions.Actions({
 		} }],
 
 
+	// XXX should this use widgets.makeUIDialog(..)
+	// 		...BUG: currently it creates a second overlay...
 	exampleEditor: ['Test/Universal $editor...',
 		widgets.uiDialog(function(spec, callback){
-			return this.makeEditor(
+			return this.showEditor(
 				spec || [
 					// basic field...
 					[['Basic static field: ', 'value']],
@@ -882,7 +884,7 @@ var ExampleUIActions = actions.Actions({
 
 			return browse.makeLister(null, function(_, make){
 
-					that.makeEditor(make, 
+					that.showEditor(make, 
 						// NOTE: we need to maintain the data between updates...
 						spec = spec 
 							|| [
@@ -915,6 +917,32 @@ var ExampleUIActions = actions.Actions({
 
 					make('Done', {open: function(){ make.dialog.close() }})
 				}, { cls: 'table-view' }) })],
+
+	exampleEditor2: ['Test/Universal Editor (2)...',
+		widgets.makeUIDialog(function(spec, callback){
+			var that = this
+			return browse.makeLister(null, function(path, make){
+
+				make([
+					'Action count:',
+					function(){
+						return that.actions.length }, ])
+
+
+				make.field('Fieatures:',
+					function(){
+						return that.features.features.length })
+
+				make.field('A', 'B')
+				make.field.field('C', 'D')
+				make.field.field.field('E', 'F')
+				make.field.field.field.field('G', 'H')
+
+				//make.field.Toggle('Toggle', 'on')
+
+			}, {
+				cls: 'table-view',
+			}) })],
 })
 
 var ExampleUI = 
