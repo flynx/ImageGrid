@@ -966,6 +966,7 @@ module.Dialogs = core.ImageGridFeatures.Feature({
 //
 // XXX BUGGY...
 // XXX move this to browse???
+// 		...or to object.js???
 browse.items.makeContext = function(name, obj){
 	// parse args...
 	var args = [...arguments]
