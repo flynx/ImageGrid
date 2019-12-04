@@ -995,6 +995,10 @@ browse.items.makeContext = function(name, obj){
 	// 		add stuff to the object while in runtime make(..) is a custom
 	// 		instance...
 	// 		...this still does not work correctly...
+	// 		.....not sure if it is possible to do a clean and generic 
+	// 		solution to this, the problem is that caching a context would 
+	// 		push that context into all the calls, when it should not do 
+	// 		so for all cases...
 	var n = '__'+ name
 	Object.defineProperty(this, name, {
 		get: function(){
