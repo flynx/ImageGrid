@@ -968,50 +968,7 @@ module.Dialogs = core.ImageGridFeatures.Feature({
 // XXX move this to browse???
 // 		...there seems to be no way to make this generic...
 browse.items.makeContext = function(name, obj){
-	// parse args...
-	var args = [...arguments]
-	name = args.shift()
-	var func = args[0] instanceof Function ? 
-		args.shift()
-		: null
-	obj = args.shift() || {}
-
-	var make = function(parent, context){
-		var f = function(){ 
-			return func ?
-				func.call(this.__make || this, ...arguments)
-				: this.call(this.__make || this, ...arguments) }
-		context
-			&& (f = f.bind(context))
-		f.__proto__ = parent 
-		Object.assign(f, obj)
-		return f }
-
-	// make the handler...
-	// XXX the idea here is to save the collection to a prop and build a 
-	// 		custom local context on access, cache it in the make instance 
-	// 		and it will be used in all the methods...
-	// 		..the reason for this complexity is that on load time we can 
-	// 		add stuff to the object while in runtime make(..) is a custom
-	// 		instance...
-	// 		...this still does not work correctly...
-	// 		.....not sure if it is possible to do a clean and generic 
-	// 		solution to this, the problem is that caching a context would 
-	// 		push that context into all the calls, when it should not do 
-	// 		so for all cases...
-	var n = '__'+ name
-	Object.defineProperty(this, name, {
-		get: function(){
-			this.__make == null
-				&& (this.__make = this)
-
-			return this.hasOwnProperty(n) ?
-				this[n]
-				: (this[n] = make(this, this))
-		},
-	})
-
-	return (this[name] = make(this)) }
+}
 
 
 
