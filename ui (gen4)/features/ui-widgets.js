@@ -960,15 +960,62 @@ module.Dialogs = core.ImageGridFeatures.Feature({
 
 // XXX EXPERIMENTAL...
 //
-//	.makeContext(name[, obj])
-//	.makeContext(name, func[, obj])
+// Make a nested context...
+//
+//	Make a nested context object...
+//	.makeSubContext(name[, obj])
+//		-> context
+//
+//	Make a nested context function...
+//	.makeSubContext(name, func[, obj])
+//		-> context
 //
 //
-// XXX BUGGY...
+// The context inherits from .items / make(..)
+//
+// If the context is callable it will be called in the context of make(..)
+//
+// If the context is constructed recursively it will return self
+//
+//
 // XXX move this to browse???
 // 		...there seems to be no way to make this generic...
-browse.items.makeContext = function(name, obj){
-}
+browse.items.makeSubContext = function(name, obj){
+	// arse args...
+	var args = [...arguments].slice(1)
+	var func = args[0] instanceof Function ?
+		args.shift()
+		: null
+	obj = args.shift()
+
+	var n = '__'+ name
+    Object.defineProperty(this, name, {
+        get: function(){
+			var that = this
+			if(!this.hasOwnProperty(n)){
+				// build the context object...
+				var nested =
+					func ?
+						// NOTE: we always call func(..) in the root context...
+						function(){
+							return func.call(that, ...arguments) }
+					: this instanceof Function ?
+						function(){
+							return root.call(this, ...arguments) }
+					: {}
+				nested.__proto__ = this
+
+				// mixin parent/obj...
+				Object.assign(nested, 
+					this[n] || obj || {})
+
+				// NOTE: this will prevent constructing a nested context
+				//		(see test above)...
+				this[n] = nested[n] = nested
+			}
+			return this[n] }, 
+	})
+	return this[name] }
 
 
 
@@ -994,7 +1041,7 @@ browse.items.makeContext = function(name, obj){
 // 		...and should we break the make(..) convention of passing an arg 
 // 		array for multiple .text blocks, i.e. make([title, value], ...)??
 //browse.items.Field = 
-browse.items.makeContext('field',
+browse.items.makeSubContext('field',
 	function(title, value, options){
 		options = options || {}
 		Object.assign(
@@ -1145,7 +1192,6 @@ browse.items.field.Batch =
 function(spec, callback){
 	// XXX
 }
-
 
 
 

@@ -934,11 +934,11 @@ var ExampleUIActions = actions.Actions({
 						return that.features.features.length })
 
 				make.field('A', 'B')
-				make.field.field('C', 'D')
-				make.field.field.field('E', 'F')
+				//make.field.field('C', 'D')
+				//make.field.field.field('E', 'F')
 				make.field.field.field.field('G', 'H')
 
-				//make.field.Toggle('Toggle', 'on')
+				make.field.Toggle('Toggle', 'on')
 
 			}, {
 				cls: 'table-view',
