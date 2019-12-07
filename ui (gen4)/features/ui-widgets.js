@@ -658,8 +658,7 @@ var DialogsActions = actions.Actions({
 				.last()
 		return modal.data('widget-controller') 
 			|| (modal.length > 0 && modal) 
-			|| null
-	},
+			|| null },
 
 	// testers...
 	//
@@ -1059,13 +1058,28 @@ browse.items.makeSubContext('field',
 
 
 
+//
+// 	.field.Toggle(title, value)
+// 	.field.Toggle(title, options)
+// 	.field.Toggle(title, value, options)
+//
 // XXX need to open a list dialog (currently context is used)...
 // 		...this can be set via options.list but would be nice to provide 
 // 		a reasonable default...
+// 		...one way to resole context access is to add a .app attribute to 
+// 		the dialog...
 browse.items.field.Toggle = 
-function(title, value, options){
+function(title, options){
 	var that = this
-	options = options || {}
+	// parse args...
+	var args = [...arguments].slice(1)
+	var value = args[0] instanceof Object ? 
+		(args[0].value 
+			|| (args[0].values || [])[0] 
+			|| 'off')
+		: args.shift()
+	options = args.shift() || {}
+
 	return this.field(title, value,
 		Object.assign(
 			options,

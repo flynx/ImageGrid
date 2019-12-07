@@ -921,6 +921,7 @@ var ExampleUIActions = actions.Actions({
 	exampleEditor2: ['Test/Universal Editor (2)...',
 		widgets.makeUIDialog(function(spec, callback){
 			var that = this
+			var data = {}
 			return browse.makeLister(null, function(path, make){
 
 				make([
@@ -934,11 +935,9 @@ var ExampleUIActions = actions.Actions({
 						return that.features.features.length })
 
 				make.field('A', 'B')
-				//make.field.field('C', 'D')
-				//make.field.field.field('E', 'F')
-				make.field.field.field.field('G', 'H')
 
-				make.field.Toggle('Toggle', 'on')
+				//make.field.Toggle('Toggle: ', 'on')
+				make.field.Toggle('Toggle: ', data)
 
 			}, {
 				cls: 'table-view',
