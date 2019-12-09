@@ -1019,21 +1019,8 @@ browse.items.makeSubContext = function(name, obj){
 
 
 // XXX EXPERIMENT...
-// 		Q: What should we use as context for the getters and callbacks?
-// 		...there are several ways to go:
-// 			- "this" generic make object + manual binding
-// 				+ generic, already implemented...
-// 				- requires manual binding...
-// 			- explicit context in arguments or options
-// 				- breaks the general API...
-// 			- a context manager API... (REJECTED?)
-// 				- complexity...
-// 		Q: should we add domain specific fields here too???
-// 			...would be nice to be able to add domains to make(..), e.g.:
-// 				make.Domain('ig')
-// 				make.ig.attrToggle = function(..){ ... }
-// 			the goal is to preserve the make(..) context in sub calls, see
-// 			browse.items.Domain(..) implemented below...
+// XXX Q: should we add an ImageGrid context to make(..)???
+// 		...something like .app for making it generic-ish for example...
 // XXX Q: do we actually need .Field(..), it does everything make(..) 
 // 		does already???
 // XXX Q: should title/value args be optional???
