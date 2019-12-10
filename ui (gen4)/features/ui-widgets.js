@@ -1021,6 +1021,13 @@ browse.items.makeSubContext = function(name, obj){
 // XXX EXPERIMENT...
 // XXX Q: should we add an ImageGrid context to make(..)???
 // 		...something like .app for making it generic-ish for example...
+// 		....a different approach to this would be to create a list editor 
+// 		within the current dialog independently of the outer context...
+// 		...this could either be done as:
+// 			- a popup/modal sub dialog
+// 				...this can be problematic as the wrapper is external to the browser...
+// 			- as a sub-path...
+// 				...this is hard without side-effects...
 // XXX Q: do we actually need .Field(..), it does everything make(..) 
 // 		does already???
 // XXX Q: should title/value args be optional???
@@ -1046,9 +1053,8 @@ browse.items.makeSubContext('field',
 
 
 //
-// 	.field.Toggle(title, value)
+// 	.field.Toggle(title, value[, options])
 // 	.field.Toggle(title, options)
-// 	.field.Toggle(title, value, options)
 //
 // XXX need to open a list dialog (currently context is used)...
 // 		...this can be set via options.list but would be nice to provide 
@@ -1074,6 +1080,9 @@ function(title, options){
 				type: 'toggle',
 
 				open: function(evt){
+					// XXX
+					//var actions = options.app || that.app
+
 					var getValues = function(){
 						return options.values instanceof Function ?
 							options.values.call(actions)
@@ -1167,6 +1176,9 @@ function(title, options){
 			options
 				// normalize value...
 				.run(function(){
+					// XXX
+					//var actions = options.app || that.app
+
 					if(!(this.value instanceof Function)){
 						var values = options.values instanceof Function ?
 								options.values.call(actions)
