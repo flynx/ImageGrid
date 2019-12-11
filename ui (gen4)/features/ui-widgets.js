@@ -1056,11 +1056,13 @@ browse.items.makeSubContext('field',
 // 	.field.Toggle(title, value[, options])
 // 	.field.Toggle(title, options)
 //
-// XXX need to open a list dialog (currently context is used)...
+// XXX need to open a list (ro/editable) dialog (currently context is used)...
 // 		...this can be set via options.list but would be nice to provide 
 // 		a reasonable default...
-// 		...one way to resole context access is to add a .app attribute to 
-// 		the dialog...
+// 		there are several ways this can be done:
+// 			- generic dialogs in browse.js
+// 			- a way to define defaults -- global options?
+// 			- access to the .app -- should be configurable...
 browse.items.field.Toggle = 
 function(title, options){
 	var that = this
