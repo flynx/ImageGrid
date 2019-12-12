@@ -977,7 +977,7 @@ module.Dialogs = core.ImageGridFeatures.Feature({
 // If the context is constructed recursively it will return self
 //
 //
-// XXX move this to browse???
+// XXX move this to browse.js/browse2.js???
 // 		...there seems to be no way to make this generic...
 browse.items.makeSubContext = function(name, obj){
 	// arse args...
