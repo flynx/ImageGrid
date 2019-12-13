@@ -979,6 +979,7 @@ module.Dialogs = core.ImageGridFeatures.Feature({
 //
 // XXX move this to browse.js/browse2.js???
 // 		...there seems to be no way to make this generic...
+// XXX think of a better name... (???)
 browse.items.makeSubContext = function(name, obj){
 	// arse args...
 	var args = [...arguments].slice(1)
