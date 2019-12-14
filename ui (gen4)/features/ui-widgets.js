@@ -1200,11 +1200,8 @@ function(title, options){
 
 
 // XXX like .makeEditor(..) but local to make(..) (i.e. generic)...
-// XXX should this use any fields available to make(..) or just the editor???
-// 		...currently seems that making this fully generic would be more
-// 		logical but would require a better name -- .Batch(..) ???
 //browse.items.makeEditor =
-browse.items.field.Batch =
+browse.items.makeBatch =
 function(spec, callback){
 	// XXX
 }
