@@ -1064,6 +1064,7 @@ browse.items.makeSubContext('field',
 // 			- generic dialogs in browse.js
 // 			- a way to define defaults -- global options?
 // 			- access to the .app -- should be configurable...
+// 			- default methods .showEditableList(..) / .showList(..) on make(..)
 browse.items.field.Toggle = 
 function(title, options){
 	var that = this
