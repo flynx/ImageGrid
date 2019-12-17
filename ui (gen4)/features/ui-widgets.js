@@ -1084,7 +1084,7 @@ function(title, options){
 
 				open: function(evt){
 					// XXX
-					//var actions = options.app || that.app
+					var actions = options.app || that.app
 
 					var getValues = function(){
 						return options.values instanceof Function ?
@@ -1180,7 +1180,7 @@ function(title, options){
 				// normalize value...
 				.run(function(){
 					// XXX
-					//var actions = options.app || that.app
+					var actions = options.app || that.app
 
 					if(!(this.value instanceof Function)){
 						var values = options.values instanceof Function ?
