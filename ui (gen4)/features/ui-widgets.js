@@ -1088,7 +1088,7 @@ function(title, options){
 				type: 'toggle',
 
 				open: function(evt){
-					// XXX
+					// XXX CONTEXT...
 					var actions = options.app || that.app
 
 					var getValues = function(){
@@ -1184,7 +1184,7 @@ function(title, options){
 			options
 				// normalize value...
 				.run(function(){
-					// XXX
+					// XXX CONTEXT...
 					var actions = options.app || that.app
 
 					if(!(this.value instanceof Function)){
