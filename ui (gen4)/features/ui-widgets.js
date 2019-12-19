@@ -1205,10 +1205,39 @@ function(title, options){
 
 
 // XXX like .makeEditor(..) but local to make(..) (i.e. generic)...
+// XXX should we have a batch callback???
+// 		...otherwise what's the point in this?
+// XXX TEST...
 //browse.items.makeEditor =
-browse.items.makeBatch =
+browse.items.batch =
 function(spec, callback){
-	// XXX
+	var that = this
+
+	// build the fields...
+	;(spec || [])
+		.forEach(function(field){
+			// array...
+			field instanceof Array ?
+				make(...field)
+			// spec...
+			: field instanceof Object ?
+				// XXX add support for field paths...
+				//filed.type.split('.')
+				//	.reduce(function(res, cur){
+				//		return res[cur] }, this)(field.text, field)
+				this[field.type || 'field'](field.text, field)
+			// other...
+			: make(field) })
+
+	// batch callback...
+	callback
+		&& this.dialog
+			.close(function(){
+				// XXX get the field data...
+				// XXX
+			})
+	
+	return this
 }
 
 
