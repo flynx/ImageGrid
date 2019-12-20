@@ -939,6 +939,13 @@ var ExampleUIActions = actions.Actions({
 				//make.field.Toggle('Toggle: ', 'on')
 				make.field.Toggle('Toggle: ', data)
 
+				// XXX need more testing...
+				make.batch([
+					['X', 'Y'],
+					{text: 'foo', value: 123},
+					{type: 'field.Toggle', text: 'Batch toggle: '},
+				])
+
 			}, {
 				cls: 'table-view',
 			}) })],
