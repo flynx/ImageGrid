@@ -1034,7 +1034,6 @@ browse.items.makeSubContext = function(name, obj){
 // XXX Q: should title/value args be optional???
 // 		...and should we break the make(..) convention of passing an arg 
 // 		array for multiple .text blocks, i.e. make([title, value], ...)??
-//browse.items.Field = 
 browse.items.makeSubContext('field',
 	function(title, value, options){
 		options = options || {}
@@ -1088,7 +1087,7 @@ function(title, options){
 				type: 'toggle',
 
 				open: function(evt){
-					// XXX
+					// XXX CONTEXT...
 					var actions = options.app || that.app
 
 					var getValues = function(){
@@ -1184,7 +1183,7 @@ function(title, options){
 			options
 				// normalize value...
 				.run(function(){
-					// XXX
+					// XXX CONTEXT...
 					var actions = options.app || that.app
 
 					if(!(this.value instanceof Function)){
@@ -1205,11 +1204,38 @@ function(title, options){
 
 
 // XXX like .makeEditor(..) but local to make(..) (i.e. generic)...
+// XXX should we have a batch callback???
+// 		...otherwise what's the point in this?
 //browse.items.makeEditor =
-browse.items.makeBatch =
+browse.items.batch =
 function(spec, callback){
-	// XXX
-}
+	var that = this
+	// build the fields...
+	;(spec || [])
+		.forEach(function(field){
+			// array...
+			field instanceof Array ?
+				that(...field)
+			// spec...
+			: field instanceof Object ?
+				(field.type || 'field')
+					// handle field paths...
+					.split('.')
+					.reduce(function(res, cur){
+						that = res
+						return res[cur] }, that)
+					// XXX revise this...
+					.call(that, field.text, field)
+			// other...
+			: that(field) })
+	// batch callback...
+	callback
+		&& this.dialog
+			.close(function(){
+				// XXX get the field data and pass it to the callback...
+				// XXX
+			})
+	return this }
 
 
 
