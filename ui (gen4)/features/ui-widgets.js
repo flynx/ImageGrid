@@ -1224,16 +1224,31 @@ function(spec, callback){
 					.reduce(function(res, cur){
 						that = res
 						return res[cur] }, that)
-					// XXX revise this...
-					.call(that, field.text || '[field]', field)
+					.call(that, field.title || field.id, field)
 			// other...
 			: that(field) })
 	// batch callback...
 	callback
 		&& this.dialog
-			.close(function(){
+			.close(function(mode){
 				// XXX get the field data and pass it to the callback...
-				// XXX
+				callback(
+					// get the field-value pairs...
+					spec.reduce(function(res, e){
+						var id = e.id || e.title
+						id != undefined
+							&& (res[id] = e.value instanceof Function ? 
+								e.value.call(that) 
+								: e.value)
+						return res }, {}), 
+					// full spec...
+					// NOTE: technically we do not need to pass this
+					// 		through as we are mutating the data inside
+					// 		but passing it here is cleaner than forcing
+					// 		the user to get it via closure...
+					spec,
+					// XXX is this the right spot for this???
+					mode)
 			})
 	return this }
 
