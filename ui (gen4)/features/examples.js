@@ -941,9 +941,19 @@ var ExampleUIActions = actions.Actions({
 
 				// XXX need more testing...
 				make.batch([
+					'---',
+					[['X', 'Y']],
+					// XXX this does not show the correct value...
+					{title: 'foo', value: 123},
+					{type: 'field.Toggle', title: 'Batch toggle: '},
+				])
+				make.field.batch([
+					// XXX this does not do the right thing...
+					'---',
 					['X', 'Y'],
-					{text: 'foo', value: 123},
-					{type: 'field.Toggle', text: 'Batch toggle: '},
+					// XXX this does not show the correct value...
+					{title: 'foo', value: 123},
+					{type: 'Toggle', title: 'Batch toggle: '},
 				])
 
 			}, {

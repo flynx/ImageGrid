@@ -980,6 +980,7 @@ module.Dialogs = core.ImageGridFeatures.Feature({
 // XXX move this to browse.js/browse2.js???
 // 		...there seems to be no way to make this generic...
 // XXX think of a better name... (???)
+// XXX should the client be able to override shorthands???
 browse.items.makeSubContext = function(name, obj){
 	// arse args...
 	var args = [...arguments].slice(1)
@@ -998,10 +999,15 @@ browse.items.makeSubContext = function(name, obj){
 					func ?
 						// NOTE: we always call func(..) in the root context...
 						function(){
-							return func.call(that, ...arguments) }
+							// XXX should the client be able to override shorthands???
+							var shorthands = (that.dialog.options || {}).elementShorthand || {}
+							return arguments[0] in shorthands ?
+								that.call(that, ...arguments)
+								: func.call(that, ...arguments) }
+							//return func.call(that, ...arguments) }
 					: this instanceof Function ?
 						function(){
-							return root.call(this, ...arguments) }
+							return that.call(this, ...arguments) }
 					: {}
 				nested.__proto__ = this
 
@@ -1016,7 +1022,6 @@ browse.items.makeSubContext = function(name, obj){
 			return this[n] }, 
 	})
 	return this[name] }
-
 
 
 // XXX EXPERIMENT...
@@ -1049,7 +1054,6 @@ browse.items.makeSubContext('field',
 				options.value(this)
 				: options.value 
 		], options) })
-
 
 
 //
@@ -1202,11 +1206,7 @@ function(title, options){
 							: 'off' } }))) }
 
 
-
 // XXX like .makeEditor(..) but local to make(..) (i.e. generic)...
-// XXX should we have a batch callback???
-// 		...otherwise what's the point in this?
-//browse.items.makeEditor =
 browse.items.batch =
 function(spec, callback){
 	var that = this
