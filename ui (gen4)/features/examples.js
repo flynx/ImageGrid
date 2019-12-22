@@ -921,7 +921,9 @@ var ExampleUIActions = actions.Actions({
 	exampleEditor2: ['Test/Universal Editor (2)...',
 		widgets.makeUIDialog(function(spec, callback){
 			var that = this
-			var data = {}
+			var d0 = {}
+			var d1 = {}
+			var d2 = {}
 			return browse.makeLister(null, function(path, make){
 
 				make([
@@ -937,23 +939,25 @@ var ExampleUIActions = actions.Actions({
 				make.field('A', 'B')
 
 				//make.field.Toggle('Toggle: ', 'on')
-				make.field.Toggle('Toggle: ', data)
+				make.field.Toggle('Toggle: ', d0)
 
-				// XXX need more testing...
+				// XXX test callback...
 				make.batch([
 					'---',
 					[['X', 'Y']],
 					// XXX this does not show the correct value...
 					{title: 'foo', value: 123},
-					{type: 'field.Toggle', title: 'Batch toggle: '},
+					Object.assign(d1,
+						{type: 'field.Toggle', title: 'Batch toggle 1: '}),
 				])
+				// XXX test callback...
 				make.field.batch([
-					// XXX this does not do the right thing...
 					'---',
 					['X', 'Y'],
 					// XXX this does not show the correct value...
 					{title: 'foo', value: 123},
-					{type: 'Toggle', title: 'Batch toggle: '},
+					Object.assign(d2,
+						{type: 'Toggle', title: 'Batch toggle 2: '}),
 				])
 
 			}, {
