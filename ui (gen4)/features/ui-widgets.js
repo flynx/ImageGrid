@@ -1025,6 +1025,11 @@ browse.items.makeSubContext = function(name, obj){
 
 
 // XXX EXPERIMENT...
+//
+// 	.field(title[, options])
+// 	.field(title, value[, options])
+//
+//
 // XXX Q: should we add an ImageGrid context to make(..)???
 // 		...something like .app for making it generic-ish for example...
 // 		....a different approach to this would be to create a list editor 
@@ -1039,10 +1044,16 @@ browse.items.makeSubContext = function(name, obj){
 // XXX Q: should title/value args be optional???
 // 		...and should we break the make(..) convention of passing an arg 
 // 		array for multiple .text blocks, i.e. make([title, value], ...)??
-// XXX parse arguments...
 browse.items.makeSubContext('field',
 	function(title, value, options){
-		options = options || {}
+		// parse arguments...
+		var args = [...arguments].slice(1)
+		value = (args[0] instanceof Function 
+				|| !(args[0] instanceof Object)) ?
+			args.shift()
+			: undefined
+		options = args.shift() || {}
+		value = value || options.value
 		Object.assign(
 			options, 
 			{
