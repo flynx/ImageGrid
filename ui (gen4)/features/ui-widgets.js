@@ -1039,6 +1039,7 @@ browse.items.makeSubContext = function(name, obj){
 // XXX Q: should title/value args be optional???
 // 		...and should we break the make(..) convention of passing an arg 
 // 		array for multiple .text blocks, i.e. make([title, value], ...)??
+// XXX parse arguments...
 browse.items.makeSubContext('field',
 	function(title, value, options){
 		options = options || {}
