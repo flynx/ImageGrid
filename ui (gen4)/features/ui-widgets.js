@@ -1030,6 +1030,10 @@ browse.items.makeSubContext = function(name, obj){
 // 	.field(title, value[, options])
 //
 //
+// NOTE: essentially make.field(..) is almost identical to make(..), the
+// 		later is needed to provide context for field items and a transparent
+// 		fallback for make(..) calls from within their context...
+//
 // XXX Q: should we add an ImageGrid context to make(..)???
 // 		...something like .app for making it generic-ish for example...
 // 		....a different approach to this would be to create a list editor 
@@ -1039,11 +1043,6 @@ browse.items.makeSubContext = function(name, obj){
 // 				...this can be problematic as the wrapper is external to the browser...
 // 			- as a sub-path...
 // 				...this is hard without side-effects...
-// XXX Q: do we actually need .field(..), it does everything make(..) 
-// 		does already???
-// XXX Q: should title/value args be optional???
-// 		...and should we break the make(..) convention of passing an arg 
-// 		array for multiple .text blocks, i.e. make([title, value], ...)??
 browse.items.makeSubContext('field',
 	function(title, value, options){
 		// parse arguments...
