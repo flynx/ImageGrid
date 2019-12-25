@@ -1206,7 +1206,7 @@ function(title, options){
 							: 'off' } }))) }
 
 
-// XXX like .makeEditor(..) but local to make(..) (i.e. generic)...
+// 
 browse.items.batch =
 function(spec, callback){
 	var that = this
