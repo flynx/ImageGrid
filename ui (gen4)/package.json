@@ -20,7 +20,6 @@
   "dependencies": {
     "app-module-path": "^1.0.6",
     "async-json": "0.0.2",
-    "commander": "^2.20.3",
     "electron": "^5.0.12",
     "exiftool": "^0.0.3",
     "fs-extra": "^7.0.1",
@@ -32,7 +31,6 @@
     "ig-features": "^3.4.0",
     "ig-object": "^2.0.0",
     "moment": "^2.24.0",
-    "openseadragon": "^2.4.1",
     "requirejs": "^2.3.6",
     "requirejs-plugins": "^1.0.2",
     "sharp": "^0.22.1",
@@ -40,9 +38,15 @@
     "v8-compile-cache": "^2.1.0",
     "wildglob": "^0.1.1"
   },
+  "dependencies-disabled": {
+    "openseadragon": "^2.4.1",
+    "commander": "^2.20.3",
+    "flickrapi": "^0.3.28"
+  },
   "optionalDependencies": {
-    "pica": "^3.0.6",
-    "flickrapi": "^0.3.28",
+    "pica": "^3.0.6"
+  },
+  "optionalDependencies-disabled": {
     "preact": "^8.2.7",
     "react": "^15.6.2",
     "react-dom": "^15.6.2"
