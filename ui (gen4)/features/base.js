@@ -829,6 +829,7 @@ actions.Actions({
 
 	// NOTE: resetting this option will clear the last direction...
 	toggleShiftsAffectDirection: ['Interface/Shifts affect direction',
+		{browseMode: 'toggleBrowseActionKeys'},
 		core.makeConfigToggler('shifts-affect-direction', 
 			['off', 'on'],
 			function(action){
@@ -1028,6 +1029,18 @@ actions.Actions({
 	// XXX are these too powerfull??
 	// 		...should the user have these or be forced to ctrl+a -> ctrl+pgdown
 	mergeRibbon: ['- Edit|Ribbon/',
+		core.doc`Merge ribbon up/down...
+
+			Merge current ribbon up/down...
+			.mergeRibbon('up')
+			.mergeRibbon('down')
+
+			Merge specific ribbon up/down...
+			.mergeRibbon('up', ribbon)
+			.mergeRibbon('down', ribbon)
+
+		NOTE: ribbon must be a value compatible with .data.getRibbon(..)
+		`,
 		function(direction, ribbon){
 			return this['shiftImage'+ direction.capitalize()](
 				this.data.getImages(
@@ -1040,6 +1053,7 @@ actions.Actions({
 		{browseMode: function(){ 
 			return this.data.ribbon_order.slice(-1)[0] == this.current_ribbon && 'disabled' }},
 		'mergeRibbon: "down" ...'],
+	// XXX should this accept a list of ribbons to flatten???
 	flattenRibbons: ['Edit|Ribbon/Flatten',
 		{browseMode: function(){ 
 			return this.data.ribbon_order.length <= 1 && 'disabled' }},
@@ -1049,9 +1063,9 @@ actions.Actions({
 			base = base && base in ribbons ?
 				base
 				: this.current_ribbon
-
 			var images = this.data.getImages('loaded')
 
+			// update the data...
 			this.data.ribbons = {
 				[base]: images,
 			}

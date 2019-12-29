@@ -361,6 +361,7 @@ module.ViewerActions = actions.Actions({
 				.centerImage(target)
 				.centerRibbon(target) }],
 	alignRibbons: ['Interface/Align ribbons',
+		{browseMode: 'toggleBrowseActionKeys'},
 		function(target, scale, now){
 			if(target == 'now'){
 				now = true
@@ -391,6 +392,7 @@ module.ViewerActions = actions.Actions({
 	// XXX skip off-screen ribbons (???)
 	// XXX should the timeout be configurable???
 	alignByOrder: ['Interface/Align ribbons by image order',
+		{browseMode: 'toggleBrowseActionKeys'},
 		function(target, scale, now){
 			if(target == 'now'){
 				now = true
@@ -455,6 +457,7 @@ module.ViewerActions = actions.Actions({
 			}
 		}],
 	alignByFirst: ['Interface/Align ribbons except current to first image',
+		{browseMode: 'toggleBrowseActionKeys'},
 		function(target){
 			target = target == 'now' ? null : target
 
@@ -653,6 +656,7 @@ module.ViewerActions = actions.Actions({
 	// XXX make this play nice with crops...
 	// 		...should this be a crop???
 	toggleRibbonList: ['Interface|Ribbon/Ribbons as images view',
+		{browseMode: 'toggleBrowseActionKeys'},
 		function(){
 			if(this._full_data == null){
 				// XXX do a better name here...
@@ -693,6 +697,7 @@ module.ViewerActions = actions.Actions({
 		function(angle){ }],
 
 	toggleImageRendering: ['Interface/Image rendering',
+		{browseMode: 'toggleBrowseActionKeys'},
 		toggler.CSSClassToggler(
 			function(){ return this.dom }, 
 			['crisp-resize', 'default-resize'],
@@ -931,6 +936,7 @@ module.Cursor = core.ImageGridFeatures.Feature({
 
 	actions: actions.Actions({
 		toggleHiddenCursor: ['Interface/Cursor hidden',
+			{browseMode: 'toggleBrowseActionKeys'},
 			toggler.CSSClassToggler(
 				function(){ return this.dom }, 
 				'cursor-hidden',
@@ -1005,6 +1011,7 @@ module.Cursor = core.ImageGridFeatures.Feature({
 		// 	.config['cursor-show-threshold']
 		//
 		toggleAutoHideCursor: ['Interface/Cursor auto-hide',
+			{browseMode: 'toggleBrowseActionKeys'},
 			toggler.CSSClassToggler(
 				function(){ return this.dom }, 
 				'cursor-autohide',
@@ -1120,11 +1127,13 @@ module.Cursor = core.ImageGridFeatures.Feature({
 				})],
 
 		toggleAutoHideCursorTimeout: ['Interface/Hide cursor on timeout',
+			{browseMode: 'toggleBrowseActionKeys'},
 			core.makeConfigToggler('cursor-autohide-on-timeout', 
 				['on', 'off'],
 				function(){ 
 					this.toggleAutoHideCursor('!') })],
 		toggleAutoHideCursorKeyboard: ['Interface/Hide cursor on keyboard',
+			{browseMode: 'toggleBrowseActionKeys'},
 			core.makeConfigToggler('cursor-autohide-on-keyboard', 
 				['on', 'off'],
 				function(){ 
@@ -1215,6 +1224,7 @@ var ControlActions = actions.Actions({
 		from reaching the viewer.
 
 		NOTE: this defines the focus/blur handlers on the window object.`,
+		{browseMode: 'toggleBrowseActionKeys'},
 		core.makeConfigToggler('lock-unfocused',
 			['off', 'on'],
 			function(state){
@@ -1368,6 +1378,7 @@ var ControlActions = actions.Actions({
 	// XXX depends on .ribbons...
 	// XXX uses: .focusImage(..)
 	toggleImageClickHandling: ['Interface/Image click handling',
+		{browseMode: 'toggleBrowseActionKeys'},
 		toggler.Toggler(null,
 			function(_, new_state){ 
 				return new_state ?
@@ -1620,6 +1631,7 @@ var ControlActions = actions.Actions({
 	// XXX depends on .ribbons...
 	// XXX uses: .focusImage(..)
 	toggleRibbonPanHandling: ['Interface/Ribbon pan handling',
+		{browseMode: 'toggleBrowseActionKeys'},
 		toggler.Toggler(null,
 			function(_, new_state){ 
 				return new_state ?
@@ -1859,6 +1871,7 @@ var ControlActions = actions.Actions({
 	// XXX depends on .ribbons...
 	// XXX uses: .focusImage(..)
 	toggleMouseWheelHandling: ['Interface/Mouse wheel handling',
+		{browseMode: 'toggleBrowseActionKeys'},
 		toggler.Toggler(null,
 			function(_, new_state){
 				return new_state ?
@@ -1963,6 +1976,7 @@ var ControlActions = actions.Actions({
 			})],
 	
 	togglePinchHandling: ['Interface/Pinch zoom handling',
+		{browseMode: 'toggleBrowseActionKeys'},
 		function(){
 			// XXX
 		}],
@@ -1972,6 +1986,7 @@ var ControlActions = actions.Actions({
 	// 		...allow ui features to control this...
 	// XXX depends on .ribbons...
 	toggleSwipeHandling: ['Interface/Swipe handling',
+		//{browseMode: 'toggleBrowseActionKeys'},
 		toggler.Toggler(null,
 			function(_, state){ 
 				return state ?

@@ -28,6 +28,7 @@ var PreCacheActions = actions.Actions({
 	// NOTE: this will not work from chrome when loading from a local fs...
 	// XXX experimental...
 	startCacheWorker: ['Interface/',
+		{browseMode: 'toggleBrowseActionKeys'},
 		function(){
 			// a worker is started already...
 			if(this.cacheWorker != null){
@@ -62,6 +63,7 @@ var PreCacheActions = actions.Actions({
 			this.cacheWorker.url = url
 		}],
 	stopCacheWorker: ['Interface/',
+		{browseMode: 'toggleBrowseActionKeys'},
 		function(){
 			if(this.cacheWorker){
 				this.cacheWorker.terminate()

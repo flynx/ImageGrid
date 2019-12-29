@@ -878,6 +878,7 @@ var DialogsActions = actions.Actions({
 
 
 	listDialogs: ['Interface|System/Dialog/Dialog list...',
+		{browseMode: 'toggleBrowseActionKeys'},
 		makeUIDialog(function(){
 			var actions = this
 
@@ -904,6 +905,7 @@ var DialogsActions = actions.Actions({
 		})],
 
 	toggleOverlayBlur: ['Interface/Dialog overlay blur',
+		{browseMode: 'toggleBrowseActionKeys'},
 		toggler.CSSClassToggler(
 			function(){ return this.dom }, 
 			'overlay-blur-enabled',
@@ -2248,6 +2250,7 @@ var BrowseActionsActions = actions.Actions({
 			// ...
 
 			'-40:Interface',
+				'Interface/90:Theme',
 			'-50:$Workspace',
 			'-60:System',
 			'-70:$Help',
@@ -2515,7 +2518,8 @@ var BrowseActionsActions = actions.Actions({
 	// XXX can this also do a flat mode???
 	// 		...this would help with the (global) search -- switch to 
 	// 		flat if searching in root mode...
-	browseActions: ['Interface|System/Dialog/Actions...',
+	browseActions: ['Interface/Dialog/Actions...',
+		{browseMode: 'toggleBrowseActionKeys'},
 		core.doc`Browse actions dialog...
 
 		This uses action definition to build and present an action tree.
@@ -2910,7 +2914,14 @@ var BrowseActionsActions = actions.Actions({
 				this.menu(showDoc.bind(this))
 			}) })],
 
+	toggleBrowseAdvanced: ['Interface/-99: Advanced menu items',
+		core.makeConfigToggler(
+			'browse-advanced-mode', 
+			['off', 'on'])],
+
 	toggleBrowseActionKeys: ['Interface/Show keys in menu',
+		{browseMode: function(){ 
+			return this.config['browse-advanced-mode'] == 'off' && 'hidden' }},
 		core.makeConfigToggler(
 			'browse-actions-keys', 
 			['on', 'off'],
@@ -2955,6 +2966,7 @@ module.ContextActionMenu = core.ImageGridFeatures.Feature({
 
 	actions: actions.Actions({
 		showContextMenu: ['Interface/Show context menu...',
+			{browseMode: 'toggleBrowseActionKeys'},
 			uiDialog(function(){
 				return this.current ?
 					this.browseActions('/Image/')
@@ -3097,12 +3109,15 @@ var ButtonsActions = actions.Actions({
 	},
 
 	toggleMainButtons: ['Interface/Main buttons',
+		{browseMode: 'toggleBrowseActionKeys'},
 		makeButtonControlsToggler('main-buttons')],
 	toggleSecondaryButtons: ['Interface/Secondary buttons',
+		{browseMode: 'toggleBrowseActionKeys'},
 		makeButtonControlsToggler('secondary-buttons')],
 	toggleAppButtons: ['Interface/App buttons',
+		{browseMode: 'toggleBrowseActionKeys'},
 		makeButtonControlsToggler('app-buttons')],
-	toggleSideButtons: ['Interface/99: Touch buttons', 
+	toggleSideButtons: ['Interface/70: Touch buttons', 
 		(function(){
 			var left = makeButtonControlsToggler('side-buttons-left')
 			var right = makeButtonControlsToggler('side-buttons-right')
@@ -3115,7 +3130,8 @@ var ButtonsActions = actions.Actions({
 				})
 		})()],
 
-	toggleButtonHighlightColor: ['Interface/Button highlight color',
+	toggleButtonHighlightColor: ['Interface/Theme/Button highlight color',
+		{browseMode: 'toggleBrowseActionKeys'},
 		core.makeConfigToggler(
 			'button-highlight-color',
 			function(){ return this.config['button-highlight-colors'] },

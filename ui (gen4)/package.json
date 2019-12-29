@@ -52,7 +52,9 @@
     "react-dom": "^15.6.2"
   },
   "devDependencies": {
-    "less": "^3.10.3"
+    "less": "^3.10.3",
+    "asar": "*",
+    "electron-rebuild": "*"
   },
   "bin": {
     "ig": "ig.js"
