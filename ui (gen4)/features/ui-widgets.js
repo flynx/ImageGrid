@@ -2914,14 +2914,14 @@ var BrowseActionsActions = actions.Actions({
 				this.menu(showDoc.bind(this))
 			}) })],
 
-	toggleBrowseAdvanced: ['Interface/-99: Advanced menu items',
+	toggleBrowseAdvanced: ['System|Interface/-99: Advanced menu items',
 		core.makeConfigToggler(
 			'browse-advanced-mode', 
 			['off', 'on'])],
 
 	toggleBrowseActionKeys: ['Interface/Show keys in menu',
 		{browseMode: function(){ 
-			return this.config['browse-advanced-mode'] == 'off' && 'hidden' }},
+			return this.config['browse-advanced-mode'] != 'on' && 'hidden' }},
 		core.makeConfigToggler(
 			'browse-actions-keys', 
 			['on', 'off'],

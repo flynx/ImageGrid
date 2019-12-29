@@ -578,6 +578,7 @@ $(BUILD_INFO): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 
 $(NODE_DIR): package.json
 	npm install
+	# NOTE: this may break on some systems due to a dependency issue...
 	electron-rebuild
 	@touch "$@"
 
