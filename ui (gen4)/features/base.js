@@ -1024,6 +1024,43 @@ actions.Actions({
 			this.data = this.data.alignToRibbon(target, start, end) }],
 
 
+	// merging ribbons...
+	// XXX are these too powerfull??
+	// 		...should the user have these or be forced to ctrl+a -> ctrl+pgdown
+	mergeRibbon: ['- Edit|Ribbon/',
+		function(direction, ribbon){
+			return this['shiftImage'+ direction.capitalize()](
+				this.data.getImages(
+					this.data.getRibbon(ribbon || 'current'))) }],
+	mergeRibbonUp: ['Edit|Ribbon/Merge ribbon up',
+		{browseMode: function(){ 
+			return this.data.ribbon_order[0] == this.current_ribbon && 'disabled' }},
+		'mergeRibbon: "up" ...'],
+	mergeRibbonDown: ['Edit|Ribbon/Merge ribbon down',
+		{browseMode: function(){ 
+			return this.data.ribbon_order.slice(-1)[0] == this.current_ribbon && 'disabled' }},
+		'mergeRibbon: "down" ...'],
+	flattenRibbons: ['Edit|Ribbon/Flatten',
+		{browseMode: function(){ 
+			return this.data.ribbon_order.length <= 1 && 'disabled' }},
+		function(){
+			var ribbons = this.data.ribbons
+			var base = this.base 
+			base = base && base in ribbons ?
+				base
+				: this.current_ribbon
+
+			var images = this.data.getImages('loaded')
+
+			this.data.ribbons = {
+				[base]: images,
+			}
+			this.data.ribbon_order = [base]
+
+			this.reload(true)
+		}],
+
+
 	// basic image editing...
 	//
 	// XXX correct undo???
@@ -1169,6 +1206,9 @@ core.ImageGridFeatures.Feature({
 			'reverseRibbons',
 
 			'alignToRibbon',
+
+			'mergeRibbon',
+			'flattenRibbons',
 		], 
 			function(_, target){ this.markChanged('data') }],
 
