@@ -124,6 +124,7 @@ var NWHostActions = actions.Actions({
 	// XXX add ability to use devtools on background page (node context)...
 	// XXX get the devtools stage...
 	showDevTools: ['Interface|Development/Show Dev Tools',
+		{browseMode: 'toggleBrowseActionKeys'},
 		function(action){
 			if(action == '?'){
 				// XXX get the devtools stage...
@@ -144,6 +145,7 @@ var NWHostActions = actions.Actions({
 		}],
 
 	toggleSplashScreen: ['Interface/',
+		{browseMode: 'toggleBrowseActionKeys'},
 		function(){
 		}],
 })
@@ -244,6 +246,7 @@ var ElectronHostActions = actions.Actions({
 
 	// XXX should this be a toggler???
 	showDevTools: ['Interface|Development/Show Dev Tools',
+		{browseMode: 'toggleBrowseActionKeys'},
 		function(action){
 			var w = electron.remote.getCurrentWindow()
 
@@ -274,6 +277,7 @@ var ElectronHostActions = actions.Actions({
 
 	// XXX make this a real toggler...
 	toggleSplashScreen: ['Interface/',
+		{browseMode: 'toggleBrowseActionKeys'},
 		function(action){
 			var splash = this.splash = (!this.splash || this.splash.isDestroyed()) ?
 				electron.remote.getGlobal('splash')
@@ -514,6 +518,7 @@ var WindowedAppControlActions = actions.Actions({
 		}],
 
 	toggleSplashScreenShowing: ['Interface/Splash screen on start',
+		{browseMode: 'toggleBrowseActionKeys'},
 		core.makeConfigToggler('show-splash-screen', 
 			['on', 'off'],
 			function(action){
