@@ -642,7 +642,7 @@ module.ViewerActions = actions.Actions({
 	rotateRibbonCW: ['Interface|Ribbon/Rotate ribbon clockwise', 
 		function(a){ 
 			this.ribbonRotation('+='+ (a || this.config['ribbon-rotation-step'] || 10)) }],
-	rotateRibbonCCW: ['Interface|Ribbon/Rotate ribbon coounter clockwise', 
+	rotateRibbonCCW: ['Interface|Ribbon/Rotate ribbon counter clockwise', 
 		function(a){ 
 			this.ribbonRotation('-='+ (a || this.config['ribbon-rotation-step'] || 10)) }],
 
