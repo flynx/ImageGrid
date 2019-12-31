@@ -2445,25 +2445,29 @@ var FileSystemWriterUIActions = actions.Actions({
 	// XXX this needs feedback...
 	// XXX should this return a promise???
 	saveIndexHere: ['File/$Save',
-		function(){ 
-			if(this.location.path){ 
-				this.saveIndex() 
+		core.doc`Save changes...
 
-			} else {
-				this.browseExportIndex()
-			}
-		}],
+		NOTE: if .location is empty this will prompt user for save path by 
+			launching .browseExportIndex(..)
+		`,
+		function(){ 
+			this.location.path ? 
+				this.saveIndex() 
+				: this.browseExportIndex() }],
 	// XXX should this be a UI action???
 	// 		...at this point this depends on .saveIndexHere(..), thus 
 	// 		it is here...
 	// XXX should this return a promise???
 	saveFullIndex: ['File/Save ($full)',
+		core.doc`Save full state...
+
+		NOTE: for more info see: .saveIndexHere(..)`,
 		function(){
 			return this
 				.markChanged('all')
 				.saveIndexHere()}],
 	saveWithCommentDialog: ['File/Save with $comment...', 
-		'exportDialog: "save"'],
+		'exportDialog: "save" -- Save full state with a comment...'],
 
 
 	// Export dialog...
