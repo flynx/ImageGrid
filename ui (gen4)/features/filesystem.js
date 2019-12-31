@@ -2448,12 +2448,12 @@ var FileSystemWriterUIActions = actions.Actions({
 		core.doc`Save changes...
 
 		NOTE: if .location is empty this will prompt user for save path by 
-			launching .browseExportIndex(..)
+			launching .exportIndexDialog(..)
 		`,
 		function(){ 
 			this.location.path ? 
 				this.saveIndex() 
-				: this.browseExportIndex() }],
+				: this.exportIndexDialog() }],
 	// XXX should this be a UI action???
 	// 		...at this point this depends on .saveIndexHere(..), thus 
 	// 		it is here...
