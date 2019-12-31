@@ -2269,6 +2269,8 @@ var BrowseActionsActions = actions.Actions({
 		'browse-actions-keys': 'on',
 
 		'browse-actions-shortcut-marker': '\\$(\\w)',
+
+		//'browse-advanced-mode': undefined, 
 	},
 
 	// Hide .alias(..) action from the browser...
@@ -3117,6 +3119,7 @@ var ButtonsActions = actions.Actions({
 	toggleAppButtons: ['Interface/App buttons',
 		{browseMode: 'toggleBrowseActionKeys'},
 		makeButtonControlsToggler('app-buttons')],
+
 	toggleSideButtons: ['Interface/70: Touch buttons', 
 		(function(){
 			var left = makeButtonControlsToggler('side-buttons-left')
