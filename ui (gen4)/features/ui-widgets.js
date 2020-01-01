@@ -1069,6 +1069,7 @@ browse.items.makeSubContext('field',
 		], options) })
 
 
+// Toggler field...
 //
 // 	.field.Toggle(title, value[, options])
 // 	.field.Toggle(title, options)
