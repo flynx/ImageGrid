@@ -1221,6 +1221,7 @@ function(title, options){
 
 
 // 
+// XXX should this also take batch options???
 browse.items.batch =
 function(spec, callback){
 	var that = this
