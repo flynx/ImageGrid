@@ -1220,7 +1220,6 @@ function(title, options){
 							: 'off' } }))) }
 
 
-// 
 // XXX should this also take batch options???
 browse.items.batch =
 function(spec, callback){
