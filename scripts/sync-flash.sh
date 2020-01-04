@@ -1,5 +1,7 @@
 #!/bin/bash
 
+VERSION=1.0
+
 DATE=`date +%Y%m%d`
 COUNT=1
 TITLE=""
@@ -21,8 +23,12 @@ COMPRESS=1
 
 # Config file to contain all the default settings...
 # XXX not sure if this is a good idea...
-##if [ -e ~/.sync-flash.rc ] ; then
-##	source ~/.sync-flash.rc
+#	...should we also check file sec?
+##CONFIG=.sync-flash.rc
+##if ! [ -z $CONFIG ] && [ -e ~/$CONFIG ] ; then
+##	# XXX what I don't like here is that we are 
+##	#	executing an external file...
+##	source ~/$CONFIG
 ##fi
 
 
