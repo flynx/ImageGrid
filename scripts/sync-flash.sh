@@ -19,6 +19,13 @@ COMPRESSOR=./compress-archive.sh
 COMPRESS=1
 
 
+# Config file to contain all the default settings...
+# XXX not sure if this is a good idea...
+##if [ -e ~/.sync-flash.rc ] ; then
+##	source ~/.sync-flash.rc
+##fi
+
+
 # base mount dir...
 # systems with /mnt
 if [ -d /mnt ] ; then
