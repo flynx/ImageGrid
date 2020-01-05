@@ -26,8 +26,7 @@ COMPRESS=1
 #	...should we also check file sec?
 ##CONFIG=.sync-flash.rc
 ##if ! [ -z $CONFIG ] && [ -e ~/$CONFIG ] ; then
-##	# XXX what I don't like here is that we are 
-##	#	executing an external file...
+##	# XXX executing an external file...
 ##	source ~/$CONFIG
 ##fi
 
