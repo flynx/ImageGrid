@@ -703,7 +703,7 @@ $(BUILD_DIR)/$(APP_NAME)-%.in-place.zip: $(TARGET_DIR)/$(ELECTRON_DIST) \
 	$(call zipDelFrom,"$(BUILD_DIR)",$@.tmp,"version")
 	# rename electron stuff...
 #	# XXX rename "Electron Helper" on mac builds...
-#		| sed 's/\(^@ \(.*\)Electron Helper\(.*\)\)$$/\1\n@=\2$(APP_NAME) Helper\3/' \
+#		| sed 's/\(^@ \(.*\)Electron Helper\(.*\)\)$$/\1\n@=\2$(APP_NAME) Helper\3/' 
 	zipnote "$@.tmp" \
 		| sed 's/\(^@ LICENSE\)$$/\1\n@=LICENSE.electron/' \
 		| zipnote -w "$@.tmp"
