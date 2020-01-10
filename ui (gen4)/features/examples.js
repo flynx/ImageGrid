@@ -945,7 +945,6 @@ var ExampleUIActions = actions.Actions({
 				make.batch([
 					'---',
 					[['X', 'Y']],
-					// XXX this does not show the correct value...
 					{title: 'foo', value: 123},
 					Object.assign(d1,
 						{type: 'field.Toggle', title: 'Batch toggle 1: '}),
@@ -954,7 +953,6 @@ var ExampleUIActions = actions.Actions({
 				make.field.batch([
 					'---',
 					['X', 'Y'],
-					// XXX this does not show the correct value...
 					{title: 'foo', value: 123},
 					Object.assign(d2,
 						{type: 'Toggle', title: 'Batch toggle 2: '}),
