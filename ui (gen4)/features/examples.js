@@ -922,8 +922,7 @@ var ExampleUIActions = actions.Actions({
 		widgets.makeUIDialog(function(spec, callback){
 			var that = this
 			var d0 = {}
-			var d1 = {}
-			var d2 = {}
+			var b1, b2
 			return browse.makeLister(null, function(path, make){
 
 				make([
@@ -941,22 +940,20 @@ var ExampleUIActions = actions.Actions({
 				//make.field.Toggle('Toggle: ', 'on')
 				make.field.Toggle('Toggle: ', d0)
 
-				// XXX test callback...
-				make.batch([
+				make.batch(b1 = b1 || [
 					'---',
 					[['X', 'Y']],
 					{title: 'foo', value: 123},
-					Object.assign(d1,
-						{type: 'field.Toggle', title: 'Batch toggle 1: '}),
+					{type: 'field.Toggle', title: 'Batch toggle 1: '},
 				])
-				// XXX test callback...
-				make.field.batch([
+				make.field.batch(b2 = b2 || [
 					'---',
 					['X', 'Y'],
-					{title: 'foo', value: 123},
-					Object.assign(d2,
-						{type: 'Toggle', title: 'Batch toggle 2: '}),
-				])
+					{type: 'Toggle', title: 'foo', values: ['1','2','3'], list: false},
+					{type: 'Toggle', title: 'Batch toggle 2: '},
+				], function(){
+					console.log('---', ...arguments)
+				})
 
 			}, {
 				cls: 'table-view',

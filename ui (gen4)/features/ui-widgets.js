@@ -1045,6 +1045,7 @@ browse.items.makeSubContext = function(name, obj){
 // 				...this can be problematic as the wrapper is external to the browser...
 // 			- as a sub-path...
 // 				...this is hard without side-effects...
+// XXX need to make this handle updates correctly...
 browse.items.makeSubContext('field',
 	function(title, value, options){
 		// parse arguments...
@@ -1086,6 +1087,7 @@ browse.items.makeSubContext('field',
 // 			- a way to define defaults -- global options?
 // 			- access to the .app -- should be configurable...
 // 			- default methods .showEditableList(..) / .showList(..) on make(..)
+// XXX need to make this handle updates correctly...
 browse.items.field.Toggle = 
 function(title, options){
 	var that = this
@@ -1102,8 +1104,6 @@ function(title, options){
 		Object.assign(
 			options,
 			{
-				type: 'toggle',
-
 				open: function(evt){
 					// XXX CONTEXT...
 					var actions = options.app || that.app
@@ -1221,6 +1221,7 @@ function(title, options){
 
 
 // XXX should this also take batch options???
+// XXX need to make this handle updates correctly...
 browse.items.batch =
 function(spec, callback){
 	var that = this
