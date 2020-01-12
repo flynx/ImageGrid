@@ -1104,6 +1104,12 @@ function(title, options){
 		Object.assign(
 			options,
 			{
+				// XXX do we need a .type ???
+				//type: options.type || 'toggle',
+
+				// XXX need to:
+				// 		- call options.open if it exists...
+				// 		- do not define this if we already did...
 				open: function(evt){
 					// XXX CONTEXT...
 					var actions = options.app || that.app
