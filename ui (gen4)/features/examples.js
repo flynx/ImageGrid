@@ -946,15 +946,15 @@ var ExampleUIActions = actions.Actions({
 					{title: 'foo', value: 123},
 					{type: 'field.Toggle', title: 'Batch toggle 1: '},
 				])
-				make.field.batch(b2 = b2 || [
-					'---',
-					['X', 'Y'],
-					{type: 'Toggle', title: 'foo', values: ['1','2','3'], list: false},
-					{type: 'Toggle', title: 'Batch toggle 2: '},
-				], function(){
-					console.log('---', ...arguments)
-				})
-
+				make.field.batch(
+					b2 = b2 || [
+						'---',
+						['X', 'Y'],
+						{type: 'Toggle', title: 'foo', values: ['1','2','3'], list: false},
+						{type: 'Toggle', title: 'Batch toggle 2: '},
+					], 
+					function(){
+						console.log('-- (2nd batch) --', ...arguments) })
 			}, {
 				cls: 'table-view',
 			}) })],
