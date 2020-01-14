@@ -1100,112 +1100,118 @@ function(title, options){
 		: args.shift()
 	options = args.shift() || {}
 
+	// user open handler...
+	var open = options.open
+	// toggler default settings...
+	var toggler_defaults = options.__toggle_setup ?
+		{}
+		: {
+			__toggler_setup: true,
+
+			// XXX do we need a .type ???
+			//type: options.type || 'toggle',
+
+			open: function(evt){
+				open 
+					&& open.call(this, ...arguments)
+
+				// XXX CONTEXT...
+				var actions = options.app || that.app
+
+				var getValues = function(){
+					return options.values instanceof Function ?
+						options.values.call(actions)
+					: options.values ?
+						options.values	
+					: ['off', 'on'] }
+				var set = function(v){
+					// get current value...
+					v = arguments.length > 0 ? 
+							v
+						: options.value instanceof Function ?
+							options.value.call(actions)
+						: options.value 
+					// normalize...
+					// NOTE: we are re-getting the values here 
+					// 		as it can get updated in options.list(..)
+					// 		or via options.values(..)...
+					if(!options.nonstrict){
+						var values = getValues()
+						v = values.includes(v) ?
+							v
+							: values[0] }
+					// update the value...
+					// NOTE: we update the local value iff set(..)
+					// 		got an explicit value argument...
+					// 		calling set(..) will not store anything,
+					// 		just update the current state, either to
+					// 		the already stored value or to the output
+					// 		of .value(..)...
+					arguments.length > 0
+						&& (options.value instanceof Function ?
+							(v = options.value.call(actions, v))
+							: (options.value = v))
+					elem.text(v)
+					// update dialog...
+					options.doNotAutoUpdateDialog
+						|| that.dialog.update() }
+
+
+				var elem = $(this).find('.text').last()
+				var current = elem.text()
+				var values = getValues()
+
+				// editable list or more than 2 values -> show value list...
+				if(options.list_editable 
+						|| (values.length > 2 
+							&& options.list !== false)){
+					// call options.list(..)
+					if(options.list instanceof Function){
+						options.list.call(actions, current, set)
+
+					// normal list...
+					} else {
+						// XXX where do we get these when context in make(..)
+						// XXX mark the current value???
+						var o = actions[
+								options.list_editable ? 
+									'showEditableList' 
+									: 'showList'](
+							values, 
+							Object.assign({
+									path: current,
+									open: function(v){
+										// update value...
+										// XXX current is [[value]], check 
+										// 		the upstream if this is correct...
+										current = v[0][0]
+										// NOTE: this is done first 
+										// 		to update values...
+										o.close()
+										// update callable values...
+										options.list_editable 
+											&& options.values instanceof Function 
+											&& options.values.call(actions, values) },
+									close: function(){
+										// NOTE: set(..) should be 
+										// 		called after all the
+										// 		dialog stuff is done...
+										setTimeout(function(){ set(current) }) },
+								}, 
+								options.list !== true ? 
+									options.list 
+									: {}) ) }
+
+				// directly toggle next value...
+				} else {
+					// XXX should we be able to toggle values back???
+					set(values[(values.indexOf(current) + 1) % values.length]) }
+			} }
+
 	return this.field(title, value,
 		Object.assign(
 			options,
-			{
-				// XXX do we need a .type ???
-				//type: options.type || 'toggle',
-
-				// XXX need to:
-				// 		- call options.open if it exists...
-				// 		- do not define this if we already did...
-				// 			...currently this is added to handlers on 
-				// 			every .dialog.update(..)...
-				open: function(evt){
-					// XXX CONTEXT...
-					var actions = options.app || that.app
-
-					var getValues = function(){
-						return options.values instanceof Function ?
-							options.values.call(actions)
-						: options.values ?
-							options.values	
-						: ['off', 'on'] }
-					var set = function(v){
-						// get current value...
-						v = arguments.length > 0 ? 
-								v
-							: options.value instanceof Function ?
-								options.value.call(actions)
-							: options.value 
-						// normalize...
-						// NOTE: we are re-getting the values here 
-						// 		as it can get updated in options.list(..)
-						// 		or via options.values(..)...
-						if(!options.nonstrict){
-							var values = getValues()
-							v = values.includes(v) ?
-								v
-								: values[0] }
-						// update the value...
-						// NOTE: we update the local value iff set(..)
-						// 		got an explicit value argument...
-						// 		calling set(..) will not store anything,
-						// 		just update the current state, either to
-						// 		the already stored value or to the output
-						// 		of .value(..)...
-						arguments.length > 0
-							&& (options.value instanceof Function ?
-								(v = options.value.call(actions, v))
-								: (options.value = v))
-						elem.text(v)
-						// update dialog...
-						options.doNotAutoUpdateDialog
-							|| that.dialog.update() }
-
-
-					var elem = $(this).find('.text').last()
-					var current = elem.text()
-					var values = getValues()
-
-					// editable list or more than 2 values -> show value list...
-					if(options.list_editable 
-							|| (values.length > 2 
-								&& options.list !== false)){
-						// call options.list(..)
-						if(options.list instanceof Function){
-							options.list.call(actions, current, set)
-
-						// normal list...
-						} else {
-							// XXX where do we get these when context in make(..)
-							// XXX mark the current value???
-							var o = actions[
-									options.list_editable ? 
-										'showEditableList' 
-										: 'showList'](
-								values, 
-								Object.assign({
-										path: current,
-										open: function(v){
-											// update value...
-											// XXX current is [[value]], check 
-											// 		the upstream if this is correct...
-											current = v[0][0]
-											// NOTE: this is done first 
-											// 		to update values...
-											o.close()
-											// update callable values...
-											options.list_editable 
-												&& options.values instanceof Function 
-												&& options.values.call(actions, values) },
-										close: function(){
-											// NOTE: set(..) should be 
-											// 		called after all the
-											// 		dialog stuff is done...
-											setTimeout(function(){ set(current) }) },
-									}, 
-									options.list !== true ? 
-										options.list 
-										: {}) ) }
-
-					// directly toggle next value...
-					} else {
-						// XXX should we be able to toggle values back???
-						set(values[(values.indexOf(current) + 1) % values.length]) }
-				},
-			},
+			toggler_defaults,
 			options
 				// normalize value...
 				.run(function(){
@@ -1271,8 +1277,7 @@ function(spec, callback){
 					// 		the user to get it via closure...
 					spec,
 					// XXX is this the right spot for this???
-					mode)
-			})
+					mode) })
 	return this }
 
 
