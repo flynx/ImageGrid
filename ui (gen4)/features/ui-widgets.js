@@ -1227,7 +1227,7 @@ function(title, options){
 
 
 // XXX should this also take batch options???
-// XXX need to make this handle updates correctly...
+// XXX need to make this handle updates correctly -- we are binding to a dialog event, need to fo this only once...
 browse.items.batch =
 function(spec, callback){
 	var that = this
