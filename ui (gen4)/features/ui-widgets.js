@@ -1045,7 +1045,6 @@ browse.items.makeSubContext = function(name, obj){
 // 				...this can be problematic as the wrapper is external to the browser...
 // 			- as a sub-path...
 // 				...this is hard without side-effects...
-// XXX need to make this handle updates correctly...
 browse.items.makeSubContext('field',
 	function(title, value, options){
 		// parse arguments...
@@ -1087,7 +1086,9 @@ browse.items.makeSubContext('field',
 // 			- a way to define defaults -- global options?
 // 			- access to the .app -- should be configurable...
 // 			- default methods .showEditableList(..) / .showList(..) on make(..)
-// XXX need to make this handle updates correctly...
+// XXX currently if a user defines options.open it will fully override 
+// 		the default open behavior...
+// 		...need a way to deal with this, preferably automatically...
 browse.items.field.Toggle = 
 function(title, options){
 	var that = this
@@ -1103,107 +1104,107 @@ function(title, options){
 	return this.field(title, value,
 		Object.assign(
 			options,
-			{
-				// XXX do we need a .type ???
-				//type: options.type || 'toggle',
+			options.__toggle_setup ?
+				{}
+				: {
+					__toggler_setup: true,
 
-				// XXX need to:
-				// 		- call options.open if it exists...
-				// 		- do not define this if we already did...
-				open: function(evt){
-					// XXX CONTEXT...
-					var actions = options.app || that.app
+					// XXX do we need a .type ???
+					//type: options.type || 'toggle',
 
-					var getValues = function(){
-						return options.values instanceof Function ?
-							options.values.call(actions)
-						: options.values ?
-							options.values	
-						: ['off', 'on'] }
-					var set = function(v){
-						// get current value...
-						v = arguments.length > 0 ? 
-								v
-							: options.value instanceof Function ?
-								options.value.call(actions)
-							: options.value 
-						// normalize...
-						// NOTE: we are re-getting the values here 
-						// 		as it can get updated in options.list(..)
-						// 		or via options.values(..)...
-						if(!options.nonstrict){
-							var values = getValues()
-							v = values.includes(v) ?
-								v
-								: values[0] }
-						// update the value...
-						// NOTE: we update the local value iff set(..)
-						// 		got an explicit value argument...
-						// 		calling set(..) will not store anything,
-						// 		just update the current state, either to
-						// 		the already stored value or to the output
-						// 		of .value(..)...
-						arguments.length > 0
-							&& (options.value instanceof Function ?
-								(v = options.value.call(actions, v))
-								: (options.value = v))
-						elem.text(v)
-						// update dialog...
-						options.doNotAutoUpdateDialog
-							|| that.dialog.update() }
+					open: function(evt){
+						// XXX CONTEXT...
+						var actions = options.app || that.app
+
+						var getValues = function(){
+							return options.values instanceof Function ?
+								options.values.call(actions)
+							: options.values ?
+								options.values	
+							: ['off', 'on'] }
+						var set = function(v){
+							// get current value...
+							v = arguments.length > 0 ? 
+									v
+								: options.value instanceof Function ?
+									options.value.call(actions)
+								: options.value 
+							// normalize...
+							// NOTE: we are re-getting the values here 
+							// 		as it can get updated in options.list(..)
+							// 		or via options.values(..)...
+							if(!options.nonstrict){
+								var values = getValues()
+								v = values.includes(v) ?
+									v
+									: values[0] }
+							// update the value...
+							// NOTE: we update the local value iff set(..)
+							// 		got an explicit value argument...
+							// 		calling set(..) will not store anything,
+							// 		just update the current state, either to
+							// 		the already stored value or to the output
+							// 		of .value(..)...
+							arguments.length > 0
+								&& (options.value instanceof Function ?
+									(v = options.value.call(actions, v))
+									: (options.value = v))
+							elem.text(v)
+							// update dialog...
+							options.doNotAutoUpdateDialog
+								|| that.dialog.update() }
 
 
-					var elem = $(this).find('.text').last()
-					var current = elem.text()
-					var values = getValues()
+						var elem = $(this).find('.text').last()
+						var current = elem.text()
+						var values = getValues()
 
-					// editable list or more than 2 values -> show value list...
-					if(options.list_editable 
-							|| (values.length > 2 
-								&& options.list !== false)){
-						// call options.list(..)
-						if(options.list instanceof Function){
-							options.list.call(actions, current, set)
+						// editable list or more than 2 values -> show value list...
+						if(options.list_editable 
+								|| (values.length > 2 
+									&& options.list !== false)){
+							// call options.list(..)
+							if(options.list instanceof Function){
+								options.list.call(actions, current, set)
 
-						// normal list...
+							// normal list...
+							} else {
+								// XXX where do we get these when context in make(..)
+								// XXX mark the current value???
+								var o = actions[
+										options.list_editable ? 
+											'showEditableList' 
+											: 'showList'](
+									values, 
+									Object.assign({
+											path: current,
+											open: function(v){
+												// update value...
+												// XXX current is [[value]], check 
+												// 		the upstream if this is correct...
+												current = v[0][0]
+												// NOTE: this is done first 
+												// 		to update values...
+												o.close()
+												// update callable values...
+												options.list_editable 
+													&& options.values instanceof Function 
+													&& options.values.call(actions, values) },
+											close: function(){
+												// NOTE: set(..) should be 
+												// 		called after all the
+												// 		dialog stuff is done...
+												setTimeout(function(){ set(current) }) },
+										}, 
+										options.list !== true ? 
+											options.list 
+											: {}) ) }
+
+						// directly toggle next value...
 						} else {
-							// XXX where do we get these when context in make(..)
-							// XXX mark the current value???
-							var o = actions[
-									options.list_editable ? 
-										'showEditableList' 
-										: 'showList'](
-								values, 
-								Object.assign({
-										path: current,
-										open: function(v){
-											// update value...
-											// XXX current is [[value]], check 
-											// 		the upstream if this is correct...
-											current = v[0][0]
-											// NOTE: this is done first 
-											// 		to update values...
-											o.close()
-											// update callable values...
-											options.list_editable 
-												&& options.values instanceof Function 
-												&& options.values.call(actions, values) },
-										close: function(){
-											// NOTE: set(..) should be 
-											// 		called after all the
-											// 		dialog stuff is done...
-											setTimeout(function(){ set(current) }) },
-									}, 
-									options.list !== true ? 
-										options.list 
-										: {}) ) }
-
-					// directly toggle next value...
-					} else {
-						// XXX should we be able to toggle values back???
-						set(values[(values.indexOf(current) + 1) % values.length]) }
-				},
-			},
+							// XXX should we be able to toggle values back???
+							set(values[(values.indexOf(current) + 1) % values.length]) }
+					} },
 			options
 				// normalize value...
 				.run(function(){
@@ -1232,7 +1233,7 @@ browse.items.batch =
 function(spec, callback){
 	var that = this
 	// build the fields...
-	;(spec || [])
+	spec
 		.forEach(function(field){
 			// array...
 			field instanceof Array ?
@@ -1250,6 +1251,8 @@ function(spec, callback){
 			: that(field) })
 	// batch callback...
 	callback
+		// only setup events once...
+		&& !spec.__batch_setup
 		&& this.dialog
 			.close(function(mode){
 				// XXX get the field data and pass it to the callback...
@@ -1269,8 +1272,9 @@ function(spec, callback){
 					// 		the user to get it via closure...
 					spec,
 					// XXX is this the right spot for this???
-					mode)
-			})
+					mode) })
+	// XXX is this a good way to do this???
+	spec.__batch_setup = true
 	return this }
 
 
