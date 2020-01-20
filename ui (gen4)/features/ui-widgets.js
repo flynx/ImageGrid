@@ -1229,7 +1229,7 @@ function(title, options){
 
 // XXX should this also take batch options???
 // XXX should we patch the close callback not to get called twice???
-// XXX BUG: if user passes a new spec each time this will not work...
+// XXX BUG: if user passes a new spec each time this will not work -- can we clear the old calkback??
 browse.items.batch =
 function(spec, callback){
 	var that = this
