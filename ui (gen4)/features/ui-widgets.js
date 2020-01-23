@@ -1227,10 +1227,10 @@ function(title, options){
 							: 'off' } }))) }
 
 
-// XXX should this also take batch options???
 // XXX should we patch the close callback not to get called twice???
 // XXX BUG: if user passes a new spec each time this will not work...
 // 		...can we clear the old callkback??
+// XXX investigate using the update event for unbinding and rebinding the close event... 
 browse.items.batch =
 function(spec, callback){
 	var that = this
