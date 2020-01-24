@@ -30,7 +30,7 @@ function(name){
 
 		name in this.dom ?
 			// proxy handler...
-			this.dom[name].apply(this.dom, args)
+			this.dom[name](...args)
 			// on/trigger handlers...
 			: this.dom.trigger(name, args) 
 
