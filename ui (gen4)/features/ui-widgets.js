@@ -1289,7 +1289,7 @@ function(spec, callback){
 			.one('update', function(){
 				console.log('update:', __v)
 				// XXX BUG? this.off(..) will not work with non-standard events...
-				this.dom.off('close', cb) }) })
+				this.dom.off('close', cb) }) 
 		&& console.log('batch:', __v)
 	return this }
 
