@@ -1287,6 +1287,8 @@ function(spec, callback){
 			//				being called at all -- see next issue...
 			//			- .off(..) for some reason does not work... (CONFIRMED)
 			//				...are we off-ing the right source???
+			//		...one possible cause of this is that .one(..) is actually
+			//		binding a wrapper and not the original function -- TEST
 			.one('update', function(){
 				console.log('update:', __v)
 				// XXX BUG? this.off(..) will not work with non-standard events...
