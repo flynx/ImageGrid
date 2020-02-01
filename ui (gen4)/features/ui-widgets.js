@@ -1288,7 +1288,13 @@ function(spec, callback){
 			//			- .off(..) for some reason does not work... (CONFIRMED)
 			//				...are we off-ing the right source???
 			//		...one possible cause of this is that .one(..) is actually
-			//		binding a wrapper and not the original function -- TEST
+			//		binding a wrapper and not the original function -- CONFIRMED!
+			//		...to reproduce:
+			//			var f = function(){ console.log('MOO!!!') }
+			//			ig.modal.client
+			//				.one('moo', f)
+			//				.off('moo', f)
+			//				.trigger('moo')	// -> will call f(..)
 			.one('update', function(){
 				console.log('update:', __v)
 				// XXX BUG? this.off(..) will not work with non-standard events...
