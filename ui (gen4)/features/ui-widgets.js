@@ -1227,8 +1227,8 @@ function(title, options){
 							: 'off' } }))) }
 
 
+//
 // XXX BUG: if user passes a new spec each time this will not work...
-// 		...can we clear the old callkback??
 // XXX still needs work...
 browse.items.batch =
 function(spec, callback){
