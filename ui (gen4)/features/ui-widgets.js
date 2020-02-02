@@ -1227,6 +1227,7 @@ function(title, options){
 							: 'off' } }))) }
 
 
+// XXX still buggy...
 browse.items.batch =
 function(spec, callback){
 	var that = this
@@ -1275,7 +1276,13 @@ function(spec, callback){
 					mode) })
 			// reset the callback on update...
 			.one('update', function(){
-				this.dom.off('close', cb) }) 
+				// NOTE: we need to skip the initial update or it will 
+				// 		.off(..) the handler right after it got bound...
+				// 		...this will effectively shift the .off(..) stage
+				// 		by one iteration...
+				// XXX feels hacky...
+				this.one('update', function(){
+					this.off('close', cb) }) })
 	return this }
 
 
