@@ -1227,9 +1227,6 @@ function(title, options){
 							: 'off' } }))) }
 
 
-//
-// XXX BUG: if user passes a new spec each time this will not work...
-// XXX still needs work...
 browse.items.batch =
 function(spec, callback){
 	var that = this
@@ -1251,7 +1248,6 @@ function(spec, callback){
 			// other...
 			: that(field) })
 	// batch callback...
-	var __v = Date.now()
 	var cb
 	callback
 		&& this.dialog
@@ -1259,7 +1255,6 @@ function(spec, callback){
 			// 		multiple times...
 			// 		...change to .close(..) when fixed...
 			.one('close', cb = function(mode){
-				console.log('callback:', __v)
 				// XXX get the field data and pass it to the callback...
 				callback(
 					// get the field-value pairs...
@@ -1279,27 +1274,8 @@ function(spec, callback){
 					// XXX is this the right spot for this???
 					mode) })
 			// reset the callback on update...
-			// XXX this does not work yet... 
-			//		there seems to be two problems here:
-			//			- 'update' is triggered on first draw, thus 
-			//				triggering .off(..)... (CONFIRMED)
-			//				...this should lead to the callback(..) not 
-			//				being called at all -- see next issue...
-			//			- .off(..) for some reason does not work... (CONFIRMED)
-			//				...are we off-ing the right source???
-			//		...one possible cause of this is that .one(..) is actually
-			//		binding a wrapper and not the original function -- CONFIRMED!
-			//		...to reproduce:
-			//			var f = function(){ console.log('MOO!!!') }
-			//			ig.modal.client
-			//				.one('moo', f)
-			//				.off('moo', f)
-			//				.trigger('moo')	// -> will call f(..)
 			.one('update', function(){
-				console.log('update:', __v)
-				// XXX BUG? this.off(..) will not work with non-standard events...
 				this.dom.off('close', cb) }) 
-		&& console.log('batch:', __v)
 	return this }
 
 
