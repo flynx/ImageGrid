@@ -15,28 +15,40 @@ var object = require('../object')
 /*********************************************************************/
 // helpers...
 
+// NOTE: this may produce a leak in cases where lots of events are bound 
+// 		and on a long running widget... (XXX)
 var proxyToDom =
 module.proxyToDom = 
 function(name){
 	return function(...args){ 
+		// XXX this feels hacky, investigate a better solution...
+		// 		...one way to go is to either handle events internally
+		// 		or remove .bind(..)...
+		// XXX this is a potential leak (see note above)...
+		var d = this.__proxy_to_dom_dict = 
+			this.__proxy_to_dom_dict || new Map()
 		// bind functions to this...
-		// XXX is this the right way to go???
 		args = args
 			.map(function(a){ 
-				return a instanceof Function ? 
-					a.bind(this) 
+				name != 'off'
+					&& a instanceof Function
+					&& ( d.has(a) 
+						|| d.set(a, a.bind(this)) )
+				var res = a instanceof Function ? 
+					d.get(a) || a.bind(this) 
 					: a 
+				// NOTE: this will delete cached handlers but it can't 
+				// 		get all of them in a generic way...
+				name == 'off'
+					&& a instanceof Function
+					&& d.delete(a)
+				return res
 			}.bind(this))
-
+		// call method or trigger event...
 		name in this.dom ?
-			// proxy handler...
 			this.dom[name](...args)
-			// on/trigger handlers...
 			: this.dom.trigger(name, args) 
-
-		return this 
-	}
-}
+		return this } }
 
 var eventToDom =
 module.eventToDom = 
@@ -55,9 +67,7 @@ function(name, defaults){
 
 			this.dom.trigger(name, args) 
 		}
-		return this 
-	}
-}
+		return this } }
 
 
 // XXX triggering events from here and from jQuery/dom has a 
