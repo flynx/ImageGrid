@@ -1227,6 +1227,7 @@ function(title, options){
 							: 'off' } }))) }
 
 
+// XXX doc!!!
 // XXX revise...
 browse.items.batch =
 function(spec, callback){
@@ -1256,7 +1257,6 @@ function(spec, callback){
 			// 		event getting triggered multiple times...
 			// 		...change to .close(..) when fixed...
 			.one('close', cb = function(mode){
-				// XXX get the field data and pass it to the callback...
 				callback(
 					// get the field-value pairs...
 					spec.reduce(function(res, e){
@@ -1272,7 +1272,6 @@ function(spec, callback){
 					// 		but passing it here is cleaner than forcing
 					// 		the user to get it via closure...
 					spec,
-					// XXX is this the right spot for this???
 					mode) })
 			// reset the callback on update...
 			.one('update', function(){
