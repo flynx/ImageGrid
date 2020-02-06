@@ -1227,7 +1227,8 @@ function(title, options){
 							: 'off' } }))) }
 
 
-// XXX doc!!!
+// XXX docs!!!
+// 		...do not forget to document the callback(..)...
 // XXX revise...
 browse.items.batch =
 function(spec, callback){
