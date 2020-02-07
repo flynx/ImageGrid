@@ -1088,7 +1088,7 @@ browse.items.makeSubContext('field',
 // 			- default methods .showEditableList(..) / .showList(..) on make(..)
 // XXX currently if a user defines options.open it will fully override 
 // 		the default open behavior...
-// 		...need a way to deal with this, preferably automatically...
+// 
 browse.items.field.Toggle = 
 function(title, options){
 	var that = this
