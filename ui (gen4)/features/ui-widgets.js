@@ -1227,6 +1227,9 @@ function(title, options){
 							: 'off' } }))) }
 
 
+// XXX docs!!!
+// 		...do not forget to document the callback(..)...
+// XXX revise...
 browse.items.batch =
 function(spec, callback){
 	var that = this
@@ -1251,11 +1254,10 @@ function(spec, callback){
 	var cb
 	callback
 		&& this.dialog
-			// XXX STUB this get's us around the close event getting triggered 
-			// 		multiple times...
+			// XXX STUB .one(..) vs. .on(..) get's us around the close 
+			// 		event getting triggered multiple times...
 			// 		...change to .close(..) when fixed...
 			.one('close', cb = function(mode){
-				// XXX get the field data and pass it to the callback...
 				callback(
 					// get the field-value pairs...
 					spec.reduce(function(res, e){
@@ -1271,11 +1273,16 @@ function(spec, callback){
 					// 		but passing it here is cleaner than forcing
 					// 		the user to get it via closure...
 					spec,
-					// XXX is this the right spot for this???
 					mode) })
 			// reset the callback on update...
 			.one('update', function(){
-				this.dom.off('close', cb) }) 
+				// NOTE: we need to skip the initial update or it will 
+				// 		.off(..) the handler right after it got bound...
+				// 		...this will effectively shift the .off(..) stage
+				// 		by one iteration...
+				// XXX feels hacky -- revise...
+				this.one('update', function(){
+					this.off('close', cb) }) })
 	return this }
 
 
