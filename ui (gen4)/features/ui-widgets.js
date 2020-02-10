@@ -1074,6 +1074,7 @@ browse.items.makeSubContext('field',
 // 	.field.Toggle(title, value[, options])
 // 	.field.Toggle(title, options)
 //
+//
 // XXX need to open a list (ro/editable) dialog (currently context is used)...
 // 		...this can be set via options.list but would be nice to provide 
 // 		a reasonable default...
@@ -1228,7 +1229,6 @@ function(title, options){
 
 // XXX docs!!!
 // 		...do not forget to document the callback(..)...
-// XXX revise...
 browse.items.batch =
 function(spec, callback){
 	var that = this
