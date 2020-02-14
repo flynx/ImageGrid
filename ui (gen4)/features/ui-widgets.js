@@ -1182,6 +1182,7 @@ function(title, options){
 									values, 
 									Object.assign({
 											path: current,
+											// XXX need to call the user .open(..) if defined...
 											open: function(v){
 												// update value...
 												// XXX current is [[value]], check 
