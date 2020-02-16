@@ -1091,8 +1091,8 @@ browse.items.makeSubContext('field',
 // 				we directly calk browse.* most of the time... (refactoring 
 // 				this might be a good excuse to migrate to browse2.js)
 // 			- default methods .showEditableList(..) / .showList(..) on make(..)
-// XXX currently if a user defines options.open it will fully override 
-// 		the default open behavior...
+// XXX if options.open is defined it will fully override the default open
+// 		behavior...
 browse.items.field.Toggle = 
 function(title, options){
 	var that = this
