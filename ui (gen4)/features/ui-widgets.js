@@ -1069,6 +1069,10 @@ browse.items.makeSubContext('field',
 		], options) })
 
 
+//browse.showEditableList = function(){}
+//browse.showList = function(){}
+
+
 // Toggler field...
 //
 // 	.field.Toggle(title, value[, options])
@@ -1104,11 +1108,11 @@ function(title, options){
 
 					open: function(evt){
 						// XXX CONTEXT...
-						var actions = options.app || that.app
+						var context = options.context || that.dialog
 
 						var getValues = function(){
 							return options.values instanceof Function ?
-								options.values.call(actions)
+								options.values.call(context)
 							: options.values ?
 								options.values	
 							: ['off', 'on'] }
@@ -1117,7 +1121,7 @@ function(title, options){
 							v = arguments.length > 0 ? 
 									v
 								: options.value instanceof Function ?
-									options.value.call(actions)
+									options.value.call(context)
 								: options.value 
 							// normalize...
 							// NOTE: we are re-getting the values here 
@@ -1137,7 +1141,7 @@ function(title, options){
 							// 		of .value(..)...
 							arguments.length > 0
 								&& (options.value instanceof Function ?
-									(v = options.value.call(actions, v))
+									(v = options.value.call(context, v))
 									: (options.value = v))
 							elem.text(v)
 							// update dialog...
@@ -1155,13 +1159,13 @@ function(title, options){
 									&& options.list !== false)){
 							// call options.list(..)
 							if(options.list instanceof Function){
-								options.list.call(actions, current, set)
+								options.list.call(context, current, set)
 
 							// normal list...
 							} else {
 								// XXX where do we get these when context in make(..)
 								// XXX mark the current value???
-								var o = actions[
+								var o = context[
 										options.list_editable ? 
 											'showEditableList' 
 											: 'showList'](
@@ -1182,7 +1186,7 @@ function(title, options){
 												// update callable values...
 												options.list_editable 
 													&& options.values instanceof Function 
-													&& options.values.call(actions, values) },
+													&& options.values.call(context, values) },
 											close: function(){
 												// NOTE: set(..) should be 
 												// 		called after all the
@@ -1202,11 +1206,11 @@ function(title, options){
 				// normalize value...
 				.run(function(){
 					// XXX CONTEXT...
-					var actions = options.app || that.app
+					var context = options.app || that.app
 
 					if(!(this.value instanceof Function)){
 						var values = options.values instanceof Function ?
-								options.values.call(actions)
+								options.values.call(context)
 							: options.values ?
 								options.values	
 							: ['off', 'on']
