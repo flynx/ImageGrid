@@ -1069,8 +1069,21 @@ browse.items.makeSubContext('field',
 		], options) })
 
 
-//browse.showEditableList = function(){}
-//browse.showList = function(){}
+// XXX rename...
+// XXX do we actually need this???
+// 		....showList(..) seems too trivial...
+browse.showList = function(list, options){
+	return browse.makeList(null, list, options) }
+browse.showEditableList = function(list, options){
+	options = Object.create(options || {})
+	// defaults...
+	options.sortable = options.sortable === undefined ? 
+		true 
+		: options.sortable
+	return browse.makeLister(null, 
+		function(path, make){
+			make.EditableList(list, options) }, 
+		options) }
 
 
 // Toggler field...
