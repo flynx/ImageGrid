@@ -1176,7 +1176,7 @@ function(title, options){
 
 							// normal list...
 							} else {
-								// XXX where do we get these when context in make(..)
+								// XXX search several contexts here... 
 								// XXX mark the current value???
 								var o = context[
 										options.list_editable ? 
