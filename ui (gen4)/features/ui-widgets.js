@@ -1072,6 +1072,7 @@ browse.items.makeSubContext('field',
 // XXX rename...
 // XXX do we actually need this???
 // 		....showList(..) seems too trivial...
+// 		need to make the upstream version to accept both signatures...
 browse.showList = function(list, options){
 	return browse.makeList(null, list, options) }
 browse.showEditableList = function(list, options){
@@ -1178,7 +1179,8 @@ function(title, options){
 							} else {
 								// XXX search several contexts here... 
 								// XXX mark the current value???
-								var o = context[
+								//var o = context[
+								var o = browse[
 										options.list_editable ? 
 											'showEditableList' 
 											: 'showList'](
