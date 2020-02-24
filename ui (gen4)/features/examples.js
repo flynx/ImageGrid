@@ -951,6 +951,7 @@ var ExampleUIActions = actions.Actions({
 						'---',
 						['X', 'Y'],
 						{type: 'Toggle', title: 'foo', values: ['1','2','3'], list: false},
+						{type: 'Toggle', title: 'foo (w. list)', values: ['1','2','3']},
 						{type: 'Toggle', title: 'Batch toggle 2: '},
 					], 
 					function(){
