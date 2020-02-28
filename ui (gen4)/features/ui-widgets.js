@@ -1026,7 +1026,6 @@ browse.items.makeSubContext = function(name, obj){
 	return this[name] }
 
 
-// XXX EXPERIMENT...
 //
 // 	.field(title[, options])
 // 	.field(title, value[, options])
@@ -1035,6 +1034,7 @@ browse.items.makeSubContext = function(name, obj){
 // NOTE: essentially make.field(..) is almost identical to make(..), the
 // 		later is needed to provide context for field items and a transparent
 // 		fallback for make(..) calls from within their context...
+//
 //
 // XXX Q: should we add an ImageGrid context to make(..)???
 // 		...something like .app for making it generic-ish for example...
