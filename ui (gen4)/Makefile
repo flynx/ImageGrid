@@ -19,7 +19,7 @@
 # 				https://goo.gl/csQmQo
 # 	- Windows
 # 		- MSVS -- to build native node modules (sharp)
-# 		- WiX -- to build the .msi installer
+# 		- WiX -- to build the .msi installer (XXX ???)
 #	- Linux
 #	- macOS
 #	- iOS
@@ -90,7 +90,7 @@
 # 			...do we actually need the file:// version working?
 # 		- version.js
 # 	- app icons...
-# 	- add a cli-only build
+# 	- add a cli-only build target...
 # 	- installers:
 # 		- msi (wix)
 # 		- deb
