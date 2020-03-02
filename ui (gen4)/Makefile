@@ -266,8 +266,6 @@ JS_FILES := $(ROOT_JS_FILES) \
 	$(wildcard $(EXT_LIB_DIR)/*.js)
 
 INCLUDE_NODE_MODULES = ig-object ig-actions ig-features
-# XXX do we actually use preact???
-#INCLUDE_NODE_MODULES += preact
 
 INCLUDE_NW_NODE_MODULES = app-module-path
 
