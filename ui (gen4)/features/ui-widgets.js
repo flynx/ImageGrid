@@ -1076,6 +1076,7 @@ browse.items.makeSubContext('field',
 // XXX these will not work as-is as they need to attach the resulting 
 // 		dialog to a container (see: makeUIDialog(..))...
 // 		...as-is these simply create a DOM object and return it...
+// 		is this feasible???
 browse.showList = function(list, options){
 	return browse.makeList(null, list, options) }
 browse.showEditableList = function(list, options){
