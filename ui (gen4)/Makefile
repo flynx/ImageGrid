@@ -19,7 +19,7 @@
 # 				https://goo.gl/csQmQo
 # 	- Windows
 # 		- MSVS -- to build native node modules (sharp)
-# 		- WiX -- to build the .msi installer
+# 		- WiX -- to build the .msi installer (XXX ???)
 #	- Linux
 #	- macOS
 #	- iOS
@@ -90,7 +90,7 @@
 # 			...do we actually need the file:// version working?
 # 		- version.js
 # 	- app icons...
-# 	- add a cli-only build
+# 	- add a cli-only build target...
 # 	- installers:
 # 		- msi (wix)
 # 		- deb
@@ -266,8 +266,6 @@ JS_FILES := $(ROOT_JS_FILES) \
 	$(wildcard $(EXT_LIB_DIR)/*.js)
 
 INCLUDE_NODE_MODULES = ig-object ig-actions ig-features
-# XXX do we actually use preact???
-#INCLUDE_NODE_MODULES += preact
 
 INCLUDE_NW_NODE_MODULES = app-module-path
 
