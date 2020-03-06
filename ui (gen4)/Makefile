@@ -485,6 +485,7 @@ electron-run: dev
 
 ##-------------------------------------------------------------- NW ---
 
+# XXX do we actually need this???
 # XXX this clashes with the electron build as the recepies do not take the
 # 	host framework into account...
 #.PHONY: nw-dist
