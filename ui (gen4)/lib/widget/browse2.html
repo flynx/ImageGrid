@@ -215,7 +215,8 @@ requirejs([
 				make.Heading('Heading'),
 				make.Confirm('Confirm', 
 					function(){ console.log('confirm') }, 
-					function(){ console.log('reject') })
+					function(){ console.log('reject') }),
+				make.field('field', 'value')
 			])
 			make.nest(make.Heading('$Dynamic Items', {
 				doc: 'Item generator examples...',

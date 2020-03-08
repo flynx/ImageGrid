@@ -203,6 +203,74 @@ object.mixinFlat(function(){}, {
 	},
 
 
+	// Utils...
+
+	// Make a nested context...
+	//
+	//	Make a nested context object...
+	//	.makeSubContext(name[, obj])
+	//		-> context
+	//
+	//	Make a nested context function...
+	//	.makeSubContext(name, func[, obj])
+	//		-> context
+	//
+	//
+	// The context inherits from .items / make(..)
+	//
+	// If the context is callable it will be called in the context of make(..)
+	//
+	// If the context is constructed recursively it will return self
+	//
+	// XXX TEST...
+	makeSubContext: function(name, obj){
+		// arse args...
+		var args = [...arguments].slice(1)
+		var func = args[0] instanceof Function ?
+			args.shift()
+			: null
+		obj = args.shift()
+
+		var n = '__'+ name
+		Object.defineProperty(this, name, {
+			get: function(){
+				var that = this
+				if(!this.hasOwnProperty(n)){
+					// build the context object...
+					var nested =
+						func ?
+							// NOTE: we always call func(..) in the root context...
+							function(){
+								// XXX should the client be able to override shorthands???
+								var shorthands = (that.dialog.options || {}).elementShorthand || {}
+								return arguments[0] in shorthands ?
+									that.call(that, ...arguments)
+									: func.call(that, ...arguments) }
+								//return func.call(that, ...arguments) }
+						: this instanceof Function ?
+							function(){
+								return that.call(this, ...arguments) }
+						: {}
+					nested.__proto__ = this
+
+					// mixin parent/obj...
+					Object.assign(nested, 
+						this[n] || obj || {})
+
+					// NOTE: this will prevent constructing a nested context
+					//		(see test above)...
+					this[n] = nested[n] = nested
+				}
+				return this[n] }, 
+		})
+		return this[name] },
+
+	// XXX
+	batch: function(spec, callback){
+		// XXX
+	},
+
+
 	// Getters...
 
 	// Last item created...
@@ -459,6 +527,48 @@ object.mixinFlat(function(){}, {
 		this.items = []
 		this.dialog = dialog },
 })
+
+
+// Sub-context: .field
+//
+Items.makeSubContext('field', 
+	// base field handler...
+	//
+	//	.field(title, value[, options])
+	//
+	// NOTE: this is a shorthand to:
+	// 		make([title, value], ..)
+	Object.assign(function(title, value, options){
+		var args = [...arguments].slice(1)
+		value = (args[0] instanceof Function 
+				|| !(args[0] instanceof Object)) ?
+			args.shift()
+			: undefined
+		options = args.shift() || {}
+		value = value || options.value
+		Object.assign(
+			options, 
+			{
+				title, 
+				value,
+			})
+		return this([
+			title, 
+			options.value instanceof Function ?
+				options.value(this)
+				: options.value 
+		], options) }, 
+	{
+		// XXX
+		Editable: function(title, value, options){
+		},
+
+		// Value toggle field...
+		//
+		// XXX
+		Toggle: function(title, options){
+		},
+	}))
 
 
 var Make = 
