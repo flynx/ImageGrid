@@ -362,6 +362,7 @@ object.mixinFlat(function(){}, {
 		return this(value, options) },
 	Action: function(value, options){},
 	ConfirmAction: function(value){},
+	// XXX how do we handle list values -- edit only the last element as default???
 	Editable: function(value){},
 
 	// lists...
@@ -559,11 +560,14 @@ Items.makeSubContext('field',
 				: options.value 
 		], options) }, 
 	{
-		// XXX
+		// Editable field value...
+		//
+		// NOTE: this is a shorthand to:
+		// 		make.Editable([title, value], ..)
 		Editable: function(title, value, options){
-		},
+			return this.__proto__.Editable([title, value], options) },
 
-		// Value toggle field...
+		// Togglable field value...
 		//
 		// XXX
 		Toggle: function(title, options){

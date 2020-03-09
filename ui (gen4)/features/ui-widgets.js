@@ -983,6 +983,7 @@ module.Dialogs = core.ImageGridFeatures.Feature({
 // 		...there seems to be no way to make this generic...
 // XXX think of a better name... (???)
 // XXX should the client be able to override shorthands???
+// XXX is there a way to access the parent context???
 browse.items.makeSubContext = function(name, obj){
 	// arse args...
 	var args = [...arguments].slice(1)
