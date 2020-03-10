@@ -265,10 +265,6 @@ object.mixinFlat(function(){}, {
 		})
 		return this[name] },
 
-	// XXX
-	batch: function(spec, callback){
-		// XXX
-	},
 
 
 	// Getters...
@@ -334,6 +330,64 @@ object.mixinFlat(function(){}, {
 		return item === this ?
 			((this.last().children = options.children), this)
 			: this(item, options) },
+
+	// XXX doc...
+	// XXX REVISE...
+	// XXX TEST...
+	batch: function(spec, callback){
+		var that = this
+		// build the fields...
+		spec
+			.forEach(function(field){
+				// array...
+				field instanceof Array ?
+					that(...field)
+				// spec...
+				: field instanceof Object ?
+					(field.type || 'field')
+						// handle field paths...
+						.split('.')
+						.reduce(function(res, cur){
+							that = res
+							return res[cur] }, that)
+						.call(that, field.title || field.id, field)
+				// other...
+				: that(field) })
+		// batch callback...
+		var cb
+		callback
+			&& this.dialog
+				// XXX STUB .one(..) vs. .on(..) get's us around the close 
+				// 		event getting triggered multiple times...
+				// 		...change to .close(..) when fixed...
+				.one('close', cb = function(mode){
+					callback(
+						// get the field-value pairs...
+						spec.reduce(function(res, e){
+							var id = e.id || e.title
+							id != undefined
+								&& (res[id] = e.value instanceof Function ? 
+									e.value.call(that) 
+									: e.value)
+							return res }, {}), 
+						// full spec...
+						// NOTE: technically we do not need to pass this
+						// 		through as we are mutating the data inside
+						// 		but passing it here is cleaner than forcing
+						// 		the user to get it via closure...
+						spec,
+						mode) })
+				// reset the callback on update...
+				.one('update', function(){
+					// NOTE: we need to skip the initial update or it will 
+					// 		.off(..) the handler right after it got bound...
+					// 		...this will effectively shift the .off(..) stage
+					// 		by one iteration...
+					// XXX feels hacky -- revise...
+					this.one('update', function(){
+						this.off('close', cb) }) })
+		return this },
+
 
 
 	// Wrappers...
@@ -531,6 +585,10 @@ object.mixinFlat(function(){}, {
 
 
 // Sub-context: .field
+//
+// 	[ title		value		... ]
+//
+// A field is an item that contains a title and a value...
 //
 Items.makeSubContext('field', 
 	// base field handler...
