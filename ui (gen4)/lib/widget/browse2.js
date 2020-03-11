@@ -627,6 +627,10 @@ Items.makeSubContext('field',
 
 		// Togglable field value...
 		//
+		// XXX should we have a version of this with the value in a button
+		// 		a-la how toggler values are handled in .browseActions(..)
+		// 		...this can also be an option...
+		// 		......should this be a generic toggle (outside of .field)???
 		// XXX
 		Toggle: function(title, options){
 		},
