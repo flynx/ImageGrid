@@ -631,6 +631,15 @@ Items.makeSubContext('field',
 		// 		a-la how toggler values are handled in .browseActions(..)
 		// 		...this can also be an option...
 		// 		......should this be a generic toggle (outside of .field)???
+		// XXX would be nice to be able to expand the options in several 
+		// 		modes:
+		// 			- new dialog -- need a wrapper...
+		// 			- nested dialog
+		// 				collapse on exit
+		// 			- nested dialog (exclusive)
+		// 				focus locked
+		// 				accept or abort closes nested dialog
+		// 			- open in the whole dialog...
 		// XXX
 		Toggle: function(title, options){
 		},
