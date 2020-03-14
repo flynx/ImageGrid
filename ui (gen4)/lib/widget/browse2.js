@@ -639,7 +639,7 @@ Items.makeSubContext('field',
 		// 			- nested dialog (exclusive)
 		// 				focus locked
 		// 				accept or abort closes nested dialog
-		// 			- open in the whole dialog...
+		// 			- redraw the whole dialog...
 		// XXX
 		Toggle: function(title, options){
 		},
