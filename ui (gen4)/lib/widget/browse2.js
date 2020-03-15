@@ -414,6 +414,9 @@ object.mixinFlat(function(){}, {
 		options.buttons = options.buttons 
 			|| this.dialog.options.headingButtons
 		return this(value, options) },
+	// XXX multi-line text....
+	Text: function(value, options){},
+
 	Action: function(value, options){},
 	ConfirmAction: function(value){},
 	// XXX how do we handle list values -- edit only the last element as default???
