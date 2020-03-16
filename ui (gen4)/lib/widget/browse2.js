@@ -621,12 +621,17 @@ Items.makeSubContext('field',
 				: options.value 
 		], options) }, 
 	{
+		// XXX
+		Text: function(title, value, options){
+			return this.__proto__.Text([title, value], options) },
+
 		// Editable field value...
 		//
 		// NOTE: this is a shorthand to:
 		// 		make.Editable([title, value], ..)
 		Editable: function(title, value, options){
 			return this.__proto__.Editable([title, value], options) },
+
 
 		// Togglable field value...
 		//
