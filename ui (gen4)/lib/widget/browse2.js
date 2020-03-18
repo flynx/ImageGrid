@@ -621,7 +621,9 @@ Items.makeSubContext('field',
 				: options.value 
 		], options) }, 
 	{
-		// XXX
+		// XXX do we need this???
+		// XXX would be nice to force the title to be on a separate line 
+		// 		from the text...
 		Text: function(title, value, options){
 			return this.__proto__.Text([title, value], options) },
 
