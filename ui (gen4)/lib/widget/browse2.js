@@ -587,6 +587,14 @@ object.mixinFlat(function(){}, {
 })
 
 
+
+// XXX do we need a custom handler here???
+// XXX do we add defaults to options???
+var makeFieldWrapper = function(name){
+	return function(title, value, options){
+		return this.__proto__[name]([title, value], options) } }
+
+
 // Sub-context: .field
 //
 // 	[ title		value		... ]
@@ -621,18 +629,11 @@ Items.makeSubContext('field',
 				: options.value 
 		], options) }, 
 	{
+		// Shorthands...
+		Text: makeFieldWrapper('Text'),
 		// XXX would be nice to force the title to be on a separate line 
 		// 		from the text...
-		Text: function(title, value, options){
-			return this.__proto__.Text([title, value], options) },
-
-		// Editable field value...
-		//
-		// NOTE: this is a shorthand to:
-		// 		make.Editable([title, value], ..)
-		Editable: function(title, value, options){
-			return this.__proto__.Editable([title, value], options) },
-
+		Editable: makeFieldWrapper('Editable'),
 
 		// Togglable field value...
 		//
