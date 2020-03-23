@@ -396,6 +396,7 @@ object.mixinFlat(function(){}, {
 	Item: function(value, options){ 
 		return this(...arguments) },
 
+	// XXX ???
 	Empty: function(options){},
 
 	Separator: function(){ 
