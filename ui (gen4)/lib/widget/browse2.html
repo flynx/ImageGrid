@@ -210,13 +210,18 @@ requirejs([
 		//browser.items.DisplayFocusedPath,
 		//null,
 		function(make){
+			// item demo...
 			make.nest(make.Heading('$Predefined Items'), [
 				make('Normal item'),
 				make.Heading('Heading'),
 				make.Confirm('Confirm', 
 					function(){ console.log('confirm') }, 
 					function(){ console.log('reject') }),
-				make.field('field', 'value')
+				make.Empty({doc: 'Empty item...'}),
+			])
+			// filed demo...
+			make.nest(make.Heading('$Fields'), [
+				make.field('field', 'value'),
 			])
 			make.nest(make.Heading('$Dynamic Items', {
 				doc: 'Item generator examples...',
@@ -229,6 +234,16 @@ requirejs([
 					id: 'inline_item_info_display',
 					doc: 'Shows the value of .doc/.alt item attr...',
 				}),
+			])
+			make.nest(make.Heading('Nesting test...'), [
+				make.nest('A', [
+					make('B'),
+					make('C'),
+				]),
+				make.nest('D', [
+					make('E'),
+					make('F'),
+				]),
 			])
 
 			make.Separator()
