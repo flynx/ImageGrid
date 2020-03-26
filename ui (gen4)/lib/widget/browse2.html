@@ -384,6 +384,33 @@ $(function(){
 <div class="container pathlist">
 </div>
 
+
+<pre style="position: absolute; display: block; top: 0; right: 0; width: 50%; ">
+
+<b>Issues:</b>
+- an issue with DOM replacement during the update sequence...
+    - kills draggable...
+        the main list is dragable but after render it does not work.
+    - messes with buttons on nested lists...
+        to reproduce:
+            open: B/C (copy path, then paste to dialog)
+            collapce...
+                - B is hidden fully
+            recover by collapsing B then expanding
+                - now everything is working but buttons are not drawn
+- who is responsible for drawing? ...parent or child?
+    ...this might be related to the above issue (case #2)
+
+
+<b>ToDo:</b>
+- partial render for long lists...
+- mode to render paths flat (a-la browse-walk.js) 
+- interactive path element...
+- search -- flat/deep
+- migrate constructors from browse.js...
+
+</pre>
+
 </body>
 </html>
 <!-- vim:set ts=4 sw=4 : -->
