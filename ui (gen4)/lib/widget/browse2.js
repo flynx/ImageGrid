@@ -294,7 +294,7 @@ object.mixinFlat(function(){}, {
 	//
 	// NOTE: see notes to collectItems(..) for more info...
 	//
-	//
+	// XXX should groups have options??
 	group: function(...items){
 		var that = this
 		items = items.length == 1 && items[0] instanceof Array ?
