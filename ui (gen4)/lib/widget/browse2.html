@@ -214,10 +214,13 @@ requirejs([
 			make.nest(make.Heading('$Predefined Items'), [
 				make('Normal item'),
 				make.Heading('Heading'),
+				make.Empty({doc: 'Empty item...'}),
+				//make.Separator({doc: 'Separator..'}),
+				//make.Spinner({doc: 'Spinner...'}),
+				//make.Editable(),
 				make.Confirm('Confirm', 
 					function(){ console.log('confirm') }, 
 					function(){ console.log('reject') }),
-				make.Empty({doc: 'Empty item...'}),
 			])
 			// filed demo...
 			make.nest(make.Heading('$Fields'), [
@@ -235,7 +238,7 @@ requirejs([
 					doc: 'Shows the value of .doc/.alt item attr...',
 				}),
 			])
-			make.nest(make.Heading('Nesting test...'), [
+			make.nest(make.Heading('Nesting test...', {collapsed: true}), [
 				make.nest('A', [
 					make('B'),
 					make('C'),
@@ -375,14 +378,9 @@ $(function(){
 <div class="container tree">
 </div>
 
-<div class="container flat">
-</div>
 
-<div class="container flat2">
-</div>
 
-<div class="container pathlist">
-</div>
+
 
 
 <pre style="position: absolute; display: block; top: 0; right: 0; width: 50%; ">
@@ -400,6 +398,14 @@ $(function(){
                 - now everything is working but buttons are not drawn
 - who is responsible for drawing? ...parent or child?
     ...this might be related to the above issue (case #2)
+- is this overcomplicated???
+    ...can the core be simpler and more modular?
+    should investigate <i>after</i> the main functionality is implemented
+    <i>NOTE: the actual LOC count is 2727 at this point in time (20200327)
+        so what's bugging me from time to time is not the code bloat but
+        rather doc bloat... 
+        ...but I'm not saying that there's no code bloat, though it's not 
+        as big as I fear =)</i>
 
 
 <b>ToDo:</b>
@@ -408,6 +414,7 @@ $(function(){
 - interactive path element...
 - search -- flat/deep
 - migrate constructors from browse.js...
+- refactor/revise...
 
 </pre>
 

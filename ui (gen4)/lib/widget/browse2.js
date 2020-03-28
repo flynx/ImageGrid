@@ -319,6 +319,10 @@ object.mixinFlat(function(){}, {
 	// 		...
 	// 	])
 	// 	
+	// XXX should options.collapsed and friends be set in item or in 
+	// 		options???
+	// 		...options does not work but seems obvious...
+	// 		XXX BUG???
 	nest: function(item, list, options){
 		options = Object.flatCopy(options || {})
 		//options = Object.assign(Object.create(this.options || {}), options || {})
@@ -396,7 +400,6 @@ object.mixinFlat(function(){}, {
 	Item: function(value, options){ 
 		return this(...arguments) },
 
-	// XXX ???
 	Empty: function(options){
 		return this('', options) },
 
