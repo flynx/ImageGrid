@@ -1560,8 +1560,19 @@ module.CropActions = actions.Actions({
 	// XXX save a crop (catalog)..
 	// XXX
 	
+	cropBefore: ['Crop/Crop current and $befor$e',
+		function(image, flatten){
+			image = image || this.current
+			var list = this.data.getImages()
+			return this.crop(list.slice(0, list.indexOf(image)+1), flatten) }],
+	cropAfter: ['Crop/Crop current and $after',
+		function(image, flatten){
+			image = image || this.current
+			var list = this.data.getImages()
+			return this.crop(list.slice(list.indexOf(image)), flatten) }],
+	
 	// XXX not sure if we actually need this...
-	cropFlatten: ['Crop/Flatten',
+	cropFlatten: ['Crop/$Flatten',
 		{browseMode: function(){ 
 			return this.data.ribbon_order.length <= 1 && 'disabled' }},
 		function(list){ this.data.length > 0 && this.crop(list, true) }],
@@ -1608,7 +1619,7 @@ module.CropActions = actions.Actions({
 
 			this.crop(crop, flatten)
 		}],
-	cropOutRibbonsBelow: ['Crop/Crop out ribbons $bellow',
+	cropOutRibbonsBelow: ['Crop/Crop out ribbons be$low',
 		function(ribbon, flatten){
 			if(this.data.length == 0){
 				return
@@ -1635,7 +1646,7 @@ module.CropActions = actions.Actions({
 
 			this.crop(data.getImages(images), flatten)
 		}],
-	
+
 	// XXX should this be here???
 	cropTagged: ['- Tag|Crop/Crop tagged images',
 		function(query, flatten){
