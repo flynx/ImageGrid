@@ -428,8 +428,9 @@ object.mixinFlat(function(){}, {
 	Editable: function(value){},
 
 	// lists...
-	// XXX how is this different from group???
-	List: function(values){},
+	// XXX how is this different from .group(..) or .batch(..)???
+	//List: function(values){},
+
 	EditableList: function(values){},
 	EditablePinnedList: function(values){},
 
