@@ -244,8 +244,9 @@ requirejs([
 					make('C'),
 				]),
 				make.nest('D', [
-					make('E'),
-					make('F'),
+					make.group(
+						make('E'),
+						make('F'))
 				]),
 			])
 

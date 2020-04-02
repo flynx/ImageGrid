@@ -222,6 +222,8 @@ object.mixinFlat(function(){}, {
 	//
 	// If the context is constructed recursively it will return self
 	//
+	// XXX doc: instruct access to the parent context...
+	// 		this.__proto__.* ???
 	// XXX TEST...
 	makeSubContext: function(name, obj){
 		// arse args...
@@ -323,6 +325,8 @@ object.mixinFlat(function(){}, {
 	// 		options???
 	// 		...options does not work but seems obvious...
 	// 		XXX BUG???
+	// XXX this should accept the results of list constructors like 
+	// 		.EditableList(..) and friends...
 	nest: function(item, list, options){
 		options = Object.flatCopy(options || {})
 		//options = Object.assign(Object.create(this.options || {}), options || {})
@@ -423,12 +427,17 @@ object.mixinFlat(function(){}, {
 	Text: function(value, options){},
 
 	Action: function(value, options){},
-	ConfirmAction: function(value){},
+	// XXX is this the same as .Confirm(...)???
+	//ConfirmAction: function(value){},
 	// XXX how do we handle list values -- edit only the last element as default???
 	Editable: function(value){},
 
 	// lists...
 	// XXX how is this different from .group(..) or .batch(..)???
+	// 		...or is this just the following???
+	// 			function(...args){
+	// 				return this.group(
+	// 					this.batch(...args)) }
 	//List: function(values){},
 
 	EditableList: function(values){},
@@ -641,6 +650,12 @@ Items.makeSubContext('field',
 		// XXX would be nice to force the title to be on a separate line 
 		// 		from the text...
 		Editable: makeFieldWrapper('Editable'),
+
+		// XXX test...
+		EditableList: function(title, ...args){
+			this.nest(
+				this.__proto__(title),
+				this.__proto__.EditableList(...args)) },
 
 		// Togglable field value...
 		//
