@@ -429,7 +429,7 @@ object.mixinFlat(function(){}, {
 	Action: function(value, options){},
 	// XXX is this the same as .Confirm(...)???
 	//ConfirmAction: function(value){},
-	// XXX how do we handle list values -- edit only the last element as default???
+	// XXX for list value edit only the last element as default...
 	Editable: function(value){},
 
 	// lists...
