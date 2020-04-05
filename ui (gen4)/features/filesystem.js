@@ -232,7 +232,7 @@ var FileSystemLoaderActions = actions.Actions({
 		// NOTE: this will not match "dot filenames", this is done 
 		// 		intentionally to avoid the previews MAC computers 
 		// 		generate all over the place...
-		'image-file-pattern': '*.@(jpg|jpeg|png|svg|JPG|JPEG|PNG|svg)',
+		'image-file-pattern': '*.@(jpg|jpeg|png|svg|JPG|JPEG|PNG|SVG)',
 
 		'image-file-read-stat': true,
 		'image-file-skip-previews': false,

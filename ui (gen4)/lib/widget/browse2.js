@@ -438,6 +438,9 @@ object.mixinFlat(function(){}, {
 	// 					this.batch(...args)) }
 	//List: function(values){},
 
+	// XXX actions:
+	// 		- add/remove
+	// 		- place
 	EditableList: function(values){},
 	EditablePinnedList: function(values){},
 
