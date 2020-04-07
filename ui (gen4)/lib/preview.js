@@ -41,6 +41,7 @@ if(typeof(process) != 'undefined'){
 // 		...
 // 	]
 //
+// XXX add a callback call when a gid is done...
 var makePreviews = 
 module.makePreviews =
 function(images, sizes, base_path, target_tpl, callback){
@@ -53,6 +54,12 @@ function(images, sizes, base_path, target_tpl, callback){
 	return Promise.all(images.map(function(data){
 		var gid = data.gid || ''
 		var source = data.source
+
+		callback && callback(null, {
+			status: 'queued', 
+			gid: gid, 
+			res: 'all', 
+		})
 
 		var ext = pathlib.extname(source)
 		var name = pathlib.basename(source)
@@ -68,59 +75,66 @@ function(images, sizes, base_path, target_tpl, callback){
 			var orig_res = Math.max(metadata.width, metadata.height)
 
 			// process previews...
-			return Promise.all(sizes.map(function(res){
-				// skip if image is smaller than res...
-				if(res >= orig_res){
-					return 
-				}
-
-				var rel = target 
-					.replace(/\$RESOLUTION|\$\{RESOLUTION\}/g, res)
-				var full = pathlib.join(base_path || '', rel)
-
-				callback && callback(null, {
-					status: 'queued', 
-					gid: gid, 
-					res: res, 
-					path: rel
-				})
-
-				// make the dir...
-				return ensureDir(pathlib.dirname(full))
-					.then(function(){
-						// check if image exists...
-						if(fse.existsSync(full)){
-							callback && callback(null, {
-								status: 'skipped', 
-								gid: gid, 
-								res: res, 
-								path: rel,
-								orientation: metadata.orientation,
-							})
-
-							return
+			return Promise
+				.all(sizes
+					.map(function(res){
+						// skip if image is smaller than res...
+						if(res >= orig_res){
+							return 
 						}
-					
-						// make the actual previews...
-						return img.clone()
-							.resize({
-								width: res,
-								height: res,
-								fit: 'inside',
+
+						var rel = target 
+							.replace(/\$RESOLUTION|\$\{RESOLUTION\}/g, res)
+						var full = pathlib.join(base_path || '', rel)
+
+						callback && callback(null, {
+							status: 'queued', 
+							gid: gid, 
+							res: res, 
+							path: rel
+						})
+
+						// make the dir...
+						return ensureDir(pathlib.dirname(full))
+							.then(function(){
+								// check if image exists...
+								if(fse.existsSync(full)){
+									callback && callback(null, {
+										status: 'skipped', 
+										gid: gid, 
+										res: res, 
+										path: rel,
+										orientation: metadata.orientation,
+									})
+									return }
+							
+								// make the actual previews...
+								return img.clone()
+									.resize({
+										width: res,
+										height: res,
+										fit: 'inside',
+									})
+									.withMetadata()
+									.toFile(full)
+										.then(function(){
+											callback 
+												&& callback(null, {
+													status: 'done', 
+													gid: gid, 
+													res: res, 
+													path: rel,
+													orientation: metadata.orientation, }) })
 							})
-							.withMetadata()
-							.toFile(full)
-								.then(function(){
-									callback 
-										&& callback(null, {
-											status: 'done', 
-											gid: gid, 
-											res: res, 
-											path: rel,
-											orientation: metadata.orientation, }) })
-					})
-			}))
-		})
+					}))
+				// report a gid is done...
+				.then(function(){
+					callback 
+						&& callback(null, {
+							status: 'done', 
+							gid: gid, 
+							res: 'all', 
+						}) }) })
 	}))
 }
 

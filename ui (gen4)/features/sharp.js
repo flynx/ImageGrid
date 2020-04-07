@@ -117,6 +117,8 @@ var SharpActions = actions.Actions({
 
 
 	// XXX should this account for non-jpeg images???
+	// XXX BUG?: this breaks on PNG images...
+	// XXX log: count gids and not specific images...
 	makePreviews: ['Sharp|File/Make image $previews',
 		core.doc`Make image previews
 
@@ -140,6 +142,10 @@ var SharpActions = actions.Actions({
 			logger = logger || this.logger
 			logger = logger && logger.push('Previews')
 
+			// XXX
+			var logger_mode = 'report-gids'
+			//var logger_mode = 'report-previews'
+
 
 			// get/normalize images...
 			//images = images || this.current
@@ -150,6 +156,19 @@ var SharpActions = actions.Actions({
 				: images
 			images = images instanceof Array ? images : [images]
 
+			//
+			// Format:
+			// 	{
+			// 		<base_path>: [
+			// 			{
+			// 				source: <image-path>,
+			// 				gid: <gid>,
+			// 			},
+			// 			...
+			// 		],
+			// 		...
+			// 	}
+			//
 			// NOTE: if base_path is not provided this will base the 
 			// 		previews in .base_path for each image, usually this
 			// 		is where the index resides but might not be the 
@@ -160,12 +179,10 @@ var SharpActions = actions.Actions({
 				var base = base_path || img.base_path || that.location.path
 
 				var d = data[base] = data[base] || []
-
 				d.push({
 					source: that.getImagePath(gid),
 					gid: gid,
-				})
-			})
+				}) })
 
 
 			// get/normalize sizes....
@@ -191,8 +208,11 @@ var SharpActions = actions.Actions({
 			var path_tpl = that.config['preview-path-template']
 				.replace(/\$INDEX|\$\{INDEX\}/g, that.config['index-dir'] || '.ImageGrid')
 
+
 			var post_handler = function(err, data){
-				if(data.status == 'done' || data.status == 'skipped'){
+				if(data.res != 'all' 
+						&& (data.status == 'done' 
+							|| data.status == 'skipped')){
 					// get/make preview list...
 					var img = that.images[data.gid]
 					var preview = img.preview =
@@ -210,48 +230,56 @@ var SharpActions = actions.Actions({
 					that.markChanged('images', [data.gid])
 				}	
 
-				logger && logger.emit(data.status, data.path)
-			}
+				// NOTE: this will handle both 'queue' and 'resolved' statuses...
+				logger && 
+					( logger_mode == 'report-gids' ?
+						// report gid-level progress...
+						(data.res == 'all' 
+							&& logger.emit(data.status, data.path))
+						// report preview-level progress...
+						: (data.res != 'all' 
+							&& logger.emit(data.status, data.path)) ) }
+
 
 			// now do the work (async)...
 			if(this.previewConstructorWorker){
-				return Promise.all(Object.keys(data).map(function(base_path){
-					return new Promise(function(resolve, reject){
-						var ticket = Date.now()
-						while(ticket in that.previewConstructorWorker.__post_handlers){
-							ticket = Date.now()
-						}
+				return Promise.all(
+					Object.keys(data)
+						.map(function(base_path){
+							return new Promise(function(resolve, reject){
+								do {
+									var ticket = Date.now()
+								} while(ticket in that.previewConstructorWorker.__post_handlers)
 
-						that.previewConstructorWorker.send({
-							ticket: ticket,
-
-							images: data[base_path], 
-							sizes: sizes, 
-							base_path: base_path, 
-							target_tpl: path_tpl, 
-						})
-						that.previewConstructorWorker.__post_handlers[ticket] = function(err, data){
-							// XXX
-							if(err){
-								reject(err)
-							}
-							if(data == 'completed'){
-								resolve()
-
-							} else {
-								post_handler(err, data)
-							}
-						} 
-					})
-				}))
+								that.previewConstructorWorker.send({
+									ticket: ticket,
+									images: data[base_path], 
+									sizes: sizes, 
+									base_path: base_path, 
+									target_tpl: path_tpl, 
+								})
+								that.previewConstructorWorker.__post_handlers[ticket] = 
+									function(err, data){
+										if(err){
+											return reject(err)
+										}
+										data == 'completed' ?
+											resolve()
+											: post_handler(err, data) }
+							}) }))
 
 			// now do the work (sync)...
 			} else {
-				return Promise.all(Object.keys(data).map(function(base_path){
-					return preview.makePreviews(
-						data[base_path], sizes, base_path, path_tpl, post_handler)
-				}))
-			}
+				return Promise.all(
+					Object.keys(data)
+						// NOTE: this will handle images batched by .base_path...
+						.map(function(base_path){
+							return preview.makePreviews(
+								data[base_path], 
+								sizes, 
+								base_path, 
+								path_tpl, 
+								post_handler) }))}
 		}],
 })
 
