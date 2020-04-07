@@ -72,6 +72,11 @@ var SharpActions = actions.Actions({
 	config: {
 		'preview-normalized': true,
 
+		// can be:
+		// 	'gids'
+		// 	'files'
+		'preview-progress-mode': 'gids',
+
 		// NOTE: this uses 'preview-sizes' and 'preview-path-template' 
 		// 		from filesystem.IndexFormat...
 	},
@@ -139,13 +144,9 @@ var SharpActions = actions.Actions({
 		`,
 		function(images, sizes, base_path, logger){
 			var that = this
+			var logger_mode = this.config['preview-progress-mode'] || 'gids'
 			logger = logger || this.logger
 			logger = logger && logger.push('Previews')
-
-			// XXX
-			var logger_mode = 'report-gids'
-			//var logger_mode = 'report-previews'
-
 
 			// get/normalize images...
 			//images = images || this.current
@@ -232,10 +233,10 @@ var SharpActions = actions.Actions({
 
 				// NOTE: this will handle both 'queue' and 'resolved' statuses...
 				logger && 
-					( logger_mode == 'report-gids' ?
+					( logger_mode == 'gids' ?
 						// report gid-level progress...
 						(data.res == 'all' 
-							&& logger.emit(data.status, data.path))
+							&& logger.emit(data.status, data.gid))
 						// report preview-level progress...
 						: (data.res != 'all' 
 							&& logger.emit(data.status, data.path)) ) }

@@ -479,7 +479,7 @@ electron-unpacked: $(BUILD_DIR)/$(APP_NAME)-$$(VERSION)-$(TARGET_OS)-$(ARCH)/
 .PHONY: electron-run
 electron-run: ## Run app in electron
 electron-run: dev
-	electron .
+	electron e.js
 
 
 
