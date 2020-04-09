@@ -87,9 +87,7 @@ var ProgressActions = actions.Actions({
 					.on('progressClose', function(){ 
 						widget
 							.fadeOut(that.config['progress-fade-duration'] || 200, function(){
-								$(this).remove() 
-							})
-					})
+								$(this).remove() }) })
 					.appendTo(container)
 				: widget
 
@@ -115,6 +113,7 @@ var ProgressActions = actions.Actions({
 				: bar.attr('value')
 
 			// format the message...
+			// XXX should we add a message after this????
 			msg = msg ? ': '+msg : ''
 			msg = ' '+ msg 
 				//+ (value && value >= (max || 0) ? ' ('+value+' done)' 
