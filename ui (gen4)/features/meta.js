@@ -25,7 +25,6 @@ core.ImageGridFeatures.Feature('imagegrid-commandline', [
 
 core.ImageGridFeatures.Feature('imagegrid-minimal', [
 	'lifecycle',
-	'logger', // XXX
 	'alias',
 	'peer',
 	'fs',

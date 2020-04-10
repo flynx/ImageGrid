@@ -333,36 +333,28 @@ var patchDate =
 module.patchDate = function(date){
 	date = date || Date
 
-	date.prototype.toShortDate = function(){
-		var y = this.getFullYear()
-		var M = this.getMonth()+1
-		M = M < 10 ? '0'+M : M
-		var D = this.getDate()
-		D = D < 10 ? '0'+D : D
-		var H = this.getHours()
-		H = H < 10 ? '0'+H : H
-		var m = this.getMinutes()
-		m = m < 10 ? '0'+m : m
-		var s = this.getSeconds()
-		s = s < 10 ? '0'+s : s
-
-		return ''+y+'-'+M+'-'+D+' '+H+':'+m+':'+s
-	}
-	date.prototype.getTimeStamp = function(no_seconds){
-		var y = this.getFullYear()
-		var M = this.getMonth()+1
-		M = M < 10 ? '0'+M : M
-		var D = this.getDate()
-		D = D < 10 ? '0'+D : D
-		var H = this.getHours()
-		H = H < 10 ? '0'+H : H
-		var m = this.getMinutes()
-		m = m < 10 ? '0'+m : m
-		var s = this.getSeconds()
-		s = s < 10 ? '0'+s : s
-
-		return ''+y+M+D+H+m+s
-	}
+	date.prototype.toShortDate = function(show_ms){
+		return '' 
+			+ this.getFullYear()
+			+'-'+ ('0'+this.getMonth()+1).slice(-2)
+			+'-'+ ('0'+this.getDate()).slice(-2)
+			+' '+ ('0'+this.getHours()).slice(-2)
+			+':'+ ('0'+this.getMinutes()).slice(-2)
+			+':'+ ('0'+this.getSeconds()).slice(-2)
+			+ (show_ms ? 
+				':'+(('000'+this.getMilliseconds()).slice(-3))
+				: '') }
+	date.prototype.getTimeStamp = function(show_ms){
+		return '' 
+			+ this.getFullYear()
+			+ ('0'+this.getMonth()+1).slice(-2)
+			+ ('0'+this.getDate()).slice(-2)
+			+ ('0'+this.getHours()).slice(-2)
+			+ ('0'+this.getMinutes()).slice(-2)
+			+ ('0'+this.getSeconds()).slice(-2)
+			+ (show_ms ? 
+				('000'+this.getMilliseconds()).slice(-3)
+				: '') }
 	date.prototype.setTimeStamp = function(ts){
 		ts = ts.replace(/[^0-9]*/g, '')
 		this.setFullYear(ts.slice(0, 4))
@@ -371,14 +363,12 @@ module.patchDate = function(date){
 		this.setHours(ts.slice(8, 10))
 		this.setMinutes(ts.slice(10, 12))
 		this.setSeconds(ts.slice(12, 14))
-		return this
-	}
-	date.timeStamp = function(){
-		return (new this()).getTimeStamp()
-	}
+		this.setMilliseconds(ts.slice(14, 17) || 0)
+		return this }
+	date.timeStamp = function(...args){
+		return (new this()).getTimeStamp(...args) }
 	date.fromTimeStamp = function(ts){
-		return (new this()).setTimeStamp(ts)
-	}
+		return (new this()).setTimeStamp(ts) }
 	// convert string time period to milliseconds...
 	date.str2ms = function(str, dfl){
 		dfl = dfl || 'ms'

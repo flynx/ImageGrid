@@ -274,11 +274,15 @@ var LoggerActions = actions.Actions({
 			this.log 
 				&& this.log.splice(0, this.log.length) 
 			return this },
-		print: function(){
-			return this.log ?
+		print: function(to_console){
+			to_console = to_console === undefined ? 
+				true 
+				: to_console
+			var str = this.log ?
 				this.log
-					.map(function([path, status, rest]){
-						return path.join(': ') + (path.length > 0 ? ': ' : '')
+					.map(function([date, path, status, rest]){
+						return `[${ new Date(date).getTimeStamp(true) }] ` 
+							+ path.join(': ') + (path.length > 0 ? ': ' : '')
 							+ status 
 							+ (rest.length > 1 ? 
 									':\n\t'
@@ -287,7 +291,10 @@ var LoggerActions = actions.Actions({
 								: '')
 							+ rest.join(': ') })
 					.join('\n')
-				: '' },
+				: '' 
+			return to_console ? 
+				(console.log(str), this)
+				: str },
 
 
 		// main API...
@@ -313,10 +320,13 @@ var LoggerActions = actions.Actions({
 		emit: function(status, ...rest){
 			// write to log...
 			this.log !== false
-				&& this.log.push([this.path, status, rest])
+				&& this.log.push([
+					Date.now(), 
+					this.path, 
+					status, 
+					rest])
 			// maintain log size...
 			this.log !== false
-				&& this.log.push([this.path, status, rest])
 				&& (this.max_size > 0 
 					&& this.log.length > this.max_size 
 					&& this.log.splice(0, this.log.length - this.max_size))
@@ -829,6 +839,9 @@ module.LifeCycle = ImageGridFeatures.Feature({
 	doc: '',
 
 	tag: 'lifecycle',
+	suggested: [
+		'logger',
+	],
 	priority: 'high',
 
 	actions: LifeCycleActions,
@@ -2288,6 +2301,9 @@ module.SelfTest = ImageGridFeatures.Feature({
 	tag: 'self-test',
 	depends: [
 		'lifecycle'	
+	],
+	suggested: [
+		'logger',
 	],
 	priority: 'low',
 
