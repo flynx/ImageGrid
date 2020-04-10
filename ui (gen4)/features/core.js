@@ -219,7 +219,14 @@ if(typeof(window) != 'undefined'){
 
 // XXX add log filtering...
 var LoggerActions = actions.Actions({
+	config: {
+		// NOTE: if set to 0 no log limit is applied...
+		'log-size': 10000,
+	},
+
 	Logger: object.Constructor('BaseLogger', {
+		doc: `Logger object constructor...`,
+
 		__context: null,
 		get context(){
 			return this.__context || this.root.__context },
@@ -228,6 +235,28 @@ var LoggerActions = actions.Actions({
 		get isRoot(){
 			return this === this.root },
 
+		__path: null,
+		get path(){
+			return (this.__path = 
+				this.__path == null ? 
+					[] 
+					: this.__path) },
+		set path(value){
+			this.__path = value },
+
+		// NOTE: if set to 0 no log limit is applied...
+		// NOTE: writing to this will modify .context.config['log-size']
+		// 		if a available and .__max_size otherwise...
+		__max_size: null,
+		get max_size(){
+			return this.__max_size != null ?
+				this.__max_size
+				// this.context.config['log-size']
+				: ((this.context || {}).config || {})['log-size'] || 10000 },
+		set max_size(value){
+			return this.context ?
+				(this.context.config['log-size'] = value)
+				: this.__max_size = value },
 		// NOTE: to disable log retention in .log set this to false...
 		__log: null,
 		get log(){
@@ -238,15 +267,6 @@ var LoggerActions = actions.Actions({
 				: this.isRoot ?
 					(this.__log = this.__log || []) 
 				: this.root.log },
-
-		__path: null,
-		get path(){
-			return (this.__path = 
-				this.__path == null ? 
-					[] 
-					: this.__path) },
-		set path(value){
-			this.__path = value },
 
 
 		// log management...
@@ -291,8 +311,16 @@ var LoggerActions = actions.Actions({
 					}) },
 
 		emit: function(status, ...rest){
+			// write to log...
 			this.log !== false
 				&& this.log.push([this.path, status, rest])
+			// maintain log size...
+			this.log !== false
+				&& this.log.push([this.path, status, rest])
+				&& (this.max_size > 0 
+					&& this.log.length > this.max_size 
+					&& this.log.splice(0, this.log.length - this.max_size))
+			// call context log handler...
 			this.context
 				&& this.context.handleLogItem
 				&& this.context.handleLogItem(this.path, status, ...rest)
@@ -313,7 +341,7 @@ var LoggerActions = actions.Actions({
 			this.__logger 
 				|| this.Logger(this)) },
 
-	// XXX move this to console-logger... (???)
+	// XXX move this to console-logger???
 	handleLogItem: ['- System/',
 		function(path, status, ...rest){
 			console.log(
