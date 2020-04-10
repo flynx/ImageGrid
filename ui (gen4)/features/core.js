@@ -14,6 +14,7 @@
 *
 *
 * Features:
+* 	- logger
 * 	- introspection
 * 	- lifecycle
 * 		base life-cycle events (start/stop/..)
@@ -214,6 +215,130 @@ if(typeof(window) != 'undefined'){
 
 
 /*********************************************************************/
+// Logger...
+
+// XXX add log filtering...
+var LoggerActions = actions.Actions({
+	Logger: object.Constructor('BaseLogger', {
+		__context: null,
+		get context(){
+			return this.__context || this.root.__context },
+
+		root: null,
+		get isRoot(){
+			return this === this.root },
+
+		// NOTE: to disable log retention in .log set this to false...
+		__log: null,
+		get log(){
+			return this.__log === false ?
+					false
+				: this.__log ?
+					this.__log
+				: this.isRoot ?
+					(this.__log = this.__log || []) 
+				: this.root.log },
+
+		__path: null,
+		get path(){
+			return (this.__path = 
+				this.__path == null ? 
+					[] 
+					: this.__path) },
+		set path(value){
+			this.__path = value },
+
+
+		// log management...
+		clear: function(){
+			this.log 
+				&& this.log.splice(0, this.log.length) 
+			return this },
+		print: function(){
+			return this.log ?
+				this.log
+					.map(function([path, status, rest]){
+						return path.join(': ') + (path.length > 0 ? ': ' : '')
+							+ status 
+							+ (rest.length > 1 ? 
+									':\n\t'
+								: rest.length == 1 ?
+									': '
+								: '')
+							+ rest.join(': ') })
+					.join('\n')
+				: '' },
+
+
+		// main API...
+		push: function(...msg){
+			return msg.length == 0 ?
+				this
+				: Object.assign(
+					this.constructor(),
+					{
+						root: this.root,
+						path: this.path.concat(msg),
+					}) },
+		pop: function(){
+			return (this.root === this || this.path.length == 1) ?
+				this
+				: Object.assign(
+					this.constructor(),
+					{
+						root: this.root,
+						path: this.path.slice(0, -1),
+					}) },
+
+		emit: function(status, ...rest){
+			this.log !== false
+				&& this.log.push([this.path, status, rest])
+			this.context
+				&& this.context.handleLogItem
+				&& this.context.handleLogItem(this.path, status, ...rest)
+			return this },
+
+
+		__call__: function(_, status, ...rest){
+			return this.emit(status, ...rest) },
+		__init__: function(context){
+			this.__context = context
+			this.root = this 
+		},
+	}),
+
+	__logger: null,
+	get logger(){
+		return (this.__logger = 
+			this.__logger 
+				|| this.Logger(this)) },
+
+	// XXX move this to console-logger... (???)
+	handleLogItem: ['- System/',
+		function(path, status, ...rest){
+			console.log(
+				path.join(': ') + (path.length > 0 ? ': ' : '')
+					+ status 
+					+ (rest.length > 1 ? 
+							':\n\t'
+						: rest.length == 1 ?
+							': '
+						: ''), ...rest) }],
+})
+
+var Logger = 
+module.Logger = ImageGridFeatures.Feature({
+	title: '',
+
+	tag: 'logger',
+	depends: [],
+
+	actions: LoggerActions,
+})
+
+
+
+//---------------------------------------------------------------------
 // Introspection...
 
 // Normalize doc strings...

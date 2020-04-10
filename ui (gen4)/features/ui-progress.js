@@ -142,6 +142,37 @@ var ProgressActions = actions.Actions({
 
 			// XXX what should we return??? (state, self, controller?)
 		}],
+
+	// handle logger progress...
+	// XXX revise...
+	handleLogItem: ['- System/',
+		function(path, status, ...rest){
+			var msg = this.message
+
+			// report progress...
+			// XXX HACK -- need meaningful status...
+			if(status == 'queued' 
+					|| status == 'found'){
+				this.showProgress(msg || ['Progress', status], '+0', '+'+rest.length)
+
+			} else if(status == 'loaded' || status == 'done' || status == 'written' 
+					|| status == 'index'){
+				this.showProgress(msg || ['Progress', status], '+'+rest.length)
+
+			} else if(status == 'skipping' || status == 'skipped'){
+				// XXX if everything is skipped the indicator does not 
+				// 		get hidden...
+				//this.showProgress(msg || ['Progress', status], '+0', '-1')
+				this.showProgress(msg || ['Progress', status], '+'+rest.length)
+
+			// XXX STUB...
+			} else if(status == 'error' ){
+				this.showProgress(['Error'].concat(msg), '+0', '+'+rest.length)
+				//console.log(msg ? 
+				//	'    '+ msg.join(': ') + ':' 
+				//	: '', ...arguments) 
+			}
+		}],
 })
 
 var Progress = 
