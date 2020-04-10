@@ -217,7 +217,6 @@ if(typeof(window) != 'undefined'){
 /*********************************************************************/
 // Logger...
 
-// XXX add log filtering...
 var LoggerActions = actions.Actions({
 	config: {
 		// NOTE: if set to 0 no log limit is applied...
@@ -274,27 +273,54 @@ var LoggerActions = actions.Actions({
 			this.log 
 				&& this.log.splice(0, this.log.length) 
 			return this },
-		print: function(to_console){
-			to_console = to_console === undefined ? 
-				true 
-				: to_console
-			var str = this.log ?
-				this.log
-					.map(function([date, path, status, rest]){
-						return `[${ new Date(date).getTimeStamp(true) }] ` 
-							+ path.join(': ') + (path.length > 0 ? ': ' : '')
-							+ status 
-							+ (rest.length > 1 ? 
-									':\n\t'
-								: rest.length == 1 ?
-									': '
-								: '')
-							+ rest.join(': ') })
-					.join('\n')
-				: '' 
-			return to_console ? 
-				(console.log(str), this)
-				: str },
+		// Format log to string...
+		//
+		// 	Full log...
+		// 	.log2str()
+		// 		-> str
+		//
+		// 	Slice log...
+		// 	.log2str(from)
+		// 	.log2str(from, to)
+		// 		-> str
+		//
+		// 	Specific item...
+		// 	.log2str(date, path, status, rest)
+		// 	.log2str([date, path, status, rest])
+		// 		-> str
+		// 		NOTE: this form does not depend on context...
+		//
+		//
+		// NOTE: the later form is useful for filtering:
+		// 		logger.log
+		// 			.filter(..)
+		// 			.map(logger.log2str)
+		// 			.join('\n')
+		//
+		log2str: function(){
+			return (arguments.length == 0 ?
+					   (this.log || [])
+					: arguments[0] instanceof Array ?
+						[arguments[0]]
+					: arguments.length < 2 ?
+						(this.log ?
+							this.log.slice(arguments[0], arguments[1])
+							: [])
+					: [arguments])
+				.map(function([date, path, status, rest]){
+					return `[${ new Date(date).getTimeStamp(true) }] ` 
+						+ path.join(': ') + (path.length > 0 ? ': ' : '')
+						+ status 
+						+ (rest.length > 1 ? 
+								':\n\t'
+							: rest.length == 1 ?
+								': '
+							: '')
+						+ rest.join(': ') })
+				.join('\n') },
+		print: function(...args){
+			console.log(this.log2str(...args))
+			return this },
 
 
 		// main API...
