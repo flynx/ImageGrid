@@ -23,13 +23,11 @@ var data = require('imagegrid/data')
 var images = require('imagegrid/images')
 
 var util = require('lib/util')
-
 var actions = require('lib/actions')
 var features = require('lib/features')
 var keyboard = require('lib/keyboard')
 
 var core = require('features/core')
-
 var widgets = require('features/ui-widgets')
 
 var overlay = require('lib/widget/overlay')
