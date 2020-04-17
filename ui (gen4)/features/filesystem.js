@@ -1627,7 +1627,7 @@ var FileSystemWriterActions = actions.Actions({
 			logger = logger || this.logger
 			logger = logger && logger.push('Backup')
 
-			do{
+			do {
 				var d = Date.timeStamp()
 				var backup_dir = `${pathlib.dirname(path)}/.${pathlib.basename(path)}.${d}`
 			} while(fse.existsSync(backup_dir))

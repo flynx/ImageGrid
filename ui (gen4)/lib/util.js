@@ -336,7 +336,7 @@ module.patchDate = function(date){
 	date.prototype.toShortDate = function(show_ms){
 		return '' 
 			+ this.getFullYear()
-			+'-'+ ('0'+this.getMonth()+1).slice(-2)
+			+'-'+ ('0'+(this.getMonth()+1)).slice(-2)
 			+'-'+ ('0'+this.getDate()).slice(-2)
 			+' '+ ('0'+this.getHours()).slice(-2)
 			+':'+ ('0'+this.getMinutes()).slice(-2)
@@ -347,7 +347,7 @@ module.patchDate = function(date){
 	date.prototype.getTimeStamp = function(show_ms){
 		return '' 
 			+ this.getFullYear()
-			+ ('0'+this.getMonth()+1).slice(-2)
+			+ ('0'+(this.getMonth()+1)).slice(-2)
 			+ ('0'+this.getDate()).slice(-2)
 			+ ('0'+this.getHours()).slice(-2)
 			+ ('0'+this.getMinutes()).slice(-2)
