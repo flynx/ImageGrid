@@ -931,7 +931,7 @@ module.Dialogs = core.ImageGridFeatures.Feature({
 				this.config['ui-overlay-blur']
 					&& this.toggleOverlayBlur(this.config['ui-overlay-blur'])
 			}],
-		['__call__', 
+		['__actioncall__', 
 			function(res, action, args){
 				//if(res instanceof jQuery || res instanceof widget.Widget){
 				//	var elem = (res.dom || res)
