@@ -1118,7 +1118,7 @@ var KeyboardWithCSSModesPrototype = {
 	},
 
 	__init__: function(keyboard, context){
-		object.parent(KeyboardWithCSSModesPrototype.__init__, this).call(this, keyboard)
+		object.parentCall(KeyboardWithCSSModesPrototype.__init__, this, keyboard)
 		
 		if(context instanceof Function){
 			Object.defineProperty(this, 'context', {

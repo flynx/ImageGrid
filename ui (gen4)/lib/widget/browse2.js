@@ -4161,7 +4161,7 @@ var HTMLItemClassPrototype = {
 	__proto__: BaseItem,
 
 	text: function(elem){
-		var txt = object.parent(HTMLItem.text, this).call(this, elem)
+		var txt = object.parentCall(HTMLItem.text, this, elem)
 		return txt != null ?
 			(txt + '')
 				.replace(/\$(.)/g, '$1') 
@@ -4217,7 +4217,7 @@ var HTMLItemPrototype = {
 	// maintain focus...
 	update: function(){
 		var that = this
-		return object.parent(HTMLItemPrototype.update, this).call(this, ...arguments)
+		return object.parentCall(HTMLItemPrototype.update, this, ...arguments)
 			.run(function(){
 				that.focused 
 					&& that.elem.focus() }) },
@@ -4269,7 +4269,7 @@ var focusItem = function(direction){
 
 	return function(){
 		var name = direction == 'up' ? 'prev' : 'next'
-		object.parent(HTMLBrowserPrototype[name], name, this).call(this, ...arguments)
+		object.parentCall(HTMLBrowserPrototype, name, this, ...arguments)
 
 		var threashold = this.options.focusOffsetWhileScrolling || 0
 
@@ -4916,7 +4916,7 @@ object.Constructor('HTMLRenderer', {
 	},
 	// XXX is this needed with partial render???
 	__init__: function(root, options){
-		var render = object.parent(HTMLRenderer.prototype.__init__, this).call(this, root, options)
+		var render = object.parentCall(HTMLRenderer.prototype.__init__, this, root, options)
 
 		var browser = this.root
 
@@ -5281,7 +5281,7 @@ var HTMLBrowserPrototype = {
 			: pattern
 
 		// call parent...
-		return object.parent(HTMLBrowserPrototype.search, this).call(this, pattern, ...args) },
+		return object.parentCall(HTMLBrowserPrototype.search, this, pattern, ...args) },
 	//
 	// Extended .get(..) to support:
 	// 	- 'pagetop'/'pagebottom' + offset...
@@ -5308,7 +5308,7 @@ var HTMLBrowserPrototype = {
 					stop(func ? 
 						func.call(this, e, i, p)
 						: e) }, ...args)
-			: object.parent(HTMLBrowserPrototype.get, this).call(this, pattern, func, ...args) },
+			: object.parentCall(HTMLBrowserPrototype.get, this, pattern, func, ...args) },
 
 
 	// Copy/Paste support...

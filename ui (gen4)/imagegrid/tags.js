@@ -2230,13 +2230,13 @@ var TagsWithHandlersPrototype = {
 	// handler: action(tag, 'tag')
 	tag: function(tags, value){
 		var that = this
-		return object.parent(TagsWithHandlersPrototype.tag, this).call(this,
+		return object.parentCall(TagsWithHandlersPrototype.tag, this,
 			that.handleSpecialTag(tags, 'tag', value),
 			...[...arguments].slice(1)) },
 	//  handler: action(tag, 'untag')
 	untag: function(tags, value){
 		var that = this
-		return object.parent(TagsWithHandlersPrototype.untag, this).call(this,
+		return object.parentCall(TagsWithHandlersPrototype.untag, this,
 			that.handleSpecialTag(tags, 'untag', value),
 			...[...arguments].slice(1)) },
 	//  handler: action(tag, 'replace', from)
@@ -2246,7 +2246,7 @@ var TagsWithHandlersPrototype = {
 			to = tag
 			tag = '*'
 		}
-		return object.parent(TagsWithHandlersPrototype.replace, this).call(this, 
+		return object.parentCall(TagsWithHandlersPrototype.replace, this, 
 			tag,
 			arguments.length <= 2 ?
 				(to instanceof Function ?
@@ -2422,9 +2422,9 @@ var TagsWithDictPrototype = {
 	//
 	tag: function(tags, value){
 		this.normalizeSave(tags)
-		return object.parent(TagsWithDictPrototype.tag, this).call(this, ...arguments) },
+		return object.parentCall(TagsWithDictPrototype.tag, this, ...arguments) },
 	untag: function(tags, value){
-		var res = object.parent(TagsWithDictPrototype.untag, this).call(this, ...arguments) 
+		var res = object.parentCall(TagsWithDictPrototype.untag, this, ...arguments) 
 		this.removeOrphansFromDict(tags)
 		return res
 	},
@@ -2436,7 +2436,7 @@ var TagsWithDictPrototype = {
 		}
 		var can_remove = []
 
-		var res = object.parent(TagsWithDictPrototype.replace, this).call(this, 
+		var res = object.parentCall(TagsWithDictPrototype.replace, this, 
 			tag,
 			arguments.length == 2 ?
 				(to instanceof Function ?
@@ -2458,7 +2458,7 @@ var TagsWithDictPrototype = {
 	togglePersistent: function(...tags){
 		this.normalizeSave(tags)
 
-		var res = object.parent(TagsWithDictPrototype.togglePersistent, this).call(this, ...arguments) 
+		var res = object.parentCall(TagsWithDictPrototype.togglePersistent, this, ...arguments) 
 
 		this.removeOrphansFromDict(res
 			.map(function(r, i){ 
@@ -2471,7 +2471,7 @@ var TagsWithDictPrototype = {
 			&& value != null
 			&& this.normalizeSave(tag, value)
 
-		var res = object.parent(TagsWithDictPrototype.define, this).call(this, ...arguments) 
+		var res = object.parentCall(TagsWithDictPrototype.define, this, ...arguments) 
 
 		value == null
 			&& this.removeOrphansFromDict(tag)
@@ -2490,7 +2490,7 @@ var TagsWithDictPrototype = {
 	// 		...
 	// 	}
 	json: function(){
-		var res = object.parent(TagsWithDictPrototype.json, this).call(this, ...arguments)
+		var res = object.parentCall(TagsWithDictPrototype.json, this, ...arguments)
 
 		// dict...
 		this.dict 
@@ -2512,7 +2512,7 @@ var TagsWithDictPrototype = {
 				.forEach(function(e){
 					that.dict[e[0]] = e[1].slice() })
 
-		return object.parent(TagsWithDictPrototype.load, this).call(this, ...arguments)
+		return object.parentCall(TagsWithDictPrototype.load, this, ...arguments)
 	},
 }
 
