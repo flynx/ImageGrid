@@ -29,7 +29,7 @@
     "guarantee-events": "^1.0.0",
     "ig-actions": "^3.24.8",
     "ig-features": "^3.4.2",
-    "ig-object": "^2.4.2",
+    "ig-object": "^2.4.5",
     "moment": "^2.24.0",
     "requirejs": "^2.3.6",
     "requirejs-plugins": "^1.0.2",
