@@ -356,11 +356,64 @@ module.ElectronHost = core.ImageGridFeatures.Feature({
 // 		get loaded when in widget mode...
 
 var BrowserHostActions = actions.Actions({
+	config: {
+		// XXX for some reason this does not work...
+		// XXX integrate this into the right place...
+		'app-buttons': Object.assign({},
+			widgets.Buttons.actions.config['app-buttons'],
+			{
+				'&#8601;': ['fullscreen always-shown', 
+					'toggleFullScreen -- Toggle fullscreen'],
+			}),
+	},
+
 	// window stuff...
 	get title(){
 		return $('title').text() },
 	set title(value){
 		$('title').text(value) },
+
+	// XXX add handler to toggle app button view -- or use the propper feature...
+	toggleFullScreen: ['Window/Full screen mode',
+		toggler.CSSClassToggler(
+			function(){ return document.body }, 
+			'.full-screen-mode',
+			function(action){
+				var that = this
+
+				// get current state...
+				var state = document.fullscreen ? 'on' : 'off'
+
+				// change the state only if the target state is not the same
+				// as the current state...
+				if(state != action){
+					this.ribbons.preventTransitions()
+
+					// hide the viewer to hide any animation crimes...
+					this.dom[0].style.visibility = 'hidden'
+
+					state == 'on' ?
+						document.exitFullscreen()
+						// XXX id document.body the right scope here???
+						// 		...this.dom[0] seems to break things...
+						: document.body.requestFullscreen()
+
+					setTimeout(function(){ 
+						that
+							.centerViewer()
+							.focusImage()
+							.ribbons
+								.restoreTransitions()
+
+						that.dom[0].style.visibility = ''
+					}, 100)
+				}
+
+				// NOTE: we delay this to account for window animation...
+				//setTimeout(function(){ 
+				//	that.storeWindowGeometry() 
+				//}, 500)
+			})],
 })
 
 // NOTE: keep this defined last as a fallback...
@@ -371,7 +424,10 @@ module.BrowserHost = core.ImageGridFeatures.Feature({
 
 	tag: 'ui-browser-host',
 	exclusive: 'ui-host',
-	depends: [],
+	depends: [
+		// XXX remove id buttons control moves elsewhere...
+		'ui-buttons',
+	],
 
 	actions: BrowserHostActions,
 
