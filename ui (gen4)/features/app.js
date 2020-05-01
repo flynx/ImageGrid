@@ -394,7 +394,7 @@ var BrowserHostActions = actions.Actions({
 							.ribbons
 								.restoreTransitions()
 						// show viewer after we are done...
-						that.dom[0].style.visibility = '' }, 100)
+						that.dom[0].style.visibility = '' }, 150)
 				}
 			})],
 })
