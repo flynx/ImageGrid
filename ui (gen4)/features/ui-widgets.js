@@ -54,6 +54,7 @@ var makeButtonControls =
 module.makeButtonControls =
 function(context, cls, data){
 	cls = cls instanceof Array ? cls : cls.split(/\s+/g)
+	var unusable_draw = context.config['unusable-button-draw-mode'] || 'hidden'
 
 	// remove old versions...
 	context.dom.find('.'+ cls.join('.')).remove()
@@ -77,6 +78,8 @@ function(context, cls, data){
 
 	// make buttons...
 	Object.keys(data).forEach(function(k){
+		var usable = true
+
 		// spacer...
 		if(typeof(data[k]) == typeof('str') 
 				&& /--+/.test(data[k])){
@@ -87,6 +90,7 @@ function(context, cls, data){
 			var menu = function(){}
 
 		// normal element...
+		// XXX show button only if action available...
 		} else {
 			var e = data[k].slice()
 			var primary = e.pop()
@@ -101,6 +105,12 @@ function(context, cls, data){
 			primary = typeof(primary) == typeof('str') ?
 				keyboard.parseActionCall(primary, context) 
 				: primary
+			usable = primary instanceof Function
+				|| context[primary.action] instanceof Function
+
+			// do not draw if primary not usable...
+			if(!usable && unusable_draw == 'none'){
+				return }
 
 			var click = primary instanceof Function ? 
 				primary 
@@ -126,7 +136,7 @@ function(context, cls, data){
 				|| e[0] 
 				|| ''
 		}
-
+		
 		controls
 			.append($('<div>')
 				.addClass('button ' + cls)
@@ -137,7 +147,12 @@ function(context, cls, data){
 						&& context.showStatusBarInfo()
 				})
 				.click(click)
-				.on('contextmenu', menu))
+				.on('contextmenu', menu)
+				.css(!usable ?
+						(unusable_draw == 'hidden' ? 
+							{display: 'none'}
+						: {})
+					: {}))
 	})
 
 	controls
@@ -3073,9 +3088,19 @@ var SETTINGS_ICON =
 	: navigator.platform == 'Win32' ?  '&#9965;'
 	: '<span class="material-icons">settings</span>'
 
+// XXX show button iff the action is present...
 // XXX add context menu action to buttons...
 var ButtonsActions = actions.Actions({
 	config: {
+		// can be:
+		// 	'hidden'	- draw hidden
+		// 	'disabled'	- draw disabled (not implemented)
+		// 	'none'		- do not draw
+		// 	'visible'	- force draw
+		//
+		// XXX should this be more granular???
+		'unusable-button-draw-mode': 'none',
+
 		'main-buttons-state': 'on',
 		// Format:
 		// 	{
@@ -3126,6 +3151,12 @@ var ButtonsActions = actions.Actions({
 				'browseActions: "Interface/" -- Interface settings...',
 				'toggleSideButtons -- Toggle touch controls',
 			]],
+			'_': ['minimize', 
+				'minimize -- Minimize'],
+			'&#8601;': ['fullscreen always-shown', 
+				'toggleFullScreen -- Toggle fullscreen'],
+			'&times;': ['close', 
+				'close -- Quit'],
 		},
 
 		'side-buttons-state': 'off',
@@ -3317,6 +3348,29 @@ module.Buttons = core.ImageGridFeatures.Feature({
 			function(){
 				$('.secondary-buttons.buttons .zoom.button sub')
 					.text(Math.round(this.screenwidth)) }],
+		// update fullscreen button...
+		['start toggleFullScreen', 
+			function(){
+				if(this.toggleFullScreen){
+					var fullscreen = this.toggleFullScreen('?')
+					var buttons = this.dom.find('.app-buttons')
+					
+					// fullscreen button...
+					buttons.find('.fullscreen.button')
+						.html(fullscreen == 'on' ? '&#8601;' : '&#8599;')
+						.attr('info', fullscreen == 'on' ? 'Exit fullscreen' : 'Fullscreen')
+
+					// XXX should this be done by css???
+					if(fullscreen == 'on'){
+						buttons.find('.button:not(.always-shown)').show()
+
+					} else {
+						buttons.find('.button:not(.always-shown)').hide()
+					}
+
+					//this.toggleFullScreenControls(fullScreen)
+				}
+			}],
 	],
 })
 

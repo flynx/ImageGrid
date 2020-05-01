@@ -356,17 +356,6 @@ module.ElectronHost = core.ImageGridFeatures.Feature({
 // 		get loaded when in widget mode...
 
 var BrowserHostActions = actions.Actions({
-	config: {
-		// XXX for some reason this does not work...
-		// XXX integrate this into the right place...
-		'app-buttons': Object.assign({},
-			widgets.Buttons.actions.config['app-buttons'],
-			{
-				'&#8601;': ['fullscreen always-shown', 
-					'toggleFullScreen -- Toggle fullscreen'],
-			}),
-	},
-
 	// window stuff...
 	get title(){
 		return $('title').text() },
@@ -395,7 +384,7 @@ var BrowserHostActions = actions.Actions({
 					state == 'on' ?
 						document.exitFullscreen()
 						// XXX id document.body the right scope here???
-						// 		...this.dom[0] seems to break things...
+						// 		...this.dom[0] seems to break alignment...
 						: document.body.requestFullscreen()
 
 					setTimeout(function(){ 
@@ -404,15 +393,9 @@ var BrowserHostActions = actions.Actions({
 							.focusImage()
 							.ribbons
 								.restoreTransitions()
-
-						that.dom[0].style.visibility = ''
-					}, 100)
+						// show viewer after we are done...
+						that.dom[0].style.visibility = '' }, 100)
 				}
-
-				// NOTE: we delay this to account for window animation...
-				//setTimeout(function(){ 
-				//	that.storeWindowGeometry() 
-				//}, 500)
 			})],
 })
 
@@ -685,70 +668,6 @@ module.AppControl = core.ImageGridFeatures.Feature('ui-app-control', [
 	'ui-portable-app-control',
 ])
 
-
-//---------------------------------------------------------------------
-// Fullscreen app control buttons...
-
-var AppButtonsActions = actions.Actions({
-	config: {
-		// append app-specific buttons...
-		'app-buttons': Object.assign({},
-			widgets.Buttons.actions.config['app-buttons'],
-			{
-				'_': ['minimize', 
-					'minimize -- Minimize'],
-				'&#8601;': ['fullscreen always-shown', 
-					'toggleFullScreen -- Toggle fullscreen'],
-				'&times;': ['close', 
-					'close -- Quit'],
-			}),
-	},
-})
-
-var AppButtons = 
-module.AppButtons = core.ImageGridFeatures.Feature({
-	title: '',
-	doc: '',
-
-	tag: 'ui-app-buttons',
-	depends: [
-		'ui-windowed-app-control',
-		'ui-buttons',
-	],
-	suggested: [
-		// needed for reporting info in .makeButtonControls(..)
-		'ui-status-bar',
-	],
-
-	actions: AppButtonsActions,
-
-	handlers: [
-		['start.pre', 
-			function(){
-				this.toggleAppButtons('on')
-			}],
-		['start toggleFullScreen', 
-			function(){
-				var fullscreen = this.toggleFullScreen('?')
-				var buttons = this.dom.find('.app-buttons')
-				
-				// fullscreen button...
-				buttons.find('.fullscreen.button')
-					.html(fullscreen == 'on' ? '&#8601;' : '&#8599;')
-					.attr('info', fullscreen == 'on' ? 'Exit fullscreen' : 'Fullscreen')
-
-				// XXX should this be done by css???
-				if(fullscreen == 'on'){
-					buttons.find('.button:not(.always-shown)').show()
-
-				} else {
-					buttons.find('.button:not(.always-shown)').hide()
-				}
-
-				//this.toggleFullScreenControls(fullScreen)
-			}],
-	],
-})
 
 
 

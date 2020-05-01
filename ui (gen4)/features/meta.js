@@ -78,7 +78,6 @@ core.ImageGridFeatures.Feature('imagegrid-ui', [
 
 	'ui-progress',
 
-	'ui-app-buttons',
 	'ui-buttons',
 
 	'ui-status-bar',

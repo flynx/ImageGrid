@@ -536,6 +536,16 @@ var LifeCycleActions = actions.Actions({
 				'started'
 			: undefined },
 
+	// XXX not implemented...
+	// 		...this should be triggered on first run and after updates...
+	setup: ['- System/',
+		doc``,
+		Event(function(mode){
+			// System started event...
+			//
+			// Not intended for direct use.
+		})],
+
 	start: ['- System/', 
 		doc`Start core action/event
 
@@ -817,6 +827,15 @@ var LifeCycleActions = actions.Actions({
 			// Not intended for direct use.
 		})],
 
+	// XXX not implemented...
+	// 		...this should be triggered before uninstall...
+	cleanup: ['- System/',
+		doc``,
+		Event(function(){
+			// System started event...
+			//
+			// Not intended for direct use.
+		})],
 
 	// trigger core events...
 	//
