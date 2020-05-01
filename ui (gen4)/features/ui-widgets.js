@@ -52,9 +52,13 @@ var browseWalk = require('lib/widget/browse-walk')
 // 	}
 var makeButtonControls =
 module.makeButtonControls =
-function(context, cls, data){
-	cls = cls instanceof Array ? cls : cls.split(/\s+/g)
-	var unusable_draw = context.config['unusable-button-draw-mode'] || 'hidden'
+function(context, cls, data, unusable_draw){
+	cls = cls instanceof Array ? 
+		cls 
+		: cls.split(/\s+/g)
+	unusable_draw = unusable_draw 
+		|| context.config['unusable-button-draw-mode'] 
+		|| 'hidden'
 
 	// remove old versions...
 	context.dom.find('.'+ cls.join('.')).remove()
@@ -66,15 +70,15 @@ function(context, cls, data){
 			evt = window.event || evt
 			var t = $(evt.target)
 
-			var info = t.attr('info') || t.parents('[info]').attr('info') || ''
+			var info = t.attr('info') 
+				|| t.parents('[info]').attr('info') 
+				|| ''
 
 			context.showStatusBarInfo
-				&& context.showStatusBarInfo(info)
-		})
+				&& context.showStatusBarInfo(info) })
 		.on('mouseout', function(){
 			context.showStatusBarInfo
-				&& context.showStatusBarInfo()
-		})
+				&& context.showStatusBarInfo() })
 
 	// make buttons...
 	Object.keys(data).forEach(function(k){
@@ -94,14 +98,18 @@ function(context, cls, data){
 		} else {
 			var e = data[k].slice()
 			var primary = e.pop()
-			primary = primary instanceof Array ? primary.slice() : primary
+			primary = primary instanceof Array ? 
+				primary.slice() 
+				: primary
 			var secondary = (primary instanceof Array && primary.length > 1) ? 
 				primary.pop() 
 				: null
 			secondary = typeof(secondary) == typeof('str') ?
 				keyboard.parseActionCall(secondary, context) 
 				: secondary
-			primary = primary instanceof Array ? primary.shift() : primary
+			primary = primary instanceof Array ? 
+				primary.shift() 
+				: primary
 			primary = typeof(primary) == typeof('str') ?
 				keyboard.parseActionCall(primary, context) 
 				: primary
@@ -148,11 +156,14 @@ function(context, cls, data){
 				})
 				.click(click)
 				.on('contextmenu', menu)
-				.css(!usable ?
-						(unusable_draw == 'hidden' ? 
-							{display: 'none'}
-						: {})
-					: {}))
+				// handle unusable drawing...
+				.run(function(){
+					!usable 
+						&& unusable_draw == 'hidden'
+						&& this.css({display: 'none'})
+					!usable 
+						&& unusable_draw == 'disabled'
+						&& this[0].setAttribute('disabled', '') }))
 	})
 
 	controls
@@ -3094,7 +3105,7 @@ var ButtonsActions = actions.Actions({
 	config: {
 		// can be:
 		// 	'hidden'	- draw hidden
-		// 	'disabled'	- draw disabled (not implemented)
+		// 	'disabled'	- draw disabled (XXX needs propper CSS)
 		// 	'none'		- do not draw
 		// 	'visible'	- force draw
 		//
