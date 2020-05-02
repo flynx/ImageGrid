@@ -362,7 +362,9 @@ var BrowserHostActions = actions.Actions({
 	set title(value){
 		$('title').text(value) },
 
-	// XXX add handler to toggle app button view -- or use the propper feature...
+	// XXX this makes document.body fullscreen as expanding .dom breaks 
+	// 		aligning -- this might be a sign that we are not placing 
+	// 		some things relative to .dom...
 	toggleFullScreen: ['Window/Full screen mode',
 		toggler.CSSClassToggler(
 			function(){ return document.body }, 
@@ -371,7 +373,7 @@ var BrowserHostActions = actions.Actions({
 				var that = this
 
 				// get current state...
-				var state = document.fullscreen ? 'on' : 'off'
+				var state = document.fullscreenElement ? 'on' : 'off'
 
 				// change the state only if the target state is not the same
 				// as the current state...
@@ -385,6 +387,7 @@ var BrowserHostActions = actions.Actions({
 						document.exitFullscreen()
 						// XXX id document.body the right scope here???
 						// 		...this.dom[0] seems to break alignment...
+						//: this.dom[0].requestFullscreen()
 						: document.body.requestFullscreen()
 
 					setTimeout(function(){ 

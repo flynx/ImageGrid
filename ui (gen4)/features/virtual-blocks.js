@@ -36,7 +36,7 @@ var VirtualBlocksActions = actions.Actions({
 		var that = this
 		return this.data.order
 			.filter(function(gid){ 
-				img = that.images[gid] || {}
+				var img = that.images[gid] || {}
 				return img.type == 'virtual' }) },
 
 	// construction of new "virtual images"...
