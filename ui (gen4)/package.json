@@ -29,11 +29,11 @@
     "guarantee-events": "^1.0.0",
     "ig-actions": "^3.24.10",
     "ig-features": "^3.4.2",
-    "ig-object": "^2.7.2",
+    "ig-object": "^3.0.0",
     "moment": "^2.25.1",
     "requirejs": "^2.3.6",
     "requirejs-plugins": "^1.0.2",
-    "sharp": "^0.22.1",
+    "sharp": "*",
     "strip-json-comments": "^2.0.1",
     "v8-compile-cache": "^2.1.0",
     "wildglob": "^0.1.1"
