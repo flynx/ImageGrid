@@ -1069,9 +1069,7 @@ object.Constructor('BaseRenderer', {
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 var TextRenderer =
 module.TextRenderer = 
-object.Constructor('TextRenderer', {
-	__proto__: BaseRenderer.prototype,
-
+object.Constructor('TextRenderer', BaseRenderer, {
 	// always render...
 	isRendered: function(){ return false },
 
@@ -1102,9 +1100,7 @@ object.Constructor('TextRenderer', {
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 var PathRenderer =
 module.PathRenderer = 
-object.Constructor('PathRenderer', {
-	__proto__: TextRenderer.prototype,
-
+object.Constructor('PathRenderer', TextRenderer, {
 	// always render...
 	isRendered: function(){ return false },
 
@@ -1132,8 +1128,7 @@ object.Constructor('PathRenderer', {
 //
 var BrowserEvent =
 module.BrowserEvent = 
-object.Constructor('BrowserEvent', 
-{
+object.Constructor('BrowserEvent', {
 	// event name...
 	name: undefined,
 
@@ -4158,8 +4153,6 @@ module.KEYBOARD_CONFIG = {
 // Item...
 
 var HTMLItemClassPrototype = {
-	__proto__: BaseItem,
-
 	text: function(elem){
 		var txt = object.parentCall(HTMLItem.text, this, elem)
 		return txt != null ?
@@ -4177,8 +4170,6 @@ var HTMLItemClassPrototype = {
 // 		auto-update an item on prop change???
 // XXX problems with writing .dom / .elem, needs revision...
 var HTMLItemPrototype = {
-	__proto__: BaseItem.prototype,
-
 	__dom: undefined,
 	get dom(){
 		return this.__dom },
@@ -4225,7 +4216,7 @@ var HTMLItemPrototype = {
 
 var HTMLItem = 
 module.HTMLItem = 
-object.Constructor('HTMLItem', 
+object.Constructor('HTMLItem', BaseItem,
 	HTMLItemClassPrototype,
 	HTMLItemPrototype)
 
@@ -4344,9 +4335,7 @@ var updateElemClass = function(action, cls, handler){
 // XXX HACK: see .nest(..)
 var HTMLRenderer =
 module.HTMLRenderer =
-object.Constructor('HTMLRenderer', {
-	__proto__: BaseRenderer.prototype,
-
+object.Constructor('HTMLRenderer', BaseRenderer, {
 	isRendered: function(){ 
 		return !!this.root.dom },
 
@@ -4947,15 +4936,13 @@ object.Constructor('HTMLRenderer', {
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 // HTML Browser...
 
-var HTMLBrowserClassPrototype = {
-	__proto__: BaseBrowser, }
+var HTMLBrowserClassPrototype = {}
 
 // XXX render of nested lists does not affect the parent list(s)...
 // 		...need to render lists and items both as a whole or independently...
 // XXX need a strategy to update the DOM -- i.e. add/remove nodes for 
 // 		partial rendering instead of full DOM replacement...
 var HTMLBrowserPrototype = {
-	__proto__: BaseBrowser.prototype,
 	__item__: HTMLItem,
 	__renderer__: HTMLRenderer,
 
@@ -5547,8 +5534,9 @@ var HTMLBrowserPrototype = {
 var HTMLBrowser = 
 module.HTMLBrowser = 
 object.Constructor('HTMLBrowser', 
-		HTMLBrowserClassPrototype, 
-		HTMLBrowserPrototype)
+	BaseBrowser,
+	HTMLBrowserClassPrototype, 
+	HTMLBrowserPrototype)
 
 
 
