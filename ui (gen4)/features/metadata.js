@@ -20,7 +20,7 @@ if(typeof(process) != 'undefined'){
 	try {
 		// do this only if browser is loaded...
 		var graph = window != null ?
-			requirejs('experiments/ig-image-graph-obj')
+			requirejs('lib/components/ig-image-graph')
 			: null
 	} catch(e){}
 }
@@ -346,7 +346,7 @@ var MetadataUIActions = actions.Actions({
 		'metadata-graph': true,
 		'metadata-graph-config': {
 			graph: 'waveform',
-			mode: 'color',
+			mode: 'luminance',
 		},
 	},
 
@@ -408,13 +408,17 @@ var MetadataUIActions = actions.Actions({
 							that.images.getBestPreview(gid, size || 300, null, true).url
 							: that.getImagePath(gid)
 						var elem = this.graph = 
-								this.graph ?
-									Object.assign(this.graph, config)
-									: graph.makeImageGraph(url, config)
+							Object.assign(
+								this.graph 
+									|| document.createElement('ig-image-graph'), 
+								config)
 						Object.assign(elem.style, {
 							width: '500px',
 							height: '200px',
 						})
+						// delay drawing a bit...
+						setTimeout(function(){
+							elem.src = url }, 0)
 						return elem }
 
 					// preview...

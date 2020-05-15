@@ -1,12 +1,14 @@
-//---------------------------------------------------------------------
-//
-//
-// XXX still thinking on how to package this correctly...
-//
-//---------------------------------------------------------------------
+/**********************************************************************
+* 
+*
+*
+* XXX still thinking on how to package this correctly...
+* XXX add worker support...
+*
+**********************************************************************/
 ((typeof define)[0]=='u'?function(f){module.exports=f(require)}:define)
 (function(require){ var module={} // make module AMD/node compatible...
-//---------------------------------------------------------------------
+/*********************************************************************/
 
 var object = require('lib/object')
 
@@ -249,7 +251,7 @@ function(img, canvas, mode, color){
 //---------------------------------------------------------------------
 // Custom element...
 
-igImageGraph_template = `
+var igImageGraph_template = `
 <style>
 	:host {
 		position: relative;
@@ -259,13 +261,17 @@ igImageGraph_template = `
 
 		width: attr(image-width);
 		height: attr(graph-height);
+
+		padding-top: 16px;
+		padding-bottom: 10px;
 	}
 	:host canvas {
 		box-sizing: border-box;
 		width: 100%;
 		height: 100%;
 
-		border: 2px solid gray;
+		border-top: 1px dashed rgba(255, 255, 255, 0.2);
+		border-bottom: 1px dashed rgba(255, 255, 255, 0.2);
 	}
 	:host .controls {
 		display: inline-block;
@@ -280,6 +286,7 @@ igImageGraph_template = `
 		color: white;
 		opacity: 0.7;
 		float: right;
+		font-size: 12px;
 	}
 	:host .controls button.current {
 		text-decoration: underline;
