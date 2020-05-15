@@ -4,9 +4,19 @@
 // XXX still thinking on how to package this correctly...
 //
 //---------------------------------------------------------------------
+((typeof define)[0]=='u'?function(f){module.exports=f(require)}:define)
+(function(require){ var module={} // make module AMD/node compatible...
+//---------------------------------------------------------------------
+
+var object = require('lib/object')
+
+
+
+//---------------------------------------------------------------------
 // image manipulation basics...
 
-var Filters = {
+var Filters = 
+module.Filters = {
 	makeCanvas: function(w, h){
 		var c = document.createElement('canvas')
 		c.width = w
@@ -213,14 +223,23 @@ var Filters = {
 //---------------------------------------------------------------------
 // helpers...
 
-var WAVEFORM_SIZE = 1000
-var waveform = function(img, canvas, mode, color){
+var WAVEFORM_SIZE =
+module.WAVEFORM_SIZE = 1000
+
+var waveform = 
+module.waveform = 
+function(img, canvas, mode, color){
 	var d = Filters.getPixels(img, WAVEFORM_SIZE)
 	var w = Filters.waveform(d, mode, color)
 	Filters.setPixels(canvas, w) }
 
-var HISTOGRAM_SIZE = 1000
-var histogram = function(img, canvas, mode, color){
+
+var HISTOGRAM_SIZE =
+module.HISTOGRAM_SIZE = 1000
+
+var histogram = 
+module.histogram = 
+function(img, canvas, mode, color){
 	var d = Filters.getPixels(img)
 	var w = Filters.histogram(d, mode, color)
 	Filters.setPixels(canvas, w) }
@@ -274,7 +293,9 @@ igImageGraph_template = `
 <div class="controls"></div>
 `
 
+
 var igImageGraph = 
+module.igImageGraph = 
 object.Constructor('igImageGraph', HTMLElement, {
 	template: 'ig-image-graph',
 	graphs: {
@@ -324,6 +345,7 @@ object.Constructor('igImageGraph', HTMLElement, {
 		this.update() },
 	get src(){
 		return this.getAttribute('src') },
+	// XXX make this async...
 	set src(value){
 		var that = this
 		this.__update_handler = this.__update_handler 
@@ -425,6 +447,8 @@ object.Constructor('igImageGraph', HTMLElement, {
 			.forEach(function(button){
 				controls.appendChild(button) })
 		return this },
+	// XXX add option to update graph in a worker...
+	// XXX show a spinner while updating...
 	update: function(){
 		var that = this
 		var mode = this.mode
@@ -458,7 +482,11 @@ window.customElements.define('ig-image-graph', igImageGraph)
 
 
 
+//---------------------------------------------------------------------
+// helper...
+
 var makeImageGraph = 
+module.makeImageGraph = 
 function(img, options){
 	var g = document.createElement('ig-image-graph')
 	Object.assign(g, 
@@ -469,5 +497,5 @@ function(img, options){
 
 
 
-//---------------------------------------------------------------------
-//                                                 vim:set ts=4 sw=4 :
+/**********************************************************************
+* vim:set ts=4 sw=4 :                               */ return module })

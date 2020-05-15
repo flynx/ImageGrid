@@ -14,6 +14,15 @@ if(typeof(process) != 'undefined'){
 	var fs = requirejs('fs')
 	var path = requirejs('path')
 	var exiftool = requirejs('exiftool')
+
+	// XXX EXPERIMENTAL: graph...
+	// XXX move this to ./components/
+	try {
+		// do this only if browser is loaded...
+		var graph = window != null ?
+			requirejs('experiments/ig-image-graph-obj')
+			: null
+	} catch(e){}
 }
 
 
@@ -332,6 +341,13 @@ var MetadataUIActions = actions.Actions({
 
 			'Mime Type',
 		],
+
+		// XXX EXPERIMENTAL: graph...
+		'metadata-graph': true,
+		'metadata-graph-config': {
+			graph: 'waveform',
+			mode: 'color',
+		},
 	},
 
 	toggleMetadataAutoSelect: ['Interface/Metadata value auto-select',
@@ -380,10 +396,36 @@ var MetadataUIActions = actions.Actions({
 									p.style.width = preview_size +'px'
 								},
 							}) }
+					// XXX EXPERIMENTAL: graph
+					// XXX make this actually update the elem if it exists...
+					// XXX do the calculations in a worker...
+					make.dialog.updateGraph = function(gid, size){
+						if(!graph || !that.config['metadata-graph']){
+							return }
+						gid = that.data.getImage(gid || 'current')
+						var config = that.config['metadata-graph-config'] || {}
+						var url = that.images[gid].preview ?
+							that.images.getBestPreview(gid, size || 300, null, true).url
+							: that.getImagePath(gid)
+						var elem = this.graph = 
+								this.graph ?
+									Object.assign(this.graph, config)
+									: graph.makeImageGraph(url, config)
+						Object.assign(elem.style, {
+							width: '500px',
+							height: '200px',
+						})
+						return elem }
 
 					// preview...
 					make(['Preview:', this.updatePreview()], 
 						{ cls: 'preview' })
+					// XXX EXPERIMENTAL: graph
+					// graph...
+					graph 
+						&& that.config['metadata-graph']
+						&& make(['Graph:', $(this.updateGraph())], 
+							{ cls: 'preview' })
 					// NOTE: these are 1-based and not 0-based...
 					make(['Position: ', 
 						$('<small>')
@@ -484,8 +526,16 @@ var MetadataUIActions = actions.Actions({
 					cls: 'table-view metadata-view',
 					showDisabled: false,
 				})
-				.on('attached', function(){ this.updatePreview() })
-				.on('update', function(){ this.updatePreview() })
+				.on('attached', function(){ 
+					this.updatePreview() 
+					graph
+						&& this.updateGraph()
+				})
+				.on('update', function(){ 
+					this.updatePreview() 
+					graph
+						&& this.updateGraph()
+				})
 				// select value of current item...
 				.on('select', function(evt, elem){
 					that.config['metadata-auto-select-mode'] == 'on select'
@@ -495,6 +545,14 @@ var MetadataUIActions = actions.Actions({
 					// XXX
 
 					that.refresh(image)
+
+					// XXX EXPERIMENTAL: graph...
+					// save graph settings...
+					this.graph
+						&& (that.config['metadata-graph-config'] = {
+							graph: this.graph.graph,
+							mode: this.graph.mode,
+						})
 				})
 		})],
 
