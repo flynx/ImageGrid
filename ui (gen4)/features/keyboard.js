@@ -1247,6 +1247,7 @@ var KeyboardUIActions = actions.Actions({
 							this.close()
 						}
 						this.keyboard.handler('General', 'e', 'editKeys')
+						this.keyboard.handler('General', 'F4', 'editKeys')
 					}
 				}) })],
 	// XXX this does not handle the passed container protocol...
