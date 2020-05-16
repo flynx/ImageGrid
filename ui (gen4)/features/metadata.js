@@ -397,23 +397,48 @@ var MetadataUIActions = actions.Actions({
 								},
 							}) }
 					// XXX EXPERIMENTAL: graph
-					// XXX make this actually update the elem if it exists...
 					// XXX do the calculations in a worker...
 					make.dialog.updateGraph = function(gid, size){
+						// prevent from updating too often...
+						if(this.__graph_updating){
+							// request an update...
+							this.__graph_updating = [gid, size]
+							return this.graph }
+						this.__graph_updating = true
+						setTimeout(function(){
+							// update was requested while we were out -> update now...
+							this.__graph_updating instanceof Array
+								&& this.updateGraph(...this.__graph_updating)
+							delete this.__graph_updating }.bind(this), 200)
+
+						// graph disabled...
 						if(!graph || !that.config['metadata-graph']){
 							return }
+
+						// data...
 						gid = that.data.getImage(gid || 'current')
 						var config = that.config['metadata-graph-config'] || {}
 						var url = that.images[gid].preview ?
 							that.images.getBestPreview(gid, size || 300, null, true).url
 							: that.getImagePath(gid)
+						var flipped = (that.images[gid] || {}).flipped || []
+						flipped = flipped.length == 1 ? 
+								flipped[0]
+							: flipped.length == 2 ?
+								'both'
+							: null
+
+						// build the element...
 						var elem = this.graph = 
 							Object.assign(
 								this.graph 
 									|| document.createElement('ig-image-graph'), 
 								config,
 								// orientation....
-								{orientation: (that.images[gid] || {}).orientation || 0})
+								{
+									orientation: (that.images[gid] || {}).orientation || 0,
+									flipped: flipped, 
+								})
 						Object.assign(elem.style, {
 							width: '500px',
 							height: '200px',

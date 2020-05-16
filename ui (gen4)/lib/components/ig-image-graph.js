@@ -2,7 +2,6 @@
 * 
 *
 *
-* XXX still thinking on how to package this correctly...
 * XXX add worker support...
 *
 **********************************************************************/
@@ -47,6 +46,42 @@ module.Filters = {
 		var context = c.getContext('2d')
 		context.putImageData(data, 0, 0)
 	},
+
+	// get image pixels normalized to a square of size s, rotated and flipped...
+	//
+	// NOTE: flip is applied to the image before it is rotated... (XXX ???)
+	getNormalizedPixels: function(img, s, rotate, flip){
+		s = s || Math.max(img.width, img.height)
+		rotate = rotate || 0
+
+		;(rotate == 90 || rotate == 270)
+			&& (flip = flip == 'horizontal' ?
+					'vertical'
+				: flip == 'vertical' ?
+					'horizontal'
+				: flip)
+		var [h, v] = flip == 'both' ?
+				[-1, -1]
+			: flip == 'horizontal' ?
+				[-1, 1]
+			: flip == 'vertical' ?
+				[1, -1]
+			: [1, 1]
+
+		var c = this.makeCanvas(s, s)
+		var context = c.getContext('2d')
+		context.rect(0, 0, s, s)
+		context.fillStyle = 'black'
+		context.fill()
+
+		if(img){
+			context.setTransform(h*1, 0, 0, v*1, s/2, s/2)
+			context.rotate(rotate * Math.PI/180)
+			context.drawImage(img, -s/2, -s/2, s, s)
+		}
+
+		return context.getImageData(0, 0, s, s)
+	}, 
 
 	filterImage: function(filter, image, var_args){
 		var args = [this.getPixels(image)]
@@ -229,14 +264,13 @@ module.Filters = {
 var WAVEFORM_SIZE =
 module.WAVEFORM_SIZE = 1000
 
-// XXX need to account for image rotation...
 var waveform = 
 module.waveform = 
-function(img, canvas, mode, color, rotation){
-	// XXX rotate...
-	var d = Filters.getPixels(img, WAVEFORM_SIZE)
+function(img, canvas, mode, color, rotate, flip){
+	var d = Filters.getNormalizedPixels(img, WAVEFORM_SIZE, rotate, flip)
 	var w = Filters.waveform(d, mode, color)
-	Filters.setPixels(canvas, w) }
+	Filters.setPixels(canvas, w) 
+}
 
 
 var HISTOGRAM_SIZE =
@@ -339,6 +373,7 @@ object.Constructor('igImageGraph', HTMLElement, {
 			'color',
 			'graph',
 			'orientation',
+			'flipped',
 			'nocontrols',
 		]},
 	attributeChangedCallback: function(name, from, to){
@@ -391,6 +426,7 @@ object.Constructor('igImageGraph', HTMLElement, {
 		value === undefined
 			&& this.removeAttribute('color') 
 		this.update() },
+
 	get orientation(){
 		return this.getAttribute('orientation') || 0 },
 	set orientation(value){
@@ -400,6 +436,16 @@ object.Constructor('igImageGraph', HTMLElement, {
 		value == null
 			&& this.removeAttribute('orientation') 
 		this.update() },
+	get flipped(){
+		return this.getAttribute('flipped') },
+	set flipped(value){
+		;(['vertical', 'horizontal', 'both'].includes(value)
+				|| typeof(value) == typeof(123))
+			&& this.setAttribute('flipped', value) 
+		value == null
+			&& this.removeAttribute('flipped') 
+		this.update() },
+
 	get nocontrols(){
 		return this.getAttribute('nocontrols') != null },
 	set nocontrols(value){
@@ -495,7 +541,11 @@ object.Constructor('igImageGraph', HTMLElement, {
 				{top: 180, left: 90, bottom: 0, right: 270}[orientation] 
 				|| orientation)
 
-			graph(this.image, canvas, this.mode, this.color, orientation)
+			graph(this.image, canvas, 
+				this.mode, 
+				this.color, 
+				Math.round(orientation),
+				this.flipped)
 
 		} else if(this.src){
 			this.src = this.src

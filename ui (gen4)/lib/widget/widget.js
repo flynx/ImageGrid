@@ -95,9 +95,8 @@ function(){
 /*********************************************************************/
 
 var WidgetClassPrototype = {
-	//make: function(obj, client, options){
-	//	console.error('Widget must define a .make method.')
-	//},
+	make: function(obj, client, options){
+		throw new Error('Widget must define a .make method.') },
 }
 
 
