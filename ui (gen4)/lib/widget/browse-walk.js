@@ -97,9 +97,7 @@ function(path, make){
 				resolve(fs.statSync(path))
 			} catch(err){
 				reject(err)
-			}
-		})
-	}
+			} }) }
 
 	/*
 	var stat = function(path){
@@ -129,9 +127,7 @@ function(path, make){
 							if(drive == 'Z'){
 								resolve()
 							}
-						})
-			})
-		})
+						}) }) })
 
 	// list dirs...
 	} else {
@@ -150,8 +146,7 @@ function(path, make){
 						elem.attr('count', lst.length)
 					})
 			}
-			return elem
-		}
+			return elem }
 
 		return new Promise(function(resolve, reject){
 			// XXX should this be a promise???
@@ -291,9 +286,9 @@ var listDir = module.listDir = listDirfs
 // XXX for some reason pop does not focus the container dir correctly...
 // 		...this is potentially due to the list not being ready yet...
 // XXX this should be smarter and support other URL schemes...
-var WalkPrototype = {
-	__proto__: browse.Browser.prototype,
-
+var Walk = 
+module.Walk = 
+object.Constructor('Walk', browse.Browser, {
 	options: {
 		__proto__: browse.Browser.prototype.options,
 
@@ -346,33 +341,20 @@ var WalkPrototype = {
 		cur && this.select(cur)
 		return this
 	},
-}
-
-
-var Walk = 
-module.Walk = 
-object.Constructor('Walk', 
-		browse.Browser, 
-		WalkPrototype)
+})
 
 
 var makeWalk = 
 module.makeWalk = function(elem, path, fileCountPattern, rest){
-	var opts = {}
-	if(rest){
-		for(var k in rest){
-			opts[k] = rest[k]
-		}
-	}
-
-	opts.path = path
-
-	opts.fileCountPattern = fileCountPattern == null ?
-		WalkPrototype.options.fileCountPattern
-		: fileCountPattern
-
-	return Walk(elem, opts)
-}
+	return Walk(elem,
+		Object.assign({}, 
+			rest, 
+			{
+				path: path,
+				fileCountPattern: fileCountPattern == null ?
+					Walk.prototype.options.fileCountPattern
+					: fileCountPattern,
+			})) }
 
 
 

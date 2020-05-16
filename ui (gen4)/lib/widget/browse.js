@@ -3284,21 +3284,18 @@ var BrowserPrototype = {
 	// Toggle filter view mode...
 	toggleFilterViewMode: function(){
 		this.dom.toggleClass('show-filtered-out')
-		return this
-	},
+		return this },
 
 	// XXX should this be a toggler???
 	disableElements: function(pattern){
 		this.filter(pattern, false)
 			.addClass('disabled')
 			.removeClass('selected')
-		return this
-	},
+		return this },
 	enableElements: function(pattern){
 		this.filter(pattern, false)
 			.removeClass('disabled')
-		return this
-	},
+		return this },
 
 	// Select an element from current list...
 	//
@@ -4040,15 +4037,17 @@ var BrowserPrototype = {
 	list: function(path, make){
 		path = path || this.path
 		var m = this.options.list
-		return m ? m.apply(this, arguments) : []
-	},
+		return m ? 
+			m.apply(this, arguments) 
+			: [] },
 
 	// Run a function in the context of the object...
 	//
 	run: function(func){
 		var res = func ? func.call(this) : undefined
-		return res === undefined ? this : res
-	},
+		return res === undefined ? 
+			this 
+			: res },
 
 	// XXX need to get a container -- UI widget API....
 	// XXX paste does not work on IE yet...
@@ -4056,7 +4055,7 @@ var BrowserPrototype = {
 	__init__: function(parent, options){
 		var that = this
 
-		object.parent(BrowserPrototype.__init__, this).call(this, parent, options)
+		object.parentCall(Browser.prototype.__init__, this, parent, options)
 
 		var dom = this.dom
 		options = this.options
@@ -4110,9 +4109,8 @@ var BrowserPrototype = {
 			*/
 
 		// attach to parent...
-		if(parent != null){
-			parent.append(dom)
-		}
+		parent != null
+			&& parent.append(dom)
 
 		// load the initial state...
 		// NOTE: path can be a number so simply or-ing here is a bad idea...
@@ -4134,11 +4132,13 @@ var BrowserPrototype = {
 					// XXX not sure if we need this...
 					// 		...currently this is used only when path is 
 					// 		a list and we need to also select an item...
-					selected ? that.select(selected) 
-						// we have a manually selected item but that was 
-						// not aligned...
-						: that.selected ? that.select()
-						: null })
+					selected ? 
+						that.select(selected) 
+					// we have a manually selected item but that was 
+					// not aligned...
+					: that.selected ? 
+						that.select()
+					: null })
 	},
 }
 
@@ -4146,40 +4146,31 @@ var BrowserPrototype = {
 var Browser = 
 module.Browser = 
 object.Constructor('Browser', 
+		widget.Widget,
 		BrowserClassPrototype, 
 		BrowserPrototype)
-
-
-// inherit from widget...
-Browser.prototype.__proto__ = widget.Widget.prototype
 
 
 
 /*********************************************************************/
 
-var ListerPrototype = Object.create(Browser.prototype)
-ListerPrototype.options = {
-	pathPrefix: '', 
-	fullPathEdit: false,
-	traversable: false,
-	flat: true,
-
-	// XXX not sure if we need these...
-	skipDisabledItems: false,
-	// NOTE: to disable this set it to false or null
-	isItemDisabled: '^- ',
-}
-// XXX should we inherit or copy options???
-// 		...inheriting might pose problems with deleting values reverting
-// 		them to default instead of nulling them and mutable options might
-// 		get overwritten...
-ListerPrototype.options.__proto__ = Browser.prototype.options
-
 var Lister = 
 module.Lister = 
-object.Constructor('Lister', 
-		BrowserClassPrototype, 
-		ListerPrototype)
+object.Constructor('Lister', Browser, {
+	options: {
+		__proto__: Browser.prototype.options,
+
+		pathPrefix: '', 
+		fullPathEdit: false,
+		traversable: false,
+		flat: true,
+
+		// XXX not sure if we need these...
+		skipDisabledItems: false,
+		// NOTE: to disable this set it to false or null
+		isItemDisabled: '^- ',
+	},
+})
 
 
 // This is a shorthand for: new List(<elem>, { data: <list> })
@@ -4217,49 +4208,46 @@ module.makeLister = function(elem, lister, options){
 // 	
 // NOTE: this essentially a different default configuration of Browser...
 // NOTE: this is essentially a wrapper around make.List(...)
-var ListPrototype = Object.create(Browser.prototype)
-ListPrototype.options = {
-
-	pathPrefix: '', 
-	fullPathEdit: false,
-	traversable: false,
-	flat: true,
-
-	// XXX not sure if we need these...
-	skipDisabledItems: false,
-	// NOTE: to disable this set it to false or null
-	isItemDisabled: '^- ',
-
-	list: function(path, make){
-		var that = this
-		var data = this.options.data
-
-		var res = []
-
-		// this is here to get the modified titles...
-		var _make = function(txt){
-			res.push(txt)
-			return make.apply(make, arguments)
-		}
-		_make.__proto__ = make
-
-		// build the list...
-		_make
-			.List(data, {
-				isItemDisabled: this.options.isItemDisabled,
-				skipDisabledItems: this.options.skipDisabledItems,
-			})
-
-		return res
-	},
-}
-ListPrototype.options.__proto__ = Browser.prototype.options
-
 var List = 
 module.List = 
-object.Constructor('List', 
-		BrowserClassPrototype, 
-		ListPrototype)
+object.Constructor('List', Browser, {
+	options: {
+		__proto__: Browser.prototype.options,
+
+		pathPrefix: '', 
+		fullPathEdit: false,
+		traversable: false,
+		flat: true,
+
+		// XXX not sure if we need these...
+		skipDisabledItems: false,
+		// NOTE: to disable this set it to false or null
+		isItemDisabled: '^- ',
+
+		list: function(path, make){
+			var that = this
+			var data = this.options.data
+
+			var res = []
+
+			// this is here to get the modified titles...
+			var _make = function(txt){
+				res.push(txt)
+				return make.apply(make, arguments)
+			}
+			_make.__proto__ = make
+
+			// build the list...
+			_make
+				.List(data, {
+					isItemDisabled: this.options.isItemDisabled,
+					skipDisabledItems: this.options.skipDisabledItems,
+				})
+
+			return res
+		},
+	},
+})
 
 
 // This is a shorthand for: new List(<elem>, { data: <list> })
@@ -4378,151 +4366,149 @@ function(list, options){
 // NOTE: currently only trailing '*' are supported.
 //
 // XXX add support for '*' and '**' glob patterns...
-var PathListPrototype = Object.create(Browser.prototype)
-PathListPrototype.options = {
-
-	fullPathEdit: true,
-	traversable: true,
-	flat: false,
-
-	// XXX not sure if we need these...
-	skipDisabledItems: false,
-	// NOTE: to disable this set it to false or null
-	isItemDisabled: '^- ',
-
-	list: function(path, make){
-		var that = this
-		var data = this.options.data
-		var keys = data.constructor == Array ? data : Object.keys(data)
-		var pattern = this.options.isItemDisabled 
-			&& RegExp(this.options.isItemDisabled)
-
-		if(pattern && this.options.skipDisabledItems){
-			keys = keys.filter(function(k){ return !pattern.test(k) })
-		}
-
-		var visited = []
-
-		// match path elements accounting for patterns...
-		//
-		// Supported patterns:
-		// 	A		- matches A exactly
-		// 	A|B		- matches either A or B
-		// 	shortcut marker
-		// 			- see .options.itemShortcutMarker
-		//
-		// NOTE: only the second argument is checked for '|' patterns...
-		var match = function(a, path){
-			var marker = that.options.itemShortcutMarker 
-			marker = marker && RegExp(marker, 'g')
-			path = marker ? path.replace(marker, '$1') : path
-			// NOTE: might be good to make this recursive when expanding
-			// 		pattern support...
-			return a
-					.split('|')
-					.map(function(e){ 
-						return marker ? e.replace(marker, '$1') : e })
-					.filter(function(e){ 
-						return e == path })
-					.length > 0 }
-
-		// get the '*' listers...
-		var lister = keys
-			.filter(function(k){ 
-				return k.trim().split(/[\\\/]+/g).pop() == '*' })
-			.filter(function(k){
-				k = k.split(/[\\\/]+/)
-					// remove the trailing '*'...
-					.slice(0, -1)
-
-				// do the match...
-				return k.length <= path.length 
-					&& k.filter(function(e, i){ 
-							return e != '*' && !match(e, path[i])
-						}).length == 0 })
-			.sort(function(a, b){ return a.length - b.length})
-			.pop()
-
-		// use the custom lister (defined by trailing '*')...
-		if(data !== keys && lister){
-			return data[lister].call(this, this.options.pathPrefix + path.join('/'), make)
-
-		// list via provided paths...
-		} else {
-			return keys
-				.map(function(k){
-					var disable = null
-					if(pattern){
-						var n = k.replace(pattern, '')
-						disable = n != k
-						k = n
-					}
-
-					var kp = k.split(/[\\\/]+/g)
-					kp[0] == '' && kp.shift()
-
-					// see if we have a star...
-					var star = kp.slice(-1)[0] == '*'
-					star && kp.pop()
-
-					// get and check current path, continue if relevant...
-					var p = kp.splice(0, path.length)
-					if(kp.length == 0 
-							|| p.length < path.length
-							|| p.filter(function(e, i){ return !match(e, path[i]) }).length > 0){
-						return false
-					}
-
-					// get current path element if one exists and we did not create it already...
-					cur = kp.shift()
-					if(cur == undefined){
-						return false
-					}
-
-					cur.split('|')
-						// skip empty path items...
-						// NOTE: this avoids creating empty items in cases
-						// 		of paths ending with '/' or containing '//'
-						.filter(function(e){ return e.trim() != '' })
-						.forEach(function(cur){
-							if(visited.indexOf(cur) >= 0){
-								// set element to traversable if we visit it again...
-								if(kp.length > 0){
-									that.filter(cur, false)
-										.removeClass('not-traversable')
-										//.removeClass('disabled')
-								}
-								return false
-							}
-							visited.push(cur)
-
-							// build the element....
-							var e = make(cur,
-								star || kp.length > 0, 
-								// XXX this might still disable a dir...
-								!star && kp.length == 0 && disable)
-
-							// setup handlers...
-							if(!star && data !== keys && kp.length == 0 && data[k] != null){
-								e.on('open', function(){ 
-									return that.options.data[k].apply(this, arguments)
-								})
-							}
-						})
-
-					return cur
-				})
-				.filter(function(e){ return e !== false })
-		}
-	},
-}
-PathListPrototype.options.__proto__ = Browser.prototype.options
-
 var PathList = 
 module.PathList = 
-object.Constructor('PathList', 
-		BrowserClassPrototype, 
-		PathListPrototype)
+object.Constructor('PathList', Browser, {
+	options: {
+		__proto__: Browser.prototype.options,
+
+		fullPathEdit: true,
+		traversable: true,
+		flat: false,
+
+		// XXX not sure if we need these...
+		skipDisabledItems: false,
+		// NOTE: to disable this set it to false or null
+		isItemDisabled: '^- ',
+
+		list: function(path, make){
+			var that = this
+			var data = this.options.data
+			var keys = data.constructor == Array ? data : Object.keys(data)
+			var pattern = this.options.isItemDisabled 
+				&& RegExp(this.options.isItemDisabled)
+
+			if(pattern && this.options.skipDisabledItems){
+				keys = keys.filter(function(k){ return !pattern.test(k) })
+			}
+
+			var visited = []
+
+			// match path elements accounting for patterns...
+			//
+			// Supported patterns:
+			// 	A		- matches A exactly
+			// 	A|B		- matches either A or B
+			// 	shortcut marker
+			// 			- see .options.itemShortcutMarker
+			//
+			// NOTE: only the second argument is checked for '|' patterns...
+			var match = function(a, path){
+				var marker = that.options.itemShortcutMarker 
+				marker = marker && RegExp(marker, 'g')
+				path = marker ? path.replace(marker, '$1') : path
+				// NOTE: might be good to make this recursive when expanding
+				// 		pattern support...
+				return a
+						.split('|')
+						.map(function(e){ 
+							return marker ? e.replace(marker, '$1') : e })
+						.filter(function(e){ 
+							return e == path })
+						.length > 0 }
+
+			// get the '*' listers...
+			var lister = keys
+				.filter(function(k){ 
+					return k.trim().split(/[\\\/]+/g).pop() == '*' })
+				.filter(function(k){
+					k = k.split(/[\\\/]+/)
+						// remove the trailing '*'...
+						.slice(0, -1)
+
+					// do the match...
+					return k.length <= path.length 
+						&& k.filter(function(e, i){ 
+								return e != '*' && !match(e, path[i])
+							}).length == 0 })
+				.sort(function(a, b){ return a.length - b.length})
+				.pop()
+
+			// use the custom lister (defined by trailing '*')...
+			if(data !== keys && lister){
+				return data[lister].call(this, this.options.pathPrefix + path.join('/'), make)
+
+			// list via provided paths...
+			} else {
+				return keys
+					.map(function(k){
+						var disable = null
+						if(pattern){
+							var n = k.replace(pattern, '')
+							disable = n != k
+							k = n
+						}
+
+						var kp = k.split(/[\\\/]+/g)
+						kp[0] == '' && kp.shift()
+
+						// see if we have a star...
+						var star = kp.slice(-1)[0] == '*'
+						star && kp.pop()
+
+						// get and check current path, continue if relevant...
+						var p = kp.splice(0, path.length)
+						if(kp.length == 0 
+								|| p.length < path.length
+								|| p.filter(function(e, i){ return !match(e, path[i]) }).length > 0){
+							return false
+						}
+
+						// get current path element if one exists and we did not create it already...
+						cur = kp.shift()
+						if(cur == undefined){
+							return false
+						}
+
+						cur.split('|')
+							// skip empty path items...
+							// NOTE: this avoids creating empty items in cases
+							// 		of paths ending with '/' or containing '//'
+							.filter(function(e){ return e.trim() != '' })
+							.forEach(function(cur){
+								if(visited.indexOf(cur) >= 0){
+									// set element to traversable if we visit it again...
+									if(kp.length > 0){
+										that.filter(cur, false)
+											.removeClass('not-traversable')
+											//.removeClass('disabled')
+									}
+									return false
+								}
+								visited.push(cur)
+
+								// build the element....
+								var e = make(cur,
+									star || kp.length > 0, 
+									// XXX this might still disable a dir...
+									!star && kp.length == 0 && disable)
+
+								// setup handlers...
+								if(!star && data !== keys && kp.length == 0 && data[k] != null){
+									e.on('open', function(){ 
+										return that.options.data[k].apply(this, arguments)
+									})
+								}
+							})
+
+						return cur
+					})
+					.filter(function(e){ return e !== false })
+			}
+		},
+	},
+})
+
 
 var makePathList = 
 module.makePathList = makeBrowserMaker(PathList)

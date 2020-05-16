@@ -411,7 +411,9 @@ var MetadataUIActions = actions.Actions({
 							Object.assign(
 								this.graph 
 									|| document.createElement('ig-image-graph'), 
-								config)
+								config,
+								// orientation....
+								{orientation: (that.images[gid] || {}).orientation || 0})
 						Object.assign(elem.style, {
 							width: '500px',
 							height: '200px',

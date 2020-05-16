@@ -95,9 +95,9 @@ function(){
 /*********************************************************************/
 
 var WidgetClassPrototype = {
-	make: function(obj, client, options){
-		console.error('Widget must define a .make method.')
-	},
+	//make: function(obj, client, options){
+	//	console.error('Widget must define a .make method.')
+	//},
 }
 
 
@@ -168,14 +168,13 @@ var WidgetPrototype = {
 		var that = this
 
 		parent = this.parent = $(parent || 'body')
-		options = options || {}
 
 		this.keybindings = JSON.parse(JSON.stringify(this.keybindings))
 
 		// merge options...
-		var opts = Object.create(this.options)
-		Object.keys(options).forEach(function(n){ opts[n] = options[n] })
-		options = this.options = opts
+		options = this.options = Object.assign(
+			Object.create(this.options),
+			options || {})
 
 		// build the dom...
 		if(this.constructor.make){
@@ -203,13 +202,11 @@ var WidgetPrototype = {
 						this.keyboard,
 						options.logKeys,
 						this,
-						function(){ return this.options.keyboardRepeatPause }))
-		}
+						function(){ return this.options.keyboardRepeatPause })) }
 
-		if(this.options.nonPropagatedEvents != null){
-			this.on(this.options.nonPropagatedEvents.join(' '), 
+		this.options.nonPropagatedEvents != null
+			&& this.on(this.options.nonPropagatedEvents.join(' '), 
 				function(evt){ evt.stopPropagation() })
-		}
 
 		return this
 	},
@@ -253,7 +250,6 @@ var ContainerPrototype = {
 		var that = this
 
 		parent = this.parent = $(parent || 'body')
-		options = options || {}
 
 		this.keybindings = JSON.parse(JSON.stringify(this.keybindings))
 
@@ -261,9 +257,9 @@ var ContainerPrototype = {
 		client.parent = this
 
 		// merge options...
-		var opts = Object.create(this.options)
-		Object.keys(options).forEach(function(n){ opts[n] = options[n] })
-		options = this.options = opts
+		options = this.options = Object.assign(
+			Object.create(this.options),
+			options || {})
 
 		// build the dom...
 		if(this.constructor.make){
@@ -301,10 +297,10 @@ var ContainerPrototype = {
 var Container = 
 module.Container = 
 object.Constructor('Container', 
-		ContainerClassPrototype, 
-		ContainerPrototype)
+	Widget,
+	ContainerClassPrototype, 
+	ContainerPrototype)
 
-Container.prototype.__proto__ = Widget.prototype
 
 
 

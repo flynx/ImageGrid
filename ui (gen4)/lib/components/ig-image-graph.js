@@ -39,11 +39,11 @@ module.Filters = {
 		} else {
 			context.drawImage(img, 0, 0, w, h)
 		}
-		return context.getImageData(0,0,c.width,c.height)
+		return context.getImageData(0, 0, c.width, c.height)
 	},
 	setPixels: function(c, data, w, h){
-		c.width = data.width
-		c.height = data.height
+		w = c.width = w || data.width
+		h = c.height = h || data.height
 		var context = c.getContext('2d')
 		context.putImageData(data, 0, 0)
 	},
@@ -74,8 +74,9 @@ module.Filters = {
 		color = color || 'fill'
 		mode = mode || 'luminance'
 
-		var w = 255 
-		var h = 255 
+		var size = 255
+		var w = size 
+		var h = size
 
 		// output buffer...
 		var out = this.getPixels(null, w, h)
@@ -105,14 +106,14 @@ module.Filters = {
 					count[b*4+2] = (count[b*4+2] || 0) + 1 } }
 		}
 
-		var m = 255 / Math.max(...count.filter(function(){ return true }))
+		var m = size / Math.max(...count.filter(function(){ return true }))
 
 		var pos = function(i, value){
 			return (
 				// horizontal position...
 				i*4 
 				// value vertical offset...
-				+ (255-Math.round(value*m))*w*4) }
+				+ (size-Math.round(value*m))*w*4) }
 
 		// XXX would be nice to have an option to draw full columns...
 		count.forEach(function(v, i){
@@ -228,9 +229,11 @@ module.Filters = {
 var WAVEFORM_SIZE =
 module.WAVEFORM_SIZE = 1000
 
+// XXX need to account for image rotation...
 var waveform = 
 module.waveform = 
-function(img, canvas, mode, color){
+function(img, canvas, mode, color, rotation){
+	// XXX rotate...
 	var d = Filters.getPixels(img, WAVEFORM_SIZE)
 	var w = Filters.waveform(d, mode, color)
 	Filters.setPixels(canvas, w) }
@@ -334,8 +337,9 @@ object.Constructor('igImageGraph', HTMLElement, {
 			'src', 
 			'mode', 
 			'color',
-			'nocontrols',
 			'graph',
+			'orientation',
+			'nocontrols',
 		]},
 	attributeChangedCallback: function(name, from, to){
 		name == 'nocontrols'
@@ -386,6 +390,15 @@ object.Constructor('igImageGraph', HTMLElement, {
 			&& this.setAttribute('color', value) 
 		value === undefined
 			&& this.removeAttribute('color') 
+		this.update() },
+	get orientation(){
+		return this.getAttribute('orientation') || 0 },
+	set orientation(value){
+		;(['top', 'left', 'bottom', 'right'].includes(value)
+				|| typeof(value) == typeof(123))
+			&& this.setAttribute('orientation', value) 
+		value == null
+			&& this.removeAttribute('orientation') 
 		this.update() },
 	get nocontrols(){
 		return this.getAttribute('nocontrols') != null },
@@ -477,7 +490,12 @@ object.Constructor('igImageGraph', HTMLElement, {
 		var canvas = this.__shadow.querySelector('canvas')
 
 		if(this.image){
-			graph(this.image, canvas, this.mode, this.color)
+			var orientation = this.orientation
+			orientation = parseFloat(
+				{top: 180, left: 90, bottom: 0, right: 270}[orientation] 
+				|| orientation)
+
+			graph(this.image, canvas, this.mode, this.color, orientation)
 
 		} else if(this.src){
 			this.src = this.src
