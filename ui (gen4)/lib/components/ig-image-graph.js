@@ -487,8 +487,9 @@ object.Constructor('igImageGraph', HTMLElement, {
 					var button = document.createElement('button')
 					button.setAttribute('id', 'orientation-button')
 					button.classList.add('update')
-					//button.innerHTML = '&#9637;'
-					button.innerHTML = '&#8597;'
+					button.innerHTML = '&#129105;'
+					button.style.marginTop = '-2px'
+					//button.innerHTML = '&#8597;'
 					button.disabled = that.graph != 'waveform'
 					var o = that.orientation || 0
 					button.onclick = function(){ 
@@ -500,11 +501,13 @@ object.Constructor('igImageGraph', HTMLElement, {
 							: that.orientation == 270 ?
 								180
 							: 0 
-						this.style.transform = 'rotate('+(o == n ? 0 : -90)+'deg)'
+						// update button orientation...
+						this.style.transform = 'rotate('+(o == n ? 0 : 90)+'deg)'
+						this.style.marginTop = o == n ? '-2px' : '-1px'
 					}
 					return button }(),
 				// modes...
-				(this.nocontrols ? 
+				...(this.nocontrols ? 
 						[] 
 						: this.modes)
 					// mode buttons...
@@ -535,7 +538,6 @@ object.Constructor('igImageGraph', HTMLElement, {
 					button.onclick = function(){ that.update() }
 					return button }(),
 			]
-			.flat()
 			.reverse()
 			.forEach(function(button){
 				controls.appendChild(button) })
