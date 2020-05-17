@@ -325,11 +325,15 @@ var igImageGraph_template = `
 		float: right;
 		font-size: 12px;
 	}
+	:host .controls button[disabled] {
+		opacity: 0.3;
+		user-select: none;
+	}
 	:host .controls button.current {
 		text-decoration: underline;
 		opacity: 0.9;
 	}
-	:host .controls button:hover {
+	:host .controls button:hover:not([disabled]) {
 		opacity: 1;
 	}
 </style>
@@ -471,10 +475,33 @@ object.Constructor('igImageGraph', HTMLElement, {
 					//button.innerHTML = '&#9681;'
 					button.innerHTML = '&#9706;'
 					button.onclick = function(){ 
-						that.graph = that.graph == 'waveform' ?
+						var g = that.graph = that.graph == 'waveform' ?
 							'histogram'
 							: 'waveform'
-						that.update() }
+						var b = button.parentElement.querySelector('#orientation-button') || {}
+						b.disabled = that.graph != 'waveform'
+					}
+					return button }(),
+				// orientation...
+				function(){
+					var button = document.createElement('button')
+					button.setAttribute('id', 'orientation-button')
+					button.classList.add('update')
+					//button.innerHTML = '&#9637;'
+					button.innerHTML = '&#8597;'
+					button.disabled = that.graph != 'waveform'
+					var o = that.orientation || 0
+					button.onclick = function(){ 
+						var n = that.orientation =
+							that.orientation == 0 ? 
+								90
+							: that.orientation == 180 ?
+								270
+							: that.orientation == 270 ?
+								180
+							: 0 
+						this.style.transform = 'rotate('+(o == n ? 0 : -90)+'deg)'
+					}
 					return button }(),
 				// modes...
 				(this.nocontrols ? 
