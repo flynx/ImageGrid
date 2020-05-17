@@ -557,20 +557,6 @@ window.customElements.define('ig-image-graph', igImageGraph)
 
 
 
-//---------------------------------------------------------------------
-// helper...
-
-var makeImageGraph = 
-module.makeImageGraph = 
-function(img, options){
-	var g = document.createElement('ig-image-graph')
-	Object.assign(g, 
-		options || {})
-	g.src = img
-	return g }
-
-
-
 
 /**********************************************************************
 * vim:set ts=4 sw=4 :                               */ return module })

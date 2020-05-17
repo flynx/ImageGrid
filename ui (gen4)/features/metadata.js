@@ -16,13 +16,10 @@ if(typeof(process) != 'undefined'){
 	var exiftool = requirejs('exiftool')
 
 	// XXX EXPERIMENTAL: graph...
-	// XXX move this to ./components/
-	try {
-		// do this only if browser is loaded...
-		var graph = window != null ?
-			requirejs('lib/components/ig-image-graph')
-			: null
-	} catch(e){}
+	// do this only if browser is loaded...
+	var graph = window != null ?
+		requirejs('lib/components/ig-image-graph')
+		: null
 }
 
 
