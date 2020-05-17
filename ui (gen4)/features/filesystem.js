@@ -786,10 +786,14 @@ var FileSystemLoaderActions = actions.Actions({
 			logger = logger || this.logger
 			logger = logger && logger.push('Checking index')
 
+			// no index loaded...
+			if(!this.location.loaded){
+				logger.emit('no index to fix.')
+				return Promise.resolve([]) }
+
 			// XXX can we remove this restriction...
-			if(this.location.loaded.length != 1){
-				throw new Error('.fixIndex(): combined indexes not supported.')
-			}
+			if(this.location.loaded.length > 1){
+				throw new Error('.fixIndex(): combined indexes not supported.') }
 
 			logger 
 				&& this.images
@@ -803,9 +807,7 @@ var FileSystemLoaderActions = actions.Actions({
 			return this.images
 				.map(function(gid, image){ 
 					return [gid, image] })
-				.mapChunks(chunk_size, function(e){
-					var gid = e[0]
-					var image = e[1]
+				.mapChunks(chunk_size, function([gid, image]){
 					var updated = false
 
 					var previews = image.preview || {}
@@ -826,6 +828,57 @@ var FileSystemLoaderActions = actions.Actions({
 				.then(function(res){
 					return res.flat() })
 		}],
+
+	// XXX not yet sure about this...
+	removeMissingImages: ['File/Remove missing images from index',
+		core.doc`Remove missing images from index
+		
+		This will remove images that are not found via their original 
+		path/name from the index.
+
+		NOTE: no actual data is removed.
+		NOTE: this will not remove generated previews from index.
+		`,
+		function(logger){
+			var that = this
+			logger = logger || this.logger
+			rem_logger = logger && logger.push('Remove missing')
+			logger = logger && logger.push('Check missing')
+
+			logger 
+				&& this.images
+					.forEach(function(gid){ 
+						logger.emit('queued', gid)})
+
+			var chunk_size = '100C'
+
+			return this.images
+				.map(function(gid, image){ 
+					return [gid, image] })
+				.mapChunks(chunk_size, function([gid, image]){
+					var updated = false
+
+					image.path 
+						&& !fse.existsSync(image.base_path +'/'+ image.path)
+						&& (updated = true)
+						&& logger && rem_logger.emit('queued', gid)
+
+					logger && logger.emit('done', gid)
+
+					return updated ? gid : []
+				})
+				.then(function(res){
+					res = res.flat()
+					if(res.length > 0){
+						logger && rem_logger.emit('queued', 'data cleanup')
+						// clear images...
+						res.forEach(function(gid){
+							delete that.images[gid]
+							logger && rem_logger.emit('done', gid) })
+						// clear data...
+						that.data.clear(res)
+						logger && rem_logger.emit('done', 'data cleanup') }
+					return res }) }],
 })
 
 
@@ -888,6 +941,15 @@ module.FileSystemLoader = core.ImageGridFeatures.Feature({
 				res.then(function(gids){
 					gids.length > 0
 						&& that.markChanged('images', gids) }) }],
+		['removeMissingImages',
+			function(res){
+				var that = this
+				res.then(function(gids){
+					gids.length > 0
+						&& that
+							.markChanged('data')
+							.markChanged('images') 
+							.reload(true) }) }],
 	],
 })
 

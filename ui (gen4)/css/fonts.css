@@ -10,6 +10,10 @@
 	font-family: OpenSans;
 	src: url(fonts/Open_Sans/OpenSans-Regular.ttf);
 }
+@font-face {
+	font-family: 'OpenSans-Light';
+	src: url(fonts/Open_Sans/OpenSans-Light.ttf);
+}
 /*
 @font-face {
 	font-family: OpenSans;
@@ -37,11 +41,6 @@
 	src: url(fonts/Open_Sans/OpenSans-ExtraBoldItalic.ttf);
 	font-weight: bolder;
 	font-style: italic;
-}
-@font-face {
-	font-family: OpenSans;
-	src: url(fonts/Open_Sans/OpenSans-Light.ttf);
-	font-weight: lighter;
 }
 @font-face {
 	font-family: OpenSans;

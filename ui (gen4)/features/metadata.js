@@ -302,10 +302,10 @@ var MetadataUIActions = actions.Actions({
 
 		'metadata-auto-select-modes': [
 			'none',
-			'on select',
+			'on focus',
 			'on open',
 		],
-		'metadata-auto-select-mode': 'on select',
+		'metadata-auto-select-mode': 'on focus',
 
 		// XXX
 		'metadata-editable-fields': [
@@ -347,12 +347,13 @@ var MetadataUIActions = actions.Actions({
 		},
 	},
 
-	toggleMetadataAutoSelect: ['Interface/Metadata value auto-select',
+	toggleMetadataAutoSelect: ['Interface/Metadata value select',
 		core.makeConfigToggler('metadata-auto-select-mode', 
 			function(){ return this.config['metadata-auto-select-modes'] })],
 
 	toggleMetadataGraph: ['Interface/Metadata graph display',
-		{ browseMode: function(){ return !graph && 'hidden' }, },
+		{ browseMode: function(){
+			return (!graph || this.config['browse-advanced-mode'] != 'on') && 'hidden' }},
 		core.makeConfigToggler('metadata-graph', ['on', 'off'])],
 
 	// NOTE: this will extend the Browse object with .updateMetadata(..)
@@ -570,7 +571,7 @@ var MetadataUIActions = actions.Actions({
 				})
 				// select value of current item...
 				.on('select', function(evt, elem){
-					that.config['metadata-auto-select-mode'] == 'on select'
+					that.config['metadata-auto-select-mode'] == 'on focus'
 						&& $(elem).find('.text').last().selectText() })
 				.close(function(){
 					// XXX handle comment and tag changes...

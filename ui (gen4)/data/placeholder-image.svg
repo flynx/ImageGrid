@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 1000 1000" style="enable-background:new 0 0 1000 1000;" xml:space="preserve">
+<style type="text/css">
+	#vertical {
+		opacity: 0.25;
+	}
+	#corners {
+		opacity: 0.5;
+	}
+	.line {
+		fill: none;
+		stroke: #FFFFFF;
+		stroke-width: 2;
+		stroke-miterlimit: 10;
+	}
+	.label {
+		font-family: 'OpenSans-Light', sans-serif;
+		font-size: 82px;
+	}
+	.stroke {
+		fill: #FFFFFF;
+	}
+</style>
+<g id="background">
+	<rect x="0" y="0" width="1000" height="1000"/>
+</g>
+<g id="vertical">
+	<g>
+		<path class="stroke" d="M831,2v996H169V2H831 M833,0H167v1000h666V0L833,0z"/>
+	</g>
+	<line class="line" x1="167" y1="1000" x2="833" y2="0"/>
+	<line class="line" x1="167" y1="0" x2="833" y2="1000"/>
+</g>
+<g id="horizontal">
+	<g>
+		<path class="stroke" d="M998,169v662H2V169H998 M1000,167H0v666h1000V167L1000,167z"/>
+	</g>
+	<line class="line" x1="1000" y1="167" x2="5" y2="833"/>
+	<g>
+		<line class="line" x1="0" y1="167" x2="1000" y2="833"/>
+	</g>
+</g>
+<g id="corners">
+	<g>
+		<path class="stroke" d="M5.5,5.5l79.3,47.6L53.1,84.8L5.5,5.5 M-0.4-0.4l53,88.4L88,52.7L-0.4-0.4L-0.4-0.4z"/>
+	</g>
+	<g>
+		<path class="stroke" d="M994.5,5.5l-47.6,79.3l-31.7-31.7L994.5,5.5 M1000.4-0.4l-88.4,53L947.3,88L1000.4-0.4L1000.4-0.4z"/>
+	</g>
+	<g>
+		<path class="stroke" d="M946.9,915.2l47.6,79.3l-79.3-47.6L946.9,915.2 M947.3,912L912,947.3l88.4,53L947.3,912L947.3,912z"/>
+	</g>
+	<g>
+		<path class="stroke" d="M53.1,915.2l31.7,31.7L5.5,994.5L53.1,915.2 M52.7,912l-53,88.4l88.4-53L52.7,912L52.7,912z"/>
+	</g>
+</g>
+<g id="text">
+	<rect x="356" y="452" width="290" height="100.3"/>
+	<text transform="matrix(1 0 0 1 373 528)" class="stroke label">IMAGE</text>
+</g>
+</svg>
