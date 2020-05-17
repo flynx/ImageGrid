@@ -340,7 +340,7 @@ var MetadataUIActions = actions.Actions({
 		],
 
 		// XXX EXPERIMENTAL: graph...
-		'metadata-graph': true,
+		'metadata-graph': 'on',
 		'metadata-graph-config': {
 			graph: 'waveform',
 			mode: 'luminance',
@@ -350,6 +350,10 @@ var MetadataUIActions = actions.Actions({
 	toggleMetadataAutoSelect: ['Interface/Metadata value auto-select',
 		core.makeConfigToggler('metadata-auto-select-mode', 
 			function(){ return this.config['metadata-auto-select-modes'] })],
+
+	toggleMetadataGraph: ['Interface/Metadata graph display',
+		{ browseMode: function(){ return !graph && 'hidden' }, },
+		core.makeConfigToggler('metadata-graph', ['on', 'off'])],
 
 	// NOTE: this will extend the Browse object with .updateMetadata(..)
 	// 		method to enable updating of metadata in the list...
@@ -409,7 +413,7 @@ var MetadataUIActions = actions.Actions({
 							delete this.__graph_updating }.bind(this), 200)
 
 						// graph disabled...
-						if(!graph || !that.config['metadata-graph']){
+						if(!graph || that.config['metadata-graph'] != 'on'){
 							return }
 
 						// data...
@@ -451,7 +455,7 @@ var MetadataUIActions = actions.Actions({
 					// XXX EXPERIMENTAL: graph
 					// graph...
 					graph 
-						&& that.config['metadata-graph']
+						&& that.config['metadata-graph'] == 'on'
 						&& make(['Graph:', $(this.updateGraph())], 
 							{ cls: 'preview' })
 					// NOTE: these are 1-based and not 0-based...
