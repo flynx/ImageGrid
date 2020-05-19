@@ -1819,6 +1819,7 @@ var BrowserPrototype = {
 			Esc: 'close: "reject"',
 
 			'/': 'startFilter!',
+			ctrl_F: '/',
 
 			ctrl_A: 'startFullPathEdit!',
 

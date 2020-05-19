@@ -461,8 +461,8 @@ module.GLOBAL_KEYBOARD = {
 		';': 'togglePreviewFilter: "Show shadows" -- Preview shadows',
 		':': 'togglePreviewFilter: "Show highlights" -- Preview highlights',
 		'caps+:': ':',
-		"'": 'togglePreviewFilter: "Black and white" -- Preview black and white',
-		'"': 'togglePreviewFilter: "Edge detect" -- Show edges',
+		'"': 'togglePreviewFilter: "Black and white" -- Preview black and white',
+		"'": 'togglePreviewFilter: "Edge detect" -- Show edges',
 		'caps+"': '"',
 
 		// doc...
