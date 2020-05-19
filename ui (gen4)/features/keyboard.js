@@ -263,7 +263,9 @@ module.GLOBAL_KEYBOARD = {
 		ctrl_F: 'F11',
 		meta_F: 'F11',
 
-		ctrl_R: 'loadNewImages!',
+		// XXX EXPERIMENTAL: which should it be???
+		//ctrl_R: 'loadNewImages!',
+		ctrl_R: 'syncIndexWithDir!',
 		ctrl_alt_R: 'reload!',
 		ctrl_shift_R: 'F5',
 

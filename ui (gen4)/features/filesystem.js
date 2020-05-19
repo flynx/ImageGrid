@@ -673,24 +673,24 @@ var FileSystemLoaderActions = actions.Actions({
 				})
 		}],
 
-	// Load new images...
-	//
-	// 	Load new images from current path...
-	// 	.loadNewImages()
-	// 		-> promise
-	//
-	// 	Load new images from path...
-	// 	.loadNewImages(path)
-	// 		-> promise
-	//
-	// This will prepend images in path (default .location.path) that 
-	// were not loaded in index...
-	//
-	// NOTE: this will not load images that are already loaded.
-	//
 	// XXX revise logger...
 	// XXX revise alignment...
 	loadNewImages: ['File/Load new images',
+		core.doc`Load new images...
+		
+			Load new images from current path...
+			.loadNewImages()
+				-> promise
+		
+			Load new images from path...
+			.loadNewImages(path)
+				-> promise
+		
+		This will prepend images in path (default .location.path) that 
+		were not loaded in index...
+		
+		NOTE: this will not load images that are already loaded.
+		`,
 		function(path, logger){
 			path = path || this.location.path
 
@@ -829,9 +829,13 @@ var FileSystemLoaderActions = actions.Actions({
 					return res.flat() })
 		}],
 
+	// XXX should this take a path argument???
 	// XXX not yet sure about this...
 	removeMissingImages: ['File/Remove missing images from index',
 		core.doc`Remove missing images from index
+
+			.removeMissingImages()
+				-> promise
 		
 		This will remove images that are not found via their original 
 		path/name from the index.
@@ -879,6 +883,25 @@ var FileSystemLoaderActions = actions.Actions({
 						that.data.clear(res)
 						logger && rem_logger.emit('done', 'data cleanup') }
 					return res }) }],
+
+
+	// XXX EXPERIMENTAL...
+	// shorthand...
+	syncIndexWithDir: ['- File/',
+		core.doc`Load new and remove deleted images...
+
+			.syncIndexWithDir()
+				-> promise
+
+
+		This will call:
+			.loadNewImages()
+			.removeMissingImages()
+		`,
+		function(logger){
+			return Promise.all([
+				this.loadNewImages(),
+				this.removeMissingImages(), ]) }],
 })
 
 
