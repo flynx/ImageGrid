@@ -206,7 +206,8 @@ function(path, make){
 								// count the number of files...
 								// NOTE: we do not care how long it will take
 								// 		so we'll not wait...
-								res && dir && elem && _countDirFiles(path, file, elem)
+								res && dir && elem 
+									&& _countDirFiles(path, file, elem)
 							})
 							// NOTE: we are not using promise.all(..) here because it
 							// 		triggers BEFORE the first make(..) is called...
@@ -319,7 +320,7 @@ object.Constructor('Walk', browse.Browser, {
 
 		fileCountPattern: '*',
 
-		disableFiles: false,
+		disableFiles: true,
 
 		disableDotFiles: true,
 		//disableHiddenFiles: false,
