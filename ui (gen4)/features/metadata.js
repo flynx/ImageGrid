@@ -356,6 +356,15 @@ var MetadataUIActions = actions.Actions({
 			return (!graph || this.config['browse-advanced-mode'] != 'on') && 'hidden' }},
 		core.makeConfigToggler('metadata-graph', ['on', 'off'])],
 
+	// XXX show only graph...
+	// XXX might be a good idea to show directly in main menu...
+	// XXX reuse in .showMetadata(..)
+	// XXX should be floating...
+	showGraph: ['- Image/',
+		function(make){
+			// XXX
+		}],
+
 	// NOTE: this will extend the Browse object with .updateMetadata(..)
 	// 		method to enable updating of metadata in the list...
 	//
@@ -389,7 +398,9 @@ var MetadataUIActions = actions.Actions({
 					// XXX BUG: this when attached is stealing marks from 
 					// 		the original image in ribbon...
 					make.dialog.updatePreview = function(){
-						var preview = this.preview = this.preview || that.ribbons.createImage(image)
+						var preview = this.preview = 
+							this.preview 
+								|| that.ribbons.createImage(image)
 						return that.ribbons.updateImage(preview, image, preview_size, false, {
 								nochrome: true,
 								pre_updaters_callback: function([p]){
