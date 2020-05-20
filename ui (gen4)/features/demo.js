@@ -104,7 +104,8 @@ module.Demo = core.ImageGridFeatures.Feature({
 
 					location: {
 						path: 'Demo data',
-						method: 'loadDemoIndex',
+						load: 'loadDemoIndex',
+						sync: 'loadDemoIndex',
 						check: true,
 					}
 				})
