@@ -352,7 +352,7 @@ var MetadataUIActions = actions.Actions({
 			function(){ return this.config['metadata-auto-select-modes'] })],
 
 	toggleMetadataGraph: ['Interface/Metadata graph display',
-		{ browseMode: function(){
+		{ mode: function(){
 			return (!graph || this.config['browse-advanced-mode'] != 'on') && 'hidden' }},
 		core.makeConfigToggler('metadata-graph', ['on', 'off'])],
 

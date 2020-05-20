@@ -144,7 +144,7 @@ var URLHistoryActions = actions.Actions({
 			this.url_history = this.url_history || {}
 			var item = !clear ? (this.url_history[url] || {}) : {}
 
-			open = item.open = open || this.location.method
+			open = item.open = open || this.location.load
 			check = item.check = check || this.location.check || 'checkPath'
 
 			// remove the old value...
@@ -429,7 +429,7 @@ var URLHistoryLocalStorageActions = actions.Actions({
 					})
 				}
 
-				this.openURLFromHistory(l.path, l.method)
+				this.openURLFromHistory(l.path, l.load)
 
 			} else {
 				this.openURLFromHistory(0)
@@ -514,17 +514,17 @@ module.URLHistoryFSWriter = core.ImageGridFeatures.Feature({
 				res.then(function(l){
 					// push saved to top...
 					if(that.config['url-history-push-to-top-on-save']){
-						that.pushURLToHistory(l.path, l.method)
+						that.pushURLToHistory(l.path, l.load)
 
 					// update...
 					} else {
 						var e = that.url_history[l.path]
 						if(e != null){
-							e.open = l.method
+							e.open = l.load
 							that.storeURLHistory()
 
 						} else {
-							that.pushURLToHistory(l.path, l.method)
+							that.pushURLToHistory(l.path, l.load)
 						}
 					}
 				})

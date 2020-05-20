@@ -904,7 +904,7 @@ var DialogsActions = actions.Actions({
 
 
 	listDialogs: ['Interface|System/Dialog/Dialog list...',
-		{browseMode: 'toggleBrowseActionKeys'},
+		{mode: 'toggleBrowseActionKeys'},
 		makeUIDialog(function(){
 			var actions = this
 
@@ -931,7 +931,7 @@ var DialogsActions = actions.Actions({
 		})],
 
 	toggleOverlayBlur: ['Interface/Dialog overlay blur',
-		{browseMode: 'toggleBrowseActionKeys'},
+		{mode: 'toggleBrowseActionKeys'},
 		toggler.CSSClassToggler(
 			function(){ return this.dom }, 
 			'overlay-blur-enabled',
@@ -2587,7 +2587,7 @@ var BrowseActionsActions = actions.Actions({
 	// 		...this would help with the (global) search -- switch to 
 	// 		flat if searching in root mode...
 	browseActions: ['Interface/Dialog/Actions...',
-		{browseMode: 'toggleBrowseActionKeys'},
+		{mode: 'toggleBrowseActionKeys'},
 		core.doc`Browse actions dialog...
 
 		This uses action definition to build and present an action tree.
@@ -2615,33 +2615,33 @@ var BrowseActionsActions = actions.Actions({
 
 
 		Action mode (disabled/hidden) and also be controlled dynamically:
-			- .browseMode() action method is called with actions as base.
+			- .mode() action method is called with actions as base.
 			Example:
 				someAction: ['Path/To/Some action',
-					{browseMode: function(){ ... }},
+					{mode: function(){ ... }},
 					function(){
 						...
 					}],
 				someOtherAction: ['Path/To/Some action',
 					// alias
-					{browseMode: 'someAction'},
+					{mode: 'someAction'},
 					function(){
 						...
 					}],
 
-			.browseMode can be:
+			.mode can be:
 				<function>			- action method.
 				<action-name>		- alias, name of action to get the
 										method from.
 
-			.browseMode() can return:
+			.mode() can return:
 				'disabled'		- item will be disabled.
 				'hidden'		- item will be both hidden and disabled.
 
-			NOTE: disabling in path has priority over .browseMode(), thus
+			NOTE: disabling in path has priority over .mode(), thus
 				it is possible to hide/disable an enabled item but not
 				possible to enable a disabled by default path.
-			NOTE: .browseMode() can be defined in any action in chain,
+			NOTE: .mode() can be defined in any action in chain,
 				though only the last one is called...
 
 
@@ -2704,52 +2704,12 @@ var BrowseActionsActions = actions.Actions({
 
 			// Get action browse mode (disabled or hidden)...
 			//
-			// NOTE: this will cache and reuse action's browseMode, this
+			// NOTE: this will cache and reuse action's mode, this
 			// 		will make things faster when lots of actions use the 
 			// 		same mode test (alias)...
 			var mode_cache = {}
 			var getMode = function(action){
-				var m = action
-				var visited = [m]
-				var last
-
-				// check cache...
-				if(m in (mode_cache || {})){
-					return mode_cache[m]
-				}
-
-				// handle aliases...
-				do {
-					last = m
-					m = actions.getActionAttr(m, 'browseMode')
-
-					// check cache...
-					if(m in (mode_cache || {})){
-						return mode_cache[m]
-					}
-
-					// check for loops...
-					if(m && visited[m] != null){
-						m = null
-						break
-					}
-					visited.push(m)
-				} while(typeof(m) == typeof('str'))
-
-				//return m ? m.call(actions) : undefined
-				return m ? 
-					// no cache...
-					(mode_cache == null ?
-							m.call(actions)
-						// cache hit...
-						: last in mode_cache ? 
-							mode_cache[last] 
-						// call check and populate cache...
-						: (mode_cache[action] = 
-							mode_cache[last] = 
-								m.call(actions)))
-					: undefined
-			}
+				return actions.getActionMode(action, mode_cache) }
 
 			// Wait for dialog...
 			var waitFor = function(dialog, child){
@@ -2944,7 +2904,7 @@ var BrowseActionsActions = actions.Actions({
 										false
 										// hide dirs containing only (statically) 
 										// hidden items...
-										// NOTE: we are not checking browseMode 
+										// NOTE: we are not checking mode 
 										// 		of other items actively here at 
 										// 		this point to avoid side-effects...
 										: Object.keys(cur[key])
@@ -2988,7 +2948,7 @@ var BrowseActionsActions = actions.Actions({
 			['off', 'on'])],
 
 	toggleBrowseActionKeys: ['Interface/Show keys in menu',
-		{browseMode: function(){ 
+		{mode: function(){ 
 			return this.config['browse-advanced-mode'] != 'on' && 'hidden' }},
 		core.makeConfigToggler(
 			'browse-actions-keys', 
@@ -3034,7 +2994,7 @@ module.ContextActionMenu = core.ImageGridFeatures.Feature({
 
 	actions: actions.Actions({
 		showContextMenu: ['Interface/Show context menu...',
-			{browseMode: 'toggleBrowseActionKeys'},
+			{mode: 'toggleBrowseActionKeys'},
 			uiDialog(function(){
 				return this.current ?
 					this.browseActions('/Image/')
@@ -3193,13 +3153,13 @@ var ButtonsActions = actions.Actions({
 	},
 
 	toggleMainButtons: ['Interface/Main buttons',
-		{browseMode: 'toggleBrowseActionKeys'},
+		{mode: 'toggleBrowseActionKeys'},
 		makeButtonControlsToggler('main-buttons')],
 	toggleSecondaryButtons: ['Interface/Secondary buttons',
-		{browseMode: 'toggleBrowseActionKeys'},
+		{mode: 'toggleBrowseActionKeys'},
 		makeButtonControlsToggler('secondary-buttons')],
 	toggleAppButtons: ['Interface/App buttons',
-		{browseMode: 'toggleBrowseActionKeys'},
+		{mode: 'toggleBrowseActionKeys'},
 		makeButtonControlsToggler('app-buttons')],
 
 	toggleSideButtons: ['Interface/70: Touch buttons', 
@@ -3216,7 +3176,7 @@ var ButtonsActions = actions.Actions({
 		})()],
 
 	toggleButtonHighlightColor: ['Interface/Theme/Button highlight color',
-		{browseMode: 'toggleBrowseActionKeys'},
+		{mode: 'toggleBrowseActionKeys'},
 		core.makeConfigToggler(
 			'button-highlight-color',
 			function(){ return this.config['button-highlight-colors'] },

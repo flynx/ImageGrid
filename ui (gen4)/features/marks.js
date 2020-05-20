@@ -257,37 +257,37 @@ var ImageMarkActions = actions.Actions({
 		}],
 
 	prevMarked: ['Mark|Navigate/Previous marked image',
-		{browseMode: function(target){ 
+		{mode: function(target){ 
 			return this.data.getImage('current', 'before', this.marked) == null && 'disabled' }},
 		function(mode){ this.prevTagged('marked', mode) }],
 	nextMarked: ['Mark|Navigate/Next marked image',
-		{browseMode: function(target){ 
+		{mode: function(target){ 
 			return this.data.getImage('current', 'after', this.marked) == null && 'disabled' }},
 		function(mode){ this.nextTagged('marked', mode) }],
 
 	cropMarked: ['Mark|Crop/Crop $marked images',
-		{browseMode: function(target){ 
+		{mode: function(target){ 
 			return this.marked.length == 0 && 'disabled' }},
 		'crop: "marked" ...'],
 		//function(flatten){ this.cropTagged('marked', flatten) }],
 		//function(flatten){ this.cropTagged('marked', 'any', flatten) }],
 
 	removeMarkedFromCrop: ['Mark|Crop/Remove marked from crop',
-		{browseMode: function(target){ 
+		{mode: function(target){ 
 				return (this.marked.length == 0 || !this.cropped) && 'disabled' }},
 		'removeFromCrop: marked'],
 
 	rotateMarkedCW: ['Mark/Rotate marked clockwise',
-		{browseMode: 'cropMarked'},
+		{mode: 'cropMarked'},
 		'rotateCW: marked'],
 	rotateMarkedCCW: ['Mark/Rotate marked counterclockwise',
-		{browseMode: 'cropMarked'},
+		{mode: 'cropMarked'},
 		'rotateCCW: marked'],
 	flipMarkedVertical: ['Mark/Flip marked vertically',
-		{browseMode: 'cropMarked'},
+		{mode: 'cropMarked'},
 		'flipVertical: marked'],
 	flipMarkedHorizontal: ['Mark/Flip marked horizontally',
-		{browseMode: 'cropMarked'},
+		{mode: 'cropMarked'},
 		'flipHorizontal: marked'],
 })
 
@@ -396,29 +396,29 @@ var ImageMarkEditActions = actions.Actions({
 
 	shiftMarkedUp: ['Mark/Shift marked u$p',
 		{undo: undoShift('shiftMarkedDown'),
-			browseMode: 'cropMarked'},
+			mode: 'cropMarked'},
 		shiftMarked('up')],
 	shiftMarkedDown: ['Mark/Shift marked $down',
 		{undo: undoShift('shiftMarkedUp'),
-			browseMode: 'cropMarked'},
+			mode: 'cropMarked'},
 		shiftMarked('down')],
 
 	// XXX undo...
 	shiftMarkedAfter: ['Mark|Image/Shift marked $after',
-		{browseMode: 'cropMarked'},
+		{mode: 'cropMarked'},
 		function(target){
 			this.shiftImageTo(this.marked, target || 'current', 'after') }],
 	// XXX undo...
 	shiftMarkedBefore: ['Mark|Image/Shift marked $b$efore',
-		{browseMode: 'cropMarked'},
+		{mode: 'cropMarked'},
 		function(target){
 			this.shiftImageTo(this.marked, target || 'current', 'before') }],
 
 	unmarkRibbon: ['Mark/Unmark ribbon',
-		{browseMode: 'cropMarked'},
+		{mode: 'cropMarked'},
 		'toggleMark: "ribbon" "off"'],
 	unmarkLoaded: ['Mark/$Unmark all',
-		{browseMode: 'cropMarked'},
+		{mode: 'cropMarked'},
 		'toggleMark: "loaded" "off"'],
 })
 
@@ -445,7 +445,7 @@ var ImageMarkGroupActions = actions.Actions({
 	// NOTE: this will only group loaded images...
 	groupMarked: ['Group|Mark/-70:Group loaded marked images', 
 		{journal: true,
-			browseMode: 'cropMarked'}, 
+			mode: 'cropMarked'}, 
 		function(){ 
 			this.group(this.data.getImages(this.marked)) }],
 })
@@ -524,16 +524,16 @@ var ImageBookmarkActions = actions.Actions({
 			: this.data.sortViaOrder(this.data.tagQuery('bookmark')) },
 
 	prevBookmarked: ['Bookmark|Navigate/Previous bookmarked image',
-		{browseMode: function(target){ 
+		{mode: function(target){ 
 			return this.data.getImage('current', 'before', this.bookmarked) == null && 'disabled' }},
 		function(mode){ this.prevTagged('bookmark', mode) }],
 	nextBookmarked: ['Bookmark|Navigate/Next bookmarked image',
-		{browseMode: function(target){ 
+		{mode: function(target){ 
 			return this.data.getImage('current', 'after', this.bookmarked) == null && 'disabled' }},
 		function(mode){ this.nextTagged('bookmark', mode) }],
 
 	cropBookmarked: ['Bookmark|Crop/Crop $bookmarked images',
-		{browseMode: function(target){ 
+		{mode: function(target){ 
 			return this.bookmarked.length == 0 && 'disabled' }},
 		'crop: "bookmarked" ...'],
 		//function(flatten){ this.cropTagged('bookmark', 'any', flatten) }],
@@ -572,7 +572,7 @@ var ImageBookmarkEditActions = actions.Actions({
 	// 	'off'	- toggle all off
 	// 	'next'	- toggle each image to next state
 	toggleBookmarkOnMarked: ['Bookmark|Mark/-70:Toggle bookmark on maked images',
-		{browseMode: 'cropMarked'},
+		{mode: 'cropMarked'},
 		function(action){ 
 			return this.toggleBookmark(this.marked, action) }],
 })

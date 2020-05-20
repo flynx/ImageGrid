@@ -12,6 +12,7 @@ var object = require('lib/object')
 
 var actions = require('lib/actions')
 var features = require('lib/features')
+var toggler = require('lib/toggler')
 
 var core = require('features/core')
 
@@ -22,26 +23,17 @@ var core = require('features/core')
 
 // XXX need the other .location stuff to be visible/accessible...
 // 		...now this only shows path...
-var LocationProto = {
+var Location = 
+//module.Location =
+object.Constructor('Location', {
 	get path(){
-		return this.__actions.__location.path
-	},
+		return this.__actions.__location.path },
 	set path(value){
-		this.__actions.location = value
-	},
+		this.__actions.location = value },
 
-	
 	__init__: function(actions){
-		this.__actions = actions
-
-		// XXX this does not work...
-		// 		...the oother way around seems best:
-		// 			actions.__location.__proto__ = this
-		//this.__proto__ = actions.__location
-	},
-}
-
-var Location = object.Constructor('Location', LocationProto)
+		this.__actions = actions },
+})
 
 
 
@@ -59,13 +51,18 @@ var Location = object.Constructor('Location', LocationProto)
 var LocationActions = actions.Actions({
 	config: {
 		'default-load-method': null,
+
+		'location-stored-attrs': [
+			'sync',
+		],
 	},
 
 	// Format:
 	// 	{
-	// 		path: <base-path>,
-	// 		method: <load-method>,
 	// 		current: <current-gid>,
+	// 		load: <load-method>,
+	// 		sync: <sync-method>,
+	// 		path: <base-path>,
 	// 		...
 	// 	}
 	//
@@ -100,10 +97,6 @@ var LocationActions = actions.Actions({
 		this.loadLocation(value) },
 
 
-	clearLoaction: ['File/Clear location',
-		function(){ delete this.__location }],
-
-
 	// Load location...
 	//
 	// 	Reload current location...
@@ -131,7 +124,7 @@ var LocationActions = actions.Actions({
 			if(typeof(location) == typeof('str')){
 				location = {
 					path: path,
-					method: (this.__location && this.__location.method) 
+					load: (this.__location && this.__location.load) 
 						|| this.config['default-load-method'],
 					current: this.current,
 				}
@@ -142,8 +135,8 @@ var LocationActions = actions.Actions({
 				location = JSON.parse(JSON.stringify(location))
 			}
 
-			var method = location.method 
-				|| this.location.method 
+			var load = location.load 
+				|| this.location.load 
 				|| this.config['default-load-method']
 			var cur = location.current
 			var path = location.path
@@ -158,7 +151,7 @@ var LocationActions = actions.Actions({
 			//this.__location = location 
 
 			// NOTE: the method should set the proper location if it uses .clear()...
-			var res = method && this[method](path)
+			var res = load && this[load](path)
 
 
 			// load current...
@@ -177,6 +170,10 @@ var LocationActions = actions.Actions({
 			return res
 		}],
 
+	clearLoaction: ['File/Clear location',
+		function(){ delete this.__location }],
+
+
 	// XXX
 	// XXX should these have the same effect as .dispatch('location:*:load', location)???
 	// 		...another way to put it is should we call this from dispatch?
@@ -186,20 +183,19 @@ var LocationActions = actions.Actions({
 	_loadLocation: ['- File/Save location',
 		{protocol: 'location:*:load'},
 		function(location){
-			this.location.method = this.locationMethod(location)
+			this.location.load = this.locationMethod(location)
 			this.dispatch('location:*:load', location) 
 		}],
 	_saveLocation: ['- File/Save location',
 		{protocol: 'location:*:save'},
 		function(location){
-			this.location.method = this.locationMethod(location)
+			this.location.load = this.locationMethod(location)
 			this.dispatch('location:*:save', location) }],
 	_locationMethod: ['- File/',
 		{protocol: 'location:?'},
 		function(location){ 
-			return (location || this.location).method || null }],
-
-
+			return (location || this.location).load || null }],
+	// 
 	// format:
 	// 	{
 	// 		'protocol:method': 'actionName',
@@ -212,8 +208,7 @@ var LocationActions = actions.Actions({
 	get protocols(){
 		var cache = this.__location_protocol_cache = this.__location_protocol_cache 
 			|| this.cacheProtocols()
-		return cache
-	},
+		return cache },
 	cacheProtocols: ['- File/',
 		function(){
 			var that = this
@@ -221,11 +216,8 @@ var LocationActions = actions.Actions({
 			this.actions.forEach(function(n){
 				var proto = that.getActionAttr(n, 'protocol')
 				if(proto){
-					res[proto] = n
-				}
-			})
-			return res
-		}],
+					res[proto] = n } })
+			return res }],
 	// XXX how do we call the dispatched actions and all the matching 
 	// 		pattern actions???
 	// 			One way to go would be:
@@ -316,6 +308,91 @@ var LocationActions = actions.Actions({
 			}
 		}],
 
+
+	// sync API...
+	//
+	get location_sync_methods(){
+		var that = this
+		return (this.__location_sync_methods_cache = 
+			this.__location_sync_methods_cache
+				|| this.actions
+					.filter(function(n){
+						return that.getActionAttr(n, 'locationSync') })
+					.reduce(function(res, n){
+						res[n] = 
+							(that.getActionAttr(n, 'doc') || '')
+								.split(/[\\\/]/)
+								.pop()
+						res[n] = res[n] == '' ? 
+							n 
+							: res[n] 
+						return res
+					}, {})) },
+
+	sync: ['- System/Synchronize index',
+		core.doc`Synchronize index...
+
+			.sync()
+				-> promise
+
+
+		NOTE: it is up to the client to detect and implement the actual 
+			sync mechanics.
+		NOTE: this expects the return value of the sync handler to be 
+			a promise...
+		`,
+		function(){
+			var method = this.location.sync
+			return method in this ?
+				// NOTE: this should return a promise...
+				this[method](...arguments)
+				: Promise.resolve() }],
+
+	toggleSyncMethod: ['File/Index synchronization method', 
+		core.doc`Toggle index synchronization method
+		
+		NOTE: this will not show disabled methods.`,
+		toggler.Toggler(null, 
+			function(_, state){
+				var dict = this.location_sync_methods
+
+				// get...
+				if(state == null){
+					return dict[this.location.sync] 
+						|| this.location.sync 
+						|| 'none' }	
+
+				// clear... 
+				if(state == 'none'){
+					delete this.location.sync 
+
+				// set...
+				} else {
+					// reverse dict...
+					var rdict = new Map(
+						Object.entries(dict)
+							.map(function([k, v]){ 
+								return [v, k] }))
+					// normalize state to action name...
+					state = state in dict ? 
+						state
+						: (rdict.get(state) || state)
+					this.location.sync = state 
+				}
+
+				this.markChanged
+					&& this.markChanged('config')
+			},
+			function(){ 
+				var that = this
+				return ['none', 
+					...Object.entries(this.location_sync_methods)
+						.filter(function([n, d]){
+							// do not list disabled methods...
+							return that.getActionMode(n) != 'disabled' })
+						.map(function([n, d]){ return d }) ] })],
+
+
 	// 1) store .location
 	// 2) cleanup .images[..].base_path
 	//
@@ -335,9 +412,7 @@ var LocationActions = actions.Actions({
 					if(l.path == img.base_path){
 						delete img.base_path
 					}
-				})
-			}
-		}}],
+				}) } }}],
 	load: [function(){
 		return function(_, data){
 			var that = this
@@ -356,14 +431,12 @@ var LocationActions = actions.Actions({
 					if(img.base_path == null){
 						img.base_path = l.path
 					}
-				})
-		}}],
+				}) }}],
 	clone: [function(){
 		return function(res){
 			if(this.location){
 				res.__location = JSON.parse(JSON.stringify(this.__location))
-			}
-		}}],
+			} }}],
 	clear: [function(){ 
 		this.clearLoaction() }],
 })
@@ -380,6 +453,36 @@ module.Location = core.ImageGridFeatures.Feature({
 	actions: LocationActions,
 
 	handlers: [
+		// handle:
+		// 	- local configuration...
+		// 		.location <-> .config
+		// XXX should this handle image .base_path ???
+		['prepareIndexForWrite', 
+			function(res){
+				if(res.changes === true || res.changes.config){
+					var data = {}
+					;(this.config['location-stored-attrs'] || [])
+						.forEach(function(attr){
+							attr in res.raw.location
+								&& (data[attr] = res.raw.location[attr]) })
+					Object.keys(data).length > 0
+						&& (res.index.config = 
+							Object.assign(
+								res.index.config || {},
+								data)) } }],
+		['prepareIndexForLoad',
+			function(res, json, base_path){
+				if(json.config){
+					var data = {}
+					;(this.config['location-stored-attrs'] || [])
+						.forEach(function(attr){
+							attr in json.config
+								&& (data[attr] = json.config[attr]) })
+					Object.keys(data).length > 0
+						&& (res.location = 
+							Object.assign(
+								res.location || {},
+								data)) } }],
 	],
 })
 

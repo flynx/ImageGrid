@@ -382,13 +382,15 @@ var FileSystemLoaderActions = actions.Actions({
 					!index
 						&& console.error('Failed to load index from:', paths)
 
-
 					// prepare the location data...
-					index.location = {
-						path: path,
-						loaded: loaded,
-						method: 'loadIndex',
-					}
+					index.location = 
+						Object.assign(
+							index.location || {},
+							{
+								path: path,
+								loaded: loaded,
+								load: 'loadIndex',
+							})
 					if(from_date){
 						index.location.from = from_date
 					}
@@ -597,7 +599,8 @@ var FileSystemLoaderActions = actions.Actions({
 
 							location: {
 								path: path,
-								method: 'loadImages',
+								load: 'loadImages',
+								sync: 'syncIndexWithDir',
 							}
 						})
 						.then(function(){
@@ -675,7 +678,7 @@ var FileSystemLoaderActions = actions.Actions({
 
 	// XXX revise logger...
 	// XXX revise alignment...
-	loadNewImages: ['File/Load new images',
+	loadNewImages: ['File/Load new images to index',
 		core.doc`Load new images...
 		
 			Load new images from current path...
@@ -691,6 +694,10 @@ var FileSystemLoaderActions = actions.Actions({
 		
 		NOTE: this will not load images that are already loaded.
 		`,
+		{ locationSync: true,
+			mode: function(){ 
+				return ['loadIndex', 'loadImages'].includes(this.location.load) 
+					|| 'disabled' }, },
 		function(path, logger){
 			path = path || this.location.path
 
@@ -843,6 +850,8 @@ var FileSystemLoaderActions = actions.Actions({
 		NOTE: no actual data is removed.
 		NOTE: this will not remove generated previews from index.
 		`,
+		{ locationSync: true,
+			mode: 'loadNewImages', },
 		function(logger){
 			var that = this
 			logger = logger || this.logger
@@ -887,7 +896,7 @@ var FileSystemLoaderActions = actions.Actions({
 
 	// XXX EXPERIMENTAL...
 	// shorthand...
-	syncIndexWithDir: ['- File/',
+	syncIndexWithDir: ['File/Synchronize index to path',
 		core.doc`Load new and remove deleted images...
 
 			.syncIndexWithDir()
@@ -898,6 +907,8 @@ var FileSystemLoaderActions = actions.Actions({
 			.loadNewImages()
 			.removeMissingImages()
 		`,
+		{ locationSync: true,
+			mode: 'loadNewImages', },
 		function(logger){
 			return Promise.all([
 				this.loadNewImages(),
@@ -1137,7 +1148,7 @@ var FileSystemLoaderUIActions = actions.Actions({
 				var dialog = this
 				var path = that.location.path
 
-				if(that.location.method != 'loadIndex'){
+				if(that.location.load != 'loadIndex'){
 					make('No indexes loaded...', null, true)
 					return
 				}
@@ -1405,7 +1416,7 @@ var FileSystemSaveHistoryUIActions = actions.Actions({
 	// Unsaved changes will be saved to .unsaved_index when switching 
 	// from current to a historic state.
 	//
-	// NOTE: this will show no history if .location.method is not 'loadIndex'..
+	// NOTE: this will show no history if .location.load is not 'loadIndex'..
 	// NOTE: this will set changes to all when loading a historic state
 	// 		that the latest and to non otherwise....
 	//
@@ -1441,7 +1452,7 @@ var FileSystemSaveHistoryUIActions = actions.Actions({
 				}
 
 				// only search for history if we have an index loaded...
-				if(that.location.method != 'loadIndex'){
+				if(that.location.load != 'loadIndex'){
 					make('No history...', {disabled: true})	
 
 					// select the 'Unsaved' item...
@@ -1758,7 +1769,7 @@ var FileSystemWriterActions = actions.Actions({
 			}
 
 			// XXX
-			if(path == null && this.location.method != 'loadIndex'){
+			if(path == null && this.location.load != 'loadIndex'){
 				path = this.location.path
 			}
 
@@ -1798,7 +1809,7 @@ var FileSystemWriterActions = actions.Actions({
 							.spawn('attrib', ['+h', full_path])
 				})
 				.then(function(){
-					location.method = 'loadIndex'
+					location.load = 'loadIndex'
 					location.from = index.date
 
 					//return location

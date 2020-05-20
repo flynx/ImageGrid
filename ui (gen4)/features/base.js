@@ -401,7 +401,7 @@ actions.Actions({
 			this.images && this.images.replaceGID(from, to)
 		}],
 
-
+	
 	// basic navigation...
 	//
 	focusImage: ['- Navigate/Focus image',
@@ -537,7 +537,7 @@ actions.Actions({
 			.focusImage(0)
 			.focusImage(0, 'global')
 		`,
-		{browseMode: function(target){ 
+		{mode: function(target){ 
 			return this.data.getImageOrder('ribbon', target) == 0 && 'disabled' }},
 		function(all){ this.focusImage(0, all == null ? 'ribbon' : 'global') }],
 	lastImage: ['Navigate/Last image in current ribbon',
@@ -549,7 +549,7 @@ actions.Actions({
 
 		NOTE: this is symmetrical to .firstImage(..) see docs for that.
 		`,
-		{browseMode: function(target){ 
+		{mode: function(target){ 
 			return this.data.getImageOrder('ribbon', target) 
 				== this.data.getImageOrder('ribbon', -1) && 'disabled' }},
 		function(all){ this.focusImage(-1, all == null ? 'ribbon' : 'global') }],
@@ -561,7 +561,7 @@ actions.Actions({
 		Shorthand for:
 			.firstImage('global')
 		`,
-		{browseMode: function(){ 
+		{mode: function(){ 
 			return this.data.getImageOrder() == 0 && 'disabled' }},
 		function(){ this.firstImage(true) }],
 	lastGlobalImage: ['Navigate/Last image globally',
@@ -572,7 +572,7 @@ actions.Actions({
 
 		NOTE: this symmetrical to .firstGlobalImage(..) see docs for that.
 		`,
-		{browseMode: function(){ 
+		{mode: function(){ 
 			return this.data.getImageOrder() == this.data.getImageOrder(-1) && 'disabled' }},
 		function(){ this.lastImage(true) }],
 
@@ -584,7 +584,7 @@ actions.Actions({
 		NOTE: this also modifies .direction
 		NOTE: this is .symmetrical to .nextImage(..) see it for docs.
 		`,
-		{browseMode: 'firstImage'},
+		{mode: 'firstImage'},
 		function(a, mode){ 
 			// keep track of traverse direction...
 			this.direction = 'left'
@@ -627,7 +627,7 @@ actions.Actions({
 
 		NOTE: this also modifies .direction
 		`,
-		{browseMode: 'lastImage'},
+		{mode: 'lastImage'},
 		function(a, mode){ 
 			// keep track of traverse direction...
 			this.direction = 'right'
@@ -693,19 +693,19 @@ actions.Actions({
 		}],
 
 	firstRibbon: ['Navigate/First ribbon',
-		{browseMode: function(target){ 
+		{mode: function(target){ 
 			return this.data.getRibbonOrder(target) == 0 && 'disabled'}},
 		function(){ this.focusRibbon('first') }],
 	lastRibbon: ['Navigate/Last ribbon',
-		{browseMode: function(target){ 
+		{mode: function(target){ 
 			return this.data.getRibbonOrder(target) 
 				== this.data.getRibbonOrder(-1) && 'disabled'}},
 		function(){ this.focusRibbon('last') }],
 	prevRibbon: ['Navigate/Previous ribbon',
-		{browseMode: 'firstRibbon'}, 
+		{mode: 'firstRibbon'}, 
 		function(){ this.focusRibbon('before') }],
 	nextRibbon: ['Navigate/Next ribbon',
-		{browseMode: 'lastRibbon'},
+		{mode: 'lastRibbon'},
 		function(){ this.focusRibbon('after') }],
 })
 
@@ -720,6 +720,7 @@ core.ImageGridFeatures.Feature({
 		'serialization',
 	],
 	suggested: [
+		'sync',
 		'edit',
 		//'tags',
 		//'sort',
@@ -734,8 +735,7 @@ core.ImageGridFeatures.Feature({
 			function(res){
 				// we save .current unconditionally (if it exists)...
 				if(res.raw.data){
-					res.index.current = res.raw.data.current
-				}
+					res.index.current = res.raw.data.current }
 
 				var changes = res.changes
 
@@ -743,10 +743,11 @@ core.ImageGridFeatures.Feature({
 					return
 				}
 
-				// data...
-				if((changes === true || changes.data) && res.raw.data){
-					res.index.data = res.raw.data
-				}
+				// basic sections...
+				// NOTE: config is local config...
+				;['config', 'data'].forEach(function(section){
+					if((changes === true || chages[section]) && res.raw[section]){
+						res.index[section] = res.raw[section] } })
 
 				// images (full)...
 				if(res.raw.images 
@@ -756,11 +757,11 @@ core.ImageGridFeatures.Feature({
 				// images-diff...
 				} else if(changes && changes.images){
 					var diff = res.index['images-diff'] = {}
-					changes.images.forEach(function(gid){
-						diff[gid] = res.raw.images[gid]
-					})
-				}
+					changes.images
+						.forEach(function(gid){
+							diff[gid] = res.raw.images[gid] }) }
 			}],
+		// XXX restore local .config....
 		['prepareIndexForLoad',
 			function(res, json, base_path){
 				// build data and images...
@@ -773,7 +774,9 @@ core.ImageGridFeatures.Feature({
 
 				var img = images.Images(json.images)
 
-				// this is needed for loading multiple indexes...
+				// handle base-path... 
+				// XXX do we actually need this???
+				// 		...this is also done in 'location'
 				if(base_path){
 					d.base_path = base_path
 					// XXX STUB remove ASAP... 
@@ -829,7 +832,7 @@ actions.Actions({
 
 	// NOTE: resetting this option will clear the last direction...
 	toggleShiftsAffectDirection: ['Interface/Shifts affect direction',
-		{browseMode: 'toggleBrowseActionKeys'},
+		{mode: 'toggleBrowseActionKeys'},
 		core.makeConfigToggler('shifts-affect-direction', 
 			['off', 'on'],
 			function(action){
@@ -847,7 +850,7 @@ actions.Actions({
 			state.base = this.base },
 		undo: function(state){ 
 			this.setBaseRibbon(state.base) },
-		browseMode: function(target){ 
+		mode: function(target){ 
 			return this.current_ribbon == this.base && 'disabled' }},
 		function(target){ this.data.setBase(target) }],
 
@@ -954,7 +957,7 @@ actions.Actions({
 		}],
 	shiftImageLeft: ['Edit|Sort|Image/Shift image left', {
 		undo: undoShift('shiftImageRight'),
-		browseMode: 'prevImage'}, 
+		mode: 'prevImage'}, 
 		function(target){ 
 			if(target == null){
 				this.direction = 'left'
@@ -964,7 +967,7 @@ actions.Actions({
 		}],
 	shiftImageRight: ['Edit|Sort|Image/Shift image right', {
 		undo: undoShift('shiftImageLeft'),
-		browseMode: 'nextImage'}, 
+		mode: 'nextImage'}, 
 		function(target){ 
 			if(target == null){
 				this.direction = 'right'
@@ -975,7 +978,7 @@ actions.Actions({
 
 	shiftRibbonUp: ['Ribbon|Edit|Sort/Shift ribbon up', {
 		undo: undoShift('shiftRibbonDown'),
-		browseMode: 'prevRibbon'}, 
+		mode: 'prevRibbon'}, 
 		function(target){ 
 			this.data.shiftRibbonUp(target) 
 			// XXX is this the right way to go/???
@@ -983,7 +986,7 @@ actions.Actions({
 		}],
 	shiftRibbonDown: ['Ribbon|Edit|Sort/Shift ribbon down', {
 		undo: undoShift('shiftRibbonUp'),
-		browseMode: 'nextRibbon'}, 
+		mode: 'nextRibbon'}, 
 		function(target){ 
 			this.data.shiftRibbonDown(target)
 			// XXX is this the right way to go/???
@@ -1046,16 +1049,16 @@ actions.Actions({
 				this.data.getImages(
 					this.data.getRibbon(ribbon || 'current'))) }],
 	mergeRibbonUp: ['Edit|Ribbon/Merge ribbon up',
-		{browseMode: function(){ 
+		{mode: function(){ 
 			return this.data.ribbon_order[0] == this.current_ribbon && 'disabled' }},
 		'mergeRibbon: "up" ...'],
 	mergeRibbonDown: ['Edit|Ribbon/Merge ribbon down',
-		{browseMode: function(){ 
+		{mode: function(){ 
 			return this.data.ribbon_order.slice(-1)[0] == this.current_ribbon && 'disabled' }},
 		'mergeRibbon: "down" ...'],
 	// XXX should this accept a list of ribbons to flatten???
 	flattenRibbons: ['Edit|Ribbon/Flatten',
-		{browseMode: function(){ 
+		{mode: function(){ 
 			return this.data.ribbon_order.length <= 1 && 'disabled' }},
 		function(){
 			var ribbons = this.data.ribbons
@@ -1245,16 +1248,16 @@ core.ImageGridFeatures.Feature({
 var ImageGroupActions =
 module.ImageGroupActions = actions.Actions({
 	expandGroup: ['Group/Expand group', 
-		{browseMode: 'ungroup'}, 
+		{mode: 'ungroup'}, 
 		function(target){ this.data.expandGroup(target || this.current) }],
 	collapseGroup: ['Group/Collapse group', {
 		journal: true,
-		browseMode: 'ungroup'}, 
+		mode: 'ungroup'}, 
 		function(target){ this.data.collapseGroup(target || this.current) }],
 
 	cropGroup: ['Crop|Group/Crop group', {
 		journal: true,
-		browseMode: 'ungroup'}, 
+		mode: 'ungroup'}, 
 		function(target){ this.crop(this.data.cropGroup(target || this.current)) }],
 })
 
@@ -1285,7 +1288,7 @@ module.ImageEditGroupActions = actions.Actions({
 		function(gids, group){ this.data.group(gids, group) }],
 	ungroup: ['Group|Edit/Ungroup images', 
 		{journal: true},
-		{browseMode: function(){
+		{mode: function(){
 			return this.data.getGroup() == null && 'disabled' }},
 		function(gids, group){ this.data.ungroup(gids, group) }],
 
@@ -1500,7 +1503,7 @@ module.CropActions = actions.Actions({
 			}
 		}],
 	uncrop: ['Crop/Uncrop',
-		{browseMode: function(){ return this.cropped || 'disabled' }},
+		{mode: function(){ return this.cropped || 'disabled' }},
 		function(level, restore_current, keep_crop_order){
 			level = level || 1
 
@@ -1538,13 +1541,13 @@ module.CropActions = actions.Actions({
 			}
 		}],
 	uncropAll: ['Crop/Uncrop all',
-		{browseMode: 'uncrop'},
+		{mode: 'uncrop'},
 		function(restore_current){ this.uncrop('all', restore_current) }],
 	// XXX see if we need to do this on this level??
 	// 		...might be a good idea to do this in data...
 	uncropAndKeepOrder: ['Crop|Edit/Uncrop keeping image order', {
 		journal: true,
-		browseMode: 'uncrop'}, 
+		mode: 'uncrop'}, 
 		function(level, restore_current){ this.uncrop(level, restore_current, true) }],
 	// XXX same as uncrop but will also try and merge changes...
 	// 		- the order is simple and already done above...
@@ -1552,7 +1555,7 @@ module.CropActions = actions.Actions({
 	// 		  only problem here is how to deal with new ribbons...
 	mergeCrop: ['- Crop|Edit/Merge crop', {
 		journal: true,
-		browseMode: 'uncrop'}, 
+		mode: 'uncrop'}, 
 		function(){
 			// XXX
 		}],
@@ -1573,7 +1576,7 @@ module.CropActions = actions.Actions({
 	
 	// XXX not sure if we actually need this...
 	cropFlatten: ['Crop/$Flatten',
-		{browseMode: function(){ 
+		{mode: function(){ 
 			return this.data.ribbon_order.length <= 1 && 'disabled' }},
 		function(list){ this.data.length > 0 && this.crop(list, true) }],
 	cropRibbon: ['Crop|Ribbon/Crop $ribbon',
@@ -1733,7 +1736,7 @@ module.CropActions = actions.Actions({
 		core.doc`
 		`,
 		{
-			browseMode: 'uncrop',
+			mode: 'uncrop',
 			getUndoState: function(d){
 				d.placements = this.data.getImagePositions(d.args[0]) },
 			undo: function(d){ 
@@ -1796,7 +1799,7 @@ module.CropActions = actions.Actions({
 		
 		NOTE: this is a shorthand for .removeFromCrop(..) but only supports
 			ribbon removal.`,
-		{browseMode: 'uncrop',},
+		{mode: 'uncrop',},
 		function(gids){ 
 			var that = this
 			gids = gids || this.current_ribbon

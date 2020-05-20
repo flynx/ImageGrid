@@ -263,9 +263,7 @@ module.GLOBAL_KEYBOARD = {
 		ctrl_F: 'F11',
 		meta_F: 'F11',
 
-		// XXX EXPERIMENTAL: which should it be???
-		//ctrl_R: 'loadNewImages!',
-		ctrl_R: 'syncIndexWithDir!',
+		ctrl_R: 'sync!',
 		ctrl_alt_R: 'reload!',
 		ctrl_shift_R: 'F5',
 
@@ -616,7 +614,7 @@ var KeyboardActions = actions.Actions({
 
 					// check if we have no doc...
 					if(doc == null || doc == ''){
-						console.warn('Action has no doc: "'
+						console.warn('Action has no short doc: "'
 							+ a.action +'" at: "'+ code +'"') 
 						// XXX ???
 						return

@@ -172,7 +172,7 @@ module.TagsEditActions = actions.Actions({
 	// NOTE: setting source to 'both' and mode to 'reset' is the same as
 	// 		'images' and 'reset' as all .data tags will be lost on first 
 	// 		pass...
-	syncTags: ['Tag/-10:Synchoronize tags between data and images',
+	syncTags: ['Tag/-10:Synchronize tags between data and images',
 		{journal: true},
 		function(source, mode){
 			// can't do anything if either .data or .images are not 

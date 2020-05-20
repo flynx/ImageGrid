@@ -852,12 +852,12 @@ var StatusLogActions = actions.Actions({
 
 	// XXX should this be here or in a separate feature???
 	statusLog: ['Interface/Show status log',
-		{browseMode: 'toggleBrowseActionKeys'},
+		{mode: 'toggleBrowseActionKeys'},
 		function(){
 			// XXX use list
 		}],
 	clearStatusLog: ['Interface/Clear status log',
-		{browseMode: 'toggleBrowseActionKeys'},
+		{mode: 'toggleBrowseActionKeys'},
 		function(){
 			delete this.__status_log
 		}],

@@ -98,7 +98,7 @@ var VirtualBlocksActions = actions.Actions({
 					...
 				}
 			`,
-		{ browseMode: function(){ return !this.collection && 'disabled' }, },
+		{ mode: function(){ return !this.collection && 'disabled' }, },
 		function(ref, offset, img){
 			ref = ref || 'current'
 			offset = offset || 'after'	
@@ -153,11 +153,11 @@ var VirtualBlocksActions = actions.Actions({
 		core.doc`Add block before...
 		
 			This is the same as .makeVirtualBlock(.., 'before', ..)`,
-		{ browseMode: 'makeVirtualBlock', },
+		{ mode: 'makeVirtualBlock', },
 		'makeVirtualBlock: $0 "before" ...'],
 
 	cloneVirtualBlock: ['Virtual block/$Clone block',
-		{ browseMode: function(){ 
+		{ mode: function(){ 
 			return (this.image || {}).type != 'virtual' && 'disabled' }, },
 		function(ref, offset, img){
 			var img = Object.assign({}, 
@@ -169,15 +169,15 @@ var VirtualBlocksActions = actions.Actions({
 	// crop...
 	// XXX would be nice to avoid these and just register a list and context...
 	cropVirtualBlocks: ['Virtual block|Crop/$Crop $virtual $blocks',
-		{ browseMode: 'makeVirtualBlock' },
+		{ mode: 'makeVirtualBlock' },
 		'crop: "virtual" ...'],
 	cropVirtualBlocksOut: ['Virtual block|Crop/Crop virtual blocks out',
-		{ browseMode: 'cropVirtualBlocks' },
+		{ mode: 'cropVirtualBlocks' },
 		'crop: "!virtual" ...'],
 
 	// marks...
 	toggleMarkVirtualBlocks: ['Virtual block|Mark/Toggle $mark on $virtual blocks',
-		{ browseMode: 'makeVirtualBlock' },
+		{ mode: 'makeVirtualBlock' },
 		'toggleMark: "virtual"'],
 
 	// remove...
@@ -358,7 +358,7 @@ var VirtualBlocksEditUIActions = actions.Actions({
 	// XXX should we also add a preview (preview constructor from features/metadata.js)???
 	// XXX should we do a sanity check for image type???
 	editVirtualBlock: ['Virtual block/$Edit...',
-		{ browseMode: 'cloneVirtualBlock' },
+		{ mode: 'cloneVirtualBlock' },
 		widgets.makeUIDialog(function(gid){
 			var that = this
 

@@ -101,7 +101,7 @@ var RangeActions = actions.Actions({
 		}],
 	clearRange: ['Range/Clear range',
 		// XXX not sure if this is the right way to go...
-		{browseMode: function(){ return !this.data.__range && 'disabled' }},
+		{mode: function(){ return !this.data.__range && 'disabled' }},
 		function(image){
 			var r = this.dom.find('.ribbon')
 
@@ -162,7 +162,7 @@ var RangeActions = actions.Actions({
 
 	cropRange: ['Range|Crop/Crop range',
 		// XXX not sure if this is the right way to go...
-		{browseMode: function(){ return !this.data.__range && 'disabled' }},
+		{mode: function(){ return !this.data.__range && 'disabled' }},
 		function(){
 			var range = this.data.__range
 			var order = this.data.order
@@ -175,7 +175,7 @@ var RangeActions = actions.Actions({
 		}],
 	cropRangeOut: ['Range|Crop/Crop out range',
 		// XXX not sure if this is the right way to go...
-		{browseMode: function(){ return !this.data.__range && 'disabled' }},
+		{mode: function(){ return !this.data.__range && 'disabled' }},
 		function(){
 			var range = this.data.__range
 			var order = this.data.order

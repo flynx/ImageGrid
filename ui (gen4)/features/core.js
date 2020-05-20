@@ -485,6 +485,58 @@ var IntrospectionActions = actions.Actions({
 	isEvent: 
 		actions.doWithRootAction(function(action){
 			return !!action.__event__ }),
+
+	// XXX revise... 
+	getActionMode: ['- Interface/',
+		doc`Get action browse mode...
+
+		Get and action's .mode(..) method and return its result.
+
+		Expected values:
+			'disabled'		- actions is disabled
+			'hidden'		- actions is hidden
+
+		NOTE: other values are ignored.
+		`,
+		function(action, mode_cache){
+			var m = action
+			var visited = [m]
+			var last
+
+			// check cache...
+			if(m in (mode_cache || {})){
+				return mode_cache[m] }
+
+			// handle aliases...
+			do {
+				last = m
+				m = this.getActionAttr(m, 'mode')
+
+				// check cache...
+				if(m in (mode_cache || {})){
+					return mode_cache[m] }
+
+				// check for loops...
+				if(m && visited[m] != null){
+					m = null
+					break
+				}
+				visited.push(m)
+			} while(typeof(m) == typeof('str'))
+
+			//return m ? m.call(this) : undefined
+			return m ? 
+				// no cache...
+				(mode_cache == null ?
+						m.call(this)
+					// cache hit...
+					: last in mode_cache ? 
+						mode_cache[last] 
+					// call check and populate cache...
+					: (mode_cache[action] = 
+						mode_cache[last] = 
+							m.call(this)))
+				: actions.UNDEFINED }],
 })
 
 
@@ -1799,7 +1851,7 @@ var JournalActions = actions.Actions({
 			.journal up until and including the undone action.
 		NOTE: only the undone action is pushed to .rjournal
 		`,
-		{browseMode: function(){ 
+		{mode: function(){ 
 			return (this.journal && this.journal.length > 0) || 'disabled' }},
 		function(){
 			var journal = this.journal.slice() || []
@@ -1854,7 +1906,7 @@ var JournalActions = actions.Actions({
 
 		Essentially this will remove and re-run the last action in .rjournal
 		`,
-		{browseMode: function(){ 
+		{mode: function(){ 
 			return (this.rjournal && this.rjournal.length > 0) || 'disabled' }},
 		function(){
 			if(!this.rjournal || this.rjournal.length == 0){

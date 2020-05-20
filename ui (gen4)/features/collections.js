@@ -745,7 +745,7 @@ var CollectionActions = actions.Actions({
 			.collectionToTop(gid)
 				-> this
 		`,
-		{browseMode: 'uncollect'},
+		{mode: 'uncollect'},
 		function(collection){
 			collection = collection || this.collection
 			collection = this.collectionGIDs[collection] || collection
@@ -984,7 +984,7 @@ var CollectionActions = actions.Actions({
 		NOTE: this will remove any gid, be it image or ribbon.
 		`,
 		{
-			browseMode: function(){ return !this.collection && 'disabled' },
+			mode: function(){ return !this.collection && 'disabled' },
 			// XXX two ways to go:
 			//		- .collect(..) + .data.placeImage(..)
 			//		- rewrite .collect(..) to use .data.placeImage(..) (like: .addToCrop(..))
@@ -1079,7 +1079,7 @@ var CollectionActions = actions.Actions({
 			i.e. each gid given will be resolved to a ribbon which will be
 			removed.
 		`,
-		{browseMode: 'uncollect'},
+		{mode: 'uncollect'},
 		function(gids, collection){
 			var that = this
 			gids = gids || 'current'
@@ -1282,7 +1282,7 @@ var CollectionActions = actions.Actions({
 	// Config and interface stuff...
 	//
 	toggleCollectionCropRetention: ['Interface/Collection crop save mode',
-		{browseMode: 'toggleBrowseActionKeys'},
+		{mode: 'toggleBrowseActionKeys'},
 		core.makeConfigToggler(
 			'collection-save-crop-state', 
 			[
@@ -2718,7 +2718,7 @@ var UICollectionActions = actions.Actions({
 		collectionGetterWrapper(function(title){ this.loadCollection(title) })],
 	loadMainCollection: ['Collections/Exit collection view',
 		{
-			browseMode: 'uncollect', 
+			mode: 'uncollect', 
 			// prevent this from showing up in .uiDialogs list...
 			__dialog__: false,
 		},
@@ -2750,7 +2750,7 @@ var UICollectionActions = actions.Actions({
 
 	// XXX do we need this???
 	cropImagesInCollection: ['Collections|Crop/Crop images in collection...',
-		{browseMode: function(){ 
+		{mode: function(){ 
 			return (!this.collections 
 					|| Object.keys(this.collections).length == 0) 
 				&& 'disabled' }},
@@ -2764,7 +2764,7 @@ var UICollectionActions = actions.Actions({
 				})
 		}, null, false)],
 	cropOutImagesInCollection: ['Collections|Crop/Remove collection images from crop...',
-		{browseMode: 'cropImagesInCollection'},
+		{mode: 'cropImagesInCollection'},
 		mixedModeCollectionAction(function(title){
 			var that = this
 			this.ensureCollection(title)
@@ -2900,7 +2900,7 @@ var CollectionMarksActions = actions.Actions({
 		function(collection){
 			return this.collect(this.marked, collection) }],
 	uncollectMarked: ['Collections|Mark/Remove marked from collection',
-		{browseMode: function(){ 
+		{mode: function(){ 
 			return (!this.collection || this.marked.length == 0) && 'disabled' }},
 		function(collection){
 			return this.uncollect(this.marked, collection) }],
@@ -2910,7 +2910,7 @@ var CollectionMarksActions = actions.Actions({
 		function(collection){
 			return this.collectTagged('bookmark', collection) }],
 	uncollectBookmarked: ['Collections|Bookmark/Remove bookmarked from collection',
-		{browseMode: function(){ 
+		{mode: function(){ 
 			return (!this.collection || this.bookmarked.length == 0) && 'disabled' }},
 		function(collection){
 			return this.uncollectTagged('bookmark', collection) }],
@@ -2939,7 +2939,7 @@ var UICollectionMarksActions = actions.Actions({
 	// UI...
 	// XXX should these be a separate feature???
 	markImagesInCollection: ['Collections|Mark/$Mark images in collection...',
-		{browseMode: 'cropImagesInCollection'},
+		{mode: 'cropImagesInCollection'},
 		mixedModeCollectionAction(function(title){
 			var that = this
 			this.ensureCollection(title)
@@ -2950,7 +2950,7 @@ var UICollectionMarksActions = actions.Actions({
 				})
 		})],
 	addMarkedToCollection: ['Collections|Mark/Add marked to $collection...',
-		{browseMode: function(){ 
+		{mode: function(){ 
 			return this.marked.length == 0 && 'disabled' }},
 		mixedModeCollectionAction(function(title){ this.collectMarked(title) })],
 })

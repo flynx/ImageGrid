@@ -206,7 +206,7 @@ var ExampleActions = actions.Actions({
 			// target...
 			// XXX more docs!
 			null, 
-			// state accessor...
+			// state getter...
 			function(_, state){ 
 				// get the state...
 				if(state == null){
@@ -324,7 +324,7 @@ var ExampleUIActions = actions.Actions({
 		}],
 
 	exampleActionDisabled: ['Test/$Disabled example action',
-		{browseMode: function(){ return 'disabled' }},
+		{mode: function(){ return 'disabled' }},
 		function(){ 
 			console.log('Disabled action called:', [...arguments]) }],
 

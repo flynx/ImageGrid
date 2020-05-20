@@ -112,7 +112,7 @@ var FileSystemCommentsActions = actions.Actions({
 	// XXX this will not save comments for merged indexes...
 	saveComments: ['- File/',
 		function(path, date, logger){
-			if(this.location.method != 'loadIndex' 
+			if(this.location.load != 'loadIndex' 
 				|| this.location.loaded.length > 1){
 				return
 			}
@@ -135,7 +135,7 @@ var FileSystemCommentsActions = actions.Actions({
 	//*/
 	loadComments: ['- File/',
 		function(path, date, logger){
-			if(this.location.method != 'loadIndex'){
+			if(this.location.load != 'loadIndex'){
 				return
 			}
 

@@ -224,7 +224,7 @@ var SlideshowActions = actions.Actions({
 
 		NOTE: this will have no effect if the slideshow is not running...
 		`,
-		{browseMode: function(){ return this.toggleSlideshow('?') == 'off' && 'disabled' }},
+		{mode: function(){ return this.toggleSlideshow('?') == 'off' && 'disabled' }},
 		toggler.Toggler(null, 
 			function(_, state){ 
 				if(state == null){
