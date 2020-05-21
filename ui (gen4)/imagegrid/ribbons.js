@@ -1461,8 +1461,7 @@ var RibbonsPrototype = {
 		return image
 	},
 
-	_loadImagePreviewURL: function(image, url){
-		var recovery_tried
+	_loadImagePreviewURL: function(image, url, other, callback){
 		url = util.path2url(url)
 		// pre-cache and load image...
 		// NOTE: this will make images load without a blackout...
@@ -1473,12 +1472,18 @@ var RibbonsPrototype = {
 			// NOTE: these do not account for rotation...
 			i.setAttribute('preview-width', img.width)
 			i.setAttribute('preview-height', img.height) }
-		// error -> load placeholder...
+		// error -> try other images -> load placeholder...
 		img.onerror = function(){
-			!recovery_tried
-				&& (img.src = images.MISSING)
-			// give up after retry try...
-			recovery_tried = true }
+			other = other instanceof Function ?
+				[...other(), images.MISSING]
+				: other
+			other 
+				&& other.length > 0
+				&& (img.src = other.shift()) 
+			// call the callback once...
+			callback
+				&& callback() 
+			callback = null }
 		img.src = url
 		return img
 	},
@@ -1513,6 +1518,9 @@ var RibbonsPrototype = {
 	//
 	// If this is set to true image previews will be loaded synchronously...
 	load_img_sync: false,
+	// handle image load errors...
+	// XXX revise...
+	imageLoadErrorCallback: undefined,
 	//
 	// XXX this depends on .images...
 	// 		...a good candidate to move to images, but not yet sure...
@@ -1540,6 +1548,10 @@ var RibbonsPrototype = {
 
 		options = options || {}
 		var pre_updaters_callback = options.pre_updaters_callback
+		var error_update_callback = options.error_update_callback
+			|| this.imageLoadErrorCallback
+		error_update_callback = error_update_callback 
+			&& error_update_callback.bind(this)
 
 		// reduce the length of input image set...
 		// NOTE: this will make things substantially faster for very large
@@ -1628,6 +1640,12 @@ var RibbonsPrototype = {
 			// stage background image update...
 			// XXX add support for basic templating here...
 			var p_url = (that.images.getBestPreview(img_data.id, size, img_data, true) || {}).url
+			// XXX sort the previews by size...
+			var alt_url = function(){
+				return [...Object.values(img_data.preview || {}), img_data.path]
+					.map(function(u){ 
+						return (img_data.base_path || '') + u })
+					.filter(function(u){ return u != p_url }) }
 			// no preview -> reset bg...
 			if(p_url == null){
 				image[0].style.backgroundImage = ''
@@ -1642,7 +1660,11 @@ var RibbonsPrototype = {
 
 				// sync...
 				if(sync){
-					that._loadImagePreviewURL(image, p_url)
+					that._loadImagePreviewURL(
+						image, 
+						p_url, 
+						alt_url, 
+						error_update_callback)
 
 				// async...
 				// NOTE: storing the url in .data() makes the image load the 
@@ -1656,8 +1678,11 @@ var RibbonsPrototype = {
 				} else {
 					image.data().loading = p_url
 					setTimeout(function(){ 
-						that._loadImagePreviewURL(image, image.data().loading)
-					}, 0)
+						that._loadImagePreviewURL(
+							image, 
+							image.data().loading, 
+							alt_url, 
+							error_update_callback) }, 0)
 				}
 			}
 		})
