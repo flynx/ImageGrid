@@ -735,6 +735,7 @@ var StatusBarActions = actions.Actions({
 
 		`,
 		function(text, timeout, fadeout){
+			var that = this
 			timeout = timeout === true ? 
 				1000 
 				: timeout
@@ -745,25 +746,19 @@ var StatusBarActions = actions.Actions({
 				&& clearTimeout(this.__statusbar_info_timeout)
 			delete this.__statusbar_info_timeout
 
-			var bar = this.dom.find('.state-indicator-container.global-info') 
+			var bar = this.dom.find('.state-indicator-container.global-info .info') 
 
 			// update the element...
-			// show...
-			;(typeof(text) == typeof('str') 
-					&& text.trim().length > 0) ?
-				bar.find('.info')
-					.empty()
-					.show()
-					.text(text)
 			// fadeout...
-			: typeof(text) == typeof(123) ?
-				bar.find('.info')
-					.fadeOut(text, function(){
-						$(this).empty() })
-			// hide...
-			: bar.find('.info')
-				.empty()
+			typeof(text) == typeof(123) ?
+				bar.fadeOut(text, function(){
+					that.showStatusBarInfo() })
+			// show/hide...
+			: bar
+				.text(text || '')
+				.stop()
 				.show()
+				.css({opacity: ''})
 
 			// clear after timeout...
 			timeout 
