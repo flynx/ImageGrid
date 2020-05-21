@@ -521,8 +521,7 @@ module.ImagesPrototype = {
 					(v < p[1] ? p : [s, v])
 				: (p[1] >= size && (v > p[1] || v < size)) ? 
 					p
-				: [s, v]
-		}
+				: [s, v] }
 
 		// get the original if it exists and smaller than size...
 		if(path && (size == null || p[1] < size)){

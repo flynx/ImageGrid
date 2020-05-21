@@ -1715,6 +1715,10 @@ var KeyboardUIActions = actions.Actions({
 					this.keyboard.handler('General', 'Q', 'abort')
 				}) })],
 
+	// XXX
+	//editActionKeyboardBinding: ['- Interface/',
+	//	function(){}],
+
 
 	/*/ XXX move to gen2
 	// XXX need to pre-process the docs...
