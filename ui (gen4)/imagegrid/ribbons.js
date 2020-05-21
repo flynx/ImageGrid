@@ -1462,17 +1462,23 @@ var RibbonsPrototype = {
 	},
 
 	_loadImagePreviewURL: function(image, url){
+		var recovery_tried
 		url = util.path2url(url)
 		// pre-cache and load image...
 		// NOTE: this will make images load without a blackout...
 		var img = new Image()
 		var i = image instanceof jQuery ? image[0] : image
 		img.onload = function(){
-			i.style.backgroundImage = 'url("'+ url +'")',
+			i.style.backgroundImage = 'url("'+ img.src +'")',
 			// NOTE: these do not account for rotation...
 			i.setAttribute('preview-width', img.width)
-			i.setAttribute('preview-height', img.height)
-		}
+			i.setAttribute('preview-height', img.height) }
+		// error -> load placeholder...
+		img.onerror = function(){
+			!recovery_tried
+				&& (img.src = images.MISSING)
+			// give up after retry try...
+			recovery_tried = true }
 		img.src = url
 		return img
 	},

@@ -29,6 +29,14 @@ if(typeof(sha1) != 'undefined'){
 
 /*********************************************************************/
 
+var PLACEHOLDER = 
+module.PLACEHOLDER = 
+	'./images/placeholder.svg'
+
+var MISSING = 
+module.MISSING = 
+	'./images/missing.svg'
+
 // A stub image, also here for documentation...
 var IMAGE_DATA =
 module.IMAGE_DATA = {
@@ -51,16 +59,17 @@ module.IMAGE_DATA = {
 	ctime: 0,
 
 	// Original path...
-	path: './images/900px/SIZE.jpg',
+	//path: './images/900px/SIZE.jpg',
+	path: PLACEHOLDER,
 
 	// Previews...
 	// NOTE: the actual values depend on specific image and can be
 	// 		any size...
-	preview: {
-		'150px': './images/150px/SIZE.jpg',
-		'350px': './images/350px/SIZE.jpg',
-		'900px': './images/900px/SIZE.jpg',
-	},
+	//preview: {
+	//	'150px': './images/150px/SIZE.jpg',
+	//	'350px': './images/350px/SIZE.jpg',
+	//	'900px': './images/900px/SIZE.jpg',
+	//},
 
 	// Classes
 	// XXX currently unused...
