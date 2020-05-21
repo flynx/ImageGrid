@@ -491,7 +491,7 @@ object.Constructor('igImageGraph', HTMLElement, {
 					// load button state...
 					var _update = function(){
 						Object.assign(button.style, 
-							!that.__rotated ?
+							that.__rotated == null ?
 								{ 
 									transform: '',
 									marginTop: '-2px', 
@@ -502,16 +502,20 @@ object.Constructor('igImageGraph', HTMLElement, {
 								}) }
 					_update()
 					button.disabled = that.graph != 'waveform'
+					// do the rotation...
 					button.onclick = function(){ 
-						var n = that.orientation =
-							that.orientation == 0 ? 
-								90
-							: that.orientation == 180 ?
-								270
-							: that.orientation == 270 ?
-								180
-							: 0 
-						var r = that.__rotated = !that.__rotated
+						var o = that.__rotated
+						var c = that.orientation*1
+
+						that.orientation = o == null ?
+							// rotate...
+							(c + 90) % 360
+							// restore...
+							: o
+
+						that.__rotated = o == null ?
+							c
+							: null
 						_update()
 					}
 					return button }(),
