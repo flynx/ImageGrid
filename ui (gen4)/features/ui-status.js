@@ -717,7 +717,29 @@ var StatusBarActions = actions.Actions({
 
 	// XXX revise...
 	showStatusBarInfo: ['- Interface/',
-		function(text, timeout){
+		core.doc`
+			Show info...
+			.showStatusBarInfo(text)
+
+			Show info for timeout then fadeout...
+			.showStatusBarInfo(text, timeout)
+			.showStatusBarInfo(text, timeout, fadeout)
+
+			Hide info...
+			.showStatusBarInfo()
+			.showStatusBarInfo('')
+
+			Fadeout info for timeout...
+			.showStatusBarInfo(fadeout)
+
+
+		`,
+		function(text, timeout, fadeout){
+			timeout = timeout === true ? 
+				1000 
+				: timeout
+			fadeout = fadeout || 200
+
 			// reset clear timeout...
 			this.__statusbar_info_timeout
 				&& clearTimeout(this.__statusbar_info_timeout)
@@ -725,17 +747,32 @@ var StatusBarActions = actions.Actions({
 
 			var bar = this.dom.find('.state-indicator-container.global-info') 
 
-			text ?
-				bar.find('.info').text(text)
-				: bar.find('.info').empty()
+			// update the element...
+			// show...
+			;(typeof(text) == typeof('str') 
+					&& text.trim().length > 0) ?
+				bar.find('.info')
+					.empty()
+					.show()
+					.text(text)
+			// fadeout...
+			: typeof(text) == typeof(123) ?
+				bar.find('.info')
+					.fadeOut(text, function(){
+						$(this).empty() })
+			// hide...
+			: bar.find('.info')
+				.empty()
+				.show()
 
 			// clear after timeout...
 			timeout 
 				&& text && text.trim() != ''
 				&& (this.__statusbar_info_timeout = 
 					setTimeout(function(){
-						delete this.__statusbar_info_timeout
-						this.showStatusBarInfo() }.bind(this), timeout)) }],
+							delete this.__statusbar_info_timeout
+							this.showStatusBarInfo(fadeout) }.bind(this), 
+						timeout)) }],
 })
 
 var StatusBar = 
