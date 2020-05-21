@@ -2267,7 +2267,7 @@ module.PreviewFilters = core.ImageGridFeatures.Feature({
 		['togglePreviewFilter',
 			function(res){
 				res != 'No filters' ?
-					this.showStatusBarInfo(res, 1000) 
+					this.showStatusBarInfo(res, 3000) 
 					: this.showStatusBarInfo() }],
 	],
 })
