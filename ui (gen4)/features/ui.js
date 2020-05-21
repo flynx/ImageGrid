@@ -2174,7 +2174,8 @@ module.PreviewFilters = core.ImageGridFeatures.Feature({
 
 	tag: 'ui-preview-filters',
 	depends: [ 
-		'ui' 
+		'ui',
+		'ui-status-bar',
 	],
 
 	config: {
@@ -2263,6 +2264,11 @@ module.PreviewFilters = core.ImageGridFeatures.Feature({
 	handlers: [
 		['focusImage',
 			function(){ this.togglePreviewFilter('No filters') }],
+		['togglePreviewFilter',
+			function(res){
+				res != 'No filters' ?
+					this.showStatusBarInfo(res, 1000) 
+					: this.showStatusBarInfo() }],
 	],
 })
 

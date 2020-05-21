@@ -717,16 +717,25 @@ var StatusBarActions = actions.Actions({
 
 	// XXX revise...
 	showStatusBarInfo: ['- Interface/',
-		function(text){
+		function(text, timeout){
+			// reset clear timeout...
+			this.__statusbar_info_timeout
+				&& clearTimeout(this.__statusbar_info_timeout)
+			delete this.__statusbar_info_timeout
+
 			var bar = this.dom.find('.state-indicator-container.global-info') 
 
-			if(text){
+			text ?
 				bar.find('.info').text(text)
+				: bar.find('.info').empty()
 
-			} else {
-				bar.find('.info').empty()
-			}
-		}],
+			// clear after timeout...
+			timeout 
+				&& text && text.trim() != ''
+				&& (this.__statusbar_info_timeout = 
+					setTimeout(function(){
+						delete this.__statusbar_info_timeout
+						this.showStatusBarInfo() }.bind(this), timeout)) }],
 })
 
 var StatusBar = 
