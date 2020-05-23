@@ -483,6 +483,15 @@ object.Constructor('igImageGraph', HTMLElement, {
 					}
 					return button }(),
 				// orientation...
+				//
+				// switch from vertical to horizontal and back, keeping 
+				// only two orientations with top-to-top (default) and 
+				// top-to-right (alternative) modes.
+				//
+				// the button arrow:
+				// 	- indicates orientation
+				// 	- points to top of image relative to waveform
+				//
 				function(){
 					var button = document.createElement('button')
 					button.setAttribute('id', 'orientation-button')
@@ -492,23 +501,25 @@ object.Constructor('igImageGraph', HTMLElement, {
 					var _update = function(){
 						Object.assign(button.style, 
 							that.__rotated == null ?
+								// top...
 								{ 
 									transform: '',
 									marginTop: '-2px', 
 								}
+								// right...
 								: {
 									transform: 'rotate(90deg)',
 									marginTop: '-1px',
 								}) }
 					_update()
 					button.disabled = that.graph != 'waveform'
-					// do the rotation...
+					// click -> do the rotation...
 					button.onclick = function(){ 
 						var o = that.__rotated
 						var c = that.orientation*1
 
 						that.orientation = o == null ?
-							// rotate...
+							// rotate cw...
 							(c + 90) % 360
 							// restore...
 							: o
@@ -520,6 +531,7 @@ object.Constructor('igImageGraph', HTMLElement, {
 					}
 					return button }(),
 				// modes...
+				// ...generate mode toggles...
 				...(this.nocontrols ? 
 						[] 
 						: this.modes)
@@ -531,25 +543,15 @@ object.Constructor('igImageGraph', HTMLElement, {
 						button.onclick = function(){ 
 							that.mode = m }
 						return button }),
-				/* 
-				// color mode switch...
-				function(){
-					var button = document.createElement('button')
-					button.innerText = '('+ that.color[0] +')'
-					button.onclick = function(){ 
-						that.color = that.color_modes[
-							(that.color_modes.indexOf(that.color) + 1) 
-								% that.color_modes.length]
-						this.innerText = '('+ that.color[0] +')' }
-					return button }(),
-					//*/
 				// reload...
+				/*/ XXX do we actually need this???
 				function(){
 					var button = document.createElement('button')
 					button.classList.add('update')
 					button.innerHTML = '&#10227;'
 					button.onclick = function(){ that.update() }
 					return button }(),
+				//*/
 			]
 			.reverse()
 			.forEach(function(button){
