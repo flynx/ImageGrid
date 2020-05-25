@@ -463,7 +463,7 @@ module.Location = core.ImageGridFeatures.Feature({
 					var data = {}
 					;(this.config['location-stored-attrs'] || [])
 						.forEach(function(attr){
-							attr in res.raw.location
+							attr in (res.raw.location || {})
 								&& (data[attr] = res.raw.location[attr]) })
 					Object.keys(data).length > 0
 						&& (res.index.config = 
