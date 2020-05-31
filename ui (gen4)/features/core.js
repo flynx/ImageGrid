@@ -487,6 +487,11 @@ var IntrospectionActions = actions.Actions({
 			return !!action.__event__ }),
 
 	// XXX revise... 
+	// XXX this is a bit restrictive, need to be able to setup mode 
+	// 		aliases/handlers, i.e. setting {mode: 'advanced'} and either
+	// 		getting the actual value from .config or calling a mode handler...
+	// 		...might also be nice to use a toggler as handler:
+	// 			{mode: 'toggleBrowseAdvanced'}
 	getActionMode: ['- Interface/',
 		doc`Get action browse mode...
 

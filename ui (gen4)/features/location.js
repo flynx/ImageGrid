@@ -352,6 +352,7 @@ var LocationActions = actions.Actions({
 		core.doc`Toggle index synchronization method
 		
 		NOTE: this will not show disabled methods.`,
+		{mode: 'toggleBrowseActionKeys'},
 		toggler.Toggler(null, 
 			function(_, state){
 				var dict = this.location_sync_methods

@@ -2932,7 +2932,7 @@ var BrowseActionsActions = actions.Actions({
 				actions.config['browse-actions-keys'] 
 					&& this.dom.addClass('show-keys')
 
-				// handle '?' button to browse path...
+				// handle '?' -- show doc...
 				var showDoc = this.showDoc = function(){
 					var action = this.select('!').attr('action')
 					action 
@@ -2940,9 +2940,28 @@ var BrowseActionsActions = actions.Actions({
 				}
 				this.keyboard.handler('General', '?', 'showDoc')
 				this.menu(showDoc.bind(this))
+
+				// handle ctrl-a -- toggle advanced mode...
+				var toggleAdvanced = this.toggleAdvanced = function(){
+					actions.toggleBrowseAdvanced() 
+					this.update() 
+				}
+				this.keyboard.handler('General', 'ctrl-a', 'toggleAdvanced')
 			}) })],
 
 	toggleBrowseAdvanced: ['System|Interface/-99: Advanced menu items',
+		core.doc`Toggle advanced menu items...
+
+		An item can:
+			- define a .mode() mothod
+			- check .config['browse-advanced-mode'] to be 'on' / 'off'
+			- return 'hidden' when needed
+		or:
+			- link to an action that behaves in a desired way:
+				{mode: 'toggleBrowseActionKeys',}
+
+		See .toggleBrowseActionKeys(..) for an example.
+		`,
 		core.makeConfigToggler(
 			'browse-advanced-mode', 
 			['off', 'on'])],
