@@ -1282,7 +1282,7 @@ var CollectionActions = actions.Actions({
 	// Config and interface stuff...
 	//
 	toggleCollectionCropRetention: ['Interface/Collection crop save mode',
-		{mode: 'toggleBrowseActionKeys'},
+		{mode: 'advancedBrowseModeAction'},
 		core.makeConfigToggler(
 			'collection-save-crop-state', 
 			[

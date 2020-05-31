@@ -904,7 +904,7 @@ var DialogsActions = actions.Actions({
 
 
 	listDialogs: ['Interface|System/Dialog/Dialog list...',
-		{mode: 'toggleBrowseActionKeys'},
+		{mode: 'advancedBrowseModeAction'},
 		makeUIDialog(function(){
 			var actions = this
 
@@ -931,7 +931,7 @@ var DialogsActions = actions.Actions({
 		})],
 
 	toggleOverlayBlur: ['Interface/Dialog overlay blur',
-		{mode: 'toggleBrowseActionKeys'},
+		{mode: 'advancedBrowseModeAction'},
 		toggler.CSSClassToggler(
 			function(){ return this.dom }, 
 			'overlay-blur-enabled',
@@ -2587,7 +2587,7 @@ var BrowseActionsActions = actions.Actions({
 	// 		...this would help with the (global) search -- switch to 
 	// 		flat if searching in root mode...
 	browseActions: ['Interface/Dialog/Actions...',
-		{mode: 'toggleBrowseActionKeys'},
+		{mode: 'advancedBrowseModeAction'},
 		core.doc`Browse actions dialog...
 
 		This uses action definition to build and present an action tree.
@@ -2949,6 +2949,31 @@ var BrowseActionsActions = actions.Actions({
 				this.keyboard.handler('General', 'ctrl-a', 'toggleAdvanced')
 			}) })],
 
+	// XXX revise...
+	advancedBrowseModeAction: ['- System/',
+		core.doc`Placeholder advanced action
+
+		This is mainly used to indicate other actions as advanced mode only.
+		
+		Example:
+			someAction: ['Menu/Path/Some action',
+				// show up only in advanced browse mode...
+				{mode: 'advancedBrowseModeAction'},
+				function(){
+					...
+				}],
+		`,
+		{mode: function(){ 
+			return this.advancedBrowseModeAction() }},
+		core.notUserCallable(function(){
+			// Placeholder action, not for direct use...
+			//
+			// See doc for more info: 
+			// 	.showDoc('advancedBrowseModeAction')
+			return this.config['browse-advanced-mode'] != 'on' 
+				&& 'hidden' 
+				|| 'visible' })],
+
 	toggleBrowseAdvanced: ['System|Interface/-99: Advanced menu items',
 		core.doc`Toggle advanced menu items...
 
@@ -2958,7 +2983,7 @@ var BrowseActionsActions = actions.Actions({
 			- return 'hidden' when needed
 		or:
 			- link to an action that behaves in a desired way:
-				{mode: 'toggleBrowseActionKeys',}
+				{mode: 'advancedBrowseModeAction',}
 
 		See .toggleBrowseActionKeys(..) for an example.
 		`,
@@ -2967,8 +2992,7 @@ var BrowseActionsActions = actions.Actions({
 			['off', 'on'])],
 
 	toggleBrowseActionKeys: ['Interface/Show keys in menu',
-		{mode: function(){ 
-			return this.config['browse-advanced-mode'] != 'on' && 'hidden' }},
+		{mode: 'advancedBrowseModeAction'},
 		core.makeConfigToggler(
 			'browse-actions-keys', 
 			['on', 'off'],
@@ -3013,7 +3037,7 @@ module.ContextActionMenu = core.ImageGridFeatures.Feature({
 
 	actions: actions.Actions({
 		showContextMenu: ['Interface/Show context menu...',
-			{mode: 'toggleBrowseActionKeys'},
+			{mode: 'advancedBrowseModeAction'},
 			uiDialog(function(){
 				return this.current ?
 					this.browseActions('/Image/')
@@ -3172,13 +3196,13 @@ var ButtonsActions = actions.Actions({
 	},
 
 	toggleMainButtons: ['Interface/Main buttons',
-		{mode: 'toggleBrowseActionKeys'},
+		{mode: 'advancedBrowseModeAction'},
 		makeButtonControlsToggler('main-buttons')],
 	toggleSecondaryButtons: ['Interface/Secondary buttons',
-		{mode: 'toggleBrowseActionKeys'},
+		{mode: 'advancedBrowseModeAction'},
 		makeButtonControlsToggler('secondary-buttons')],
 	toggleAppButtons: ['Interface/App buttons',
-		{mode: 'toggleBrowseActionKeys'},
+		{mode: 'advancedBrowseModeAction'},
 		makeButtonControlsToggler('app-buttons')],
 
 	toggleSideButtons: ['Interface/70: Touch buttons', 
@@ -3195,7 +3219,7 @@ var ButtonsActions = actions.Actions({
 		})()],
 
 	toggleButtonHighlightColor: ['Interface/Theme/Button highlight color',
-		{mode: 'toggleBrowseActionKeys'},
+		{mode: 'advancedBrowseModeAction'},
 		core.makeConfigToggler(
 			'button-highlight-color',
 			function(){ return this.config['button-highlight-colors'] },

@@ -832,7 +832,7 @@ actions.Actions({
 
 	// NOTE: resetting this option will clear the last direction...
 	toggleShiftsAffectDirection: ['Interface/Shifts affect direction',
-		{mode: 'toggleBrowseActionKeys'},
+		{mode: 'advancedBrowseModeAction'},
 		core.makeConfigToggler('shifts-affect-direction', 
 			['off', 'on'],
 			function(action){
