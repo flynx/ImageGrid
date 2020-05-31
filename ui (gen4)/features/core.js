@@ -487,21 +487,46 @@ var IntrospectionActions = actions.Actions({
 			return !!action.__event__ }),
 
 	// XXX revise... 
-	// XXX this is a bit restrictive, need to be able to setup mode 
-	// 		aliases/handlers, i.e. setting {mode: 'advanced'} and either
-	// 		getting the actual value from .config or calling a mode handler...
-	// 		...might also be nice to use a toggler as handler:
-	// 			{mode: 'toggleBrowseAdvanced'}
 	getActionMode: ['- Interface/',
 		doc`Get action browse mode...
 
 		Get and action's .mode(..) method and return its result.
 
-		Expected values:
-			'disabled'		- actions is disabled
-			'hidden'		- actions is hidden
+		Action .mode can be:
+			<function>			- action method.
+			<action-name>		- alias, name of action to get the
+									method from.
 
-		NOTE: other values are ignored.
+		The action .mode(..) method is called in the context of actions.
+
+		Basic example:
+			someAction: ['Path/To/Some action',
+				{mode: function(){ ... }},
+				function(){
+					...
+				}],
+			someOtherAction: ['Path/To/Some action',
+				// alias
+				{mode: 'someAction'},
+				function(){
+					...
+				}],
+
+
+		Usage pattern:
+			// for cases where we need to define an explicit mode...
+			actionModeX: ['- System/',
+				{mode: function(){
+					return this.actionModeX() }},
+				core.notUserCallable(function(){
+					return ...
+				})],
+			someAction: [
+				// use the mode...
+				{mode: 'actionModeX'},
+				function(){
+					...
+				}],
 		`,
 		function(action, mode_cache){
 			var m = action

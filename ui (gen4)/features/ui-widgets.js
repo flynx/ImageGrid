@@ -2615,34 +2615,20 @@ var BrowseActionsActions = actions.Actions({
 
 
 		Action mode (disabled/hidden) and also be controlled dynamically:
-			- .mode() action method is called with actions as base.
-			Example:
-				someAction: ['Path/To/Some action',
-					{mode: function(){ ... }},
-					function(){
-						...
-					}],
-				someOtherAction: ['Path/To/Some action',
-					// alias
-					{mode: 'someAction'},
-					function(){
-						...
-					}],
 
-			.mode can be:
-				<function>			- action method.
-				<action-name>		- alias, name of action to get the
-										method from.
+		Expected modes:
+			'hidden'		- hide the action from dialog
+			'disabled'		- disable the action in dialog
+			...				- other values are ignored
 
-			.mode() can return:
-				'disabled'		- item will be disabled.
-				'hidden'		- item will be both hidden and disabled.
+		NOTE: disabling in path has priority over .mode(), thus
+			it is possible to hide/disable an enabled item but not
+			possible to enable a disabled by default path.
+		NOTE: .mode() can be defined in any action in chain,
+			though only the last one is called...
 
-			NOTE: disabling in path has priority over .mode(), thus
-				it is possible to hide/disable an enabled item but not
-				possible to enable a disabled by default path.
-			NOTE: .mode() can be defined in any action in chain,
-				though only the last one is called...
+		For more info see .getActionMode(..)
+
 
 
 		options format:
@@ -2951,7 +2937,7 @@ var BrowseActionsActions = actions.Actions({
 
 	// XXX revise...
 	advancedBrowseModeAction: ['- System/',
-		core.doc`Placeholder advanced action
+		core.doc`advanced action (placeholder)
 
 		This is mainly used to indicate other actions as advanced mode only.
 		
@@ -2965,14 +2951,14 @@ var BrowseActionsActions = actions.Actions({
 		`,
 		{mode: function(){ 
 			return this.advancedBrowseModeAction() }},
-		core.notUserCallable(function(){
+		function(){
 			// Placeholder action, not for direct use...
 			//
 			// See doc for more info: 
 			// 	.showDoc('advancedBrowseModeAction')
 			return this.config['browse-advanced-mode'] != 'on' 
 				&& 'hidden' 
-				|| 'visible' })],
+				|| 'visible' }],
 
 	toggleBrowseAdvanced: ['System|Interface/-99: Advanced menu items',
 		core.doc`Toggle advanced menu items...

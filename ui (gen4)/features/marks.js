@@ -266,7 +266,7 @@ var ImageMarkActions = actions.Actions({
 		function(mode){ this.nextTagged('marked', mode) }],
 
 	cropMarked: ['Mark|Crop/Crop $marked images',
-		{mode: function(target){ 
+		{mode: function(){
 			return this.marked.length == 0 && 'disabled' }},
 		'crop: "marked" ...'],
 		//function(flatten){ this.cropTagged('marked', flatten) }],
@@ -274,7 +274,7 @@ var ImageMarkActions = actions.Actions({
 
 	removeMarkedFromCrop: ['Mark|Crop/Remove marked from crop',
 		{mode: function(target){ 
-				return (this.marked.length == 0 || !this.cropped) && 'disabled' }},
+			return (this.marked.length == 0 || !this.cropped) && 'disabled' }},
 		'removeFromCrop: marked'],
 
 	rotateMarkedCW: ['Mark/Rotate marked clockwise',
