@@ -17,7 +17,7 @@ if(typeof(process) != 'undefined'){
 
 	// XXX EXPERIMENTAL: graph...
 	// do this only if browser is loaded...
-	var graph = window != null ?
+	var graph = typeof(window) != 'undefined' ?
 		requirejs('lib/components/ig-image-graph')
 		: null
 }

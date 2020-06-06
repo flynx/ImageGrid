@@ -94,16 +94,14 @@ module.SHIFT_KEYS = {
 var UNSHIFT_KEYS = 
 module.UNSHIFT_KEYS = {}
 for(var k in SHIFT_KEYS){
-	UNSHIFT_KEYS[SHIFT_KEYS[k]] = k
-}
+	UNSHIFT_KEYS[SHIFT_KEYS[k]] = k }
 
 
 // build a reverse map of SPECIAL_KEYS
 var KEY_CODES =
 module.KEY_CODES = {}
 for(var k in SPECIAL_KEYS){
-	KEY_CODES[SPECIAL_KEYS[k]] = k
-}
+	KEY_CODES[SPECIAL_KEYS[k]] = k }
 
 
 // This is used to identify and correct key notation...
@@ -130,8 +128,7 @@ var SPECIAL_KEY_ALTERNATIVE_TITLES = {
 }
 var SPECIAL_KEYS_DICT = {}
 for(var k in SPECIAL_KEYS){
-	SPECIAL_KEYS_DICT[SPECIAL_KEYS[k].toLowerCase()] = SPECIAL_KEYS[k]
-}
+	SPECIAL_KEYS_DICT[SPECIAL_KEYS[k].toLowerCase()] = SPECIAL_KEYS[k] }
 
 
 
@@ -143,8 +140,7 @@ module.doc =
 function doc(text, func){
 	func = !func ? function(){return true}: func
 	func.doc = text
-	return func
-}
+	return func }
 
 
 // Parse action call format...
@@ -365,8 +361,7 @@ function normalizeKey(key){
 
 	return output == 'array' ? 
 		key 
-		: joinKey(key)
-}
+		: joinKey(key) }
 
 
 // Get shifted key if available...
@@ -395,8 +390,7 @@ function shifted(key){
 	return s == null ? null 
 		: output == 'string' ? 
 			joinKey(res)
-		: res
-}
+		: res }
 
 
 
