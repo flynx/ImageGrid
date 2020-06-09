@@ -25,76 +25,6 @@ if(typeof(process) != 'undefined'){
 
 
 /*********************************************************************/
-
-// setup logger...
-// XXX STUB...
-var logger = {
-	root: true,
-	message: null,
-	log: null,
-	ig: null,
-
-	emit: function(e, v){ 
-		var msg = this.message
-		var log = this.log = this.log || []
-
-		// XXX HACK...
-		var ig = this.ig
-
-		// report progress...
-		// XXX HACK -- need meaningful status...
-		if(e == 'queued' 
-				|| e == 'found'){
-			ig.showProgress(msg || ['Progress', e], '+0', '+1')
-
-		} else if(e == 'loaded' || e == 'done' || e == 'written' 
-				|| e == 'index'){
-			ig.showProgress(msg || ['Progress', e], '+1')
-
-		} else if(e == 'skipping' || e == 'skipped'){
-			// XXX if everything is skipped the indicator does not 
-			// 		get hidden...
-			//ig.showProgress(msg || ['Progress', e], '+0', '-1')
-			ig.showProgress(msg || ['Progress', e], '+1')
-
-		// XXX STUB...
-		} else if(e == 'error' ){
-			ig.showProgress(['Error'].concat(msg), '+0', '+1')
-			console.log(msg ? 
-				'    '+ msg.join(': ') + ':' 
-				: '', ...arguments) 
-
-		} else {
-			// console...
-			console.log(msg ? 
-				'    '+ msg.join(': ') + ':' 
-				: '', ...arguments) 
-		}
-
-		// XXX
-		//log.push([msg, e, v])
-	},
-
-	push: function(msg){
-		if(msg == null){
-			return this
-		}
-
-		var logger = Object.create(this)
-		logger.root = false
-		logger.message = logger.message == null ? [msg] : logger.message.concat([msg])
-		logger.log = this.log = this.log || []
-
-		return logger
-	},
-	pop: function(){
-		return !this.__proto__.root ? this.__proto__ : this	
-	},
-}
-
-
-
-/*********************************************************************/
 // XXX what we need here is:
 // 		- base introspection
 // 			- list features
@@ -199,6 +129,7 @@ var CLIActions = actions.Actions({
 })
 
 
+// XXX move this to the argv parser used in object.js
 var CLI = 
 module.CLI = core.ImageGridFeatures.Feature({
 	title: '',
@@ -206,7 +137,8 @@ module.CLI = core.ImageGridFeatures.Feature({
 
 	tag: 'commandline',
 	depends: [
-		'lifecycle'
+		'lifecycle',
+		'logger',
 	],
 
 	// XXX should this be ONLY node???
@@ -224,9 +156,6 @@ module.CLI = core.ImageGridFeatures.Feature({
 		['ready',
 			function(){
 				var that = this
-
-				this.logger = logger
-				logger.ig = that
 
 				// get the arguments...
 				if(this.runtime.nw){
