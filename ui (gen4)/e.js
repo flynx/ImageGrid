@@ -29,6 +29,12 @@ var VERSION = require('./version').version
 
 /*********************************************************************/
 
+// XXX process args...
+
+
+
+/*********************************************************************/
+
 var win
 
 // XXX move this to splash.js (or an electron-specific variant of it) 
