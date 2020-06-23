@@ -32,6 +32,7 @@ if(typeof(process) != 'undefined'){
 // 			- list action scripts / commands
 // 		- call action
 // 		- call action script (a-la git commands)
+// 		- repl (debug/testing)
 //
 // XXX the main functionality:
 // 		- make previews
