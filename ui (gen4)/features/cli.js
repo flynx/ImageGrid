@@ -129,6 +129,7 @@ var CLIActions = actions.Actions({
 })
 
 
+// XXX revise architecture....
 // XXX move this to the argv parser used in object.js
 var CLI = 
 module.CLI = core.ImageGridFeatures.Feature({
@@ -148,10 +149,6 @@ module.CLI = core.ImageGridFeatures.Feature({
 	actions: CLIActions,
 
 	handlers: [
-		// XXX sort out different run/stop/exit paths -- make this more 
-		// 		systematic...
-		// 		...i.e. how do we run stuff (electron/nw/repl), interact
-		// 		with it (peer???) and wait/stop when done...
 		// XXX should some of the flag handlers be actions???
 		['ready',
 			function(){
