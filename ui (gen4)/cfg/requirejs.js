@@ -19,6 +19,7 @@ var requirejs_cfg = {
 		'lib/actions': 'node_modules/ig-actions/actions',
 		'lib/features': 'node_modules/ig-features/features',
 		//'lib/keyboard': './node_modules/ig-keyboard/keyboard',
+		'object-run': 'node_modules/object-run/run',
 		
 		'lib/walk': 'node_modules/generic-walk/walk',
 	},	

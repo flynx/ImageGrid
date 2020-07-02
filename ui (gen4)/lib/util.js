@@ -7,20 +7,11 @@
 (function(require){ var module={} // make module AMD/node compatible...
 /*********************************************************************/
 
+require('object-run')
+
 
 //---------------------------------------------------------------------
 // Object...
-
-// Run a function in the context of an object...
-//
-Object.defineProperty(Object.prototype, 'run', {
-	enumerable: false,
-	value: function(func){
-		var res = func ? func.call(this) : undefined
-		return res === undefined ? this : res
-	},
-})
-
 
 // Get all the accessible keys...
 //
@@ -33,8 +24,7 @@ Object.deepKeys = function(obj){
 		res = res.concat(Object.keys(obj))
 		obj = obj.__proto__
 	}
-	return res.unique()
-}
+	return res.unique() }
 
 
 // Make a full key set copy of an object...
@@ -45,8 +35,7 @@ Object.flatCopy = function(obj){
 	Object.deepKeys(obj).forEach(function(key){
 		res[key] = obj[key]
 	})
-	return res
-}
+	return res}
 
 
 
