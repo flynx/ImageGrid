@@ -2762,7 +2762,7 @@ var FileSystemWriterUIActions = actions.Actions({
 								})
 						}],
 						// XXX BUG: closing this breaks on parant.focus()...
-						['histroy', widgets.makeNestedConfigListEditor(actions, parent,
+						['history', widgets.makeNestedConfigListEditor(actions, parent,
 							'export-paths',
 							'export-path',
 							{
