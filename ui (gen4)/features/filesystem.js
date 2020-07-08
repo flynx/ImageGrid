@@ -491,6 +491,7 @@ var FileSystemLoaderActions = actions.Actions({
 	//
 	// Returns: Images object
 	//
+	// XXX revise logging...
 	getImagesInPath: ['- File/',
 		function(path, read_stat, skip_preview_search, logger){
 			if(path == null){
@@ -503,12 +504,22 @@ var FileSystemLoaderActions = actions.Actions({
 				this.config['image-file-skip-previews']
 				: skip_preview_search
 
-			// XXX get a logger...
 			logger = logger || this.logger
-			//logger = logger && logger.push('getImagesInPath')
 
 			var that = this
 			path = util.normalizePath(path)
+
+			// progress...
+			// XXX this does not appear to run while glob(..) is running...
+			var found = []
+			var update_interval
+			if(logger){
+				that.showProgress 
+					&& that.showProgress(logger.path)
+				update_interval = setInterval(function(){
+					found.length > 0
+						&& logger.emit('found', found) 
+						&& (found = []) }, 150) }
 
 			// get the image list...
 			return new Promise(function(resolve, reject){
@@ -516,11 +527,19 @@ var FileSystemLoaderActions = actions.Actions({
 						stat: !!read_stat,
 						strict: false,
 					})
+					.on('match', function(e){ found.push(e) })
 					.on('error', function(err){
+						update_interval
+							&& clearInterval(update_interval)
 						console.error(err)
-						reject(err)
-					})
+						reject(err) })
 					.on('end', function(lst){ 
+						update_interval
+							&& clearInterval(update_interval)
+						logger && found.length > 0
+							&& logger.emit('found', found)
+							&& (found = [])
+
 						// XXX might be a good idea to make image paths relative to path...
 						//lst = lst.map(function(p){ return pathlib.relative(base, p) })
 						// XXX do we need to normalize paths after we get them from glob??
@@ -543,8 +562,7 @@ var FileSystemLoaderActions = actions.Actions({
 								img.size = stat.size
 
 								// XXX do we need anything else???
-							})
-						}
+							}) }
 
 						// pass on the result...
 						resolve(imgs)
@@ -558,9 +576,7 @@ var FileSystemLoaderActions = actions.Actions({
 				return !skip_preview_search ? 
 					//that.getPreviews('all', path, imgs)
 					that.getPreviews('all', index_path, imgs)
-					: imgs 
-			})
-		}],
+					: imgs }) }],
 
 	// Load images...
 	//
@@ -593,6 +609,7 @@ var FileSystemLoaderActions = actions.Actions({
 					logger)
 				// load the data...
 				.then(function(imgs){
+					logger && logger.emit('loaded', imgs.keys()) 
 					return that.loadOrRecover({
 							images: imgs,
 							data: data.Data.fromArray(imgs.keys()),
@@ -604,10 +621,7 @@ var FileSystemLoaderActions = actions.Actions({
 							}
 						})
 						.then(function(){
-							that.markChanged('none')
-						})
-				})
-		}],
+							that.markChanged('none') }) }) }],
 
 	// Load images to new ribbon...
 	//
@@ -650,6 +664,8 @@ var FileSystemLoaderActions = actions.Actions({
 					logger)
 				// load the data...
 				.then(function(imgs){
+					logger && logger.emit('loaded', imgs.keys()) 
+
 					that.clearLoaction()
 
 					var d = that.data
@@ -699,19 +715,19 @@ var FileSystemLoaderActions = actions.Actions({
 				return ['loadIndex', 'loadImages'].includes(this.location.load) 
 					|| 'disabled' }, },
 		function(path, logger){
+			var that = this
 			path = path || this.location.path
 
 			if(path == null){
 				return
 			}
 
-			var that = this
 			logger = logger || this.logger
 			logger = logger && logger.push('Load new images')
 			path = util.normalizePath(path)
 
 			// cache the loaded images...
-			var loaded = this.images.map(function(gid, img){ return img.path })
+			var loaded = new Set(this.images.map(function(gid, img){ return img.path }))
 			//var base_pattern = RegExp('^'+path)
 
 			return this.getImagesInPath(
@@ -721,25 +737,47 @@ var FileSystemLoaderActions = actions.Actions({
 					logger)
 				// load the data...
 				.then(function(imgs){
+					var added = []
+					var skipped = []
+					var progress = function(){
+						skipped.length > 0
+							&& logger.emit('skipped', skipped)
+							&& (skipped = [])
+						added.length > 0
+							&& logger.emit('done', added)
+							&& (added = []) }
+
 					// remove the images we already have loaded...
+					var t = Date.now()
 					imgs.forEach(function(gid, img){
+						// XXX this does not let the browser update progress...
+						Date.now() - t > 200
+							&& (t = Date.now())
+							&& progress()
 						// NOTE: we do not need to normalize anything as
 						// 		both the current path and loaded paths 
 						// 		came from the same code...
 						// XXX is this good enough???
 						// 		...might be a good idea to compare absolute
 						// 		paths...
-						if(loaded.indexOf(img.path) >= 0){
-							delete imgs[gid]
-						}	
-					})
+						if(loaded.has(img.path)){
+							delete imgs[gid] 
+							skipped.push(gid)
+						} else {
+							added.push(gid) } })
+
+					// finalize progress...
+					if(logger){
+						skipped.length > 0
+							&& logger.emit('skipped', skipped)
+						added.length > 0
+							&& logger.emit('done', added) }
 
 					// nothing new...
 					if(imgs.length == 0){
 						// XXX
 						logger && logger.emit('loaded', [])
-						return imgs
-					}
+						return imgs }
 
 					// XXX
 					logger && logger.emit('queued', imgs)
@@ -863,39 +901,47 @@ var FileSystemLoaderActions = actions.Actions({
 			logger = logger && logger.push('Check missing')
 
 			logger 
-				&& this.images
-					.forEach(function(gid){ 
-						logger.emit('queued', gid)})
+				&& logger.emit('queued', this.images.keys())
 
 			var chunk_size = '100C'
+			var removed = []
 
 			return this.images
 				.map(function(gid, image){ 
 					return [gid, image] })
-				.mapChunks(chunk_size, function([gid, image]){
-					var updated = false
+				.mapChunks(chunk_size, [
+					function([gid, image]){
+						var updated = false
 
-					image.path 
-						&& !fse.existsSync(image.base_path +'/'+ image.path)
-						&& (updated = true)
-						&& logger && rem_logger.emit('queued', gid)
+						image.path 
+							&& !fse.existsSync(image.base_path +'/'+ image.path)
+							&& (updated = true)
+							&& logger 
+								&& removed.push(gid)
 
-					logger && logger.emit('done', gid)
-
-					return updated ? gid : []
-				})
+						return updated ? gid : [] },
+					// do the logging per chunk...
+					function(chunk, res){
+						logger 
+							&& logger.emit('done', chunk.map(function([gid]){ return gid })) 
+							&& rem_logger.emit('queued', removed)
+							&& (removed = []) }])
 				.then(function(res){
 					res = res.flat()
-					if(res.length > 0){
-						logger && rem_logger.emit('queued', 'data cleanup')
-						// clear images...
-						res.forEach(function(gid){
-							delete that.images[gid]
-							logger && rem_logger.emit('done', gid) })
-						// clear data...
-						that.data.clear(res)
-						logger && rem_logger.emit('done', 'data cleanup') }
-					return res }) }],
+					return res.length > 0 ?
+						res
+							.mapChunks(chunk_size, [
+								// clear images...
+								function(gid){
+									delete that.images[gid] }, 
+								// log...
+								function(chunk){
+									logger && rem_logger.emit('done', chunk) }])
+							// clear data...
+							.then(function(){
+								that.data.clear(res) 
+								return res })
+						: res }) }],
 
 
 	// XXX EXPERIMENTAL...

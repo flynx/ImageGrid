@@ -244,7 +244,7 @@ function(list){
 var groupByKeyword = 
 module.groupByKeyword = 
 function(list, from_date, logger){
-	logger = logger && logger.push('Grouping by keyword')
+	//logger = logger && logger.push('Grouping by keyword')
 
 	var index = {}
 	var queued = 0
@@ -312,8 +312,8 @@ function(list, from_date, logger){
 
 	// remove the flags...
 	for(var k in index){
-		index[k] = index[k].map(function(e){ return e[1] })
-	}
+		index[k] = index[k]
+			.map(function(e){ return e[1] }) }
 
 	logger && logger.emit('files-queued', queued, index)
 

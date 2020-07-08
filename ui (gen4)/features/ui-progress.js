@@ -20,6 +20,8 @@ var ProgressActions = actions.Actions({
 	config: {
 		'progress-fade-duration': 200,
 		'progress-done-delay': 1000,
+
+		'progress-update-min': 200,
 	},
 
 	// Progress bar widget...
@@ -41,19 +43,55 @@ var ProgressActions = actions.Actions({
 	// 	.showProgress('text', '+1')
 	// 	.showProgress('text', '+0', '+1')
 	//
+	// 	.showProgress(logger)
+	//
 	//
 	// XXX add message to be shown...
 	// XXX should we report errors and stoppages??? (error state??)
 	// XXX multiple containers...
 	// XXX shorten the nested css class names...
 	// XXX revise styles...
+	__progress_cache: null,
 	showProgress: ['- Interface/Show progress bar...',
 		function(text, value, max){
-			var viewer = this.dom
 			var that = this
+			var viewer = this.dom
 
 			var msg = text instanceof Array ? text.slice(1).join(': ') : null
 			text = text instanceof Array ? text[0] : text
+
+			// make sure we do not update too often...
+			if(value != 'close'){
+				var cache = (this.__progress_cache = this.__progress_cache || {})
+				cache = cache[text] = cache[text] || {}
+
+				var updateValue = function(name, value){
+					var v = cache[name] || 0
+					return (cache[name] = 
+						value != null ? 
+							(typeof(value) == typeof('str') && /[+-][0-9]+/.test(value) ? 
+								v + parseInt(value)
+								: parseInt(value))
+							: v) }
+
+				value = updateValue('value', value)
+				max = updateValue('max', max)
+
+				// update not due yet...
+				if('timeout' in cache){
+					cache.update = true
+					return 
+
+				// set next update point and continue...
+				} else {
+					delete cache.update
+					cache.timeout = setTimeout(
+						function(){
+							var cache = that.__progress_cache[text] || {}
+							delete cache.timeout
+							cache.update
+								&& that.showProgress(text) }, 
+						this.config['progress-update-min'] || 200) } }
 
 			// container...
 			var container = viewer.find('.progress-container')
@@ -68,8 +106,8 @@ var ProgressActions = actions.Actions({
 			// close action...
 			if(value == 'close'){
 				widget.trigger('progressClose')
-				return
-			}
+				return }
+
 			widget = widget.length == 0 ?
 				$('<div/>')
 					.addClass('progress-bar')
@@ -87,6 +125,10 @@ var ProgressActions = actions.Actions({
 					.on('progressClose', function(){ 
 						widget
 							.fadeOut(that.config['progress-fade-duration'] || 200, function(){
+								var cache = (that.__progress_cache || {})
+								cache[text].timeout 
+									&& clearTimeout(cache[text].timeout)
+								delete cache[text]
 								$(this).remove() }) })
 					.appendTo(container)
 				: widget
@@ -99,26 +141,11 @@ var ProgressActions = actions.Actions({
 			var bar = widget.find('progress')
 			var state = widget.find('.progress-details')
 
-			// XXX stub???
-			// normalize max and value...
-			max = max != null ? 
-					(typeof(max) == typeof('str') && /[+-][0-9]+/.test(max) ? 
-						parseInt(bar.attr('max') || 0) + parseInt(max)
-					: parseInt(max))
-				: bar.attr('max')
-			value = value != null ? 
-					(typeof(value) == typeof('str') && /[+-][0-9]+/.test(value) ? 
-						parseInt(bar.attr('value') || 0) + parseInt(value)
-					: parseInt(value))
-				: bar.attr('value')
-
 			// format the message...
-			// XXX should we add a message after this????
 			msg = msg ? ': '+msg : ''
 			msg = ' '+ msg 
-				//+ (value && value >= (max || 0) ? ' ('+value+' done)' 
 				+ (value && value >= (max || 0) ? ' (done)' 
-					: value && max && value != max ? ' ('+ value +' of '+ max +')'
+					: max && value != max ? ' ('+ (value || 0) +' of '+ max +')'
 					: '...')
 
 			// update widget...
@@ -129,48 +156,59 @@ var ProgressActions = actions.Actions({
 			state.text(msg)
 
 			// auto-close...
-			// XXX make this optional... 
 			if(value && value >= (max || 0)){
 				widget.attr('close-timeout', 
 					JSON.stringify(setTimeout(function(){ 
 						widget.trigger('progressClose') 
-					}, this.config['progress-done-delay'] || 1000)))
-			}
+					}, this.config['progress-done-delay'] || 1000))) }
 
 			// XXX force the browser to render...
 			//bar.hide(0).show(0)
-
-			// XXX what should we return??? (state, self, controller?)
 		}],
 
 	// handle logger progress...
 	// XXX revise...
 	handleLogItem: ['- System/',
 		function(path, status, ...rest){
-			var msg = this.message
+			var msg = path.join(': ')
+			var l = (rest.length == 1 && rest[0] instanceof Array) ?
+				rest[0].length
+				: rest.length
+
+			// XXX should we move these to a more accessible spot???
+			var add = [
+				'added',
+				'queued',
+				'found',
+			]
+			var done = [
+				'loaded',
+				'done',
+				'written',
+				'index',
+			]
+			var skipped = [
+				'skipping',
+				'skipped',
+				'removed',
+			]
 
 			// report progress...
 			// XXX HACK -- need meaningful status...
-			if(status == 'queued' 
-					|| status == 'found'){
-				this.showProgress(msg || ['Progress', status], '+0', '+'+rest.length)
+			if(add.includes(status)){
+				this.showProgress(msg, '+0', '+'+l)
 
-			} else if(status == 'loaded' || status == 'done' || status == 'written' 
-					|| status == 'index'){
-				this.showProgress(msg || ['Progress', status], '+'+rest.length)
+			} else if(done.includes(status)){
+				this.showProgress(msg, '+'+l)
 
-			} else if(status == 'skipping' || status == 'skipped'){
+			} else if(skipped.includes(status)){
 				// XXX if everything is skipped the indicator does not 
 				// 		get hidden...
-				//this.showProgress(msg || ['Progress', status], '+0', '-1')
-				this.showProgress(msg || ['Progress', status], '+'+rest.length)
+				this.showProgress(msg, '+'+l)
 
 			// XXX STUB...
 			} else if(status == 'error' ){
-				this.showProgress(['Error'].concat(msg), '+0', '+'+rest.length)
-				//console.log(msg ? 
-				//	'    '+ msg.join(': ') + ':' 
-				//	: '', ...arguments) 
+				this.showProgress(['Error'].concat(msg), '+0', '+'+l)
 			}
 		}],
 })

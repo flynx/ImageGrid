@@ -196,15 +196,24 @@ Array.prototype.sortAs = function(other){
 //
 //	.mapChunks(func)
 //	.mapChunks(chunk_size, func)
+//	.mapChunks([item_handler, chunk_handler])
+//	.mapChunks(chunk_size, [item_handler, chunk_handler])
 //		-> promise(list)
 //	
 //	.filterChunks(func)
 //	.filterChunks(chunk_size, func)
+//	.filterChunks([item_handler, chunk_handler])
+//	.filterChunks(chunk_size, [item_handler, chunk_handler])
 //		-> promise(list)
 //	
 //	.reduceChunks(func, res)
 //	.reduceChunks(chunk_size, func, res)
+//	.reduceChunks([item_handler, chunk_handler], res)
+//	.reduceChunks(chunk_size, [item_handler, chunk_handler], res)
 //		-> promise(res)
+//
+//
+//	chunk_handler(chunk, result, offset)
 //
 //
 // chunk_size can be:
@@ -223,7 +232,8 @@ var makeChunkIter = function(iter, wrapper){
 	return function(size, func, ...rest){
 		var that = this
 		var args = [...arguments]
-		size = args[0] instanceof Function ? 
+		size = (args[0] instanceof Function 
+				|| args[0] instanceof Array) ? 
 			(this.CHUNK_SIZE || 50)
 			: args.shift()
 		size = typeof(size) == typeof('str') ?
@@ -232,31 +242,38 @@ var makeChunkIter = function(iter, wrapper){
 				 	Math.round(this.length / (parseInt(size) || 1)) || 1
 				: parseInt(size))
 			: size
+		var postChunk
 		func = args.shift()
+		;[func, postChunk] = func instanceof Array ? func : [func]
 		rest = args
 		var res = []
 		var _wrapper = wrapper.bind(this, res, func, this)
 
 		return new Promise(function(resolve, reject){
-			var next = function(chunks){
-				setTimeout(function(){
-					res.push(
-						chunks.shift()[iter](_wrapper, ...rest))
-					// stop condition...
-					chunks.length == 0 ?
-						resolve(res.flat(2))
-						: next(chunks) }, 0) }
-			next(that
-				// split the array into chunks...
-				.reduce(function(res, e, i){
-					var c = res.slice(-1)[0]
-					c.length >= size ?
-						// initial element in chunk...
-						res.push([[i, e]])
-						// rest...
-						: c.push([i, e])
-					return res }, [[]]))
-		}) } }
+				var next = function(chunks){
+					setTimeout(function(){
+						var chunk, val
+						res.push(
+							val = (chunk = chunks.shift())[iter](_wrapper, ...rest))
+						postChunk
+							&& postChunk.call(that, 
+								chunk.map(function([i, v]){ return v }), 
+								val,
+								chunk[0][0])
+						// stop condition...
+						chunks.length == 0 ?
+							resolve(res.flat(2))
+							: next(chunks) }, 0) }
+				next(that
+					// split the array into chunks...
+					.reduce(function(res, e, i){
+						var c = res.slice(-1)[0]
+						c.length >= size ?
+							// initial element in chunk...
+							res.push([[i, e]])
+							// rest...
+							: c.push([i, e])
+						return res }, [[]])) }) } }
 
 Array.prototype.CHUNK_SIZE = 50 
 Array.prototype.mapChunks = makeChunkIter('map')
