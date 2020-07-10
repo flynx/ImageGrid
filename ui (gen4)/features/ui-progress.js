@@ -193,18 +193,23 @@ var ProgressActions = actions.Actions({
 				'removed',
 			]
 
+			// close...
+			// XXX is the right keyword...
+			if(status == 'done' && rest.length == 0){
+				this.showProgress(path, 'close')
+
 			// report progress...
 			// XXX HACK -- need meaningful status...
-			if(add.includes(status)){
-				this.showProgress(msg, '+0', '+'+l)
+			} else if(add.includes(status)){
+				this.showProgress(path, '+0', '+'+l)
 
 			} else if(done.includes(status)){
-				this.showProgress(msg, '+'+l)
+				this.showProgress(path, '+'+l)
 
 			} else if(skipped.includes(status)){
 				// XXX if everything is skipped the indicator does not 
 				// 		get hidden...
-				this.showProgress(msg, '+'+l)
+				this.showProgress(path, '+'+l)
 
 			// XXX STUB...
 			} else if(status == 'error' ){

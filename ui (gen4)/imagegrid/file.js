@@ -367,29 +367,23 @@ function(path, index_dir, logger){
 			getIndexes(path, index_dir, logger)
 				.catch(function(err){
 					logger && logger.emit('error', err)
-					console.error(err)
-				})
+					console.error(err) })
 				.then(function(paths){
 					// start loading...
-					return Promise.all(paths.map(function(p){
-						p = util.normalizePath(p)
-						//var path = pathlib.normalize(p +'/'+ index_dir) 
-						var path = util.normalizePath(p +'/'+ index_dir) 
-						return loadSaveHistoryList(path, index_dir)
-							.then(function(obj){ 
-								// NOTE: considering that all the paths within
-								// 		the index are relative to the preview 
-								// 		dir (the parent dir to the index root)
-								// 		we do not need to include the index 
-								// 		itself in the base path...
-								res[p] = obj
-							})
-					}))
-				})
-				.then(function(){ resolve(res) })
-		}
-	})
-}
+					return Promise
+						.all(paths.map(function(p){
+							p = util.normalizePath(p)
+							//var path = pathlib.normalize(p +'/'+ index_dir) 
+							var path = util.normalizePath(p +'/'+ index_dir) 
+							return loadSaveHistoryList(path, index_dir)
+								.then(function(obj){ 
+									// NOTE: considering that all the paths within
+									// 		the index are relative to the preview 
+									// 		dir (the parent dir to the index root)
+									// 		we do not need to include the index 
+									// 		itself in the base path...
+									res[p] = obj }) })) })
+				.then(function(){ resolve(res) }) } }) }
 
 
 

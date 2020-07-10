@@ -941,7 +941,11 @@ var FileSystemLoaderActions = actions.Actions({
 							.then(function(){
 								that.data.clear(res) 
 								return res })
-						: res }) }],
+						: res })
+				// clear out progress...
+				.then(function(res){
+					logger && rem_logger.emit('done')
+					return res }) }],
 
 
 	// XXX EXPERIMENTAL...
