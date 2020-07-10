@@ -287,30 +287,31 @@ var FileSystemLoaderActions = actions.Actions({
 					//console.log('FOUND INDEXES:', Object.keys(res).length)
 
 					// skip nested paths...
+					//
 					// XXX make this optional...
 					// XXX this is best done BEFORE we load all the 
 					// 		indexes, e.g. in .loadIndex(..)
+					var skipped = new Set()
 					var paths = Object.keys(res)
-					var skipped = []
 					paths
 						.sort()
 						.forEach(function(p){
 							// already removed...
-							if(skipped.indexOf(p) >= 0){
-								return
-							}
+							if(skipped.has(p) >= 0){
+								return }
 
 							paths
 								// get all paths that fully contain p...
 								.filter(function(o){
-									return o != p && o.indexOf(p) == 0
-								})
-								// drop all longer paths...
+									return o != p 
+										&& o.indexOf(p) == 0 })
+								// drop all nested (longer) paths...
 								.forEach(function(e){
-									skipped.push(e)
-									delete res[e]
-								})
-						})
+									skipped.add(e)
+									delete res[e] }) })
+					// keep only the valid paths...
+					paths = Object.keys(res)
+
 					//console.log('SKIPPING NESTED:', skipped.length)
 
 					var index
@@ -325,15 +326,13 @@ var FileSystemLoaderActions = actions.Actions({
 						// skip empty indexes...
 						// XXX should we rebuild or list here???
 						if(res[k].data == null && res[k].images == null){
-							continue
-						}
+							continue }
 
 						// build the data from images...
 						if(res[k].data == null){
 							res[k].data = {
 								order: Object.keys(res[k].images),
-							}
-						}
+							} }
 
 						// prepare to do a full save if format version updated...
 						if(res[k].data.version != that.data.version){
@@ -342,8 +341,7 @@ var FileSystemLoaderActions = actions.Actions({
 							logger && logger.emit('Data version changed:',
 								v, '->', that.data.version)
 
-							force_full_save = true
-						}
+							force_full_save = true }
 
 						var part = that.prepareIndexForLoad(res[k], k)
 
@@ -391,9 +389,8 @@ var FileSystemLoaderActions = actions.Actions({
 								loaded: loaded,
 								load: 'loadIndex',
 							})
-					if(from_date){
-						index.location.from = from_date
-					}
+					from_date
+						&& (index.location.from = from_date)
 
 					// this is the critical section, after this point we
 					// are doing the actual loading....
@@ -402,8 +399,7 @@ var FileSystemLoaderActions = actions.Actions({
 							force_full_save
 								// XXX remove as soon as merged index save is done...
 								&& loaded.length == 1
-								&& that.markChanged('all')
-						})
+								&& that.markChanged('all') })
 				})
 		}],
 

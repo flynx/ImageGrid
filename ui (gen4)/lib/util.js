@@ -35,7 +35,7 @@ Object.flatCopy = function(obj){
 	Object.deepKeys(obj).forEach(function(key){
 		res[key] = obj[key]
 	})
-	return res}
+	return res }
 
 
 
@@ -94,12 +94,10 @@ Array.prototype.toKeys = function(normalize){
 	return normalize ? 
 		this.reduce(function(r, e, i){
 			r[normalize(e)] = i
-			return r
-		}, {})
+			return r }, {})
 		: this.reduce(function(r, e, i){
 			r[e] = i
-			return r
-		}, {}) }
+			return r }, {}) }
 
 
 // Convert an array to a map...
@@ -120,13 +118,11 @@ Array.prototype.toMap = function(normalize){
 		this
 			.reduce(function(m, e, i){
 				m.set(normalize(e), i)
-				return m
-			}, new Map())
+				return m }, new Map())
 		: this
 			.reduce(function(m, e, i){
 				m.set(e, i)
-				return m
-			}, new Map()) }
+				return m }, new Map()) }
 
 
 // Return an array with duplicate elements removed...
@@ -149,18 +145,13 @@ Array.prototype.tailUnique = function(normalize){
 //
 Array.prototype.cmp = function(other){
 	if(this === other){
-		return true
-	}
+		return true }
 	if(this.length != other.length){
-		return false
-	}
+		return false }
 	for(var i=0; i<this.length; i++){
 		if(this[i] != other[i]){
-			return false
-		}
-	}
-	return true
-}
+			return false } }
+	return true }
 
 
 // Compare two Arrays as sets...
@@ -185,9 +176,7 @@ Array.prototype.sortAs = function(other){
 		return i < 0 && j < 0 ? 0
 			: i < 0 ? 1
 			: j < 0 ? -1
-			: i - j
-	})
-}
+			: i - j }) }
 
 
 
@@ -315,8 +304,7 @@ var quoteRegExp =
 RegExp.quoteRegExp =
 module.quoteRegExp =
 function(str){
-	return str.replace(/([\.\\\/\(\)\[\]\$\*\+\-\{\}\@\^\&\?\<\>])/g, '\\$1')
-}
+	return str.replace(/([\.\\\/\(\)\[\]\$\*\+\-\{\}\@\^\&\?\<\>])/g, '\\$1') }
 
 
 

@@ -181,10 +181,14 @@ module.calcRelativeRotation = function(from, to){
 		to = from
 		from = 0
 	}
-	to = to == 'cw' ? 1 
-		: to == 'ccw' ? -1
-		: [0, 90, 180, 270].indexOf(to*1) >= 0 ? to*1
-		: [-90, -180, -270].indexOf(to*1) >= 0 ? 360+(to*1)
+	to = to == 'cw' ? 
+			1 
+		: to == 'ccw' ? 
+			-1
+		: [0, 90, 180, 270].includes(to*1) ? 
+			to*1
+		: [-90, -180, -270].includes(to*1) ? 
+			360+(to*1)
 		: null
 
 	// relative rotation...
@@ -201,8 +205,7 @@ module.calcRelativeRotation = function(from, to){
 		var res = to
 	}
 
-	return res
-}
+	return res }
 
 
 
@@ -449,8 +452,7 @@ module.ImagesPrototype = {
 		var i = keys.indexOf('version')
 		i >= 0
 			&& keys.splice(i, 1)
-		return keys
-	},
+		return keys },
 
 	// Build an image index relative to an attribute...
 	//
@@ -752,16 +754,15 @@ module.ImagesPrototype = {
 			//
 			// NOTE: updating from legacy format...
 			// XXX move this to version conversion... (???)
-			if(version == null){
-				Object.keys(img && img.preview || {})
+			version == null
+				&& Object.keys(img && img.preview || {})
 					.forEach(function(res){
 						var p = img.preview[res]
-						img.preview[res] = p.indexOf(k+'%20-%20') >= 0 ? decodeURI(p) : p
-					})
-			}
-		}
-		return this
-	},
+						img.preview[res] = 
+							p.includes(k+'%20-%20') ? 
+								decodeURI(p) 
+								: p }) }
+		return this },
 	// XXX this is really odd: renaming this to 'toJSON' breaks JavaScript
 	// 		making chrome/node just say: "<error>" and a filename...
 	json: function(data){

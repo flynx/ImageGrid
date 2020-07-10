@@ -2309,7 +2309,7 @@ var RibbonsPrototype = {
 	// NOTE: this will reuse existing marks...
 	toggleImageMark: function(image, cls, action){
 		var that = this
-		if(cls == null || ['toggle', 'on', 'off', '?'].indexOf(cls) >= 0 ){
+		if(cls == null || ['toggle', 'on', 'off', '?'].includes(cls)){
 			action = cls
 			cls = image
 			image = null
@@ -2443,7 +2443,7 @@ var RibbonsPrototype = {
 			// update existing state...
 			if(set_state == null){
 				var d = direction
-				if(reference == 'view' && [90, 270].indexOf(that.getImageRotation(img)) > -1){
+				if(reference == 'view' && [90, 270].includes(that.getImageRotation(img))){
 					d = direction == 'vertical' ? 'horizontal' : 'vertical'
 				}
 				var state = img.attr('flipped')

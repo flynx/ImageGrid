@@ -715,8 +715,8 @@ var BaseTagsPrototype = {
 				res = res.unite(tags)
 				return res.size != size ? 
 					expand(tags, res)
-					: [...res] 
-			}
+					: [...res] }
+
 			// Set matching...
 			// 	a matches b iff each element of a exists in b.
 			//
@@ -724,14 +724,14 @@ var BaseTagsPrototype = {
 			// NOTE: this matches single tags too...
 			var matchSet = function(a, b){
 				a = that.splitSet(a)
-				b = (no_definitions || !definitions) ? 
+				b = new Set((no_definitions || !definitions) ? 
 					that.splitSet(b) 
-					: expand(that.splitSet(b))
+					: expand(that.splitSet(b)))
 				return a.length <= b.length
 					// keep only the non-matches -> if at least one exists we fail...
 					&& a.filter(function(e){ 
 						return e != '*' 
-							&& b.indexOf(e) < 0
+							&& b.has(e) < 0
 				   			&& !(cmp 
 								&& b.filter(cmp.bind(null, e)).length > 0) })
 						.length == 0 }

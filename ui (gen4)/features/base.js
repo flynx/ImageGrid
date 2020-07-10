@@ -1617,10 +1617,9 @@ module.CropActions = actions.Actions({
 					.shift()
 				crop.focusImage(
 					crop.getImage(this.current, 'after', r)
-						|| crop.getImage(this.current, 'before', r))
-			}
+						|| crop.getImage(this.current, 'before', r)) }
 
-			this.crop(crop, flatten)
+			this.crop(crop, flatten) 
 		}],
 	cropOutRibbonsBelow: ['Crop/Crop out ribbons be$low',
 		function(ribbon, flatten){
@@ -1723,10 +1722,8 @@ module.CropActions = actions.Actions({
 			// add gids to current ribbon...
 			gids.forEach(function(gid){
 				var i = o.indexOf(gid)
-				if(i >= 0){
-					r[i] = gid
-				}
-			})
+				i >= 0
+					&& (r[i] = gid) })
 
 			// place...
 			;(ribbon || reference || mode)
