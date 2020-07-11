@@ -276,9 +276,7 @@ module.SortActions = actions.Actions({
 				b = this.images.getImageNameLeadingSeq(b)
 				b = typeof(b) == typeof('str') ? 0 : b
 
-				return a - b
-			}
-		},
+				return a - b } },
 		'name-sequence': function(){
 			return function(a, b){
 				a = this.images.getImageNameSeq(a)
@@ -286,12 +284,11 @@ module.SortActions = actions.Actions({
 				b = this.images.getImageNameSeq(b)
 				b = typeof(b) == typeof('str') ? 0 : b
 
-				return a - b
-			}
-		},
+				return a - b } },
 		// NOTE: this will actually sort twice, stage one build sort index and
 		// 		second stage is a O(n) lookup cmp...
 		// 		XXX not sure if this is the best way to go...
+		// XXX add ability to rotate sections...
 		'name-sequence-overflow': function(){
 			var that = this
 
@@ -304,44 +301,42 @@ module.SortActions = actions.Actions({
 				.map(function(gid){ 
 					return [gid, that.images.getImageNameSeq(gid)] })
 				// keep only items with actual sequence numbers...
-				.filter(function(e){
-					return typeof(e[1]) == typeof(123) })
+				.filter(function([_, s]){
+					return typeof(s) == typeof(123) })
 				// sort by sequence...
-				.sort(function(a, b){ 
-					a = a[1]
-					a = typeof(a) == typeof('str') ? 0 : a
-					b = b[1]
-					b = typeof(b) == typeof('str') ? 0 : b
-
-					return a - b 
-				})
+				.sort(function([x, a], [y, b]){ 
+					return a - b })
 				// find largest gaps...
 				.map(function(e, i, lst){
 					var c = (lst[i+1] || e)[1] - e[1]
+					//var c = (lst[i+1] || lst[0])[1] - e[1]
 					if(c > l){
 						l = c
-						gap = i
-					}
-					return e
-				})
+						gap = i }
+					return e })
+
+			// calc gap between min/max accounting for overflow...
+			var a = lst[0][1]
+			var b = lst.slice(-1)[0][1]
+			var c = a + ( 10 ** (''+b).length ) - b - 2
+			if(c > l){
+				l = c
+				gap = -1 }
 
 			// rotate index blocks...
-			if(l > 1){
+			if(l > 1 && gap >= 0){
 				var tail = lst.splice(gap+1, lst.length)
-				lst = tail.concat(lst)
-			}
+				lst = tail.concat(lst) }
 
 			// build the actual lookup table...
 			var index = {}
 			lst.forEach(function(e, i){
-				index[e[0]] = i
-			})
+				index[e[0]] = i })
 
 			// return the lookup cmp...
 			return function(a, b){
 				// XXX is 0 as alternative here the correct way to go???
-				return (index[a] || 0) - (index[b] || 0) }
-		},
+				return (index[a] || 0) - (index[b] || 0) } },
 
 		// Keep image order in each ribbon the same but sort ribbons (i.e. 
 		// images within ribbons) in ribbon order...
