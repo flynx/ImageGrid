@@ -103,8 +103,7 @@ module.gGlob = function(){
 var listIndexes =
 module.listIndexes = 
 function(base, index_dir){
-	return gGlob(base +'/**/'+ (index_dir || INDEX_DIR), {strict: false})
-}
+	return gGlob(base +'/**/'+ (index_dir || INDEX_DIR), {strict: false}) }
 
 
 // NOTE: this is similar to listIndexes(..) but will return a promise and
@@ -125,17 +124,14 @@ function(base, index_dir, logger){
 			.on('end', function(paths){
 				// skip nested indexes...
 				resolve(skipNested(paths, index_dir, logger))
-			})
-	})
-}
+			}) }) }
 
 
 var listPreviews =
 module.listPreviews = 
 function(base, img_pattern){
 	//return gGlob(base +'/*px/*jpg')
-	return gGlob(base +'/*px/'+(img_pattern || '*')+'.jpg', {strict: false})
-}
+	return gGlob(base +'/*px/'+(img_pattern || '*')+'.jpg', {strict: false}) }
 
 
 // XXX return a promise rather than an event emitter (???)
@@ -144,8 +140,7 @@ module.listJSON =
 function(path, pattern){
 	pattern = pattern || '*'
 	path = util.normalizePath(path)
-	return gGlob(path +'/'+ pattern +'.json', {strict: false})
-}
+	return gGlob(path +'/'+ pattern +'.json', {strict: false}) }
 
 // wrap a node style callback function into a Promise...
 //

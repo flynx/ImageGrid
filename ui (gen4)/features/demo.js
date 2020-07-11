@@ -96,6 +96,7 @@ module.Demo = core.ImageGridFeatures.Feature({
 
 	actions: actions.Actions({
 		loadDemoIndex: ['File/Load demo data',
+			{mode: 'advancedBrowseModeAction'},
 			function(){
 				this.load({
 					data: data.Data(demo_data),
@@ -107,9 +108,7 @@ module.Demo = core.ImageGridFeatures.Feature({
 						load: 'loadDemoIndex',
 						sync: 'loadDemoIndex',
 						check: true,
-					}
-				})
-			}],
+					} }) }],
 	})
 })
 
