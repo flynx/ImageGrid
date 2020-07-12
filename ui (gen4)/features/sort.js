@@ -292,11 +292,14 @@ module.SortActions = actions.Actions({
 		'name-sequence-overflow': function(){
 			var that = this
 
+			var logger = this.logger 
+				&& this.logger.push('Sort indexing')
+			logger && logger.emit('queued', 'sequence sections')
+
 			// gap and gap length...
 			var gap = -1
 			var l = 1
 
-			// XXX add progress reporting...
 			var lst = this.images
 				.map(function(gid){ 
 					return [gid, that.images.getImageNameSeq(gid)] })
@@ -309,7 +312,6 @@ module.SortActions = actions.Actions({
 				// find largest gaps...
 				.map(function(e, i, lst){
 					var c = (lst[i+1] || e)[1] - e[1]
-					//var c = (lst[i+1] || lst[0])[1] - e[1]
 					if(c > l){
 						l = c
 						gap = i }
@@ -333,9 +335,10 @@ module.SortActions = actions.Actions({
 			lst.forEach(function(e, i){
 				index[e[0]] = i })
 
+			logger && logger.emit('done', 'sequence sections')
+
 			// return the lookup cmp...
 			return function(a, b){
-				// XXX is 0 as alternative here the correct way to go???
 				return (index[a] || 0) - (index[b] || 0) } },
 
 		// Keep image order in each ribbon the same but sort ribbons (i.e. 
@@ -345,8 +348,14 @@ module.SortActions = actions.Actions({
 		// and before images in ribbons >N
 		'sort-via-ribbons': function(reverse){
 			var that = this
+
+			var logger = this.logger 
+				&& this.logger.push('Sort indexing')
+			logger && logger.emit('queued', 'ribbon order')
+
 			var index = new Map(
 				this.data.ribbon_order
+					// reverse?
 					.run(function(){
 						return reverse ?
 							this.slice().reverse()
@@ -357,6 +366,9 @@ module.SortActions = actions.Actions({
 					.compact()
 					.map(function(e, i){ 
 						return [e, i] }))
+
+			logger && logger.emit('done', 'ribbon order')
+
 			return function(a, b){
 				a = index.get(a)
 				b = index.get(b)
@@ -376,10 +388,18 @@ module.SortActions = actions.Actions({
 		// XXX legacy: this is added to every sort automatically...
 		// 		...do we still need this here???
 		'keep-position': function(){
+
+			var logger = this.logger 
+				&& this.logger.push('Sort indexing')
+			logger && logger.emit('queued', 'position')
+
 			var order = new Map(
 				this.data.order
 					.map(function(e, i){ 
 						return [e, i] }))
+
+			logger && logger.emit('done', 'position')
+
 			return function(a, b){
 				return order.get(a) - order.get(b) } },
 	},
