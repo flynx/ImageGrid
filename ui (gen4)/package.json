@@ -55,7 +55,7 @@
   "devDependencies": {
     "asar": "^3.0.1",
     "electron-rebuild": "^1.11.0",
-    "less": "^3.11.3"
+    "less": "^3.12.0"
   },
   "bin": {
     "ig": "ig.js"
