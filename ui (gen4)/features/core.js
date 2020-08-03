@@ -424,12 +424,8 @@ module.Logger = ImageGridFeatures.Feature({
 // 		right at the string start.
 // 		
 // XXX might be a good idea to move this to a more generic spot like lib/util.js...
-var doc = 
-module.doc =
-function(strings, ...values){
-	return object.normalizeIndent(strings
-		.map(function(s, i){ return s + (values[i] || '') })
-		.join('')) }
+var doc = module.doc = object.doc
+var text = module.text = object.text
 
 
 // Indicate that an action is not intended for direct use...
