@@ -61,11 +61,7 @@
     "ig": "ig.js"
   },
   "scripts": {
-    "build-css": "lessc css/layout.less css/layout.css",
-    "build-dist": "make dist",
-    "start": "electron e.js",
-    "start-nw": "nw .",
-    "start-electron": "electron e.js ."
+    "start": "echo Use 'make run' instead of npm start..."
   },
   "vim-cfg": " vim:set ts=2 sw=2 expandtab : "
 }
