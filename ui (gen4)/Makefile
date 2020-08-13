@@ -5,7 +5,7 @@
 #
 # Make dependencies that need to be installed (make check):
 # 	- General
-# 		- bash or similar shell
+# 		- bash
 #	 	- git
 # 		- nodejs / npm 
 # 			also nodejs-legacy seems to be required by some code...
@@ -17,9 +17,11 @@
 # 			a patched version of 3.0...
 # 			for more info and patch see: 
 # 				https://goo.gl/csQmQo
+# 		- sed
+# 		- grep / fgrep
+# 		- printf
 # 	- Windows
 # 		- MSVS -- to build native node modules (sharp)
-# 		- WiX -- to build the .msi installer (XXX ???)
 #	- Linux
 #	- macOS
 #	- iOS
