@@ -28,6 +28,7 @@
     "glob": "^7.1.6",
     "guarantee-events": "^1.0.0",
     "ig-actions": "^3.24.11",
+    "ig-argv": "^2.13.2",
     "ig-features": "^3.4.2",
     "ig-object": "^5.1.16",
     "moment": "^2.27.0",
