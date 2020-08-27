@@ -9,7 +9,7 @@
 #	 	- git
 # 		- nodejs / npm 
 # 			also nodejs-legacy seems to be required by some code...
-# 		- npm i -g electron electron-rebuild asar less
+# 		- npm i -g electron electron-rebuild asar less (optional)
 # 		- wget
 # 		- zip / unzip / zipnote
 # 			if zipnote fails this is likely due to a bug in 
@@ -118,6 +118,9 @@
 .SECONDEXPANSION:
 
 SHELL := $(shell which bash)
+
+# set path to use local tools...
+export PATH := $(shell pwd)/node_modules/.bin/:$(PATH)
 
 
 

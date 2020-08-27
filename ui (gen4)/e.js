@@ -16,6 +16,8 @@ var path = require('path')
 var url = require('url')
 //var fs = require('fs')
 
+var argv = require('ig-argv')
+
 var VERSION = require('./version').version
 
 
@@ -30,6 +32,12 @@ var VERSION = require('./version').version
 /*********************************************************************/
 
 // XXX process args...
+// 		...might be a good idea to process args in two stages:
+// 		1) process pre-start args:
+// 			splash screen opts
+// 			debug stuff (dev tools etc)
+// 			start mode (ui vs cli ...)
+// 		2) process the rest of the args within the started context...
 
 
 
