@@ -120,6 +120,7 @@
 SHELL := $(shell which bash)
 
 # set path to use local tools...
+# XXX this does not affect where make is seraching for commands...
 export PATH := $(shell pwd)/node_modules/.bin/:$(PATH)
 
 
@@ -138,6 +139,10 @@ VERSION := $(strip $(shell \
 DATE := $(strip $(shell date "+%Y%m%d%H%M"))
 COMMIT := $(strip $(shell git rev-parse HEAD))
 
+# less...
+#
+LESSC := $(shell which lessc)
+
 
 # Electron...
 #
@@ -145,9 +150,12 @@ COMMIT := $(strip $(shell git rev-parse HEAD))
 # 	linked against are missing, this can happen if we try to run electron
 # 	on a non-GUI box (i.e. no gtk)...
 # 	...love the "statically" linked "dynamic" libs...
+ELECTRON := $(shell which electron)
+ELECTRON_REBUILD := $(shell which electron-rebuild)
+ASAR := $(shell which asar)
 ELECTRON_VERSION_FALLBACK ?= v1.8.1
 ELECTRON_VERSION := $(strip $(shell \
-	electron -v 2> /dev/null \
+	$(ELECTRON) -v 2> /dev/null \
 		|| echo $(ELECTRON_VERSION_FALLBACK)))
 ELECTRON_DOWNOAD_URL ?= https://github.com/electron/electron/releases/download/$(ELECTRON_VERSION)
 ELECTRON_DIST ?= electron-$(ELECTRON_VERSION)-$(TARGET_OS)-$(ARCH).zip
@@ -281,7 +289,7 @@ INCLUDE_NW_NODE_MODULES = app-module-path
 #
 # XXX would be nice to either auto-check for these or move them to the 
 # 	respective section...
-#DEPENDENCIES_WIX = heat candle light
+#DEPENDENCIES_WEB = node npm $(LESSC)
 DEPENDENCIES_WEB = node npm lessc
 DEPENDENCIES_HELP = sed fgrep printf 
 
@@ -289,6 +297,7 @@ DEPENDENCIES = $(DEPENDENCIES_WEB) \
 	$(DEPENDENCIES_HELP) \
 	wget zip unzip zipnote git \
 	electron electron-rebuild asar
+#	$(ELECTRON) $(ELECTRON_REBUILD) $(ASAR)
 
 
 
@@ -484,7 +493,7 @@ electron-unpacked: $(BUILD_DIR)/$(APP_NAME)-$$(VERSION)-$(TARGET_OS)-$(ARCH)/
 .PHONY: electron-run
 electron-run: ## Run app in electron
 electron-run: dev
-	electron e.js
+	$(ELECTRON) e.js
 
 
 
@@ -563,7 +572,7 @@ $(BUILD_INFO): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 
 
 %.css: %.less
-	lessc $< > $@
+	$(LESSC) $< > $@
 
 
 # XXX might be a good idea to install directly to $(BUILD_DIR) so as not 
@@ -583,7 +592,7 @@ $(BUILD_INFO): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 $(NODE_DIR): package.json
 	npm install
 	# NOTE: this may break on some systems due to a dependency issue...
-	electron-rebuild
+	$(ELECTRON_REBUILD)
 	@touch "$@"
 
 
@@ -663,7 +672,7 @@ $(BUILD_DIR)/app.asar: $(PACK_FULL)
 	# remove electron from the dist...
 	rm -rf "$(BUILD_DIR)/$(APP_NAME)/$(NODE_DIR)/electron"
 	cd "$(BUILD_DIR)" ; \
-		asar p "$(APP_NAME)" app.asar \
+		$(ASAR) p "$(APP_NAME)" app.asar \
 			--exclude-hidden \
 			--unpack-dir node_modules/sharp
 
@@ -789,31 +798,13 @@ $(BUILD_DIR)/package.nw: $$(PACK_MINIMAL)
 
 #----------------------------------------------------------------------
 # cli... 
-
 # XXX
 
 
 
 #----------------------------------------------------------------------
-# Desktop installer (WiX)...
-
-# harvest directory tree...
-%.wxs:
-	heat dir $* -gg -o $<
-	
-
-# XXX provide -arch x64/ia32...
-%.wixobj: %.wsx
-	candle -o $@ $<
-
-
-%.msi: %.wixobj
-	light -o $@ $<
-
-
-# installer (WiX)...
-$(DIST_DIR)/$(APP_NAME)-%.msi: $(BUILD_DIR)/$(APP_NAME)-% $(BUILD_DIR)/$(APP_NAME).wxs
-	$(MD) "$(@D)"
+# Desktop installer...
+# XXX
 
 
 
@@ -828,6 +819,13 @@ $(DIST_DIR)/$(APP_NAME)-%.msi: $(BUILD_DIR)/$(APP_NAME)-% $(BUILD_DIR)/$(APP_NAM
 # XXX
 
 
+#----------------------------------------------------------------------
+
+test:
+	which electron
+	echo $(ELECTRON)
+	echo $(ELECTRON_VERSION)
+	electron -v
 
 
 #**********************************************************************
