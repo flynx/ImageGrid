@@ -1,0 +1,15 @@
+.gitignore
+*.pem
+*.sw[po]
+*.py[co]
+build
+Session.vim
+*.bak
+*.dll
+*.exe
+*.pak
+*.dat
+*.zip
+node_modules
+targets
+*.egg-info
