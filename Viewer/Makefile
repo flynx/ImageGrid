@@ -150,6 +150,12 @@ LESSC := $(shell which lessc)
 # 	linked against are missing, this can happen if we try to run electron
 # 	on a non-GUI box (i.e. no gtk)...
 # 	...love the "statically" linked "dynamic" libs...
+# NOTE: I would rather use the $PATH but there seeems to be no way to 
+# 	change the env make already sees except for two ways:
+# 		1) wrap all the relevant commands in vars and use child 
+# 		   procs to access their paths (as is done below)
+# 		2) set path and launch a child make -- not sure how to 
+# 		   do this...
 ELECTRON := $(shell which electron)
 ELECTRON_REBUILD := $(shell which electron-rebuild)
 ASAR := $(shell which asar)
