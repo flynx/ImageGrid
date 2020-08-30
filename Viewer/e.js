@@ -102,6 +102,7 @@ function createWindow(){
 		webPreferences: {
 			nodeIntegration: true,
 			contextIsolation: false,
+			enableRemoteModule: true,
 		},
 
 		// let the window to get ready before we show it to the user...
