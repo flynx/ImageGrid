@@ -4,6 +4,9 @@
 *
 **********************************************************************/
 var requirejs_cfg = {
+	// NOTE: on electron v7+ the default seems to be '../', bug?
+	baseUrl: './',
+
 	// XXX this does not work on direct filesystem access...
 	//urlArgs: 'bust='+Date.now(),
 	

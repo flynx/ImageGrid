@@ -101,6 +101,7 @@ function createWindow(){
 	win = new BrowserWindow({
 		webPreferences: {
 			nodeIntegration: true,
+			contextIsolation: false,
 		},
 
 		// let the window to get ready before we show it to the user...
