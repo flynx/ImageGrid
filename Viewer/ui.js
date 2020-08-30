@@ -41,8 +41,8 @@ if(typeof(process) != 'undefined'){
 
 
 /*********************************************************************/
-(typeof(define)[0]=='u'?function(f){module.exports=f(require)}:define)(
-function(require){ var module={} // makes module AMD/node compatible...
+((typeof define)[0]=='u'?function(f){module.exports=f(require)}:define)
+(function(require){ var module={} // make module AMD/node compatible...
 /*********************************************************************/
 
 var utildom = require('lib/util-dom')
@@ -52,6 +52,7 @@ var viewer = require('imagegrid/viewer')
 
 /*********************************************************************/
 
+// NOTE: wrapped in a function to be run on body load...
 $(function(){
 
 	try {
