@@ -104,6 +104,14 @@ requirejs('ui')
 </head>
 <body>
 
+<!--
+XXX STUB: this fixes Chrome's tendency to mess up full screen colors unless a 
+	video is present and visible...
+-->
+<video style="display:block; position:absolute; width:1px; height:1px; top:0px; left:0px" tabindex="-1">
+	<source src="data/blank.mp4" type="video/mp4">
+</video>
+
 
 <!-- 
 XXX this lives in css/filters.svg but Chrome refuses to reference 
