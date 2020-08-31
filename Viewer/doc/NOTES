@@ -3,8 +3,8 @@ Modules and RequireJS
 =====================
 
 Most of the system is loaded via browser context RequireJS loader, in 
-node/nw context node-specific stuff is loaded with a second node-enabled
-RequireJS instance or node require.
+node/electron/nw context node-specific stuff is loaded with a second 
+node-enabled RequireJS instance or node require.
 
 The ideal solution would be to use one require that sees both the browser
 and node contexts, the problem is exactly in this, the browser requirejs
@@ -15,8 +15,8 @@ Thus we are forced to use both mode requirejs loaders which may be
 confusing at times.
 
 
-Different loaders:
-------------------
+Different loaders
+-----------------
 
 There are two RequireJS instances present in most contexts in nw.js 
 within the define(..) runner:
@@ -30,57 +30,10 @@ within the define(..) runner:
 		This is needed as the above require(..) overloads the 
 		node native loader.
 
-The future:
------------
+The future
+----------
 
 This seems a bit confusing, so at least the naming convention should be
 revised.
-
-
-
-Runtimes
-========
-
-ImageGrid.Viewer can be run in a number of runtimes on multiple platforms.
-
-Browser
--------
-
-	npm install
-	index.html
-
-
-
-Node.js
--------
-
-	npm install
-	node ig.js --help
-
-
-
-Electron
---------
-
-	npm install
-	npm start
-
-
-
-NW.js
------
-
-change "main" to "index.html" in package.json
-
-	npm install
-	nw .
-
-
-
-Cordova/PhoneGap
-----------------
-
-XXX
-
 
 

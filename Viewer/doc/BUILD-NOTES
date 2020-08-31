@@ -1,39 +1,39 @@
-Basic build
------------
+Makefile
+--------
 
-Default desktop electron app build (modifying the electron dist in-place):
+For make help to work make requires: bash, sed, grep/fgrep and printf to 
+be available in the path, run this to double check:
 
-	make
+	$ make check-help
+
+To check the full list of dependencies run:
+
+	$ make check
 
 
-Build desktop electron app with full repack: 
+The make file is largely self-documented so run this for more info:
 
-	(export BUILD_MODE=repack && make)
-
-
-Build package files for web:
-
-	make web
+	$ make help
 
 
 
 Sharp and other native modules for nw/electron
 ----------------------------------------------
 
-To build sharp for a specific version of node and nwjs:
-
-	cd ./node_modules/sharp/
-	nw-gyp rebuild --target=0.17.4 --arch=x64
-
-
 And for electron (done by make):
 
 	electron-rebuild
 
 
+To build sharp for a specific version of node and nwjs (outdated):
 
-Chromium flicker issue (nw)
----------------------------
+	cd ./node_modules/sharp/
+	nw-gyp rebuild --target=0.17.4 --arch=x64
+
+
+
+Chromium flicker issue (nw/outdated)
+------------------------------------
 
 The UI sometimes flickers -- at first blanks out to black then re-draws,
 this is most noticeable on white or gray backgrounds. 
@@ -47,8 +47,8 @@ This will fix the issue temporarily, but we still need a better solution.
 
 
 
-Remote debugging via DevTools (nw)
-----------------------------------
+Remote debugging via DevTools (nw/outdated)
+-------------------------------------------
 
 Set this in package.json:
   "chromium-args": "--remote-debugging-port=9222",
@@ -57,8 +57,8 @@ Then open http://localhost:9222 in chrome.
 	
 
 
-Speedup loading of app (nw)
----------------------------
+Speedup loading of app (nw/outdated)
+------------------------------------
 
 One of the ways to speed up the load times when packed is to store Node's
 modules ./node_modules in a separate location, outside of the app.zip
@@ -73,8 +73,7 @@ To enable require(..) to find them:
 			var path = require('path')
 			require('app-module-path')
 				.addPath(path.dirname(process.execPath) 
-					+ '/node_modules/')
-		}
+					+ '/node_modules/') }
 
 
 
