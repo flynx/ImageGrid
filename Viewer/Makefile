@@ -4,8 +4,12 @@
 ##
 #
 # Make dependencies that need to be installed (make check):
-# 	- General
+# 	- make basics
 # 		- bash
+# 		- sed
+# 		- grep / fgrep
+# 		- printf
+# 	- General
 #	 	- git
 # 		- nodejs / npm 
 # 			also nodejs-legacy seems to be required by some code...
@@ -17,9 +21,6 @@
 # 			a patched version of 3.0...
 # 			for more info and patch see: 
 # 				https://goo.gl/csQmQo
-# 		- sed
-# 		- grep / fgrep
-# 		- printf
 # 	- Windows
 # 		- MSVS -- to build native node modules (sharp)
 #	- Linux
@@ -349,6 +350,7 @@ help:
 #**********************************************************************
 ### Dependency checking...
 
+# XXX for some reason this fails with fgrep...
 require(%):
 	@printf "%-20s %s\n" \
 		"$*" \

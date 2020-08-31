@@ -1,0 +1,29 @@
+Hacks and fixes
+===============
+
+
+
+
+20200830: 
+RequireJS + Electron v7+ mess up default .baseUrl
+
+FIX:
+- cfg/requirejs.js: added .baseUrl inferencing.
+
+TODO:
+- is this a bug or a feature and report as bug if needed
+
+
+
+20200830: 
+Chrome messing up fullscreen colors unless a <video> tag is present.
+
+FIX:
+- data/blank.mp4: added
+- index.html/electron.html: added <video> tag with data/blank.mp4 as source
+
+TODO:
+- document and post a bug report
+
+
+
