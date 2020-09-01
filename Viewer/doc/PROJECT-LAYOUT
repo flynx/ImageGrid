@@ -1,11 +1,10 @@
 
-
 Basic project layout:
 ---------------------
 
-	imagegrid/		- domain-specific modules...
+	imagegrid/		- domain-specific modules
 
-	features/		- feature modules...
+	features/		- feature modules
 		_feature.js	- feature template
 		all.js		- feature loader
 				  this module includes all the
@@ -14,39 +13,39 @@ Basic project layout:
 		meta.js		- feature configuration and
 				  meta-features
 
-	workers/		- workers...
+	workers/		- workers
 
-	lib/			- generic library modules...
-		widgets/	- generic widgets...
-		_module.js	- module template...
-		_template.js	- generic js file template...
+	lib/			- generic library modules
+		widgets/	- generic widgets
+		_module.js	- module template
+		_template.js	- generic js file template
 
-	ext-lib/		- external library modules...
+	ext-lib/		- external library modules
 
-	node_modules/		- npm modules...
+	node_modules/		- npm modules
 		ig-*/		- ImageGrid npm modules
 
 	css/			- css/less files
-		widgets/	- widget-specific css...
+		widgets/	- widget-specific css
 
-	images/			- system images...
-	data/			- data and assets...
+	images/			- system images
+	data/			- data and assets
 
-	doc/			- various documentation...
+	doc/			- various dev documentation
 		PROJECT-LAYOUT	- this file
 		BUILD-NOTES	- notes on the build process
-		NOTES		- general notes...
+		NOTES		- general notes
 		HACKS		- list of hacks around external 
-				  "features"...
+				  "features" and bugs
 
-	experiments/		- standalone experiments...
+	experiments/		- standalone experiments
 
-	package.json		- npm/nw configuration...
-	electron.html		- electron-specific html...
-	ui.js			- GUI root setup...
+	package.json		- npm/nw configuration
+	electron.html		- electron-specific html
+	ui.js			- GUI root setup
 
-	ig.js			- CLI entry point...
-	index.html		- Browser/NW entry point...
-	e.js			- electron entry point...
+	ig.js			- CLI entry point
+	index.html		- Browser/NW entry point
+	e.js			- electron entry point
 
 
