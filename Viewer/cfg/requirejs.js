@@ -5,14 +5,13 @@
 **********************************************************************/
 
 var requirejs_cfg = {
-	// NOTE: on electron v7+ the default seems to be '../', bug?
-	//baseUrl: './',
-	baseUrl: typeof(document) != 'undefined' ?
+	baseUrl: 
+		// electron...
+		// NOTE: on electron v7+ the default seems to be '../', a bug?
+		typeof(process) != 'undefined' && 'electron' in process.versions ?
 			document.baseURI
 				.replace(/^[a-zA-Z]+:\/\/\/?/, '')
 				.split(/[#&]/)[0].split(/[\\\/]/g).slice(0, -1).join('/')
-		: typeof(process) != 'undefined' ?
-			process.cwd().replace(/\\/g, '/')+'/'
 		: './',
 
 	// XXX this does not work on direct filesystem access...

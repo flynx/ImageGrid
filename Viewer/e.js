@@ -164,24 +164,21 @@ function createWindow(){
 // Some APIs can only be used after this event occurs.
 app.on('ready', function(){
 	createSplash()
-	createWindow()
-})
+	createWindow() })
 
 // Quit when all windows are closed.
 // On macOS it is common for applications and their menu bar
 // to stay active until the user quits explicitly with Cmd + Q
 app.on('window-all-closed', function(){
 	process.platform !== 'darwin'
-		&& app.quit()
-})
+		&& app.quit() })
 
 // On macOS it's common to re-create a window in the app when the
 // dock icon is clicked and there are no other windows open.
 // XXX needs testing...
 app.on('activate', function(){
 	win === null
-		&& createWindow()
-})
+		&& createWindow() })
 
 
 
