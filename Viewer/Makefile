@@ -38,7 +38,7 @@
 ## 	APP_NAME	- Application name
 ## 	APP_BIN		- App binary name (ignored for MacOS)
 ##
-## 	ARCH		- target achitecture (ia32, x86)
+## 	ARCH		- target achitecture (ia32, x86, x64, ...)
 ## 	TARGET_OS	- target OS (win32, linux, darwin)
 ##
 ## 	ELECTRON_DOWNOAD_URL
