@@ -54,7 +54,7 @@ Dependency checking:
 
 Generic targets:
    all:                           Run the full build chain
-   doc:                           Build the documentation
+   doc:                           Build documentation
    dev:                           Build the development environment
    dist:                          Build distributable package
    test-dist:                     Build testing distributable package
