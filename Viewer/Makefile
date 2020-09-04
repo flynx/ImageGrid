@@ -118,6 +118,11 @@
 
 .SECONDEXPANSION:
 
+# XXX for some reason in some contexts bash complains somewhere after 
+# 	this point but otherwise works fine:
+# 		- ssh localhost
+# 		- termux on android
+# 	while everything is OK on ubuntu and normal dev context...
 SHELL := $(shell which bash)
 
 # set path to use local tools...
