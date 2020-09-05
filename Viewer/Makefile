@@ -11,9 +11,9 @@
 # 		- printf
 # 	- General
 #	 	- git
-# 		- nodejs / npm 
-# 			also nodejs-legacy seems to be required by some code...
-# 		- npm i -g electron electron-rebuild asar less (optional)
+# 		- nodejs / npm / npx
+# 			also nodejs-legacy seems to be required in some 
+# 			contexts...
 # 		- wget
 # 		- zip / unzip / zipnote
 # 			if zipnote fails this is likely due to a bug in 
@@ -21,6 +21,10 @@
 # 			a patched version of 3.0...
 # 			for more info and patch see: 
 # 				https://goo.gl/csQmQo
+# 		Optional
+# 			- npm i -g electron electron-rebuild asar less
+# 				needed only if running global versions 
+# 				of cli's...
 # 	- Windows
 # 		- MSVS -- to build native node modules (sharp)
 #	- Linux
@@ -126,8 +130,9 @@
 SHELL := $(shell which bash)
 
 # set path to use local tools...
-# XXX this does not affect where make is seraching for commands...
-export PATH := $(shell pwd)/node_modules/.bin/:$(PATH)
+# NOTE this does not affect where make is seraching for commands...
+# XXX this breaks which when looking for egrep/fgrep...
+#export PATH := $(shell pwd)/node_modules/.bin/:$(PATH)
 
 
 
@@ -147,7 +152,7 @@ COMMIT := $(strip $(shell git rev-parse HEAD))
 
 # less...
 #
-LESSC := $(shell which lessc)
+LESSC := npx lessc
 
 
 # Electron...
@@ -162,9 +167,9 @@ LESSC := $(shell which lessc)
 # 		   procs to access their paths (as is done below)
 # 		2) set path and launch a child make -- not sure how to 
 # 		   do this...
-ELECTRON := $(shell which electron)
-ELECTRON_REBUILD := $(shell which electron-rebuild)
-ASAR := $(shell which asar)
+ELECTRON := npx electron
+ELECTRON_REBUILD := npx electron-rebuild
+ASAR := npx asar
 ELECTRON_VERSION_FALLBACK ?= v1.8.1
 ELECTRON_VERSION := $(strip $(shell \
 	$(ELECTRON) -v 2> /dev/null \
@@ -301,16 +306,14 @@ INCLUDE_NW_NODE_MODULES = app-module-path
 #**********************************************************************
 # dependencies to check...
 #
-# XXX would be nice to either auto-check for these or move them to the 
-# 	respective section...
-#DEPENDENCIES_WEB = node npm $(LESSC)
-DEPENDENCIES_WEB = node npm lessc
-DEPENDENCIES_HELP = sed fgrep printf 
+DEPENDENCIES_WEB = node npm npx
+DEPENDENCIES_HELP = sed grep egrep fgrep printf 
 
 DEPENDENCIES = $(DEPENDENCIES_WEB) \
 	$(DEPENDENCIES_HELP) \
-	wget zip unzip zipnote git \
-	electron electron-rebuild asar
+	wget zip unzip zipnote git
+#	# XXX not needed with npx...
+#	electron electron-rebuild asar
 #	$(ELECTRON) $(ELECTRON_REBUILD) $(ASAR)
 
 
