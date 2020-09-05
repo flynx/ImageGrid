@@ -7,7 +7,7 @@
 # 	- make basics
 # 		- bash
 # 		- sed
-# 		- grep / fgrep
+# 		- grep / fgrep / egrep
 # 		- printf
 # 	- General
 #	 	- git
@@ -21,10 +21,13 @@
 # 			a patched version of 3.0...
 # 			for more info and patch see: 
 # 				https://goo.gl/csQmQo
-# 		Optional
-# 			- npm i -g electron electron-rebuild asar less
-# 				needed only if running global versions 
-# 				of cli's...
+# 	- Optional
+# 		- npm i -g electron electron-rebuild asar less 
+# 			needed only if running global versions of cli's,
+# 			will be maintained and used by npm/npx 
+# 			automatically in local ./node_modules...
+# 			XXX might be a good idea to add a flag to use 
+#				global cli's....
 # 	- Windows
 # 		- MSVS -- to build native node modules (sharp)
 #	- Linux
@@ -306,8 +309,8 @@ INCLUDE_NW_NODE_MODULES = app-module-path
 #**********************************************************************
 # dependencies to check...
 #
-DEPENDENCIES_WEB = node npm npx
 DEPENDENCIES_HELP = sed grep egrep fgrep printf 
+DEPENDENCIES_WEB = node npm npx
 
 DEPENDENCIES = $(DEPENDENCIES_WEB) \
 	$(DEPENDENCIES_HELP) \
@@ -369,7 +372,6 @@ doc/MAKE: Makefile
 #**********************************************************************
 ### Dependency checking...
 
-# XXX for some reason this fails with fgrep...
 require(%):
 	@printf "%-20s %s\n" \
 		"$*" \
