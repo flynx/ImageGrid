@@ -26,8 +26,6 @@
 # 			needed only if running global versions of cli's,
 # 			will be maintained and used by npm/npx 
 # 			automatically in local ./node_modules...
-# 			XXX might be a good idea to add a flag to use 
-#				global cli's....
 # 	- Windows
 # 		- MSVS -- to build native node modules (sharp)
 #	- Linux
