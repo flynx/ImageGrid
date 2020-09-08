@@ -27,7 +27,7 @@
 # 			will be maintained and used by npm/npx 
 # 			automatically in local ./node_modules...
 # 	- Windows
-# 		- MSVS -- to build native node modules (sharp)
+# 		- MSVS -- to build native node modules (sharp) (optional?)
 #	- Linux
 #	- macOS
 #	- iOS
