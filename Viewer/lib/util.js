@@ -61,6 +61,48 @@ Array.prototype.includes
 		return this.indexOf(value) >= 0 }) 
 
 
+// first/last element access short-hands...
+//
+//	.first()
+//		-> elem
+//
+//	.first(value)
+//		-> array
+//
+//
+Array.prototype.first
+	|| (Array.prototype.first = function(value){
+		return arguments.length > 0 ?
+			((this[0] = value), this)
+			: this[0]})
+Array.prototype.last
+	|| (Array.prototype.last = function(value){
+		return arguments.length > 0 ?
+			((this[this.length - 1 || 0] = value), this)
+			: this[this.length - 1]})
+
+
+/*/ XXX not yet sure should these be funcs or props...
+'first' in Array.prototype
+	|| Object.defineProperty(Array.prototype, 'first', {
+		enumerable: false,
+		get : function () {
+			return this[0] },
+		set : function(value){
+			this[0] = value 
+			return this }, })
+
+'last' in Array.prototype
+	|| Object.defineProperty(Array.prototype, 'last', {
+		enumerable: false,
+		get : function () {
+			return this[this.length - 1] },
+		set : function(value){
+			this[this.length - 1 || 0] = value 
+			return this }, })
+//*/
+
+
 // Compact a sparse array...
 //
 // NOTE: this will not compact in-place.
