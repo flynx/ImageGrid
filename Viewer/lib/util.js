@@ -64,12 +64,16 @@ Array.prototype.includes
 // first/last element access short-hands...
 //
 //	.first()
+//	.last()
 //		-> elem
 //
 //	.first(value)
+//	.last(value)
 //		-> array
 //
-//
+// NOTE: setting a value will overwrite an existing first/last value.
+// NOTE: for an empty array both .first(..)/.last(..) will return undefined 
+// 		when getting a value and set the 0'th value when setting...
 Array.prototype.first
 	|| (Array.prototype.first = function(value){
 		return arguments.length > 0 ?
