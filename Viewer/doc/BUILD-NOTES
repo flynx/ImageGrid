@@ -1,5 +1,75 @@
-Makefile
---------
+General environment
+-------------------
+
+ImageGrid will require the following installed and in path:
+	- bash
+	- make (GNU Make)
+	- git
+	- wget
+	- zip / unzip / zipnote
+	- grep / egrep / fgrep
+	- sed
+
+
+Some more dependencies will be installed by make via npm locally.
+
+
+Dependencies can be checked with:
+
+	$ make check
+
+
+
+Then the build system/process is generally the same on all platforms:
+
+- Clone the repository:
+
+	$ git clone https://github.com/flynx/ImageGrid.git
+
+
+- Build the dev envioronment (bash):
+
+	$ make dev
+
+
+- Run in-place:
+
+	$ make run
+
+
+- Build a distro:
+
+	$ make dist
+
+
+
+Windows environment
+-------------------
+
+This will require a UN*X-like build environment to run make and friends.
+
+
+One way to go about this is (admin PowerShell):
+
+- Install Chocolate
+
+	> Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+
+
+  For more info see: https://chocolatey.org/install
+
+
+- Install git-bash based env:
+
+	> choco install git nodejs wget zip sed grep
+
+
+Now we can proceed with the normal build.
+
+
+
+The Makefile
+------------
 
 For make help to work make requires: bash, sed, grep/fgrep and printf to 
 be available in the path, run this to double check:
