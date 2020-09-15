@@ -40,11 +40,17 @@ Examples:
 	# check if all dependencies are available...
 	make check
 
+	# make development environment...
+	make dev
+
 	# full build...
 	make clean dist
 
-	# build for darwin... (XXX needs testing)
-	export TARGET_OS=darwin && make clean dist
+	# build in repack mode...
+	BUILD_MODE=repack make dist
+
+	# build for darwin... (EXPERIMENTAL)
+	TARGET_OS=darwin make clean dist
 
 
 Dependency checking:
