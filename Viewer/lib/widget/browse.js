@@ -759,8 +759,7 @@ function(list, options){
 					// we need to return the list itself...
 					&& lst
 			// in case the list(..) returns nothing...
-			|| lst
-	}
+			|| lst }
 	// save item to lst...
 	var saveItem = function(txt, replace){
 		if(txt == replace || txt.trim() == ''){
@@ -841,8 +840,7 @@ function(list, options){
 
 		lst = write(dialog.__list[id], lst)
 		
-		return txt
-	}
+		return txt }
 	// edit item inline...
 	var editItem = function(elem){
 		var elem = $(elem).find('.text').last()
@@ -876,8 +874,7 @@ function(list, options){
 				title = title.replace(/\$/g, '')
 				dialog.update()
 					.then(function(){ dialog.select(`"${title}"`) })
-			})
-	}
+			}) }
 
 	dialog.__list = dialog.__list || {}
 	dialog.__editable = dialog.__editable || {}

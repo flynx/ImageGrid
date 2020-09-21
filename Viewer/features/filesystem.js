@@ -2544,6 +2544,7 @@ var FileSystemWriterUIActions = actions.Actions({
 				alias: 'index',
 				action: 'exportIndex',
 				data: [
+					//'name',
 					'base_path',
 					'target_dir',
 					'clean_target_dir',
@@ -2561,6 +2562,7 @@ var FileSystemWriterUIActions = actions.Actions({
 				alias: 'images',
 				action: 'exportDirs',
 				data: [
+					//'name',
 					'pattern',
 					'size',
 					'include_virtual',
@@ -2576,15 +2578,31 @@ var FileSystemWriterUIActions = actions.Actions({
 		// XXX format:
 		// 	[
 		// 		{
+		// 			// XXX optional -- auto-generated if not given...
+		// 			name: <name>,
 		// 			// XXX key in .config['export-dialog-modes']
 		// 			type: <preset-tipe>,
+		//
+		// 			// these depend on preset type...
 		// 			...
 		// 		}
 		// 	]
 		// XXX should this be a dict or a list???
 		// 		...a dict would require keys (gid/title??)
 		// XXX should this api be accessible from outside the ui???
-		'export-presets': [],
+		'export-presets': [
+			// XXX examples...
+			{
+				type: 'images',
+				pattern: '%(fav)l%n%(-bookmarked)b%(-m)m%(-%c)c',
+				size: '1000',
+				include_virtual: true,
+				target_dir: './select',
+				clean_target_dir: true,
+			},
+		],
+		'export-history': [
+		],
 	},
 
 	// XXX this needs feedback...
@@ -3007,8 +3025,17 @@ var FileSystemWriterUIActions = actions.Actions({
 	// XXX need a means to save/manage/run presets...
 	exportPresets: ['- File/Export...',
 		widgets.makeUIDialog(function(mode){
-			// XXX
-		})],
+			var that = this
+			return browse.makeLister(null, function(path, make){
+
+				make('Export...')
+
+				make('---')
+
+
+				make('---')
+
+			}) })],
 
 	// XXX these do note need the ui -- move to a separate feature...
 	// XXX these are essentially the same as the history API, make a 
