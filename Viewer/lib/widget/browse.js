@@ -132,8 +132,7 @@ function(text, options){
 	var attrs = options.doc ? {doc: options.doc} : {}
 	attrs.__proto__ = options.attrs || {}
 	options.attrs = attrs
-	return this(text, options)
-}
+	return this(text, options) }
 
 // Action...
 //

@@ -2600,6 +2600,14 @@ var FileSystemWriterUIActions = actions.Actions({
 				target_dir: './select',
 				clean_target_dir: true,
 			},
+			{
+				type: 'index',
+				size: '1000',
+				include_virtual: true,
+				target_dir: './select',
+				clean_target_dir: true,
+				comment: 'demo',
+			},
 		],
 		'export-history': [
 		],
@@ -3002,38 +3010,91 @@ var FileSystemWriterUIActions = actions.Actions({
 
 
 	// XXX export using a preset...
-	// 		- display a list of presets accessible with 1-9 keys + title 
-	// 			hotkeys...
-	// 			a-la collection list + location history...
-	// 			- edit, remove buttons
-	// 			- sortable
-	// 			- pinnable?
-	// 				...thought of prioritizing based on path (relative vs. 
-	// 				absolute) but this seems to be wrong...
-	// 				prioritizing based on title (optional) is logical 
-	// 				on the other hand, but not sure if having a title here
-	// 				is a good idea in the first place -- overcomplicating things
-	// 				...having a note/comment on the other hand is a good idea...
-	// 			- fixed number???
-	// 			- select last used
-	// 		- use .exportDialog(..) as preset editor
-	// 			- add optional 'title'
-	// 		- "New/Custom..." button
-	// 		- single image mode:
-	// 			- disable index exporting for single images
-	// 		- add option to export only current image from any view...
-	// XXX need a means to save/manage/run presets...
-	exportPresets: ['- File/Export...',
+	// XXX should presets be available just in UI???
+	// 		need to:
+	// 			- pass values to export dialog (load)
+	// 			- pass values to export action (use)
+	exportPresets: ['- File/',
 		widgets.makeUIDialog(function(mode){
 			var that = this
+
+			// presets...
+			// XXX better names...
+			var index = (that.config['export-presets'] || [])
+				.reduce(function(res, e, i){
+					name = e.name
+						// XXX these should be type-specific...
+						|| `${ e.type }: ${ e.target_dir }${ e.pattern ? ': "'+e.pattern+'"' : '' }`
+					res[name] = i 
+					return res }, {})
+			var presets = Object.keys(index)
+
+			// history...
+			// XXX
+			var history = []
+
 			return browse.makeLister(null, function(path, make){
+				// presets...
+				presets.length == 0 ?
+					make.Empty()
+					: make.EditableList(presets, {
+						list_id: 'presets',
+						sortable: true,
+						new_item: false,
+						buttons: [
+							// XXX new export...
+							['N', function(){
+								// XXX
+							}],
+							// XXX not sure about the default icon...
+							'TO_TOP',
+							'REMOVE',
+						],
+						// XXX export...
+						open: function(evt, title){
+							console.log('###', title
+						},
+						// XXX handle rename -> update index...
+						// XXX
+					})
 
-				make('Export...')
+				/*/ export dialog...
+				// XXX do we need this???
+				make.Separator()
+				make('$Export...', {
+					open: function(){
+						that.exportDialog() 
+						//make.dialog.close() 
+					},
+				})
+				//*/
 
-				make('---')
+				// history...
+				make.Separator()
+				history.length == 0 ?
+					make.Empty()
+					: ake.EditableList(history, {
+						list_id: 'history',
+						sortable: false,
+						new_item: false,
+						editable_items: false,
+						buttons: [
+							// to preset...
+							['P', function(){
+								// XXX
+							}],
+							'REMOVE',
+						],
+						// XXX export...
+						open: function(evt, title){
+							console.log('###', title
+						},
+					})
+			})
+	   		.close(function(){
 
-
-				make('---')
+				// XXX need to merge history/presets back when dialog closes...
+				// XXX
 
 			}) })],
 
