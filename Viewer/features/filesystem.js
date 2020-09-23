@@ -3014,7 +3014,7 @@ var FileSystemWriterUIActions = actions.Actions({
 	// 		need to:
 	// 			- pass values to export dialog (load)
 	// 			- pass values to export action (use)
-	exportPresets: ['- File/',
+	exportPresets: ['- File/Export history...',
 		widgets.makeUIDialog(function(mode){
 			var that = this
 
@@ -3047,12 +3047,12 @@ var FileSystemWriterUIActions = actions.Actions({
 								// XXX
 							}],
 							// XXX not sure about the default icon...
-							'TO_TOP',
+							['T', 'TO_TOP'],
 							'REMOVE',
 						],
 						// XXX export...
 						open: function(evt, title){
-							console.log('###', title
+							console.log('###', title)
 						},
 						// XXX handle rename -> update index...
 						// XXX
@@ -3087,7 +3087,7 @@ var FileSystemWriterUIActions = actions.Actions({
 						],
 						// XXX export...
 						open: function(evt, title){
-							console.log('###', title
+							console.log('###', title)
 						},
 					})
 			})

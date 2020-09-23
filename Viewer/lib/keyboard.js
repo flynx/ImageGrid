@@ -213,8 +213,7 @@ function parseActionCall(txt, context){
 		doc: doc,
 		no_default: no_default,
 		stop_propagation: false,
-	}
-}
+	} }
 
 
 
@@ -250,8 +249,7 @@ function event2key(evt){
 	// pressed a modifier key...
 	key.indexOf(k.toLowerCase()) < 0 && key.push(k)
 
-	return key
-}
+	return key }
 
 
 // Get key code from key name...
@@ -329,8 +327,7 @@ function normalizeKey(key){
 
 	// special case: got a number...
 	if(typeof(key) == typeof(123)){
-		return code2key(key)
-	}
+		return code2key(key) }
 
 	// sort modifiers via .modifiers and keep the key last...
 	key = splitKey(key)
@@ -346,8 +343,7 @@ function normalizeKey(key){
 	k = parseInt(k) ? code2key(parseInt(k)) : k
 
 	if(!k){
-		return k
-	}
+		return k }
 
 	// get the propper name...
 	k = SPECIAL_KEY_ALTERNATIVE_TITLES[k.toLowerCase()] || k
@@ -510,9 +506,7 @@ var KeyboardPrototype = {
 		if(this.__keyboard instanceof Function){
 			this.__keyboard(value) 
 		} else {
-			this.__keyboard = value
-		}
-	},
+			this.__keyboard = value } },
 
 	// XXX is this needed???
 	//context: null,
@@ -603,8 +597,7 @@ var KeyboardPrototype = {
 			this.keyboard = ordered
 		}
 
-		return this
-	},
+		return this },
 
 	// Get keys for handler...
 	//
@@ -672,10 +665,7 @@ var KeyboardPrototype = {
 							.unique()))
 					res.indexOf(k) < 0 
 						&& res.push(k)
-						&& walkAliases(res, rev, bindings, k, mod)
-				})
-			}
-		}
+						&& walkAliases(res, rev, bindings, k, mod) }) } }
 
 		var modes = handler == '?' ? this.modes() : '*'
 		var drop = []
@@ -684,14 +674,12 @@ var KeyboardPrototype = {
 		Object.keys(keyboard).forEach(function(mode){
 			// skip non-applicable modes...
 			if(modes != '*' && modes.indexOf(mode) < 0){
-				return
-			}
+				return }
 
 			var bindings = keyboard[mode]
 
 			if(handler == '?'){
-				next = next.concat(bindings.NEXT || [])
-			}
+				next = next.concat(bindings.NEXT || []) }
 
 			// build a reverse index...
 			var rev = {}
@@ -706,8 +694,7 @@ var KeyboardPrototype = {
 						: (h.doc || h.name)
 					rev[h] = (rev[h] || [])
 						.concat((rev[bindings[key]] || []).concat([key]))
-						.unique()
-				})
+						.unique() })
 
 			var seen = []
 			var handlers = handler == '*' || handler == '?' ?  
@@ -729,8 +716,7 @@ var KeyboardPrototype = {
 						drop = drop == '*' ?  '*' : drop.concat(keys)
 						next = next
 							.filter(function(k){ return keys.indexOf(k) >= 0 })
-						return
-					}
+						return }
 
 					var keys = (rev[h] || []).map(that.normalizeKey.bind(that))
 
@@ -759,25 +745,20 @@ var KeyboardPrototype = {
 									|| next.indexOf(k) >= 0
 									|| (drop != '*' 
 										&& drop.indexOf(key) < 0
-										&& drop.indexOf(k) < 0) 
-							})
-					}
+										&& drop.indexOf(k) < 0) }) }
 
 					if(keys.length > 0){
 						var m = res[mode] = res[mode] || {}
-						m[h] = keys
-					}
+						m[h] = keys }
 				})
 
 			if(handler == '?'){
 				drop = drop == '*' || bindings.drop == '*' ? 
 					'*' 
-					: drop.concat(bindings.drop || [])
-			}
+					: drop.concat(bindings.drop || []) }
 		})
 
-		return res
-	},
+		return res },
 
 	// Get/set/unset handler for key...
 	//
@@ -870,12 +851,10 @@ var KeyboardPrototype = {
 		var key_separators = KEY_SEPARATORS  
 
 		if(mode == null){
-			return null
-		}
+			return null }
 		if(key == null && this.isKey(mode)){
 			key = mode
-			mode = '*'
-		}
+			mode = '*' }
 
 		var joinKeys = function(key, shift_key){
 			// match candidates...
@@ -898,8 +877,7 @@ var KeyboardPrototype = {
 		var keyCombinations = function(key, shift_key, remove_single_keys){
 			if(key.length <= 1){
 				//return shift_key ? [key, shift_key] : [key]
-				return key 
-			}
+				return key }
 			var k = remove_single_keys ? 1 : 0 
 			// generate recursively, breadth first...
 			var _combinations = function(level, res){
@@ -918,19 +896,15 @@ var KeyboardPrototype = {
 									// 		as they are searched separately...
 									//s.length > 0 
 									s.length > k 
-										&& next.push(s)
-								})
-					})
+										&& next.push(s) }) })
 				next.length > 0 
 					&& _combinations(next, res)
-				return res
-			}
+				return res }
 			return _combinations(shift_key && shift_key.length > 0 ?
 				[key, shift_key] 
 				: [key], [])
 					.map(function(e){ return joinKeys(e.split(/\+\+\+/g)) })
-					.reduce(function(a, b){ return a.concat(b) }, [])
-		}
+					.reduce(function(a, b){ return a.concat(b) }, []) }
 		var walkAliases = function(bindings, handler, modifiers){
 			var seen = []
 			var modifiers = modifiers || []
@@ -950,13 +924,10 @@ var KeyboardPrototype = {
 				// check for loops...
 				if(seen.indexOf(handler) >= 0){
 					handler = null
-					break
-				}
-				seen.push(handler)
-			}
+					break }
+				seen.push(handler) }
 
-			return handler
-		}
+			return handler }
 
 		key = this.normalizeKey(this.splitKey(key))
 		var shift_key = this.shifted(key)
@@ -1001,18 +972,15 @@ var KeyboardPrototype = {
 					handler = walkAliases(
 						bindings, 
 						[k, c].filter(function(k){ return bindings[k] })[0],
-						mod)
-				}
+						mod) }
 
 				// explicit DROP -- ignore next sections...
 				if(drop && handler == 'DROP'){
-					break
-				}
+					break }
 
 				// we got a match...
 				if(handler){
-					res[m] = handler
-				}
+					res[m] = handler }
 
 				// if key in .drop then ignore the rest...
 				if(drop 
@@ -1027,9 +995,7 @@ var KeyboardPrototype = {
 							// 		between X meaning drop only X and drop
 							// 		all combos with X...
 							|| (bindings.drop || []).indexOf(k) >= 0)){
-					break
-				}
-			}
+					break } }
 
 			return (typeof(mode) == typeof('str') 
 					&& ['*', 'test', '?'].indexOf(mode) < 0) ? 
@@ -1049,13 +1015,20 @@ var KeyboardPrototype = {
 
 				// set handler if given...
 				if(handler && handler != ''){
-					keyboard[mode][that.joinKey(key)] = handler
-				}
-			})
-		}
+					keyboard[mode][that.joinKey(key)] = handler } }) }
 
-		return this
-	},
+		return this },
+
+	// Trigger handler...
+	//
+	// XXX can this be implemented here???
+	// 		...we need context among other things...
+	// 		might be a good idea to add config options for everything 
+	// 		and just set things up in wrappers...
+	handle: function(mode, key){
+		// XXX
+		return this },
+
 
 	// get applicable modes...
 	//
@@ -1071,14 +1044,42 @@ var KeyboardPrototype = {
 			: Object.keys(this.keyboard) },
 
 
+	// XXX EXPERIMENTAL...
+	// Basic binding editing API...
+	//
+	// NOTE: this is an event-like proxy to the .handler(..)
+	//
+	// 	Bind handler key (top section)...
+	// 	.on(key, handler)
+	// 		-> this
+	//
+	// 	.on(key, section, handler)
+	// 		-> this
+	//
+	on: function(key, handler){
+		// normalize args...
+		if(arguments.length == 3){
+			[key, mode, handler] = arguments
+		} else {
+			[key, handler] = arguments }
+		mode = mode 
+			|| Object.keys(this.keyboard)[0]
+		// bind...
+		return this.handler(mode, key, handler) },
+	off: function(key, mode){
+		// normalize args...
+		mode = mode 
+			|| Object.keys(this.keyboard)[0]
+		// unbind...
+		return this.handler(mode, key, null) },
+
+
 	// init base data...
 	__init__: function(keyboard, is_mode_applicable){
 		this.keyboard = keyboard
 
 		if(is_mode_applicable instanceof Function){
-			this.isModeApplicable = is_mode_applicable
-		}
-	},
+			this.isModeApplicable = is_mode_applicable } },
 }
 
 var Keyboard = 
@@ -1108,8 +1109,7 @@ var KeyboardWithCSSModesPrototype = {
 			|| (context.matches ? 
 				(context.matches(pattern)
 					|| !!context.querySelector(pattern))
-				: false)
-	},
+				: false) },
 
 	__init__: function(keyboard, context){
 		object.parentCall(KeyboardWithCSSModesPrototype.__init__, this, keyboard)
@@ -1120,9 +1120,7 @@ var KeyboardWithCSSModesPrototype = {
 			})
 
 		} else {
-			this.context = context
-		}
-	},
+			this.context = context } },
 }
 
 var KeyboardWithCSSModes = 
@@ -1167,7 +1165,6 @@ KeyboardWithCSSModes.prototype.__proto__ = Keyboard.prototype
 var makeKeyboardHandler =
 module.makeKeyboardHandler =
 function makeKeyboardHandler(keyboard, unhandled, actions){
-
 	var kb = keyboard instanceof Keyboard ? 
 		keyboard 
 		//: Keyboard(keyboard, checkGlobalMode)
@@ -1192,8 +1189,7 @@ function makeKeyboardHandler(keyboard, unhandled, actions){
 
 		Object.keys(handlers).forEach(function(mode){
 			if(res === false){
-				return
-			}
+				return }
 
 			var handler = handlers[mode]
 
@@ -1224,17 +1220,13 @@ function makeKeyboardHandler(keyboard, unhandled, actions){
 					evt 
 						&& h.stop_propagation
 						&& evt.stopPropagation()
-						&& (res = false)
-				} 
-			}
-		})
+						&& (res = false) } } })
 
 		no_match 
 			&& !did_handling 
 			&& no_match.call(actions, evt, key)
 
-		return res
-	}
+		return res }
 }
 
 
@@ -1269,8 +1261,7 @@ function makePausableKeyboardHandler(keyboard, unhandled, actions, check_interva
 			},
 			(check_interval instanceof Function ?
 				check_interval.call(actions) 
-				: (check_interval || 100)))
-	}
+				: (check_interval || 100))) }
 
 
 	return stoppableKeyboardRepeat(
@@ -1278,11 +1269,8 @@ function makePausableKeyboardHandler(keyboard, unhandled, actions, check_interva
 		function(){
 			if(kb.__repeat_pause_timeout){
 				kb.pauseRepeat()
-				return false
-			}
-			return true
-		})
-}
+				return false }
+			return true }) }
 
 
 
@@ -1324,8 +1312,7 @@ function dropRepeatingkeys(handler, max_rate){
 				&& meta == evt.metaKey
 				&& alt == evt.altKey
 				&& shift == evt.shiftKey){
-			return
-		}
+			return }
 
 		key = evt.keyCode
 		ctrl = evt.ctrlKey
@@ -1339,9 +1326,7 @@ function dropRepeatingkeys(handler, max_rate){
 			// XXX is this the right way to go???
 			typeof(max_rate) == typeof(123) ? max_rate : max_rate())
 
-		return handler(evt)
-	}
-}
+		return handler(evt) } }
 
 
 
