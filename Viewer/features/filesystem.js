@@ -3020,14 +3020,15 @@ var FileSystemWriterUIActions = actions.Actions({
 
 			// presets...
 			// XXX better names...
-			var index = (that.config['export-presets'] || [])
+			var presets = that.config['export-presets'] || []
+			var index = presets
 				.reduce(function(res, e, i){
 					name = e.name
 						// XXX these should be type-specific...
 						|| `${ e.type }: ${ e.target_dir }${ e.pattern ? ': "'+e.pattern+'"' : '' }`
 					res[name] = i 
 					return res }, {})
-			var presets = Object.keys(index)
+			var keys = Object.keys(index)
 
 			// history...
 			// XXX
@@ -3035,9 +3036,9 @@ var FileSystemWriterUIActions = actions.Actions({
 
 			return browse.makeLister(null, function(path, make){
 				// presets...
-				presets.length == 0 ?
+				keys.length == 0 ?
 					make.Empty()
-					: make.EditableList(presets, {
+					: make.EditableList(keys, {
 						list_id: 'presets',
 						sortable: true,
 						new_item: false,
@@ -3052,7 +3053,12 @@ var FileSystemWriterUIActions = actions.Actions({
 						],
 						// XXX export...
 						open: function(evt, title){
-							console.log('###', title)
+							var preset = presets[index[title]]
+							// XXX handle order...
+							// XXX handle removed...
+							// XXX load...
+							
+							console.log('###', title, preset)
 						},
 						// XXX handle rename -> update index...
 						// XXX
