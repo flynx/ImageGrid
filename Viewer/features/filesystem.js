@@ -3055,7 +3055,9 @@ var FileSystemWriterUIActions = actions.Actions({
 						open: function(evt, title){
 							var preset = presets[index[title]]
 							// XXX handle order...
+						
 							// XXX handle removed...
+
 							// XXX load...
 							
 							console.log('###', title, preset)
