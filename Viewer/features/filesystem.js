@@ -1704,6 +1704,9 @@ module.FileSystemLoaderURLHistoryUI = core.ImageGridFeatures.Feature({
 //---------------------------------------------------------------------
 // Writer...
 
+var EXPORT_PREVIEW_NAME = '%(fav)l%n%(-%c)c'
+
+
 var FileSystemWriterActions = actions.Actions({
 	config: {
 
@@ -1851,7 +1854,8 @@ var FileSystemWriterActions = actions.Actions({
 
 		`,
 		function(pattern, name, data){
-			pattern = pattern || '%f'
+			pattern = pattern 
+				|| EXPORT_PREVIEW_NAME
 			data = data || {}
 			var gid = data.gid
 			if(!gid && name in this.images){
@@ -2116,7 +2120,7 @@ var FileSystemWriterActions = actions.Actions({
 			logger = logger || this.logger
 			logger = logger && logger.push('Export index')
 
-			if(typeof(path) != typeof('str')){
+			if(path && typeof(path) != typeof('str')){
 				settings = path
 				path = settings.path }
 			settings = this.config['export-settings'] || {}
@@ -2377,7 +2381,7 @@ var FileSystemWriterActions = actions.Actions({
 			var that = this
 			var base_dir = this.location.path
 
-			if(typeof(path) != typeof('str')){
+			if(path && typeof(path) != typeof('str')){
 				settings = path
 				path = settings.path }
 			settings = this.config['export-settings'] || {}
@@ -2411,7 +2415,7 @@ var FileSystemWriterActions = actions.Actions({
 				|| 1000
 			pattern = pattern 
 				|| settings['preview-name-pattern'] 
-				|| '%f'
+				|| EXPORT_PREVIEW_NAME
 			include_virtual = include_virtual === undefined ?
 				settings['include-virtual']
 				: include_virtual
@@ -2734,7 +2738,7 @@ var FileSystemWriterUIActions = actions.Actions({
 			var pattern = 
 				settings['preview-name-pattern'] =
 					settings['preview-name-pattern'] 
-					|| '%f'
+					|| EXPORT_PREVIEW_NAME
 
 			var showExaples = function(pattern, img){
 				img = img || actions.current
@@ -2775,7 +2779,6 @@ var FileSystemWriterUIActions = actions.Actions({
 			var res = make(['Filename $pattern: ', pattern], {
 				open: widgets.makeNestedConfigListEditor(actions, parent,
 					'export-preview-name-patterns',
-					//'export-preview-name-pattern', {
 					'export-settings.preview-name-pattern', {
 						length_limit: 10,
 						events: {
@@ -2802,24 +2805,21 @@ var FileSystemWriterUIActions = actions.Actions({
 				function(){ return actions.formatImageName(pattern, img) }],
 				{
 					open: function(){ 
-						showExaples(actions.config['export-preview-name-pattern'] || '%f') },
-				})
+						showExaples(settings['preview-name-pattern'] 
+							|| EXPORT_PREVIEW_NAME) }, })
 
-			return res
-		},
-		/* XXX not used any more...
+			return res },
 		// XXX add option not to create level dirs...
 		'level_dir': function(actions, make, parent, settings){
 			return make(['$Level directory: ', 
 					function(){ 
-						return actions.config['export-level-directory-name'] || 'fav' }])
+						return settings['level-directory-name'] || 'fav' }])
 				.on('open', 
 					widgets.makeNestedConfigListEditor(actions, parent,
 						'export-level-directory-names', 
-						'export-level-directory-name', {
+						'export-settings.level-directory-name', {
 							length_limit: 10,
 						})) },
-		//*/
 		// XXX should we merge this with 'size_limit'????
 		'size': function(actions, make, parent, settings){
 			return make(['Image $size: ', 
@@ -2893,7 +2893,6 @@ var FileSystemWriterUIActions = actions.Actions({
 							// XXX add new dir global button...
 							return actions.browsePath(path, 
 								function(path){ 
-									//actions.config['export-path'] = path
 									settings['path'] = path
 									actions.config['export-paths'].splice(0, 0, path)
 
@@ -2904,7 +2903,6 @@ var FileSystemWriterUIActions = actions.Actions({
 						// XXX BUG: closing this breaks on parant.focus()...
 						['history', widgets.makeNestedConfigListEditor(actions, parent,
 							'export-paths',
-							//'export-path',
 							'export-settings.path',
 							{
 								length_limit: 10,
@@ -2924,7 +2922,6 @@ var FileSystemWriterUIActions = actions.Actions({
 								],
 							})
 							.on('edit-commit', function(_, path){
-								//actions.config['export-path'] = path
 								settings['path'] = path
 								actions.config['export-paths'].indexOf(path) < 0
 									&& actions.config['export-paths'].splice(0, 0, path) })
@@ -2997,7 +2994,7 @@ var FileSystemWriterUIActions = actions.Actions({
 			var settings
 
 			// explicitly passed settings... 
-			if(typeof(mode) == typeof({})){
+			if(mode && typeof(mode) != typeof('str')){
 				settings = mode
 				mode = settings['mode'] }
 			settings = settings
@@ -3014,10 +3011,11 @@ var FileSystemWriterUIActions = actions.Actions({
 			var o = browse.makeLister(null, function(path, make){
 				var dialog = this
 
-				mode = settings['mode'] =
-					show_mode 
-					|| settings['mode']
-					|| 'Images only'
+				mode = 
+					settings['mode'] =
+						show_mode 
+						|| settings['mode']
+						|| 'Images only'
 				// if invalid mode get the first...
 				mode = !that.config['export-dialog-modes'][mode] ?
 					Object.keys(that.config['export-dialog-modes']).shift()
@@ -3034,8 +3032,7 @@ var FileSystemWriterUIActions = actions.Actions({
 							//widgets.makeNestedConfigListEditor(that, o,
 							open: widgets.makeNestedConfigListEditor(that, make.dialog,
 								'export-dialog-modes',
-								//'export-dialog-mode',
-								'export-settings.dialog-mode',
+								'export-settings.mode',
 								{
 									length_limit: 10,
 									new_item: false,
@@ -3064,9 +3061,7 @@ var FileSystemWriterUIActions = actions.Actions({
 						open: function(){
 							var mode = 
 								that.config['export-dialog-modes'][settings['mode']]
-							// XXX need to pass settings correctly...
-							that[mode.action](
-								settings['path'] || undefined)
+							that[mode.action](settings)
 							dialog.close()
 						},
 					}) 
@@ -3090,8 +3085,8 @@ var FileSystemWriterUIActions = actions.Actions({
 	// XXX export using a preset...
 	// XXX should presets be available just in UI???
 	// 		need to:
-	// 			- pass values to export dialog (load)
-	// 			- pass values to export action (use)
+	// 			- pass values to export dialog (load) -- DONE
+	// 			- pass values to export action (use) -- DONE
 	exportPresets: ['- File/Export history...',
 		widgets.makeUIDialog(function(mode){
 			var that = this
