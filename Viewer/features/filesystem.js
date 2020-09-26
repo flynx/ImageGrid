@@ -2530,6 +2530,22 @@ var FileSystemWriterUIActions = actions.Actions({
 	config: {
 		'export-dialog-mode': 'Full index',
 
+		// export settings...
+		//
+		// NOTE: these are defined and set in .__export_dialog_fields__[..]
+		//'export-paths': [ .. ], 
+		//'export-preview-name-patterns': [ .. ],
+		//'export-preview-size-limits': [ .. ],
+		//
+		// XXX LEGACY: these settings have moved to 'export-settings' below...
+		//'export-dialog-mode': 'Images only',
+		//'export-path': './', 
+		//'export-preview-name-pattern': '%f',
+		//'export-preview-size': 1000,
+		//'export-preview-size-limit': 'no limit',
+		//'export-include-virtual': 'no',
+		//'export-clean-target': 'yes',
+
 		'export-dialog-modes': {
 			// XXX is this the right title???
 			// XXX this is not yet working...
@@ -2575,23 +2591,45 @@ var FileSystemWriterUIActions = actions.Actions({
 			},
 		},
 
-		// XXX format:
+		//
+		// Format:
+		// 	{
+		//		// NOTE: this is set/used by .exportDialog(..)
+		//		'mode': 'Images only',
+		//
+		// 		// NOTE: these are defined and set in .__export_dialog_fields__[..]
+		//		'path': './', 
+		//		'preview-name-pattern': '%f',
+		//		'preview-size': 1000,
+		//		'preview-size-limit': 'no limit',
+		//		'include-virtual': 'no',
+		//		'clean-target': 'yes',
+		//
+		//		// ...
+		// 	}
+		//
+		// XXX this will accumulate settings from all export modes, is this correct???
+		// XXX this is not yet used by the actual export actions, only for the UI...
+		'export-settings': {},
+
+		//
+		// Format:
 		// 	[
 		// 		{
-		// 			// XXX optional -- auto-generated if not given...
-		// 			name: <name>,
-		// 			// XXX key in .config['export-dialog-modes']
-		// 			type: <preset-tipe>,
+		// 			// preset name (optional)...
+		// 			name: ...,
 		//
-		// 			// these depend on preset type...
+		// 			// see: 'export-settings' for more settings...
 		// 			...
-		// 		}
+		// 		},
+		// 		...
 		// 	]
+		//
 		// XXX should this be a dict or a list???
 		// 		...a dict would require keys (gid/title??)
 		// XXX should this api be accessible from outside the ui???
 		'export-presets': [
-			// XXX examples...
+			// XXX STUB: placeholders, replace with real examples...
 			{
 				type: 'images',
 				pattern: '%(fav)l%n%(-bookmarked)b%(-m)m%(-%c)c',
@@ -2671,9 +2709,12 @@ var FileSystemWriterUIActions = actions.Actions({
 	// NOTE: the export action should get all of its arguments from config
 	// 		except for the export path...
 	__export_dialog_fields__: {
-		'pattern': function(actions, make, parent){
+		'pattern': function(actions, make, parent, settings){
 			var img = actions.current
-			var pattern = actions.config['export-preview-name-pattern'] || '%f'
+			var pattern = 
+				settings['preview-name-pattern'] =
+					settings['preview-name-pattern'] 
+					|| '%f'
 
 			var showExaples = function(pattern, img){
 				img = img || actions.current
@@ -2714,7 +2755,8 @@ var FileSystemWriterUIActions = actions.Actions({
 			var res = make(['Filename $pattern: ', pattern], {
 				open: widgets.makeNestedConfigListEditor(actions, parent,
 					'export-preview-name-patterns',
-					'export-preview-name-pattern', {
+					//'export-preview-name-pattern', {
+					'export-settings.preview-name-pattern', {
 						length_limit: 10,
 						events: {
 							menu: function(_, p){ showExaples(p) },
@@ -2745,8 +2787,9 @@ var FileSystemWriterUIActions = actions.Actions({
 
 			return res
 		},
+		/* XXX not used any more...
 		// XXX add option not to create level dirs...
-		'level_dir': function(actions, make, parent){
+		'level_dir': function(actions, make, parent, settings){
 			return make(['$Level directory: ', 
 					function(){ 
 						return actions.config['export-level-directory-name'] || 'fav' }])
@@ -2756,37 +2799,39 @@ var FileSystemWriterUIActions = actions.Actions({
 						'export-level-directory-name', {
 							length_limit: 10,
 						})) },
+		//*/
 		// XXX should we merge this with 'size_limit'????
-		'size': function(actions, make, parent){
+		'size': function(actions, make, parent, settings){
 			return make(['Image $size: ', 
 					function(){ 
-						return actions.config['export-preview-size'] || 1000 }])
+						return (settings['preview-size'] = 
+							settings['preview-size'] 
+							|| 1000) }])
 				.on('open', 
 					widgets.makeNestedConfigListEditor(actions, parent,
 						'export-preview-sizes',
-						'export-preview-size',
+						'export-settings.preview-size',
 						{
 							length_limit: 10,
 							sort: function(a, b){ return parseInt(a) - parseInt(b) },
 							check: function(e){
 								return !!parseInt(e) },
-						}))
-
-		},
-		'size_limit': function(actions, make, parent){
+						})) },
+		'size_limit': function(actions, make, parent, settings){
 			return make(['Limit image $size: ', 
 					function(){ 
-						return actions.config['export-preview-size-limit'] || 'no limit' }],
+						return (settings['preview-size-limit'] =
+							settings['preview-size-limit'] 
+							|| 'no limit') }],
 					{ buttons: [
 						['clear', function(p){
-							actions.config['export-preview-size-limit'] = 'no limit'
-							parent.update()
-						}],
+							settings['preview-size-limit'] = 'no limit'
+							parent.update() }],
 					] })
 				.on('open', 
 					widgets.makeNestedConfigListEditor(actions, parent,
 						'export-preview-size-limits',
-						'export-preview-size-limit',
+						'export-settings.preview-size-limit',
 						{
 							length_limit: 10,
 							// sort ascending + keep 'no limit' at top...
@@ -2801,10 +2846,9 @@ var FileSystemWriterUIActions = actions.Actions({
 									|| !!parseInt(e) },
 							remove: function(e){
 								return e != 'no limit' },
-						}))
-		},
+						})) },
 		// XXX should this be editable???
-		'base_path': function(actions, make, parent){
+		'base_path': function(actions, make, parent, settings){
 			var elem = make(['Current path: ', this.location.path], 
 				{
 					select: function(){
@@ -2813,9 +2857,12 @@ var FileSystemWriterUIActions = actions.Actions({
 						elem.find('.text').last().selectText(null) },
 				}) },
 		// XXX BUG: history closing errors -- non-critical...
-		'target_dir': function(actions, make, parent){
+		'target_dir': function(actions, make, parent, settings){
 			var elem = make(['$To: ', 
-				function(){ return actions.config['export-path'] || './' }], 
+				function(){ 
+					return (settings['path'] = 
+						settings['path'] 
+						|| './') }], 
 				{ 
 					buttons: [
 						['browse', function(p){
@@ -2826,7 +2873,8 @@ var FileSystemWriterUIActions = actions.Actions({
 							// XXX add new dir global button...
 							return actions.browsePath(path, 
 								function(path){ 
-									actions.config['export-path'] = path
+									//actions.config['export-path'] = path
+									settings['path'] = path
 									actions.config['export-paths'].splice(0, 0, path)
 
 									parent.update()
@@ -2836,7 +2884,8 @@ var FileSystemWriterUIActions = actions.Actions({
 						// XXX BUG: closing this breaks on parant.focus()...
 						['history', widgets.makeNestedConfigListEditor(actions, parent,
 							'export-paths',
-							'export-path',
+							//'export-path',
+							'export-settings.path',
 							{
 								length_limit: 10,
 								new_item: false,
@@ -2855,24 +2904,19 @@ var FileSystemWriterUIActions = actions.Actions({
 								],
 							})
 							.on('edit-commit', function(_, path){
-								actions.config['export-path'] = path
+								//actions.config['export-path'] = path
+								settings['path'] = path
 								actions.config['export-paths'].indexOf(path) < 0
-									&& actions.config['export-paths'].splice(0, 0, path)
-
-							})
+									&& actions.config['export-paths'].splice(0, 0, path) })
 							.on('edit-abort edit-commit', function(evt, path){
 								parent.update()
 									.then(function(){
-										parent.select(path)
-									})
-							})
-					},
-				})
-		},
-		'comment': function(actions, make, parent){
+										parent.select(path) }) }) },
+				}) },
+		'comment': function(actions, make, parent, settings){
 			var elem = make(['$Comment: ', 
-				// XXX get staged comment???
-				function(){ return actions.getSaveComment() }])
+					// XXX get staged comment???
+					function(){ return actions.getSaveComment() }])
 				.on('open', function(){
 					event.preventDefault()
 
@@ -2892,53 +2936,67 @@ var FileSystemWriterUIActions = actions.Actions({
 						.on('edit-abort edit-commit', function(evt, text){
 							parent.update()
 								.then(function(){
-									parent.select(text)
-								})
-						})
-				})
-		},
-		'include_virtual': function(actions, make, parent){
+									parent.select(text) }) }) }) },
+		'include_virtual': function(actions, make, parent, settings){
+			settings['include-virtual'] = !!settings['include-virtual']
 			var elem = make([
 					'Include $virtual: ', 
-					actions.config['export-include-virtual'] ?
+					settings['include-virtual'] ?
 						'yes' 
 						: 'no'], 
 				{ open: function(){
-					var v = actions.config['export-include-virtual'] = 
-						!actions.config['export-include-virtual'] 
+					var v = settings['include-virtual'] = 
+						!settings['include-virtual'] 
 					elem.find('.text').last()
 						.text(v ? 'yes' : 'no') }, }) },
-		'clean_target_dir': function(actions, make, parent){
+		'clean_target_dir': function(actions, make, parent, settings){
+			settings['clean-target'] = !!settings['clean-target']
 			var elem = make([
 					'$Clean target: ', 
-					actions.config['export-clean-target'] ?
+					settings['clean-target'] ?
 						'yes' 
 						: 'no'], 
 				{ open: function(){
-					var v = actions.config['export-clean-target'] = 
-						!actions.config['export-clean-target'] 
+					var v = settings['clean-target'] = 
+						!settings['clean-target'] 
 					elem.find('.text').last()
 						.text(v ? 'yes' : 'no') }, }) },
 	},
 	// XXX update export state: index, crop, image...
 	// XXX should this be visible directly???
 	exportDialog: ['- File/Export...',
+		core.doc`
+
+			.exportDialog()
+			.exportDialog(mode)
+			.exportDialog(settings)
+
+		`,
 		widgets.makeUIDialog(function(mode){
 			var that = this
+			var settings
 
+			// explicitly passed settings... 
+			if(typeof(mode) == typeof({})){
+				settings = mode
+				mode = settings['mode'] }
+			settings = settings
+				|| (this.config['export-settings'] = 
+					this.config['export-settings'] 
+					|| {})
 			// mode aliases...
 			var mode_aliases = Object.entries(that.config['export-dialog-modes'] || {})
 				.reduce(function(res, [key, value]){
 					res[value.alias || key] = key
-					return res
-				}, {})
+					return res }, {})
 			var show_mode = mode_aliases[mode] || mode
 
 			var o = browse.makeLister(null, function(path, make){
 				var dialog = this
 
-				mode = show_mode 
-					|| that.config['export-dialog-mode'] 
+				mode = settings['mode'] =
+					show_mode 
+					|| settings['mode']
 					|| 'Images only'
 				// if invalid mode get the first...
 				mode = !that.config['export-dialog-modes'][mode] ?
@@ -2949,20 +3007,20 @@ var FileSystemWriterUIActions = actions.Actions({
 				// mode selector...
 				!show_mode
 					&& make(['Export $mode: ', 
-							function(){ 
-								return mode }], 
+							function(){ return mode }], 
 						{
 							// XXX for some reason o is initially undefined when
 							// 		it should be set to the dialog...
 							//widgets.makeNestedConfigListEditor(that, o,
 							open: widgets.makeNestedConfigListEditor(that, make.dialog,
-									'export-dialog-modes',
-									'export-dialog-mode',
-									{
-										length_limit: 10,
-										new_item: false,
-										itemButtons: [],
-									}),
+								'export-dialog-modes',
+								//'export-dialog-mode',
+								'export-settings.dialog-mode',
+								{
+									length_limit: 10,
+									new_item: false,
+									itemButtons: [],
+								}),
 						})
 
 				// get the root and user fields...
@@ -2971,10 +3029,9 @@ var FileSystemWriterUIActions = actions.Actions({
 				// build the fields...
 				data.forEach(function(k){
 					(fields[k] 
-							&& fields[k].call(that, that, make, dialog))
+							&& fields[k].call(that, that, make, dialog, settings))
 						|| (base_fields[k] 
-								&& base_fields[k].call(that, that, make, dialog))
-				})
+								&& base_fields[k].call(that, that, make, dialog, settings)) })
 
 				// Start action...
 				make([function(){
@@ -2986,9 +3043,10 @@ var FileSystemWriterUIActions = actions.Actions({
 						cls: 'selected',
 						open: function(){
 							var mode = 
-								that.config['export-dialog-modes'][that.config['export-dialog-mode']]
+								that.config['export-dialog-modes'][settings['mode']]
+							// XXX need to pass settings correctly...
 							that[mode.action](
-								that.config['export-path'] || undefined)
+								settings['path'] || undefined)
 							dialog.close()
 						},
 					}) 
