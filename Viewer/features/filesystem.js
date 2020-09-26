@@ -1706,17 +1706,28 @@ module.FileSystemLoaderURLHistoryUI = core.ImageGridFeatures.Feature({
 
 var FileSystemWriterActions = actions.Actions({
 	config: {
-		//'index-filename-template': '${DATE}-${KEYWORD}.${EXT}',
 
-		'export-path': null,
+		// main settings...
+		'export-settings': {
+			'path': null,
+
+			'include-virtual': true,
+			'clean-target': true,
+
+			// NOTE: file extension is added automatically...
+			// NOTE: see .formatImageName(..) for format docs...
+			'preview-name-pattern': '%(fav)l%n%(-%c)c',
+
+			// XXX is this used???
+			//'level-directory-name': 'fav',
+
+			// XXX do we need both???
+			'preview-size': 1000,
+			'preview-size-limit': 'no limit',
+		},
+
+		// history / presets...
 		'export-paths': [],
-
-		'export-include-virtual': true,
-		'export-clean-target': true,
-
-		// NOTE: file extension is added automatically...
-		// NOTE: see .formatImageName(..) for format docs...
-		'export-preview-name-pattern': '%(fav)l%n%(-%c)c',
 		'export-preview-name-patterns': [
 			'%(fav)l%n%(-bookmarked)b%(-%c)c',
 			'%(fav)l%n%(-bookmarked)b%(-m)m%(-%c)c',
@@ -1724,23 +1735,6 @@ var FileSystemWriterActions = actions.Actions({
 			'%(fav)l%i-%n',
 			'%(fav)l%g-%n',
 		],
-
-		// This is used in .exportIndex(..) to resolve name conflicts...
-		//
-		// NOTE: this is applied ONLY if there is a naming conflict...
-		// NOTE: see .formatImageName(..) for format docs...
-		// XXX adding a %c is more human-readable but is unstable as
-		// 		depends on gid order, %g resolves this problem but is 
-		// 		not very intuitive...
-		//'export-conflicting-image-name': '%n%(-%g)c',
-		'export-conflicting-image-name': '%n%(-%c)c',
-
-		'export-level-directory-name': 'fav',
-		'export-level-directory-names': [
-			'fav',
-			'select',
-		],
-
 		// XXX add options to indicate:
 		// 		- long side
 		// 		- short side
@@ -1754,8 +1748,6 @@ var FileSystemWriterActions = actions.Actions({
 			'1280',
 			'1920',
 		],
-		'export-preview-size': 1000,
-
 		'export-preview-size-limits': [
 			'no limit',
 			'900',
@@ -1763,8 +1755,212 @@ var FileSystemWriterActions = actions.Actions({
 			'1280',
 			'1920',
 		],
+		'export-level-directory-names': [
+			'fav',
+			'select',
+		],
+
+		//'index-filename-template': '${DATE}-${KEYWORD}.${EXT}',
+		
+		// This is used in .exportIndex(..) to resolve name conflicts...
+		//
+		// NOTE: this is applied ONLY if there is a naming conflict...
+		// NOTE: see .formatImageName(..) for format docs...
+		// XXX adding a %c is more human-readable but is unstable as
+		// 		depends on gid order, %g resolves this problem but is 
+		// 		not very intuitive...
+		// XXX is this used???
+		//'export-conflicting-image-name': '%n%(-%g)c',
+		'export-conflicting-image-name': '%n%(-%c)c',
+
+		/* XXX LEGACY...
+		'export-path': null,
+		'export-include-virtual': true,
+		'export-clean-target': true,
+		'export-preview-name-pattern': '%(fav)l%n%(-%c)c',
+		'export-level-directory-name': 'fav',
+		'export-preview-size': 1000,
 		'export-preview-size-limit': 'no limit',
+		//*/
 	},
+
+	// XXX document data format...
+	// XXX should %T / %I be global or current crop???
+	// XXX add comments...
+	// 		%comment - add comment if present
+	// 		%(...%comment )comment - add comment if present
+	// 		...need a better name...
+	// XXX add tags/keywords... 
+	// 		%(tag|...)k - if image is tagged with tag add text
+	formatImageName: ['- File/',
+		core.doc`
+
+		Filename patterns:
+		 	%n		- name without extension
+		
+		 	%gid	- full image gid
+		 	%g		- short gid
+		
+		 	%i		- image index in ribbon
+		 	%I		- global image index
+
+			%r		- ribbon number
+			%R		- ribbon number counting from the bottom
+		
+		 	%t 		- total number of images in ribbon
+		 	%T		- total number of images
+		
+		 	%(...)m	- add text in braces if image marked
+		 	%(...)b	- add text in braces if image is bookmark
+		
+		 	%(...)C	- add text in braces if there are name conflicts.
+						NOTE: this will be added to all images.
+		 	%(...)c	- add text in braces if there are name conflicts 
+						present, but only if the current image has a 
+						conflicting name.
+		 	%c		- number in set of conflicting names (default: 0).
+						NOTE: this is not stable and can change depending
+							on image order.
+
+			%(...)l	- image level path, level depth corresponds to ribbon 
+						number counting from the bottom
+						NOTE: if level is 0 this resolves to '/'
+						Example: '%(x)lz.jop' will resolve to '/z.jpg' for bottom 
+							ribbon and to 'x/x/x/z.jpg' for ribbon #3 from the
+							bottom.
+			%(...)L	- image level path, level depth corresponds to ribbon 
+						number counting from the top
+						NOTE: if level is 0 this resolves to '/'
+
+		NOTE: file extension is added automatically.
+		NOTE: all group patterns (i.e. '%(..)x') can include other patterns.
+
+
+		Examples:
+			These examples are for image 123.jpg at position 2 of 10 (15th
+			of 100 total), bookmarked but not marked, in ribbon 1 in a 
+			set of 3 ribbons.
+
+			'%(fav)l%i-%n'		-> 'fav/02-123.jpg'
+
+			'%(other)L/%I-John-Smith-%n%(-b)b%(-m)m'
+								-> '/10-John-Smith-123-b.jpg'
+
+			'%(best)b/%i of %t - J. Smith - %n'
+								-> 'best/02 of 10 - J. Smith - 123.jpg'
+
+		`,
+		function(pattern, name, data){
+			pattern = pattern || '%f'
+			data = data || {}
+			var gid = data.gid
+			if(!gid && name in this.images){
+				gid = name
+				name = null
+			}
+			gid = gid || this.current
+			var ribbon = this.data.getRibbon(gid)
+			data = Object.assign({}, 
+				this.images[gid] || {}, 
+				data)
+
+			name = name 
+				|| pathlib.basename(
+					data.path || ((data.name || '') + (data.ext || '')))
+			name = name == '' ? 
+				gid 
+				: name
+			var ext = pathlib.extname(name)
+			var to_ext = data.ext 
+				|| ext
+
+			var tags = data.tags || this.data.getTags(gid)
+
+			// XXX revise defaults...
+			var len = data.len || this.data.ribbons[ribbon].len
+			var total_len = data.total_len || this.data.length
+			var r_len = data.r_len || Object.keys(this.data.ribbons).length
+
+			var i = data.i || this.data.getImageOrder('ribbon', gid)
+			var I = data.I || this.data.getImageOrder('loaded', gid)
+			var r = data.r || this.data.getRibbonOrder(gid)
+			var R = data.R || r_len - r - 1
+
+			// pad with zeros...
+			i = (i+'').padStart((len + '').length, '0')
+			I = (I+'').padStart((total_len + '').length, '0')
+			r = (r+'').padStart((r_len + '').length, '0')
+			R = (R+'').padStart((r_len + '').length, '0')
+			//i = ((('1e'+(len+'').length)*1 + i) + '').slice(1)
+			//I = ((('1e'+(total_len+'').length)*1 + I) + '').slice(1)
+
+			var conflicts = data.conflicts
+
+			return pattern
+				// file name...
+				.replace(/%n/, name.replace(ext, ''))
+
+				// gid...
+				.replace(/%gid/, gid)
+				// XXX get the correct short gid length...
+				.replace(/%g/, gid.slice(-6))
+
+				// order...
+				.replace(/%i/, i)
+				.replace(/%I/, I)
+
+				// ribbon order...
+				.replace(/%r/, r)
+				.replace(/%r/, R)
+				
+				// totals...
+				.replace(/%t/, len)
+				.replace(/%T/, total_len)
+
+				// conflict count...
+				.replace(/%c/, (conflicts && conflicts[gid]) ? 
+					conflicts[gid].indexOf(gid) 
+					: 0)
+
+				// metadata...
+				// XXX
+
+
+				// Group patterns...
+
+				// tags...
+				// XXX test: %n%(b)b%(m)m%e
+				.replace(
+					/%\(([^)]*)\)m/, tags.indexOf('marked') >= 0 ? '$1' : '')
+				.replace(
+					/%\(([^)]*)\)b/, tags.indexOf('bookmark') >= 0 ? '$1' : '')
+				// XXX
+				//.replace(
+				//	/%\(([^)]*)\)k/, tags.indexOf('bookmark') >= 0 ? '$1' : '')
+
+				// conflicts...
+				.replace(
+					/%\(([^)]*)\)C/, conflicts ? '$1' : '')
+				.replace(
+					/%\(([^)]*)\)c/, (conflicts || {})[gid] ? '$1' : '')
+
+				// level...
+				.replace(
+					/%\(([^)]*)\)L/, 
+					function(match, level, offset, str){
+						return (offset == 0 ? '' : '/') 
+							+(new Array(r*1)).fill(level).join('/')
+							+(match.length + offset == str.length ? '' : '/') })
+				.replace(
+					/%\(([^)]*)\)l/,
+					function(match, level, offset, str){
+						return (offset == 0 ? '' : '/') 
+							+(new Array(r_len - r*1 - 1)).fill(level).join('/')
+							+(match.length + offset == str.length ? '' : '/') })
+
+				+ to_ext
+		}],
+	
 
 	// XXX should this be sync???
 	backupDir: ['- File/',
@@ -1908,27 +2104,35 @@ var FileSystemWriterActions = actions.Actions({
 	// 		of max_size...
 	// XXX log gid count instead of file count...
 	exportIndex: ['- File/Export/Export index',
+		core.doc`
+
+			.exportIndex(path)
+			.exportIndex(settings)
+
+		`,
 		function(path, max_size, include_orig, clean_target_dir, logger){
 			var that = this
+			var settings
 			logger = logger || this.logger
 			logger = logger && logger.push('Export index')
 
-			max_size = parseInt(max_size || this.config['export-preview-size-limit']) || null
-			// XXX make this dependant on max_size....
-			include_orig = include_orig || true
-
-			// XXX is this correct???
-			// 		...get this from config...
-			path = path || './exported'
-			path = util.normalizePath(path)
-
+			if(typeof(path) != typeof('str')){
+				settings = path
+				path = settings.path }
+			settings = this.config['export-settings'] || {}
 			// XXX resolve env variables in path...
 			// 		...also add ImageGrid specifics: $IG_INDEX, ...
 			// XXX
-			
+			path = path || './exported'
+			path = util.normalizePath(path)
+
+			max_size = parseInt(max_size || settings['preview-size-limit']) || null
+			// XXX make this dependant on max_size....
+			include_orig = include_orig || true
+
 			// clear/backup target...
 			clean_target_dir = clean_target_dir === undefined ? 
-				this.config['export-clean-target'] 
+				settings['clean-target'] 
 				: clean_target_dir
 			clean_target_dir
 				&& fse.existsSync(path)
@@ -2148,183 +2352,6 @@ var FileSystemWriterActions = actions.Actions({
 			return Promise.all(queue)
 		}],
 
-	// XXX document data format...
-	// XXX should %T / %I be global or current crop???
-	// XXX add comments...
-	// 		%comment - add comment if present
-	// 		%(...%comment )comment - add comment if present
-	// 		...need a better name...
-	// XXX add tags/keywords... 
-	// 		%(tag|...)k - if image is tagged with tag add text
-	formatImageName: ['- File/',
-		core.doc`
-
-		Filename patterns:
-		 	%n		- name without extension
-		
-		 	%gid	- full image gid
-		 	%g		- short gid
-		
-		 	%i		- image index in ribbon
-		 	%I		- global image index
-
-			%r		- ribbon number
-			%R		- ribbon number counting from the bottom
-		
-		 	%t 		- total number of images in ribbon
-		 	%T		- total number of images
-		
-		 	%(...)m	- add text in braces if image marked
-		 	%(...)b	- add text in braces if image is bookmark
-		
-		 	%(...)C	- add text in braces if there are name conflicts.
-						NOTE: this will be added to all images.
-		 	%(...)c	- add text in braces if there are name conflicts 
-						present, but only if the current image has a 
-						conflicting name.
-		 	%c		- number in set of conflicting names (default: 0).
-						NOTE: this is not stable and can change depending
-							on image order.
-
-			%(...)l	- image level path, level depth corresponds to ribbon 
-						number counting from the bottom
-						NOTE: if level is 0 this resolves to '/'
-						Example: '%(x)lz.jop' will resolve to '/z.jpg' for bottom 
-							ribbon and to 'x/x/x/z.jpg' for ribbon #3 from the
-							bottom.
-			%(...)L	- image level path, level depth corresponds to ribbon 
-						number counting from the top
-						NOTE: if level is 0 this resolves to '/'
-
-		NOTE: file extension is added automatically.
-		NOTE: all group patterns (i.e. '%(..)x') can include other patterns.
-
-
-		Examples:
-			These examples are for image 123.jpg at position 2 of 10 (15th
-			of 100 total), bookmarked but not marked, in ribbon 1 in a 
-			set of 3 ribbons.
-
-			'%(fav)l%i-%n'		-> 'fav/02-123.jpg'
-
-			'%(other)L/%I-John-Smith-%n%(-b)b%(-m)m'
-								-> '/10-John-Smith-123-b.jpg'
-
-			'%(best)b/%i of %t - J. Smith - %n'
-								-> 'best/02 of 10 - J. Smith - 123.jpg'
-
-		`,
-		function(pattern, name, data){
-			pattern = pattern || '%f'
-			data = data || {}
-			var gid = data.gid
-			if(!gid && name in this.images){
-				gid = name
-				name = null
-			}
-			gid = gid || this.current
-			var ribbon = this.data.getRibbon(gid)
-			data = Object.assign({}, 
-				this.images[gid] || {}, 
-				data)
-
-			name = name 
-				|| pathlib.basename(
-					data.path || ((data.name || '') + (data.ext || '')))
-			name = name == '' ? 
-				gid 
-				: name
-			var ext = pathlib.extname(name)
-			var to_ext = data.ext 
-				|| ext
-
-			var tags = data.tags || this.data.getTags(gid)
-
-			// XXX revise defaults...
-			var len = data.len || this.data.ribbons[ribbon].len
-			var total_len = data.total_len || this.data.length
-			var r_len = data.r_len || Object.keys(this.data.ribbons).length
-
-			var i = data.i || this.data.getImageOrder('ribbon', gid)
-			var I = data.I || this.data.getImageOrder('loaded', gid)
-			var r = data.r || this.data.getRibbonOrder(gid)
-			var R = data.R || r_len - r - 1
-
-			// pad with zeros...
-			i = (i+'').padStart((len + '').length, '0')
-			I = (I+'').padStart((total_len + '').length, '0')
-			r = (r+'').padStart((r_len + '').length, '0')
-			R = (R+'').padStart((r_len + '').length, '0')
-			//i = ((('1e'+(len+'').length)*1 + i) + '').slice(1)
-			//I = ((('1e'+(total_len+'').length)*1 + I) + '').slice(1)
-
-			var conflicts = data.conflicts
-
-			return pattern
-				// file name...
-				.replace(/%n/, name.replace(ext, ''))
-
-				// gid...
-				.replace(/%gid/, gid)
-				// XXX get the correct short gid length...
-				.replace(/%g/, gid.slice(-6))
-
-				// order...
-				.replace(/%i/, i)
-				.replace(/%I/, I)
-
-				// ribbon order...
-				.replace(/%r/, r)
-				.replace(/%r/, R)
-				
-				// totals...
-				.replace(/%t/, len)
-				.replace(/%T/, total_len)
-
-				// conflict count...
-				.replace(/%c/, (conflicts && conflicts[gid]) ? 
-					conflicts[gid].indexOf(gid) 
-					: 0)
-
-				// metadata...
-				// XXX
-
-
-				// Group patterns...
-
-				// tags...
-				// XXX test: %n%(b)b%(m)m%e
-				.replace(
-					/%\(([^)]*)\)m/, tags.indexOf('marked') >= 0 ? '$1' : '')
-				.replace(
-					/%\(([^)]*)\)b/, tags.indexOf('bookmark') >= 0 ? '$1' : '')
-				// XXX
-				//.replace(
-				//	/%\(([^)]*)\)k/, tags.indexOf('bookmark') >= 0 ? '$1' : '')
-
-				// conflicts...
-				.replace(
-					/%\(([^)]*)\)C/, conflicts ? '$1' : '')
-				.replace(
-					/%\(([^)]*)\)c/, (conflicts || {})[gid] ? '$1' : '')
-
-				// level...
-				.replace(
-					/%\(([^)]*)\)L/, 
-					function(match, level, offset, str){
-						return (offset == 0 ? '' : '/') 
-							+(new Array(r*1)).fill(level).join('/')
-							+(match.length + offset == str.length ? '' : '/') })
-				.replace(
-					/%\(([^)]*)\)l/,
-					function(match, level, offset, str){
-						return (offset == 0 ? '' : '/') 
-							+(new Array(r_len - r*1 - 1)).fill(level).join('/')
-							+(match.length + offset == str.length ? '' : '/') })
-
-				+ to_ext
-		}],
-	
 	// XXX might also be good to save/load the export options to .ImageGrid-export.json
 	// XXX resolve env variables in path... (???)
 	// XXX make custom previews (option)...
@@ -2339,6 +2366,9 @@ var FileSystemWriterActions = actions.Actions({
 	exportDirs: ['- File/Export/Export ribbons as directories',
 		core.doc`Export ribbons as directories
 
+			.exportDirs(path)
+			.exportDirs(settings)
+
 		NOTE: see .formatImageName(..) for pattern syntax details.
 		`,
 		function(path, pattern, level_dir, size, include_virtual, clean_target_dir, logger){
@@ -2347,6 +2377,14 @@ var FileSystemWriterActions = actions.Actions({
 			var that = this
 			var base_dir = this.location.path
 
+			if(typeof(path) != typeof('str')){
+				settings = path
+				path = settings.path }
+			settings = this.config['export-settings'] || {}
+			// XXX resolve env variables in path...
+			// 		...also add ImageGrid specifics: $IG_INDEX, ...
+			// XXX
+			path = path || './exported-dirs'
 			path = util.normalizePath(path)
 
 			// XXX resolve env variables in path...
@@ -2357,8 +2395,7 @@ var FileSystemWriterActions = actions.Actions({
 					// and skip windows drives...
 					&& !/^[a-z]:[\\\/]/i.test(path)){
 				// XXX do we need to normalize???
-				path = this.location.path +'/'+ path
-			}
+				path = this.location.path +'/'+ path }
 
 			var to_dir = path
 
@@ -2366,16 +2403,22 @@ var FileSystemWriterActions = actions.Actions({
 			// XXX should this store the last set???
 			level_dir = level_dir === undefined ?
 				level_dir 
-				: (level_dir || this.config['export-level-directory-name'] || 'fav')
-			size = size || this.config['export-preview-size'] || 1000
-			pattern = pattern || this.config['export-preview-name-pattern'] || '%f'
+				: (level_dir 
+					|| settings['level-directory-name'] 
+						|| 'fav')
+			size = size 
+				|| settings['preview-size'] 
+				|| 1000
+			pattern = pattern 
+				|| settings['preview-name-pattern'] 
+				|| '%f'
 			include_virtual = include_virtual === undefined ?
-				this.config['export-include-virtual']
+				settings['include-virtual']
 				: include_virtual
 
 			// clear/backup target...
 			clean_target_dir = clean_target_dir === undefined ? 
-				this.config['export-clean-target'] 
+				settings['clean-target'] 
 				: clean_target_dir
 			clean_target_dir
 				&& fse.existsSync(to_dir)
@@ -2528,23 +2571,7 @@ module.FileSystemWriter = core.ImageGridFeatures.Feature({
 // 		- save if not base path present (browser)
 var FileSystemWriterUIActions = actions.Actions({
 	config: {
-		'export-dialog-mode': 'Full index',
-
-		// export settings...
-		//
-		// NOTE: these are defined and set in .__export_dialog_fields__[..]
-		//'export-paths': [ .. ], 
-		//'export-preview-name-patterns': [ .. ],
-		//'export-preview-size-limits': [ .. ],
-		//
-		// XXX LEGACY: these settings have moved to 'export-settings' below...
-		//'export-dialog-mode': 'Images only',
-		//'export-path': './', 
-		//'export-preview-name-pattern': '%f',
-		//'export-preview-size': 1000,
-		//'export-preview-size-limit': 'no limit',
-		//'export-include-virtual': 'no',
-		//'export-clean-target': 'yes',
+		// NOTE: for more docs on export settings see FileSystemWriter.config...
 
 		'export-dialog-modes': {
 			// XXX is this the right title???
@@ -2597,20 +2624,13 @@ var FileSystemWriterUIActions = actions.Actions({
 		//		// NOTE: this is set/used by .exportDialog(..)
 		//		'mode': 'Images only',
 		//
-		// 		// NOTE: these are defined and set in .__export_dialog_fields__[..]
-		//		'path': './', 
-		//		'preview-name-pattern': '%f',
-		//		'preview-size': 1000,
-		//		'preview-size-limit': 'no limit',
-		//		'include-virtual': 'no',
-		//		'clean-target': 'yes',
-		//
-		//		// ...
+		//		// NOTE: for more info see FileSystemWriter.config['export-settings']...
+		//		...
 		// 	}
 		//
 		// XXX this will accumulate settings from all export modes, is this correct???
 		// XXX this is not yet used by the actual export actions, only for the UI...
-		'export-settings': {},
+		//'export-settings': {},
 
 		//
 		// Format:
