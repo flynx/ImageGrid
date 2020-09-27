@@ -227,7 +227,9 @@ module.GLOBAL_KEYBOARD = {
 		// open/save...
 		O: 'browsePath',
 		ctrl_S: 'saveIndexHere',
-		ctrl_shift_S: 'exportDialog',
+		//ctrl_shift_S: 'exportDialog',
+		ctrl_shift_S: 'exportPresets',
+		ctrl_alt_S: 'exportDialog',
 
 
 		// external editors...

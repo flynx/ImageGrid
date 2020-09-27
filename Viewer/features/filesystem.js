@@ -2653,26 +2653,29 @@ var FileSystemWriterUIActions = actions.Actions({
 		// 		...a dict would require keys (gid/title??)
 		// XXX should this api be accessible from outside the ui???
 		'export-presets': [
-			// XXX STUB: placeholders, replace with real examples...
 			{
-				type: 'images',
-				pattern: '%(fav)l%n%(-bookmarked)b%(-m)m%(-%c)c',
-				size: '1000',
-				include_virtual: true,
-				target_dir: './select',
-				clean_target_dir: true,
+				'name': './select (ribbons to "./fav/..")',
+				'mode': 'Images only',
+				'path': './select',
+				'include-virtual': true,
+				'clean-target': true,
+				'preview-name-pattern': '%(fav)l%n%(-%c)c',
+				'preview-size': 1000,
+				'preview-size-limit': 'no limit',
 			},
 			{
-				type: 'index',
-				size: '1000',
-				include_virtual: true,
-				target_dir: './select',
-				clean_target_dir: true,
-				comment: 'demo',
+				'mode': 'Images only',
+				'path': 'L:/tmp/test/export-test/images-only/',
+				'include-virtual': true,
+				'clean-target': true,
+				'preview-name-pattern': '%(fav)l%n%(-%c)c',
+				'preview-size': 1000,
+				'preview-size-limit': 'no limit',
 			},
 		],
-		'export-history': [
-		],
+		// XXX need to manage history length...
+		'export-history-length': 50,
+		'export-history': [],
 	},
 
 	// XXX this needs feedback...
@@ -3092,13 +3095,12 @@ var FileSystemWriterUIActions = actions.Actions({
 			var that = this
 
 			// presets...
-			// XXX better names...
 			var presets = that.config['export-presets'] || []
 			var index = presets
 				.reduce(function(res, e, i){
 					name = e.name
 						// XXX these should be type-specific...
-						|| `${ e.type }: ${ e.target_dir }${ e.pattern ? ': "'+e.pattern+'"' : '' }`
+						|| `${ e.mode }: ${ e.path }`
 					res[name] = i 
 					return res }, {})
 			var keys = Object.keys(index)
@@ -3106,6 +3108,20 @@ var FileSystemWriterUIActions = actions.Actions({
 			// history...
 			// XXX
 			var history = []
+			var history_index = {}
+			var history_keys = Object.keys(history_index)
+
+			var runExport = function(title, presets, index){
+				// XXX BUG: this does not get the second preset...
+				var preset = presets[index[title]]
+
+				console.log('###', title, preset)
+
+				// XXX load...
+				
+				// XXX STUB...
+				that.exportDialog(preset)
+			}
 
 			return browse.makeLister(null, function(path, make){
 				// presets...
@@ -3116,7 +3132,7 @@ var FileSystemWriterUIActions = actions.Actions({
 						sortable: true,
 						new_item: false,
 						buttons: [
-							// XXX new export...
+							// XXX new export or should this be edit???
 							['N', function(){
 								// XXX
 							}],
@@ -3126,15 +3142,8 @@ var FileSystemWriterUIActions = actions.Actions({
 						],
 						// XXX export...
 						open: function(evt, title){
-							var preset = presets[index[title]]
-							// XXX handle order...
-						
-							// XXX handle removed...
-
-							// XXX load...
-							
-							console.log('###', title, preset)
-						},
+							runExport(title, presets, index)
+							make.dialog.close() },
 						// XXX handle rename -> update index...
 						// XXX
 					})
@@ -3168,8 +3177,8 @@ var FileSystemWriterUIActions = actions.Actions({
 						],
 						// XXX export...
 						open: function(evt, title){
-							console.log('###', title)
-						},
+							runExport(title, history, history_index)
+							make.dialog.close() },
 					})
 			})
 	   		.close(function(){
@@ -3182,11 +3191,14 @@ var FileSystemWriterUIActions = actions.Actions({
 	// XXX these do note need the ui -- move to a separate feature...
 	// XXX these are essentially the same as the history API, make a 
 	// 		generic list manager???
-	saveExportPreset: ['- File/', 
+	exportPresetSave: ['- File/', 
 		function(){}],
-	deleteExportPreset: ['- File/', 
+	exportPresetDelete: ['- File/', 
 		function(){}],
-	runExportPreset: ['- File/', 
+	exportPresetRun: ['- File/', 
+		function(){}],
+
+	exportHistoryPush: ['- File/', 
 		function(){}],
 })
 
