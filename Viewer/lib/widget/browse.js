@@ -2325,6 +2325,8 @@ var BrowserPrototype = {
 	// 		...basically for this to work we need to either reset or override
 	// 		user-agent-stylesheet...
 	// 		to override just set most of the affected options to inherit...
+	// XXX make(..): this trims of the trailing '/' of the text in some cases...
+	// 		...is this a bug???
 	update: function(path, list){
 		path = path || this.path
 		var browser = this.dom
@@ -2350,8 +2352,7 @@ var BrowserPrototype = {
 		// no selection...
 		} else {
 			path = this.path2list(path)
-			var selection = null
-		}
+			var selection = null }
 
 		//-------------------------------------- prepare for update ---
 		// prevent the browser from collapsing and then growing on 
@@ -2493,25 +2494,21 @@ var BrowserPrototype = {
 
 			var hidden = false
 
-			if(that.options.holdSize){
-				// we've started, no need to hold the size any more... 
-				// ...and we do not need to do this more than once.
-				size_freed = !size_freed ? !_freeSize() : true
-			}
+			// we've started, no need to hold the size any more... 
+			// ...and we do not need to do this more than once.
+			that.options.holdSize
+				&& (size_freed = !size_freed ? 
+					!_freeSize() 
+					: true)
 
 			// options passed as an object...
 			if(traversable != null && typeof(traversable) != typeof(true)){
 				opts = traversable
-
-				traversable = opts.traversable
-				disabled = opts.disabled
-				buttons = opts.buttons
-				hidden = opts.hidden
-			}
+				var {traversable, disabled, buttons, hidden} = opts }
 
 			buttons = buttons
-				|| (that.options.itemButtons && that.options.itemButtons.slice())
-
+				|| (that.options.itemButtons 
+					&& that.options.itemButtons.slice())
 
 			// NOTE: this is becoming a bit big, so here the code is 
 			// 		split into more wieldable sections...
@@ -2525,11 +2522,13 @@ var BrowserPrototype = {
 				var shorthand = that.options.elementShorthand[p]
 				if(typeof(res) == typeof('str')){
 					res = $(shorthand.html)
-						.addClass(shorthand.class || '')
-				}
+						.addClass(shorthand.class || '') }
+				opts.attrs
+					&& res.attr(opts.attrs)
+				opts.style
+					&& res.css(opts.style)
 				res.appendTo(l)
-				return res
-			}
+				return res }
 
 			//------------------------------------------- item text ---
 			// array of str/func/dom...
@@ -2618,11 +2617,7 @@ var BrowserPrototype = {
 										&& registered_shortcuts.push(nk))
 									return mark ?
 										`<span class="keyboard-shortcut">${k}</span>`
-										: k
-								}))
-						})
-				}
-			}
+										: k })) }) } }
 			//---------------------------------------------------------
 
 			// tell the lister that we have started in interactive mode...

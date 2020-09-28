@@ -122,8 +122,7 @@ var CollectionActions = actions.Actions({
 			.forEach(function(title){
 				res[c[title].gid || title] = title
 			})
-		return res
-	},
+		return res },
 
 	get collection(){
 		return this.location.collection },
@@ -172,8 +171,7 @@ var CollectionActions = actions.Actions({
 
 		this.__collection_order.splice(0, this.__collection_order.length, ...res)
 
-		return this.__collection_order.slice()
-	},
+		return this.__collection_order.slice() },
 	set collection_order(value){
 		value && this.sortCollections(value) },
 
@@ -186,8 +184,7 @@ var CollectionActions = actions.Actions({
 		var c = (this.collections || {})
 		return MAIN_COLLECTION_TITLE in c ? 
 			Object.keys(c).length - 1
-			: Object.keys(c).length
-	},
+			: Object.keys(c).length },
 
 	// Format:
 	// 	{
@@ -226,8 +223,7 @@ var CollectionActions = actions.Actions({
 				delete handlers['data']
 			}
 
-			return handlers
-		}) },
+			return handlers }) },
 
 
 	// Collection events...
@@ -337,8 +333,7 @@ var CollectionActions = actions.Actions({
 						reject(err) })
 			})
 
-			return p
-		}],
+			return p }],
 
 
 	// Collection life-cycle...
@@ -414,8 +409,7 @@ var CollectionActions = actions.Actions({
 			if(collection == null 
 					|| this.collections == null 
 					|| !(collection in this.collections)){
-				return
-			}
+				return }
 			var crop_mode = this.config['collection-save-crop-state'] || 'all'
 
 			var current = this.current
@@ -444,8 +438,7 @@ var CollectionActions = actions.Actions({
 					&& !force){
 				this.saveCollection(
 					this.collection, 
-					crop_mode == 'all' ? 'crop': null)
-			}
+					crop_mode == 'all' ? 'crop': null) }
 
 			// load collection...
 			// XXX should this be sync???
@@ -455,8 +448,7 @@ var CollectionActions = actions.Actions({
 					var data = collection_data.data
 
 					if(!data){
-						return
-					}
+						return }
 
 					// current...
 					data.current = data.getImage(current) 
@@ -505,13 +497,9 @@ var CollectionActions = actions.Actions({
 										collection
 									// cleanup...
 									if(collection == null){
-										delete this.location.collection
-									}
-								}
+										delete this.location.collection } }
 							}, 
-							collection)
-				})
-		}],
+							collection) }) }],
 	// XXX should this call .loadCollection('!') when saving to current
 	// 		collection???
 	// 		This would reaload the view to a consistent (just saved) 
@@ -569,9 +557,9 @@ var CollectionActions = actions.Actions({
 			collection = collection == 'current' ? this.collection : collection
 
 			if(!force 
-					&& (collection == null || collection == MAIN_COLLECTION_TITLE)){
-				return
-			}
+					&& (collection == null 
+						|| collection == MAIN_COLLECTION_TITLE)){
+				return }
 
 			var collections = this.collections = this.collections || {}
 			var depth = typeof(mode) == typeof(123) ? mode : null
@@ -584,11 +572,10 @@ var CollectionActions = actions.Actions({
 							&& collection == this.collection) 
 						|| collection == MAIN_COLLECTION_TITLE) ? 
 					'crop' 
-					: 'current'
-			}
+					: 'current' }
 			var new_collection = 
 				!collections[collection] 
-				&& collection != MAIN_COLLECTION_TITLE
+					&& collection != MAIN_COLLECTION_TITLE
 
 			// save the data...
 			var state = collections[collection] = collections[collection] || {}
@@ -630,9 +617,7 @@ var CollectionActions = actions.Actions({
 
 			// other modes...
 			} else {
-				delete state.crop_stack
-			}
-
+				delete state.crop_stack }
 
 			// XXX this leads to recursion????
 			// 		.loadCollection('X')
@@ -643,8 +628,7 @@ var CollectionActions = actions.Actions({
 			//	&& this.loadCollection('!')
 
 			new_collection
-				&& this.collectionCreated(collection)
-		}],
+				&& this.collectionCreated(collection) }],
 	newCollection: ['- Collections/',
 		core.doc` Shorthand to .saveCollection(collection, 'empty')`,
 		function(collection){ return this.saveCollection(collection, 'empty') }],
@@ -664,17 +648,15 @@ var CollectionActions = actions.Actions({
 			collection = this.collectionGIDs[collection] || collection
 			if(collection in this.collections){
 				delete this.collections[collection]
-				this.collectionRemoved(collection)
-			}
-		}],
+				this.collectionRemoved(collection) } }],
 	renameCollection: ['- Collections/',
 		function(from, to){
 			if(to == from 
 					|| from == MAIN_COLLECTION_TITLE 
 					|| to == MAIN_COLLECTION_TITLE 
-					|| (this.collections || {})[from] == null){
-				return
-			}
+					|| (this.collections 
+						|| {})[from] == null){
+				return }
 
 			var order = this.collection_order
 			order.splice(order.indexOf(from), 1, to)
@@ -685,9 +667,7 @@ var CollectionActions = actions.Actions({
 			data.title = to
 
 			if(this.collection == from){
-				this.location.collection = to
-			}
-		}],
+				this.location.collection = to } }],
 
 
 	// Collection list manipulation...
@@ -728,8 +708,7 @@ var CollectionActions = actions.Actions({
 			} else {
 				this.__collection_order.sort()
 			}
-			this.collection_order
-		}],
+			this.collection_order }],
 	collectionToTop: ['Collections/Bring collection to $top',
 		core.doc`Bring collection to top...
 
@@ -755,8 +734,7 @@ var CollectionActions = actions.Actions({
 				return
 			}
 
-			this.collection_order = [collection].concat(o).unique()
-		}],
+			this.collection_order = [collection].concat(o).unique() }],
 	
 
 	// Introspection...
@@ -778,8 +756,7 @@ var CollectionActions = actions.Actions({
 						&& that.collections[c]
 						&& that.collections[c].data
 						&& (!gid 
-							|| that.collections[c].data.getImage(gid)) })
-		}],
+							|| that.collections[c].data.getImage(gid)) }) }],
 
 
 	// Collection editing....
@@ -829,8 +806,7 @@ var CollectionActions = actions.Actions({
 			collection = collection || this.collection
 			collection = this.collectionGIDs[collection] || collection 
 			if(collection == null || collection == MAIN_COLLECTION_TITLE){
-				return
-			}
+				return }
 
 			gids = gids == 'loaded' ? 
 					this.data.getImages('loaded')
@@ -854,19 +830,18 @@ var CollectionActions = actions.Actions({
 					var remove = c.data.getImages(gids, 'all')
 					// only add gids that do not exist in collection...
 					gids = gids
-						.filter(function(g){ return remove.indexOf(g) < 0 })
+						.filter(function(g){ 
+							return remove.indexOf(g) < 0 })
 
 					if(gids.length == 0){
-						return
-					}
+						return }
 
 					// add to collection...
 					var data = this.data.constructor.fromArray(gids)
 
 					// XXX should we use collection.data.placeImage(..)???
-					return this.joinCollect(null, collection, data)
-				}).bind(this))
-		}],
+					return this.joinCollect(null, collection, data) 
+				}).bind(this)) }],
 	joinCollect: ['Collections/$Merge view to collection...',
 		core.doc`Merge/Join current state to collection
 
@@ -894,8 +869,7 @@ var CollectionActions = actions.Actions({
 			collection = arguments.length == 1 ? align : collection
 			collection = this.collectionGIDs[collection] || collection 
 			if(collection == null || collection == MAIN_COLLECTION_TITLE){
-				return
-			}
+				return }
 
 			// if only collection is given, reset align to null...
 			align = align === collection ? null : align
@@ -926,12 +900,10 @@ var CollectionActions = actions.Actions({
 									.concat(rorder)
 									.unique()
 									.reverse() 
-								data.updateImagePositions()
-							})
+								data.updateImagePositions() })
 
 					} else {
-						c.data = res
-					}
+						c.data = res }
 
 					// joining into the current collection...
 					if(collection == this.collection){
@@ -946,17 +918,13 @@ var CollectionActions = actions.Actions({
 										.concat(rorder)
 										.unique()
 										.reverse() 
-									data.updateImagePositions()
-								})
+									data.updateImagePositions() })
 
 						} else {
 							var cur = this.current
 							this.data = res 
-							this.data.current = cur
-						}
-					}
-				}).bind(this))
-		}],
+							this.data.current = cur } }
+				}).bind(this)) }],
 	// XXX undo: see .removeFromCrop(..) for a reference implementation...
 	// 		this will need:
 	// 			- .collect(..) to be able to place images...
@@ -984,14 +952,15 @@ var CollectionActions = actions.Actions({
 		NOTE: this will remove any gid, be it image or ribbon.
 		`,
 		{
-			mode: function(){ return !this.collection && 'disabled' },
+			mode: function(){ 
+				return !this.collection && 'disabled' },
 			// XXX two ways to go:
 			//		- .collect(..) + .data.placeImage(..)
 			//		- rewrite .collect(..) to use .data.placeImage(..) (like: .addToCrop(..))
 			getUndoState: function(d){
 				d.placements = this.data.getImagePositions(d.args[0])
-				d.collection = d.args[1] || this.collection
-			},
+				d.collection = d.args[1] 
+					|| this.collection },
 			// XXX this does not work yet...
 			// 		...need to trigger .reload(..), and considering that
 			// 		this is a UI action, doing so explicitly is logical...
@@ -1015,8 +984,7 @@ var CollectionActions = actions.Actions({
 								// XXX does not place correctly...
 								that.data.placeImage(e[0], e[1], that.data.order[e[2]]) 
 							that.reload(true)
-						}) })
-			},
+						}) }) },
 			//*/
 		},
 		function(gids, collection){
@@ -1026,8 +994,7 @@ var CollectionActions = actions.Actions({
 					|| collection == MAIN_COLLECTION_TITLE
 					|| !this.collections 
 					|| !(collection in this.collections)){
-				return
-			}
+				return }
 
 			var that = this
 
@@ -1053,9 +1020,7 @@ var CollectionActions = actions.Actions({
 			if(this.collections[collection].data 
 					&& this.data !== this.collections[collection].data){
 				this.collections[collection].data
-					.clear(gids)
-			}
-		}],
+					.clear(gids) } }],
 	uncollectRibbon: ['Collections|Ribbon/Remove ribbon from collection',
 		core.doc`Remove ribbons from collection...
 
@@ -1085,8 +1050,7 @@ var CollectionActions = actions.Actions({
 			gids = gids || 'current'
 			gids = gids instanceof Array ? gids : [gids]
 			gids = gids.map(function(gid){ return that.data.getRibbon(gid) })
-			return this.uncollect(gids, collection) 
-		}],
+			return this.uncollect(gids, collection) }],
 
 
 	// Serialization...
@@ -1103,61 +1067,51 @@ var CollectionActions = actions.Actions({
 		var order = json.collection_order || Object.keys(c)
 
 		if((json.location || {}).collection){
-			this.location.collection = json.location.collection
-		}
+			this.location.collection = json.location.collection }
 			
-		Object.keys(c).forEach(function(title){
-			if(c[title] === false){
-				return
-			}
+		Object.keys(c)
+			.forEach(function(title){
+				if(c[title] === false){
+					return }
 
-			var state = collections[title] = { title: title }
+				var state = collections[title] = { title: title }
 
-			// load data...
-			var d = c[title].data == null ?
-					null
-				: c[title].data instanceof data.Data ?
-					c[title].data
-				: data.Data.fromJSON(c[title].data)
-			if(d){
-				state.data = d
-			}
+				// load data...
+				var d = c[title].data == null ?
+						null
+					: c[title].data instanceof data.Data ?
+						c[title].data
+					: data.Data.fromJSON(c[title].data)
+				if(d){
+					state.data = d }
 
-			// image count...
-			if(c[title].count){
-				state.count = c[title].count
-			}
+				// image count...
+				if(c[title].count){
+					state.count = c[title].count }
 
-			// NOTE: this can be done lazily when loading each collection
-			// 		but doing so will make the system more complex and 
-			// 		confuse (or complicate) some code that expects 
-			// 		.collections[*].crop_stack[*] to be instances of Data.
-			if(c[title].crop_stack){
-				state.crop_stack = c[title].crop_stack
-					.map(function(c){ 
-						return c instanceof data.Data ? 
-							c 
-							: data.Data(c) })
-			}
+				// NOTE: this can be done lazily when loading each collection
+				// 		but doing so will make the system more complex and 
+				// 		confuse (or complicate) some code that expects 
+				// 		.collections[*].crop_stack[*] to be instances of Data.
+				if(c[title].crop_stack){
+					state.crop_stack = c[title].crop_stack
+						.map(function(c){ 
+							return c instanceof data.Data ? 
+								c 
+								: data.Data(c) }) }
 
-			// copy the rest of collection data as-is...
-			Object.keys(c[title])
-				.forEach(function(key){
-					if(key in state){
-						return
-					}
-
-					state[key] = c[title][key]
-				})
-		})
+				// copy the rest of collection data as-is...
+				Object.keys(c[title])
+					.forEach(function(key){
+						if(key in state){
+							return }
+						state[key] = c[title][key]
+					}) })
 
 		return function(){
 			if(Object.keys(collections).length > 0){
 				this.collections = collections
-				this.collection_order = order
-			}
-		}
-	}],
+				this.collection_order = order } } }],
 	//
 	// Supported modes:
 	// 	current (default) 	- ignore collections
@@ -1197,15 +1151,14 @@ var CollectionActions = actions.Actions({
 						: main.data)
 					.json()
 
-				delete res.location.collection
-			}
+				delete res.location.collection }
 
 			res.collections = {}
 			order.forEach(function(title){
 				// in base mode skip the main collection...
-				if(mode == 'base' && title == MAIN_COLLECTION_TITLE){
-					return
-				}
+				if(mode == 'base' 
+						&& title == MAIN_COLLECTION_TITLE){
+					return }
 
 				var state = collections[title]
 
@@ -1213,8 +1166,7 @@ var CollectionActions = actions.Actions({
 				// XXX
 				if(state == null){
 					res.collections[title] = false
-					return
-				}
+					return }
 
 				// build the JSON...
 				var s = res.collections[title] = { title: title }
@@ -1229,18 +1181,14 @@ var CollectionActions = actions.Actions({
 					s.count = data.length
 
 				} else if(state.count) {
-					s.count = state.count
-				}
+					s.count = state.count }
 
 				// handle .crop_stack of collection...
 				// NOTE: in base mode, crop_stack is ignored...
 				if(mode != 'base' && state.crop_stack){
 					s.crop_stack = state.crop_stack
-						.map(function(d){ return d.json() })
-				}
-			})
-		}
-	} }],
+						.map(function(d){ return d.json() }) }
+			}) } } }],
 	clone: [function(full){
 		return function(res){
 			if(this.collections){
@@ -1258,25 +1206,18 @@ var CollectionActions = actions.Actions({
 						}
 
 						if(cur[title].data){
-							c.data = cur[title].data.clone()
-						}
+							c.data = cur[title].data.clone() }
 
 						if(cur[title].crop_stack){
 							c.crop_stack = cur[title].crop_stack
-								.map(function(d){ return d.clone() })
-						}
-					})
-			}
-
-		} }],
+								.map(function(d){ return d.clone() }) } }) } } }],
 
 	clear: [function(){
 		this.collection
 			&& this.collectionUnloaded('*')
 		delete this.collections
 		delete this.__collection_order
-		delete this.location.collection
-	}],
+		delete this.location.collection }],
 
 
 	// Config and interface stuff...
@@ -2424,8 +2365,7 @@ var UICollectionActions = actions.Actions({
 						.on('update', function(){
 							dialog.filter(JSON.stringify((that.collection || MAIN_COLLECTION_TITLE)
 									.replace(/\$/g, '')))
-								.addClass('highlighted')
-						})
+								.addClass('highlighted') })
 
 					// nothing loaded...
 					// NOTE: we have to check both .data and .collection as
@@ -2433,24 +2373,21 @@ var UICollectionActions = actions.Actions({
 					// 		.data but a set .collection...
 					if(that.data.length == 0 && that.collection == null){
 						make.Empty('No collections...')
-						return
-					}
+						return }
 
 					var openHandler = function(_, title){
 						var title = $(this).find('.text').attr('text') || title
 						// create collection if it does not exist...
 						if(!that.collections 
 								|| !(title in that.collections)){
-							that.newCollection(title)
-						}
+							that.newCollection(title) }
 
 						var gid = that.current
 						action ?
 							action.call(that, title)
 							: that.loadCollection(title)
 						that.focusImage(gid)
-						dialog.close()
-					}
+						dialog.close() }
 					var setItemState = function(title){
 						var gid = ((that.collections || {})[title] || {}).gid || title
 						// handle main collection changes...
@@ -2490,8 +2427,7 @@ var UICollectionActions = actions.Actions({
 						i = (!i && title == MAIN_COLLECTION_TITLE && !that.collection) ?
 							that.data.length 
 							: i
-						i && $(this).attr('count', i)
-					}
+						i && $(this).attr('count', i) }
 
 					// update collection list if changed externally...
 					collections.splice.apply(collections, 
@@ -2572,9 +2508,7 @@ var UICollectionActions = actions.Actions({
 
 								// rename was successful...
 								if(to in that.collections){
-									collections[collections.indexOf(from)] = to
-								}
-							},
+									collections[collections.indexOf(from)] = to } },
 						})
 				}, {
 					cls: 'collection-list',
@@ -2592,10 +2526,8 @@ var UICollectionActions = actions.Actions({
 						&& (that.config[last_used_collection] = title) })
 				.close(function(){
 					that.collection_order = collections
-
 					to_remove
-						.forEach(function(title){ that.removeCollection(title) }) 
-				})
+						.forEach(function(title){ that.removeCollection(title) }) })
 		})],
 	// XXX should this be able to add new collections???
 	browseImageCollections: ['Collections|Image/Image $collections...',
@@ -2623,8 +2555,7 @@ var UICollectionActions = actions.Actions({
 					if(defaults){
 						all.splice.apply(all, 
 							[0, all.length]
-								.concat(all.concat(defaults).unique()))
-					}
+								.concat(all.concat(defaults).unique())) }
 
 					// load collections...
 					var loading = all
@@ -2646,8 +2577,7 @@ var UICollectionActions = actions.Actions({
 										dialog.update() 
 									}, 100)
 								}) 
-							return c
-						})
+							return c })
 					
 					// containing collections...
 					collections = collections
@@ -2661,9 +2591,7 @@ var UICollectionActions = actions.Actions({
 						all.forEach(function(title){
 							collections.indexOf(title) < 0
 								&& loading.indexOf(title) < 0
-								&& to_remove.push(title.replace(/\$/g, ''))
-						})
-					}
+								&& to_remove.push(title.replace(/\$/g, '')) }) }
 
 					all.length > 0 ?
 						make.EditableList(all, 
@@ -2732,8 +2660,7 @@ var UICollectionActions = actions.Actions({
 			this.saveCollection(title, 'current') 
 			// XXX should we be doing this manually here or in .saveCollection(..)
 			title == this.collection
-				&& this.loadCollection('!')
-		})],
+				&& this.loadCollection('!') })],
 	collect: [
 		collectionGetterWrapper(function(gids, title){ 
 			if(title == null){
@@ -2761,8 +2688,7 @@ var UICollectionActions = actions.Actions({
 					var images = collection.data.getImages('all')
 
 					that.crop(images, false)
-				})
-		}, null, false)],
+				}) }, null, false)],
 	cropOutImagesInCollection: ['Collections|Crop/Remove collection images from crop...',
 		{mode: 'cropImagesInCollection'},
 		mixedModeCollectionAction(function(title){

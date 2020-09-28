@@ -1059,10 +1059,10 @@ var KeyboardPrototype = {
 	on: function(key, handler){
 		// normalize args...
 		if(arguments.length == 3){
-			[key, mode, handler] = arguments
+			var [key, mode, handler] = arguments
 		} else {
-			[key, handler] = arguments }
-		mode = mode 
+			var [key, handler] = arguments }
+		var mode = mode 
 			|| Object.keys(this.keyboard)[0]
 		// bind...
 		return this.handler(mode, key, handler) },

@@ -2520,7 +2520,6 @@ var FileSystemWriterActions = actions.Actions({
 					return res
 				}))
 		}]
-
 })
 
 
@@ -2626,6 +2625,7 @@ var FileSystemWriterUIActions = actions.Actions({
 		// Format:
 		// 	{
 		//		// NOTE: this is set/used by .exportDialog(..)
+		//		// XXX replace this with action...
 		//		'mode': 'Images only',
 		//
 		//		// NOTE: for more info see FileSystemWriter.config['export-settings']...
@@ -2668,7 +2668,7 @@ var FileSystemWriterUIActions = actions.Actions({
 				'path': 'L:/tmp/test/export-test/images-only/',
 				'include-virtual': true,
 				'clean-target': true,
-				'preview-name-pattern': '%(fav)l%n%(-%c)c',
+				'preview-name-pattern': '%n%(-b)b%(-%c)c',
 				'preview-size': 1000,
 				'preview-size-limit': 'no limit',
 			},
@@ -2677,6 +2677,16 @@ var FileSystemWriterUIActions = actions.Actions({
 		'export-history-length': 50,
 		'export-history': [],
 	},
+
+	// XXX rename???
+	// XXX should this be here or in FileSystemWriter???
+	// 		...FileSystemWriter does not define .mode for this to work correctly...
+	exportAs: ['- File/',
+		function(settings){
+			settings = settings 
+				|| this.config['export-settings']
+			var action = this.config['export-dialog-modes'][settings.mode].action
+			return this[action](settings) }],
 
 	// XXX this needs feedback...
 	// XXX should this return a promise???
@@ -3086,24 +3096,14 @@ var FileSystemWriterUIActions = actions.Actions({
 
 
 	// XXX export using a preset...
-	// XXX should presets be available just in UI???
-	// 		need to:
-	// 			- pass values to export dialog (load) -- DONE
-	// 			- pass values to export action (use) -- DONE
+	// XXX TODO:
+	// 		- format the element into: title (optional) + info
 	exportPresets: ['- File/Export history...',
 		widgets.makeUIDialog(function(mode){
 			var that = this
 
 			// presets...
 			var presets = that.config['export-presets'] || []
-			var index = presets
-				.reduce(function(res, e, i){
-					name = e.name
-						// XXX these should be type-specific...
-						|| `${ e.mode }: ${ e.path }`
-					res[name] = i 
-					return res }, {})
-			var keys = Object.keys(index)
 
 			// history...
 			// XXX
@@ -3111,58 +3111,61 @@ var FileSystemWriterUIActions = actions.Actions({
 			var history_index = {}
 			var history_keys = Object.keys(history_index)
 
-			var runExport = function(title, presets, index){
-				// XXX BUG: this does not get the second preset...
-				var preset = presets[index[title]]
-
-				console.log('###', title, preset)
-
-				// XXX load...
-				
-				// XXX STUB...
-				that.exportDialog(preset)
-			}
+			// XXX
+			var getPreset = function(title, presets, index){
+				return presets[index[title]] }
 
 			return browse.makeLister(null, function(path, make){
+
+				var index = presets
+					.reduce(function(res, e, i){
+						name = e.name
+							// XXX these should be type-specific...
+							|| `${ e.mode }: "${ e.path }"`
+						res[name] = i 
+						return res }, {})
+				var keys = Object.keys(index)
+
 				// presets...
+				//make.Separator()
 				keys.length == 0 ?
-					make.Empty()
+					make.Empty('No presets...')
 					: make.EditableList(keys, {
 						list_id: 'presets',
 						sortable: true,
 						new_item: false,
 						buttons: [
 							// XXX new export or should this be edit???
-							['N', function(){
-								// XXX
-							}],
+							['E', function(title){
+								that.exportDialog(getPreset(title, presets, index))
+						   			.close(function(){
+										// XXX for some reason on update when 
+										// 		name affected the item does not 
+										// 		get updated...
+										make.dialog.update() })}],
 							// XXX not sure about the default icon...
 							['T', 'TO_TOP'],
 							'REMOVE',
 						],
 						// XXX export...
 						open: function(evt, title){
-							runExport(title, presets, index)
+							that.exportAs(getPreset(title, presets, index))
 							make.dialog.close() },
 						// XXX handle rename -> update index...
 						// XXX
 					})
 
-				/*/ export dialog...
-				// XXX do we need this???
-				make.Separator()
-				make('$Export...', {
+				// export dialog...
+				make.Separator({ style: { opacity: '0.1' } })
+				make('E$xport...', {
 					open: function(){
 						that.exportDialog() 
-						//make.dialog.close() 
-					},
-				})
-				//*/
+						make.dialog.close() }, })
 
 				// history...
 				make.Separator()
 				history.length == 0 ?
-					make.Empty()
+					make.Empty('No export history...')
 					: ake.EditableList(history, {
 						list_id: 'history',
 						sortable: false,
@@ -3177,9 +3180,16 @@ var FileSystemWriterUIActions = actions.Actions({
 						],
 						// XXX export...
 						open: function(evt, title){
-							runExport(title, history, history_index)
+							that.exportAs(getPreset(title, presets, index))
 							make.dialog.close() },
 					})
+			})
+			.run(function(){
+				var that = this
+				// XXX
+				this.keyboard.on('E', function(){
+					console.log('!!!!!!!!!!!!!', that.selected)
+				})
 			})
 	   		.close(function(){
 
