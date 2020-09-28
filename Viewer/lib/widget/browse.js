@@ -600,7 +600,14 @@ function(data, options){
 //
 // 		// Item edit event handler...
 // 		//
-// 		itemedit: function(from, to){ ... },
+// 		itemedit: function(evt, from, to){ ... },
+//
+// 		// If true allow saving and triggering options.itemedit(..) on an
+// 		// empty value after editing the item... (default: null)
+// 		//
+// 		// NOTE: this will not save the empty value (see .Editable(..))
+// 		//		this will only trigger the handler on an empty value...
+// 		allow_empty: null | <bool>,
 //
 //		// Item open event handler...
 //		//
@@ -659,10 +666,11 @@ function(data, options){
 // 		// Merge list state and external list mode on update...
 // 		//
 // 		// This can be:
-// 		//	null			- keep dialog state, ignore external state (default)
+// 		//	'keep_changes'	- keep dialog state, ignore external state (default)
+// 		//	null			- same as 'keep_changes'
 // 		//	'drop_changes'	- replace dialog state with input state
-// 		//	'keep_changes'	- keep dialog state (ignoring input)
 // 		//	'merge'			- merge dialog state and input state
+// 		//	'live'			- live edit
 // 		//	<function>		- merge the changes
 //		//
 // 		update_merge: null | 'drop_changes' | 'keep_changes' | 'merge' | <function>,
@@ -861,19 +869,15 @@ function(list, options){
 				],
 			})
 			.on('edit-commit', function(evt, to){
-				if(to.trim() != ''){
+				if(options.allow_empty || to.trim() != ''){
 					to = saveItem(to, from)
-
 					options.itemedit 
-						&& options.itemedit.call(elem, evt, from, to)
-				}
-			})
+						&& options.itemedit.call(elem, evt, from, to) } })
 			.on('edit-abort edit-commit', function(_, title){
 				title = title.trim() == '' ? from : title
 				title = title.replace(/\$/g, '')
 				dialog.update()
-					.then(function(){ dialog.select(`"${title}"`) })
-			}) }
+					.then(function(){ dialog.select(`"${title}"`) }) }) }
 
 	dialog.__list = dialog.__list || {}
 	dialog.__editable = dialog.__editable || {}
@@ -893,8 +897,7 @@ function(list, options){
 	options = options || {}
 	var opts = {}
 	for(var k in options){
-		opts[k] = options[k]
-	}
+		opts[k] = options[k] }
 	options = opts
 
 	var lst = 
@@ -903,7 +906,9 @@ function(list, options){
 			(list instanceof Function ? list() : list)
 
 		// load dialog state (ignore input)...
-		: (options.update_merge == null || options.update_merge == 'keep_changes') ? 
+		: (options.update_merge == null 
+				|| options.update_merge == 'keep_changes'
+				|| options.update_merge == 'live') ? 
 			dialog.__list[id]
 
 		// load input/external state (ignore dialog state)...
@@ -922,8 +927,7 @@ function(list, options){
 						// via their position in local...
 						i = i == -1 ? input.indexOf(a) : i
 						j = j == -1 ? input.indexOf(b) : j
-						return i - j
-					})
+						return i - j })
 			})(dialog.__list[id] || [], list instanceof Function ? list() : list)
 
 		// user merge...
@@ -940,7 +944,11 @@ function(list, options){
 	var editable = dialog.__editable[id] = lst instanceof Array
 	// NOTE: we .slice() here to make the changes a bit better packaged
 	// 		or discrete and not done as they come in...
-	lst = lst instanceof Array ? lst.slice() : Object.keys(lst)
+	lst = lst instanceof Array ? 
+		(options.update_merge == 'live' ?
+			lst
+			: lst.slice())
+		: Object.keys(lst)
 
 	dialog.__list[id] = lst
 
@@ -959,8 +967,7 @@ function(list, options){
 		options.to_top_button
 			&& buttons.push('TO_TOP')
 		options.to_bottom_button
-			&& buttons.push('TO_BOTTOM')
-	}
+			&& buttons.push('TO_BOTTOM') }
 	// remove...
 	editable 
 		&& options.delete_button !== false
@@ -1055,8 +1062,7 @@ function(list, options){
 				var key = button instanceof Array ? button[1] : button
 				// skip seen buttons...
 				if(seen.indexOf(key) >= 0){
-					return key
-				}
+					return key }
 				var res = button in __buttons ? 
 						__buttons[button]
 					: button[1] in __buttons ? 
@@ -1065,12 +1071,9 @@ function(list, options){
 				// group if at least one sort button is present...
 				if(res !== button){
 					options.groupList = true
-
 					// avoid duplicates...
-					seen.push(key)
-				}
-				return res.slice()
-			})
+					seen.push(key) }
+				return res.slice() })
 			// clear out the unused button placeholders...
 			.filter(function(b){ 
 				return ['UP', 'DOWN', 'TO_TOP', 'TO_BOTTOM', 'REMOVE'].indexOf(b) < 0 })
@@ -1260,8 +1263,8 @@ function(list, pins, options){
 	// link the to_remove lists of pins and the main list...
 	dialog.__to_remove = dialog.__to_remove || {}
 	if(dialog.__to_remove[id] == null){
-		dialog.__to_remove[id] = dialog.__to_remove[pins_id] = []
-	}
+		dialog.__to_remove[id] = 
+			dialog.__to_remove[pins_id] = [] }
 
 	// XXX redraw....
 	// 		- sort			- within one list this is trivial (history.js)
@@ -2027,8 +2030,7 @@ var BrowserPrototype = {
 		if(e.length <= 0){
 			return null
 		}
-		return e.find('.text').text()
-	},
+		return e.find('.text').text() },
 	set selected(value){
 		return this.select(value) },
 

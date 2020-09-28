@@ -3095,15 +3095,28 @@ var FileSystemWriterUIActions = actions.Actions({
 		'exportDialog: "images"'],
 
 
-	// XXX export using a preset...
 	// XXX TODO:
 	// 		- format the element into: title (optional) + info
+	// XXX add a 'name' field to the exportDialog(..)???
+	// XXX button icons... 
+	// XXX button shortcuts...
 	exportPresets: ['- File/Export history...',
 		widgets.makeUIDialog(function(mode){
 			var that = this
+			var logger = this.logger && this.logger.push('exportPresets')
+
+			// XXX these should be type-specific...
+			var getName = function(preset){
+				return preset.name
+					|| `${ preset.mode }: "${ preset.path }"` }
 
 			// presets...
 			var presets = that.config['export-presets'] || []
+			var index = presets
+				.reduce(function(res, e, i){
+					res[getName(e)] = i 
+					return res }, {})
+			var keys = Object.keys(index)
 
 			// history...
 			// XXX
@@ -3111,56 +3124,73 @@ var FileSystemWriterUIActions = actions.Actions({
 			var history_index = {}
 			var history_keys = Object.keys(history_index)
 
-			// XXX
 			var getPreset = function(title, presets, index){
 				return presets[index[title]] }
 
 			return browse.makeLister(null, function(path, make){
-
-				var index = presets
-					.reduce(function(res, e, i){
-						name = e.name
-							// XXX these should be type-specific...
-							|| `${ e.mode }: "${ e.path }"`
-						res[name] = i 
-						return res }, {})
-				var keys = Object.keys(index)
-
-				// presets...
-				//make.Separator()
+				// preset list...
 				keys.length == 0 ?
 					make.Empty('No presets...')
 					: make.EditableList(keys, {
 						list_id: 'presets',
 						sortable: true,
+						update_merge: 'live',
 						new_item: false,
+						// NOTE: we use empty to restore the automatic value...
+						allow_empty: true,
+						itemedit: function(evt, from, to){
+							var preset = getPreset(from, presets, index)
+							// clear...
+							if(to.trim() == ''){
+								delete preset.name
+								to = keys[keys.indexOf(from)] = getName(preset)
+							// set...
+							} else {
+								to = preset.name = to.trim() }
+							// update index...
+							index[to] = index[from]
+							delete index[from] 
+							// select item...
+							// NOTE: this is not done automatically because 
+							// 		we are changing the title .EditableList(..)
+							// 		is expecting...
+							make.dialog.one('update', 
+								function(){
+									make.dialog.select(to) }) },
 						buttons: [
-							// XXX new export or should this be edit???
-							['E', function(title){
-								that.exportDialog(getPreset(title, presets, index))
+							['<small>edit</small>', function(title){
+								var preset = getPreset(title, presets, index)
+								that.exportDialog(preset)
 						   			.close(function(){
-										// XXX for some reason on update when 
-										// 		name affected the item does not 
-										// 		get updated...
-										make.dialog.update() })}],
-							// XXX not sure about the default icon...
-							['T', 'TO_TOP'],
-							'REMOVE',
-						],
-						// XXX export...
+										var n = getName(preset)
+										// update the list if name is affected...
+										if(n != title){
+											keys[keys.indexOf(title)] = n
+											index[n] = index[title]
+											delete index[title]
+											make.dialog.select(n) 
+											make.dialog.update() } })}],
+							['&diams;', 'TO_TOP'],
+							'REMOVE'],
+						// export...
 						open: function(evt, title){
-							that.exportAs(getPreset(title, presets, index))
-							make.dialog.close() },
-						// XXX handle rename -> update index...
-						// XXX
-					})
+							var preset = getPreset(title, presets, index)
+							// export only if we get a good preset...
+							if(preset && getName(preset) == title){
+								that.exportAs(preset)
+								return make.dialog.close() }
+							// error...
+							logger 
+								&& logger.emit('error', 'preset not found.') }, })
 
 				// export dialog...
 				make.Separator({ style: { opacity: '0.1' } })
 				make('E$xport...', {
 					open: function(){
-						that.exportDialog() 
-						make.dialog.close() }, })
+						that.exportDialog()
+							.close(function(evt, reason){
+								reason != 'reject'
+									&& make.dialog.close() }) }, })
 
 				// history...
 				make.Separator()
@@ -3186,30 +3216,49 @@ var FileSystemWriterUIActions = actions.Actions({
 			})
 			.run(function(){
 				var that = this
-				// XXX
+				// XXX this does not work yet...
 				this.keyboard.on('E', function(){
 					console.log('!!!!!!!!!!!!!', that.selected)
 				})
-			})
-	   		.close(function(){
-
-				// XXX need to merge history/presets back when dialog closes...
-				// XXX
-
 			}) })],
 
 	// XXX these do note need the ui -- move to a separate feature...
 	// XXX these are essentially the same as the history API, make a 
 	// 		generic list manager???
+	// XXX need to check preset uniqueness...
 	exportPresetSave: ['- File/', 
-		function(){}],
+		function(settings){
+			settings = settings 
+				|| this.config['export-settings']
+			// XXX need to check preset uniqueness...
+			settings 
+				&& (this.config['export-presets'] = 
+						this.config['export-presets'] 
+						|| [])
+					.push(settings) }],
+
+	// XXX need a way to reference a preset...
 	exportPresetDelete: ['- File/', 
 		function(){}],
 	exportPresetRun: ['- File/', 
 		function(){}],
 
+	// XXX need to check item uniqueness...
 	exportHistoryPush: ['- File/', 
-		function(){}],
+		function(settings){
+			settings = settings 
+				|| this.config['export-settings']
+			var l = this.config['export-history-length'] || 50
+			var history = 
+				this.config['export-history'] = 
+					this.config['export-history'] || []
+			// add...
+			// XXX need to check item uniqueness...
+			settings 
+				&& history.push(settings) 
+			// trim the history...
+			history.length > l
+				&& history.splice(0, history.length - l) }],
 })
 
 
@@ -3226,6 +3275,13 @@ module.FileSystemWriterUI = core.ImageGridFeatures.Feature({
 	],
 
 	actions: FileSystemWriterUIActions,
+
+	handlers: [
+		[[
+			'exportIndex',
+			'exportDirs',
+		], function(_, settings){}]
+	],
 })
 
 

@@ -842,8 +842,7 @@ var DialogsActions = actions.Actions({
 				: options.sortable
 			return browse.makeLister(null, 
 				function(path, make){
-					make.EditableList(list, options)
-				}, 
+					make.EditableList(list, options) }, 
 				options) })],
 	showActionList: ['- Interface/', 
 		core.doc`Show list of actions dialog...
