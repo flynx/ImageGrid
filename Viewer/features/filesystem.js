@@ -3081,7 +3081,7 @@ var FileSystemWriterUIActions = actions.Actions({
 						buttons: [
 							['<i><small>Save preset</small></i>',
 								function(_, elem){
-									that.exportPresetSave() 
+									that.exportPresetSave(settings)
 
 									// button press feedback...
 									var e = elem.find('.button small')
@@ -3123,9 +3123,11 @@ var FileSystemWriterUIActions = actions.Actions({
 			var that = this
 			var logger = this.logger && this.logger.push('exportPresets')
 
+			// XXX should this show date???
 			var getName = function(preset){
 				return preset.name
 					|| `${ preset.mode }: "${ preset.path }"` }
+
 			var buildIndex = function(presets){
 				var index
 				return [
@@ -3138,10 +3140,15 @@ var FileSystemWriterUIActions = actions.Actions({
 					Object.keys(index), ] }
 			var getPreset = function(title, presets, index){
 				return presets[index[title]] }
-
 			// presets...
 			var presets = that.config['export-presets'] || []
 			var [index, keys] = buildIndex(presets)
+
+			var updateIndex = function(){
+				var [idx, k] = buildIndex(presets)
+				index = idx
+				// NOTE: keys must be updated in-place...
+				keys.splice(0, keys.length, ...k) }
 
 			// history...
 			var history = that.config['export-history'] || []
@@ -3214,7 +3221,7 @@ var FileSystemWriterUIActions = actions.Actions({
 								return make.dialog.close() }
 							// error...
 							logger 
-								&& logger.emit('error', 'preset not found.') }, })
+								&& logger.emit('error', `preset not found: "${ title }"`) }, })
 
 				// export dialog...
 				make.Separator({ style: { opacity: '0.1' } })
@@ -3223,10 +3230,7 @@ var FileSystemWriterUIActions = actions.Actions({
 						that.exportDialog()
 							// new preset saved...
 							.on('save-preset', function(){
-								var [idx, k] = buildIndex(presets)
-								index = idx
-								// NOTE: keys must be updated in-place...
-								keys.splice(0, keys.length, ...k)
+								updateIndex()
 								make.dialog.update() })
 							// close dialog on export...
 							.close(function(evt, reason){
@@ -3243,26 +3247,52 @@ var FileSystemWriterUIActions = actions.Actions({
 						new_item: false,
 						editable_items: false,
 						buttons: [
+							// view...
+							['<small class="show-on-hover">view</small>', 
+								function(title){
+									var preset = getPreset(title, history, history_index)
+									preset
+										&& that.exportDialog(
+												// prevent editing history...
+												JSON.parse(JSON.stringify( preset )) ) 
+											// new preset saved...
+											.on('save-preset', function(){
+												updateIndex()
+												make.dialog.update() })
+											// close dialog on export...
+											.close(function(evt, reason){
+												reason != 'reject'
+													&& make.dialog.close() }) }],
 							// to preset...
 							['<small class="show-on-hover">save</small>', 
-								 function(){
-									// XXX
-								}],
+								 function(title){
+									var preset = getPreset(title, history, history_index)
+									if(preset){
+										that.exportPresetSave(preset) 
+										updateIndex()
+										make.dialog.update() } }],
 							'REMOVE',
 						],
-						// XXX export...
+						// export...
 						open: function(evt, title){
-							that.exportAs(getPreset(title, presets, index))
-							make.dialog.close() },
-					})
+							var preset = getPreset(title, history, history_index)
+							// export only if we get a good preset...
+							if(preset && getName(preset) == title){
+								that.exportAs(preset)
+								return make.dialog.close() }
+							// error...
+							logger 
+								&& logger.emit('error', `history item not found: "${ title }"`) }, })
 			})
+			// keyboard...
 			.run(function(){
 				var that = this
-				// XXX this does not work yet...
+				// XXX for some reason this does not work yet...
 				this.keyboard.on('E', function(){
 					console.log('!!!!!!!!!!!!!', that.selected)
 				})
 			})
+			// save things after we are done...
 			.close(function(){
 				// update preset order and count...
 				that.config['export-presets'] = keys
@@ -3295,7 +3325,8 @@ var FileSystemWriterUIActions = actions.Actions({
 	exportPresetRun: ['- File/', 
 		function(){}],
 
-	// XXX need to check item uniqueness...
+	// XXX need to check item uniqueness???
+	// XXX add date???
 	exportHistoryPush: ['- File/', 
 		function(settings){
 			settings = settings 
@@ -3305,9 +3336,12 @@ var FileSystemWriterUIActions = actions.Actions({
 				this.config['export-history'] = 
 					this.config['export-history'] || []
 			// add...
-			// XXX need to check item uniqueness...
 			settings 
-				&& history.push(JSON.parse(JSON.stringify( settings )))
+				&& history.push(Object.assign(
+					JSON.parse(JSON.stringify( settings )), 
+					{
+						date: Date.timeStamp(true),
+					}))
 			// trim the history...
 			history.length > l
 				&& history.splice(0, history.length - l) }],
