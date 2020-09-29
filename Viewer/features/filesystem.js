@@ -2673,8 +2673,8 @@ var FileSystemWriterUIActions = actions.Actions({
 				'preview-size-limit': 'no limit',
 			},
 		],
-		// XXX need to manage history length...
 		'export-history-length': 50,
+		// XXX should this be stored here or like file history in session???
 		'export-history': [],
 	},
 
@@ -3112,18 +3112,17 @@ var FileSystemWriterUIActions = actions.Actions({
 		'exportDialog: "images"'],
 
 
-	// XXX TODO:
-	// 		- format the element into: title (optional) + info
+	// XXX format the element into: title (optional) + info
 	// XXX add a 'name' field to the exportDialog(..)???
 	// XXX button icons... 
 	// XXX button shortcuts...
 	// XXX handle presets with repeating titles...
-	exportPresets: ['- File/Export history...',
+	// XXX would be nice to mark sections...
+	exportPresets: ['- File/Export presets and history...',
 		widgets.makeUIDialog(function(mode){
 			var that = this
 			var logger = this.logger && this.logger.push('exportPresets')
 
-			// XXX these should be type-specific...
 			var getName = function(preset){
 				return preset.name
 					|| `${ preset.mode }: "${ preset.path }"` }
@@ -3145,8 +3144,7 @@ var FileSystemWriterUIActions = actions.Actions({
 			var [index, keys] = buildIndex(presets)
 
 			// history...
-			// XXX
-			var history = []
+			var history = that.config['export-history'] || []
 			var [history_index, history_keys] = buildIndex(history)
 
 			return browse.makeLister(null, function(path, make){
@@ -3239,7 +3237,7 @@ var FileSystemWriterUIActions = actions.Actions({
 				make.Separator()
 				history.length == 0 ?
 					make.Empty('No export history...')
-					: ake.EditableList(history_keys, {
+					: make.EditableList(history_keys, {
 						list_id: 'history',
 						sortable: false,
 						new_item: false,
@@ -3272,9 +3270,9 @@ var FileSystemWriterUIActions = actions.Actions({
 						return getPreset(e, presets, index) })
 				// handle history delete...
 				history.length != that.config['export-history']
-					&& that.config['export-history'] = history_keys
+					&& (that.config['export-history'] = history_keys
 						.map(function(e){
-							return getPreset(e, history, history_index) }) }) })],
+							return getPreset(e, history, history_index) })) }) })],
 
 	// XXX these do note need the ui -- move to a separate feature...
 	// XXX these are essentially the same as the history API, make a 
@@ -3334,7 +3332,11 @@ module.FileSystemWriterUI = core.ImageGridFeatures.Feature({
 		[[
 			'exportIndex',
 			'exportDirs',
-		], function(_, settings){}]
+		], function(_, settings){
+			this.exportHistoryPush(
+				(!settings || typeof(settings) == typeof('str')) ?
+					this.config['export-settings']
+					: settings) }]
 	],
 })
 
