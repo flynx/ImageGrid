@@ -102,8 +102,7 @@ function(msg, options){
 		: true
 	options.cls = (options.cls || '') + ' empty-msg'
 	msg = msg || options.message || 'Empty...'
-	return this(msg, options)
-}
+	return this(msg, options) }
 
 
 // NOTE: this is the same as make('---'[, options])
@@ -141,8 +140,7 @@ Items.Action =
 function(text, options){
 	options = Object.create(options || {})
 	options.cls = (options.cls || '') + ' action'
-	return this(text, options)
-}
+	return this(text, options) }
 
 // Action requiring confirmation...
 //
@@ -205,10 +203,7 @@ function(text, options){
 
 			// confirmed...
 			} else {
-				callback && callback()
-			}
-		})
-}
+				callback && callback() } }) }
 
 // Item with auto selected text on select...
 //
@@ -245,8 +240,7 @@ function(text, options){
 
 			text.selectText()
 		})
-	return elem
-}
+	return elem }
 
 // Editable item or it's part...
 //
@@ -385,8 +379,7 @@ function(text, options){
 		&& elem
 			.on(stop_propagation, function(e){ e.stopPropagation() })
 
-	return elem
-}
+	return elem }
 
 
 
@@ -419,8 +412,7 @@ function(list){
 		.addClass('item-group')
 		.appendTo($(res).parent())
 		.append($(res))
-	return group
-}
+	return group }
 
 
 // List of elements...
@@ -516,19 +508,14 @@ function(data, options){
 
 				// no match -- restore text...
 				} else {
-					txt = k
-				}
-			}
-		})
+					txt = k } } })
 
 		if(opts.disabled && opts.disabled instanceof Array){
-			opts.disabled = opts.disabled.indexOf(txt || k) >= 0
-		}
+			opts.disabled = opts.disabled.indexOf(txt || k) >= 0 }
 
 		if((opts.disabled && opts.skipDisabledItems) 
 				|| (opts.hidden && opts.skipHiddenItems)){
-			return
-		}
+			return }
 
 		var elem = make(txt || k, opts)
 
@@ -538,13 +525,11 @@ function(data, options){
 		opts.each
 			&& opts.each.call(elem, txt || k)
 
-		res.push(elem[0])
-	})
+		res.push(elem[0]) })
 
 	return options.groupList ?
 		make.Group(res).children()
-		: $(res)
-}
+		: $(res) }
 
 
 // Editable list of elements...
@@ -1296,23 +1281,20 @@ function(list, pins, options){
 
 				// unpin...
 				} else {
-					pins.splice(pins.indexOf(p), 1)
-				}
+					pins.splice(pins.indexOf(p), 1) }
 
 				// XXX this is slow...
 				that.dialog
 					.update()
 					.then(function(){
-						that.dialog.trigger('pin_button', p, cur)
-					})
+						that.dialog.trigger('pin_button', p, cur) })
 			}]
 	;[buttons, pins_buttons]
 		.forEach(function(b){
 			var i = b.indexOf('PIN')
 			i < 0 ? 
 				b.push(pin)
-				: (b[i] = pin) 
-		})
+				: (b[i] = pin) })
 	options.isItemHidden = function(e){ return pins.indexOf(e) >= 0 }
 	options.skipHiddenItems = options.skipHiddenItems !== false ? true : false
 
@@ -1333,8 +1315,7 @@ function(list, pins, options){
 	if(!sortable){
 		 pins_options.sort = options.sort instanceof Function ? 
 			options.sort
-			: pins.sortAs(dialog.__list[id])
-	}
+			: pins.sortAs(dialog.__list[id]) }
 
 	//---------------------------------------------- build the list ---
 	var res = this.EditableList(pins, pins_options)
@@ -1350,8 +1331,7 @@ function(list, pins, options){
 			options)
 		.toArray())
 
-	return $(res)
-}
+	return $(res) }
 
 
 
@@ -1383,10 +1363,7 @@ Buttons.markForRemoval = function(list, html){
 			} else {
 				var i = list.indexOf(p)
 				i >= 0
-					&& list.splice(i, 1)
-			}
-		}]
-}
+					&& list.splice(i, 1) } }] }
 
 
 
@@ -1688,6 +1665,7 @@ var BrowserPrototype = {
 			'open',
 			'menu',
 			'update',
+			'close',
 		],
 
 		// Shorthand elements...
@@ -2252,6 +2230,7 @@ var BrowserPrototype = {
 	//		open: <handler>,
 	//		menu: <handler>,
 	//		update: <handler>,
+	//		close: <handler>,
 	//
 	//		// event handlers...
 	//		events: {

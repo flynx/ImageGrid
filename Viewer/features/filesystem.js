@@ -3001,6 +3001,8 @@ var FileSystemWriterUIActions = actions.Actions({
 			.exportDialog(mode)
 			.exportDialog(settings)
 
+
+		NOTE: when saving a preset the dialog will trigger a 'save-preset' event.
 		`,
 		widgets.makeUIDialog(function(mode){
 			var that = this
@@ -3075,8 +3077,23 @@ var FileSystemWriterUIActions = actions.Actions({
 							var mode = 
 								that.config['export-dialog-modes'][settings['mode']]
 							that[mode.action](settings)
-							dialog.close()
-						},
+							dialog.close() },
+						buttons: [
+							['<i><small>Save preset</small></i>',
+								function(_, elem){
+									that.exportPresetSave() 
+
+									// button press feedback...
+									var e = elem.find('.button small')
+									var text = e.text()
+									var reset = function(){
+										e.text(text) }
+									e.text('Saved.')
+									e.one('mouseout', reset)
+									setTimeout(reset, 2000)
+
+									make.dialog.trigger('save-preset')
+								}] ],
 					}) 
 
 				make.done()
@@ -3100,6 +3117,7 @@ var FileSystemWriterUIActions = actions.Actions({
 	// XXX add a 'name' field to the exportDialog(..)???
 	// XXX button icons... 
 	// XXX button shortcuts...
+	// XXX handle presets with repeating titles...
 	exportPresets: ['- File/Export history...',
 		widgets.makeUIDialog(function(mode){
 			var that = this
@@ -3109,29 +3127,32 @@ var FileSystemWriterUIActions = actions.Actions({
 			var getName = function(preset){
 				return preset.name
 					|| `${ preset.mode }: "${ preset.path }"` }
+			var buildIndex = function(presets){
+				var index
+				return [
+					// index...
+					(index = presets
+						.reduce(function(res, e, i){
+							res[getName(e)] = i 
+							return res }, {})),
+					// keys...
+					Object.keys(index), ] }
+			var getPreset = function(title, presets, index){
+				return presets[index[title]] }
 
 			// presets...
 			var presets = that.config['export-presets'] || []
-			var index = presets
-				.reduce(function(res, e, i){
-					res[getName(e)] = i 
-					return res }, {})
-			var keys = Object.keys(index)
+			var [index, keys] = buildIndex(presets)
 
 			// history...
 			// XXX
 			var history = []
-			var history_index = {}
-			var history_keys = Object.keys(history_index)
-
-			var getPreset = function(title, presets, index){
-				return presets[index[title]] }
+			var [history_index, history_keys] = buildIndex(history)
 
 			return browse.makeLister(null, function(path, make){
 				// preset list...
-				keys.length == 0 ?
-					make.Empty('No presets...')
-					: make.EditableList(keys, {
+				keys.length > 0
+					&& make.EditableList(keys, {
 						list_id: 'presets',
 						sortable: true,
 						update_merge: 'live',
@@ -3140,7 +3161,7 @@ var FileSystemWriterUIActions = actions.Actions({
 						allow_empty: true,
 						itemedit: function(evt, from, to){
 							var preset = getPreset(from, presets, index)
-							// clear...
+							// reset...
 							if(to.trim() == ''){
 								delete preset.name
 								to = keys[keys.indexOf(from)] = getName(preset)
@@ -3158,18 +3179,32 @@ var FileSystemWriterUIActions = actions.Actions({
 								function(){
 									make.dialog.select(to) }) },
 						buttons: [
-							['<small>edit</small>', function(title){
-								var preset = getPreset(title, presets, index)
-								that.exportDialog(preset)
-						   			.close(function(){
-										var n = getName(preset)
-										// update the list if name is affected...
-										if(n != title){
-											keys[keys.indexOf(title)] = n
-											index[n] = index[title]
-											delete index[title]
-											make.dialog.select(n) 
-											make.dialog.update() } })}],
+							// edit...
+							['<small class="show-on-hover">edit</small>', 
+								function(title){
+									var preset = getPreset(title, presets, index)
+									that.exportDialog(preset)
+										.close(function(){
+											var n = getName(preset)
+											// update the list if name is affected...
+											if(n != title){
+												keys[keys.indexOf(title)] = n
+												index[n] = index[title]
+												delete index[title]
+												make.dialog.select(n) 
+												make.dialog.update() } })}],
+							// duplicate...
+							['<span class="show-on-hover">&#x274F;</span>', 
+								function(title){
+									var preset = JSON.parse(
+										JSON.stringify(
+											getPreset(title, presets, index) ))
+									preset.name = title + ' (copy)'
+									// place preset in list...
+									var i = index[preset.name] = index[title]+1
+									presets.splice(i, 0, preset)
+									keys.splice(keys.indexOf(title)+1, 0, preset.name)
+									make.dialog.update() }],
 							['&diams;', 'TO_TOP'],
 							'REMOVE'],
 						// export...
@@ -3188,6 +3223,14 @@ var FileSystemWriterUIActions = actions.Actions({
 				make('E$xport...', {
 					open: function(){
 						that.exportDialog()
+							// new preset saved...
+							.on('save-preset', function(){
+								var [idx, k] = buildIndex(presets)
+								index = idx
+								// NOTE: keys must be updated in-place...
+								keys.splice(0, keys.length, ...k)
+								make.dialog.update() })
+							// close dialog on export...
 							.close(function(evt, reason){
 								reason != 'reject'
 									&& make.dialog.close() }) }, })
@@ -3196,16 +3239,17 @@ var FileSystemWriterUIActions = actions.Actions({
 				make.Separator()
 				history.length == 0 ?
 					make.Empty('No export history...')
-					: ake.EditableList(history, {
+					: ake.EditableList(history_keys, {
 						list_id: 'history',
 						sortable: false,
 						new_item: false,
 						editable_items: false,
 						buttons: [
 							// to preset...
-							['P', function(){
-								// XXX
-							}],
+							['<small class="show-on-hover">save</small>', 
+								 function(){
+									// XXX
+								}],
 							'REMOVE',
 						],
 						// XXX export...
@@ -3220,7 +3264,17 @@ var FileSystemWriterUIActions = actions.Actions({
 				this.keyboard.on('E', function(){
 					console.log('!!!!!!!!!!!!!', that.selected)
 				})
-			}) })],
+			})
+			.close(function(){
+				// update preset order and count...
+				that.config['export-presets'] = keys
+					.map(function(e){
+						return getPreset(e, presets, index) })
+				// handle history delete...
+				history.length != that.config['export-history']
+					&& that.config['export-history'] = history_keys
+						.map(function(e){
+							return getPreset(e, history, history_index) }) }) })],
 
 	// XXX these do note need the ui -- move to a separate feature...
 	// XXX these are essentially the same as the history API, make a 
@@ -3235,7 +3289,7 @@ var FileSystemWriterUIActions = actions.Actions({
 				&& (this.config['export-presets'] = 
 						this.config['export-presets'] 
 						|| [])
-					.push(settings) }],
+					.push(JSON.parse(JSON.stringify( settings ))) }],
 
 	// XXX need a way to reference a preset...
 	exportPresetDelete: ['- File/', 
@@ -3255,7 +3309,7 @@ var FileSystemWriterUIActions = actions.Actions({
 			// add...
 			// XXX need to check item uniqueness...
 			settings 
-				&& history.push(settings) 
+				&& history.push(JSON.parse(JSON.stringify( settings )))
 			// trim the history...
 			history.length > l
 				&& history.splice(0, history.length - l) }],

@@ -323,7 +323,7 @@ body {
 	font-style: italic;
 }
 .browse-widget.tail-action .list .item:last-child .button {
-	display: none;
+	/*display: none;*/
 }
 
 /* do not show top border if after another action or separator... */
