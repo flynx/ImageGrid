@@ -1528,9 +1528,7 @@ var FileSystemSaveHistoryUIActions = actions.Actions({
 
 						Object.keys(data).forEach(function(path){
 							Object.keys(data[path]).forEach(function(d){
-								list.push(d)
-							})
-						})
+								list.push(d) }) })
 
 						list
 							.sort()
@@ -1543,9 +1541,7 @@ var FileSystemSaveHistoryUIActions = actions.Actions({
 							make(_makeTitle('Original state (unsaved)', 'current', unsaved))	
 								.on('open', function(){
 									that.load(unsaved)
-
-									delete that.unsaved_index
-								})
+									delete that.unsaved_index })
 
 						// Special case: top save state is the default, 
 						// no need to mark anything for change, but only
@@ -1554,9 +1550,7 @@ var FileSystemSaveHistoryUIActions = actions.Actions({
 							var first = list.shift()
 							first && make(_makeTitle(Date.fromTimeStamp(first).toShortDate(), first))	
 								.on('open', function(){
-									that.loadIndex(that.location.path, first)
-								})
-						}
+									that.loadIndex(that.location.path, first) }) }
 
 						list
 							.forEach(function(d){
@@ -1583,12 +1577,9 @@ var FileSystemSaveHistoryUIActions = actions.Actions({
 												// NOTE: the original 'current'
 												// 		comment is saved to
 												// 		.unsaved_index
-												delete that.comments.save.current
-											})
-									})
+												delete that.comments.save.current }) })
 									// mark the current loaded position...
-									.addClass(d == from ? 'selected highlighted' : '')
-							})
+									.addClass(d == from ? 'selected highlighted' : '') })
 
 						make.done()
 
@@ -3112,21 +3103,29 @@ var FileSystemWriterUIActions = actions.Actions({
 		'exportDialog: "images"'],
 
 
-	// XXX format the element into: title (optional) + info
-	// XXX add a 'name' field to the exportDialog(..)???
-	// XXX button icons... 
-	// XXX button shortcuts...
 	// XXX handle presets with repeating titles...
-	// XXX would be nice to mark sections...
+	// XXX UI:
+	// 		- element format:
+	// 			TITLE
+	// 			mode / destination / format
+	// 		- revise buttons and icons...
+	// 		- button shortcuts...
+	// XXX add a 'name' field to the exportDialog(..)???
+	// XXX would be nice to mark/title sections -- presets / history... (???)
 	exportPresets: ['- File/Export presets and history...',
 		widgets.makeUIDialog(function(mode){
 			var that = this
 			var logger = this.logger && this.logger.push('exportPresets')
 
-			// XXX should this show date???
 			var getName = function(preset){
-				return preset.name
-					|| `${ preset.mode }: "${ preset.path }"` }
+				var date = preset.date
+					&& Date.fromTimeStamp(preset.date).toShortDate()
+				date = date ? 
+					date + ' - '
+					: ''
+				return date
+					+ (preset.name
+						|| `${ preset.mode }: "${ preset.path }"`) }
 
 			var buildIndex = function(presets){
 				var index
@@ -3162,7 +3161,7 @@ var FileSystemWriterUIActions = actions.Actions({
 						sortable: true,
 						update_merge: 'live',
 						new_item: false,
-						// NOTE: we use empty to restore the automatic value...
+						// saving an empty string on item edit will clear .name...
 						allow_empty: true,
 						itemedit: function(evt, from, to){
 							var preset = getPreset(from, presets, index)
@@ -3199,7 +3198,8 @@ var FileSystemWriterUIActions = actions.Actions({
 												make.dialog.select(n) 
 												make.dialog.update() } })}],
 							// duplicate...
-							['<span class="show-on-hover">&#x274F;</span>', 
+							//['<span class="show-on-hover">&#x274F;</span>', 
+							['<small class="show-on-hover">clone</small>', 
 								function(title){
 									var preset = JSON.parse(
 										JSON.stringify(
@@ -3287,7 +3287,6 @@ var FileSystemWriterUIActions = actions.Actions({
 			// keyboard...
 			.run(function(){
 				var that = this
-				// XXX for some reason this does not work yet...
 				this.keyboard.on('E', function(){
 					console.log('!!!!!!!!!!!!!', that.selected)
 				})
@@ -3312,21 +3311,19 @@ var FileSystemWriterUIActions = actions.Actions({
 		function(settings){
 			settings = settings 
 				|| this.config['export-settings']
-			// XXX need to check preset uniqueness...
-			settings 
-				&& (this.config['export-presets'] = 
-						this.config['export-presets'] 
-						|| [])
-					.push(JSON.parse(JSON.stringify( settings ))) }],
-
-	// XXX need a way to reference a preset...
-	exportPresetDelete: ['- File/', 
-		function(){}],
-	exportPresetRun: ['- File/', 
-		function(){}],
-
+			// no settings...
+			if(!settings){
+				console.error('.exportPresets(..): no settings to save.')
+				return }
+			// isolate and cleanup...
+			settings = JSON.parse(JSON.stringify(settings))
+			delete settings.date
+			// XXX check preset uniqueness...
+			;(this.config['export-presets'] = 
+					this.config['export-presets'] 
+					|| [])
+				.push(settings) }],
 	// XXX need to check item uniqueness???
-	// XXX add date???
 	exportHistoryPush: ['- File/', 
 		function(settings){
 			settings = settings 
@@ -3345,6 +3342,10 @@ var FileSystemWriterUIActions = actions.Actions({
 			// trim the history...
 			history.length > l
 				&& history.splice(0, history.length - l) }],
+
+	clearExportHistory: ['- File/Clear export history',
+		function(){
+			delete this.config['export-history'] }],
 })
 
 
@@ -3363,6 +3364,7 @@ module.FileSystemWriterUI = core.ImageGridFeatures.Feature({
 	actions: FileSystemWriterUIActions,
 
 	handlers: [
+		// update export history...
 		[[
 			'exportIndex',
 			'exportDirs',

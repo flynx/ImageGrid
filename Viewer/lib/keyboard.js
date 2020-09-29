@@ -1049,13 +1049,14 @@ var KeyboardPrototype = {
 	//
 	// NOTE: this is an event-like proxy to the .handler(..)
 	//
-	// 	Bind handler key (top section)...
+	// 	Bind handler key ('General' section)...
 	// 	.on(key, handler)
 	// 		-> this
 	//
 	// 	.on(key, section, handler)
 	// 		-> this
 	//
+	// NOTE: default mode is 'General'...
 	on: function(key, handler){
 		// normalize args...
 		if(arguments.length == 3){
@@ -1063,13 +1064,15 @@ var KeyboardPrototype = {
 		} else {
 			var [key, handler] = arguments }
 		var mode = mode 
-			|| Object.keys(this.keyboard)[0]
+			//|| Object.keys(this.keyboard)[0]
+			|| 'General'
 		// bind...
 		return this.handler(mode, key, handler) },
 	off: function(key, mode){
 		// normalize args...
 		mode = mode 
-			|| Object.keys(this.keyboard)[0]
+			//|| Object.keys(this.keyboard)[0]
+			|| 'General'
 		// unbind...
 		return this.handler(mode, key, null) },
 
