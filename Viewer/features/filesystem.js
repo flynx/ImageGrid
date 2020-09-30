@@ -3005,8 +3005,7 @@ var FileSystemWriterUIActions = actions.Actions({
 				mode = settings['mode'] }
 			settings = settings
 				|| (this.config['export-settings'] = 
-					this.config['export-settings'] 
-					|| {})
+					this.config['export-settings'] || {})
 			// mode aliases...
 			var mode_aliases = Object.entries(that.config['export-dialog-modes'] || {})
 				.reduce(function(res, [key, value]){
@@ -3029,6 +3028,7 @@ var FileSystemWriterUIActions = actions.Actions({
 				var data = that.config['export-dialog-modes'][mode].data
 
 				// mode selector...
+				// NOTE: this is only visible if no mode/settings are given...
 				!show_mode
 					&& make(['Export $mode: ', 
 							function(){ return mode }], 
@@ -3065,9 +3065,7 @@ var FileSystemWriterUIActions = actions.Actions({
 					{
 						cls: 'selected',
 						open: function(){
-							var mode = 
-								that.config['export-dialog-modes'][settings['mode']]
-							that[mode.action](settings)
+							that.exportAs(settings)
 							dialog.close() },
 						buttons: [
 							['<i><small>Save preset</small></i>',
@@ -3103,19 +3101,59 @@ var FileSystemWriterUIActions = actions.Actions({
 		'exportDialog: "images"'],
 
 
-	// XXX handle presets with repeating titles...
+	// XXX BUG: affecting preset name will delete on dialog close...
+	// 		to reproduce:
+	// 			- open dialog
+	// 			- edit preset changing path
+	// 			- close
+	// 		result:
+	// 			.config['export-presets'] will contain undefined instead 
+	// 			of last preset
+	// 		likely cause:
+	// 			- inconsistent keys and on .close(..) we can't get the 
+	// 				correct preset...
+	// XXX BUG: running a preset from the editor will use the default 
+	// 		settings and not the loaded preset...
+	// 		...can't reproduce... (revise)
+	// XXX ASAP handle presets with repeating titles...
 	// XXX UI:
 	// 		- element format:
 	// 			TITLE
 	// 			mode / destination / format
 	// 		- revise buttons and icons...
 	// 		- button shortcuts...
-	// XXX add a 'name' field to the exportDialog(..)???
+	// XXX add a 'name' field to the exportDialog(..) (???)
 	// XXX would be nice to mark/title sections -- presets / history... (???)
 	exportPresets: ['- File/Export presets and history...',
 		widgets.makeUIDialog(function(mode){
 			var that = this
 			var logger = this.logger && this.logger.push('exportPresets')
+
+			// XXX need a way for index to support unique names and to do it
+			// 		in a stable manner:
+			// 			- getName(..) must generate the same title for 
+			// 				the same item, i.e. 'abc' -> 'abc (3)' -> 'abc (3)' ...
+			// 				...this may be done like this:
+			// 					- index format (buildIndex(..)):
+			// 						{
+			// 							<title>: [ <index>, ... ],
+			// 							...
+			// 						}
+			// 					- title format (used by getPreset(..)):
+			// 						"<title>"				-> index = 0
+			// 						"<title> (<index>)"		-> index = <index>
+			// 					- cache name with index in a Map(..) with preset as key
+			//
+			// Format:
+			// 	Map([
+			// 		[<preset>, {
+			// 			base: <base-name>, 
+			// 			index: <index>,
+			// 			name: "<base-name> (<index>)", 
+			// 		}],
+			// 		...
+			// 	])
+			//var name_cache = new Map()
 
 			var getName = function(preset){
 				var date = preset.date
@@ -3125,7 +3163,10 @@ var FileSystemWriterUIActions = actions.Actions({
 					: ''
 				return date
 					+ (preset.name
-						|| `${ preset.mode }: "${ preset.path }"`) }
+						|| ( preset.mode == 'Images only' ?
+							`${ preset.mode }: `
+								+`"${ preset['preview-name-pattern'] }" → "${ preset.path }"`
+							: `${ preset.mode }: → "${ preset.path }"`)) }
 
 			var buildIndex = function(presets){
 				var index
@@ -3150,7 +3191,10 @@ var FileSystemWriterUIActions = actions.Actions({
 				keys.splice(0, keys.length, ...k) }
 
 			// history...
-			var history = that.config['export-history'] || []
+			// NOTE: history is reversed in view...
+			var history = (that.config['export-history'] || [])
+				.slice()
+				.reverse()
 			var [history_index, history_keys] = buildIndex(history)
 
 			return browse.makeLister(null, function(path, make){
@@ -3217,6 +3261,7 @@ var FileSystemWriterUIActions = actions.Actions({
 							var preset = getPreset(title, presets, index)
 							// export only if we get a good preset...
 							if(preset && getName(preset) == title){
+								console.log('>>>>>>>>>', preset)
 								that.exportAs(preset)
 								return make.dialog.close() }
 							// error...
@@ -3278,17 +3323,19 @@ var FileSystemWriterUIActions = actions.Actions({
 							var preset = getPreset(title, history, history_index)
 							// export only if we get a good preset...
 							if(preset && getName(preset) == title){
+								console.log('>>>>>>>>>', preset)
 								that.exportAs(preset)
 								return make.dialog.close() }
 							// error...
 							logger 
-								&& logger.emit('error', `history item not found: "${ title }"`) }, })
+								&& logger.emit('error', 
+									`history item not found: "${ title }"`) }, })
 			})
 			// keyboard...
 			.run(function(){
 				var that = this
 				this.keyboard.on('E', function(){
-					console.log('!!!!!!!!!!!!!', that.selected)
+					// XXX
 				})
 			})
 			// save things after we are done...
@@ -3300,6 +3347,7 @@ var FileSystemWriterUIActions = actions.Actions({
 				// handle history delete...
 				history.length != that.config['export-history']
 					&& (that.config['export-history'] = history_keys
+						.reverse()
 						.map(function(e){
 							return getPreset(e, history, history_index) })) }) })],
 
