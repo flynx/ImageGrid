@@ -1698,6 +1698,7 @@ module.FileSystemLoaderURLHistoryUI = core.ImageGridFeatures.Feature({
 var EXPORT_PREVIEW_NAME = '%(fav)l%n%(-%c)c'
 
 
+// XXX rename: 'clean-target' -> 'merge-to-target'
 var FileSystemWriterActions = actions.Actions({
 	config: {
 
@@ -1706,6 +1707,7 @@ var FileSystemWriterActions = actions.Actions({
 			'path': null,
 
 			'include-virtual': true,
+			// XXX rename to 'merge-to-target'
 			'clean-target': true,
 
 			// NOTE: file extension is added automatically...
@@ -3161,12 +3163,15 @@ var FileSystemWriterUIActions = actions.Actions({
 				date = date ? 
 					date + ' - '
 					: ''
+				var clean = preset['clean-target'] ? 
+					'' 
+					: ' (merge)'
 				return date
 					+ (preset.name
 						|| ( preset.mode == 'Images only' ?
 							`${ preset.mode }: `
-								+`"${ preset['preview-name-pattern'] }" → "${ preset.path }"`
-							: `${ preset.mode }: → "${ preset.path }"`)) }
+								+`"${ preset['preview-name-pattern'] }" → "${ preset.path }"${ clean }`
+							: `${ preset.mode }: → "${ preset.path }"${ clean }`)) }
 
 			var buildIndex = function(presets){
 				var index
@@ -3335,7 +3340,7 @@ var FileSystemWriterUIActions = actions.Actions({
 			.run(function(){
 				var that = this
 				this.keyboard.on('E', function(){
-					// XXX
+					// XXX trigger edit/view button...
 				})
 			})
 			// save things after we are done...
