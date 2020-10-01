@@ -3127,6 +3127,8 @@ var FileSystemWriterUIActions = actions.Actions({
 	// XXX add a 'name' field to the exportDialog(..) (???)
 	// XXX would be nice to mark/title sections -- presets / history... (???)
 	exportPresets: ['- File/Export presets and history...',
+		core.doc`
+		`,
 		widgets.makeUIDialog(function(mode){
 			var that = this
 			var logger = this.logger && this.logger.push('exportPresets')
