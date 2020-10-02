@@ -3103,7 +3103,7 @@ var FileSystemWriterUIActions = actions.Actions({
 		'exportDialog: "images"'],
 
 
-	// XXX BUG: affecting preset name will delete on dialog close...
+	// XXX ASAP BUG: affecting preset name will delete on dialog close...
 	// 		to reproduce:
 	// 			- open dialog
 	// 			- edit preset changing path
@@ -3114,7 +3114,7 @@ var FileSystemWriterUIActions = actions.Actions({
 	// 		likely cause:
 	// 			- inconsistent keys and on .close(..) we can't get the 
 	// 				correct preset...
-	// XXX BUG: running a preset from the editor will use the default 
+	// XXX ASAP BUG: running a preset from the editor will use the default 
 	// 		settings and not the loaded preset...
 	// 		...can't reproduce... (revise)
 	// XXX ASAP handle presets with repeating titles...
