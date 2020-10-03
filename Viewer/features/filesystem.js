@@ -3157,7 +3157,24 @@ var FileSystemWriterUIActions = actions.Actions({
 			// 		}],
 			// 		...
 			// 	])
-			//var name_cache = new Map()
+			var getName = function(elem, index){
+				if(index){
+					var data = index.get(elem) || {}
+					index.has(elem)
+						|| index.set(elem, data) }
+				// XXX
+			}
+			var buildCache = function(list){
+				var index = new Map()
+				// populate the index...
+				list
+					.forEach(function(e){ getName(e) })
+				return [
+					index,
+				] }
+
+
+
 
 			var getName = function(preset){
 				var date = preset.date
