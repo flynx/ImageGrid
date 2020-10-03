@@ -2562,6 +2562,50 @@ module.FileSystemWriter = core.ImageGridFeatures.Feature({
 //---------------------------------------------------------------------
 // Writer UI...
 
+var object = require('lib/object')
+
+// XXX move this to browse2 and use it as an option/basis for list...
+// XXX BUG: UniqueKeyMap([['a', 123], ...]) breaks...
+var UniqueKeyMap = object.Constructor('UniqueKeyMap', Map, {
+	// Format:
+	// 	Map([
+	// 		[ <elem>, <original-name> ],
+	// 		...
+	// 	])
+	//
+	// XXX make this a non-enumerable prop...
+	__names: null,
+
+	__name_pattern__: '$NAME ($COUNT)',
+
+	// XXX problem: non unique elems will override each other in .__names...
+	set: function(key, elem){
+		// elem already in index -> rename...
+		// XXX should we have the restriction of requiring unique elements??? 
+		if(this.__names.has(elem)){
+			return this.rename(this.__names.get(elem), key) }
+		this.__names[elem] = key
+		var n = key
+		var i = 0
+		while(this.has(n)){
+			i++
+			n = this.__name_pattern__
+				.replace(/\$NAME/, key)
+				.replace(/\$COUNT/, i) }
+		return object.parentCall(UniqueKeyMap.prototype, 'set', this, n, elem) },
+	delete: function(key){
+		delete this.__names[this.get(key)]
+		return object.parentCall(UniqueKeyMap.prototype, 'delete', this, key) },
+	rename: function(from, to){
+		var e = this.get(from)
+		this.delete(from)
+		return this.set(to, e) },
+
+	__init__: function(){
+		this.__names = new Map() },
+})
+
+
 // XXX add writer UI feature...
 // 		- save as.. (browser)
 // 		- save if not base path present (browser)
@@ -3158,20 +3202,64 @@ var FileSystemWriterUIActions = actions.Actions({
 			// 		...
 			// 	])
 			var getName = function(elem, index){
+				// add to index...
 				if(index){
 					var data = index.get(elem) || {}
 					index.has(elem)
 						|| index.set(elem, data) }
-				// XXX
-			}
+
+				// generate base name...
+				// NOTE: we always do this unconditionally so as not to 
+				// 		mess with keeping things in sync...
+				var date = preset.date
+					&& Date.fromTimeStamp(preset.date).toShortDate()
+				date = date ? 
+					date + ' - '
+					: ''
+				var clean = preset['clean-target'] ? 
+					'' 
+					: ' (merge)'
+				var base = data.base = 
+					date
+						+ (preset.name
+							|| ( preset.mode == 'Images only' ?
+								// XXX might be a good idea to move name patterns to .config
+								`${ preset.mode }: `
+									+`"${ preset['preview-name-pattern'] }" → "${ preset.path }"${ clean }`
+								: `${ preset.mode }: → "${ preset.path }"${ clean }`))
+				// generate a unique name...
+				var name = base
+				var i = 0
+				while(name in index.names){
+					data.index = ++i
+					// XXX might be a good idea to move name patterns to .config
+					name = `${ base } (${ i })` }
+				data.name = name
+				index.names[name] = elem
+				return name }
+			var getElem = function(title, index){
+				return index.names[title] }
+			var delElem = function(title, index){
+				var e = index.names[title]
+				delete index.names[title]
+				index.delete(e)
+				return index }
+			var renameElem = function(from, to, index){
+				var e = getElem(from, index)
+				if(to.trim() == ''){
+					delete e.name
+				} else {
+					e.name = to.trim() }
+				delete index.names[from]
+				getName(e, index)
+				return index }
 			var buildCache = function(list){
-				var index = new Map()
+				//var index = new Map()
+				//var index.names = {}
 				// populate the index...
 				list
-					.forEach(function(e){ getName(e) })
-				return [
-					index,
-				] }
+					.forEach(function(e){ getName(e, index) })
+				return index }
 
 
 
