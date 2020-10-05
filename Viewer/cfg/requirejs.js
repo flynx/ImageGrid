@@ -26,6 +26,7 @@ var requirejs_cfg = {
 		//'ext-lib/preact': './node_modules/preact/dist/preact.dev',
 
 		'lib/object': 'node_modules/ig-object/object',
+		'lib/types': 'node_modules/ig-types/',
 		'lib/actions': 'node_modules/ig-actions/actions',
 		'lib/features': 'node_modules/ig-features/features',
 		//'lib/keyboard': './node_modules/ig-keyboard/keyboard',
@@ -39,6 +40,7 @@ var requirejs_cfg = {
 			// ...these enable the npm modules reference each other in 
 			// a cross-platform manner....
 			'ig-object': 'lib/object',
+			'ig-types': 'lib/types',
 			'ig-actions': 'lib/actions',
 			'ig-features': 'lib/features',
 
@@ -47,6 +49,9 @@ var requirejs_cfg = {
 			'generic-walk': 'lib/walk',
 		},
 	},
+	packages: [
+		'lib/types',
+	],
 }
 
 
