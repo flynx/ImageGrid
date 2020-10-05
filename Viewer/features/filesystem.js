@@ -3134,8 +3134,6 @@ var FileSystemWriterUIActions = actions.Actions({
 	// 		- revise buttons and icons...
 	// 		- button shortcuts...
 	// XXX add a 'name' field to the exportDialog(..) (???)
-	// XXX would be nice to mark/title sections -- presets / history... (???)
-	// XXX use UniqueKeyMap(..) in browse2's listers...
 	exportPresets: ['- File/Export presets and history...',
 		core.doc`
 		`,
@@ -3316,7 +3314,6 @@ var FileSystemWriterUIActions = actions.Actions({
 							var preset = history_index.get(title)
 							// export only if we get a good preset...
 							if(preset && getName(preset) == title){
-								console.log('>>>>>>>>>', preset)
 								that.exportAs(preset)
 								return make.dialog.close() }
 							// error...
