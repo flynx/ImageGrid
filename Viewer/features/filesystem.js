@@ -3124,6 +3124,9 @@ var FileSystemWriterUIActions = actions.Actions({
 		'exportDialog: "images"'],
 
 
+	// XXX BUG: editing the path of a duplicate ("... (n)") preset first 
+	// 		replaces the wrong preset in the list but after reopening 
+	// 		the dialog everything is correct... 
 	// XXX UI:
 	// 		- element format:
 	// 			TITLE
@@ -3219,7 +3222,7 @@ var FileSystemWriterUIActions = actions.Actions({
 									make.dialog.select(to) }) },
 						buttons: [
 							// edit...
-							['<small class="show-on-hover">edit</small>', 
+							['<small class="show-on-hover view-or-edit">edit</small>', 
 								function(title){
 									var preset = preset_index.get(title)
 									var o = getName(preset)
@@ -3283,7 +3286,7 @@ var FileSystemWriterUIActions = actions.Actions({
 						editable_items: false,
 						buttons: [
 							// view...
-							['<small class="show-on-hover">view</small>', 
+							['<small class="show-on-hover view-or-edit">view</small>', 
 								function(title){
 									var preset = history_index.get(title)
 									preset
@@ -3324,10 +3327,20 @@ var FileSystemWriterUIActions = actions.Actions({
 			// keyboard...
 			.run(function(){
 				var that = this
-				this.keyboard.on('E', function(){
-					// XXX trigger edit/view button...
-				})
-			})
+				this.keyboard
+					// edit/view...
+					.on('E', function(){
+						that
+							.select()
+							.find('.view-or-edit')
+								.click() })
+					// mark for deletion...
+					// XXX move to browse...
+					.on('D', function(){
+						that
+							.select()
+								// XXX
+							}) })
 			// save things after we are done...
 			.close(function(){
 				// update preset order and count...
