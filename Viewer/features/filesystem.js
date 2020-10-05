@@ -3105,21 +3105,12 @@ var FileSystemWriterUIActions = actions.Actions({
 		'exportDialog: "images"'],
 
 
-	// XXX ASAP BUG: affecting preset name will delete on dialog close...
-	// 		to reproduce:
-	// 			- open dialog
-	// 			- edit preset changing path
-	// 			- close
-	// 		result:
-	// 			.config['export-presets'] will contain undefined instead 
-	// 			of last preset
-	// 		likely cause:
-	// 			- inconsistent keys and on .close(..) we can't get the 
-	// 				correct preset...
+	// XXX BUG: changing values from history (button) changes the default 
+	// 		and not the current preset...
+	// 		...bug in exportDialog(..)
 	// XXX ASAP BUG: running a preset from the editor will use the default 
 	// 		settings and not the loaded preset...
 	// 		...can't reproduce... (revise)
-	// XXX ASAP handle presets with repeating titles...
 	// XXX UI:
 	// 		- element format:
 	// 			TITLE
@@ -3128,19 +3119,13 @@ var FileSystemWriterUIActions = actions.Actions({
 	// 		- button shortcuts...
 	// XXX add a 'name' field to the exportDialog(..) (???)
 	// XXX would be nice to mark/title sections -- presets / history... (???)
+	// XXX use UniqueKeyMap(..) in browse2's listers...
 	exportPresets: ['- File/Export presets and history...',
 		core.doc`
 		`,
 		widgets.makeUIDialog(function(mode){
 			var that = this
 			var logger = this.logger && this.logger.push('exportPresets')
-
-
-			// XXX use this as index...
-			// XXX use this in browse2...
-			var index = containers.UniqueKeyMap()
-
-
 
 			var getName = function(preset){
 				var date = preset.date
@@ -3157,40 +3142,42 @@ var FileSystemWriterUIActions = actions.Actions({
 							`${ preset.mode }: `
 								+`"${ preset['preview-name-pattern'] }" → "${ preset.path }"${ clean }`
 							: `${ preset.mode }: → "${ preset.path }"${ clean }`)) }
-
-			var buildIndex = function(presets){
+			var buildIndex = function(source){
 				var index
 				return [
-					// index...
-					(index = presets
-						.reduce(function(res, e, i){
-							res[getName(e)] = i 
-							return res }, {})),
-					// keys...
-					Object.keys(index), ] }
-			var getPreset = function(title, presets, index){
-				return presets[index[title]] }
+					index = containers.UniqueKeyMap(source
+						.map(function(e){ 
+							return [getName(e), e] })),
+					[...index.keys()], ] }
+
 			// presets...
 			var presets = that.config['export-presets'] || []
-			var [index, keys] = buildIndex(presets)
+			var [preset_index, preset_keys] = buildIndex(presets)
 
-			var updateIndex = function(){
-				var [idx, k] = buildIndex(presets)
-				index = idx
-				// NOTE: keys must be updated in-place...
-				keys.splice(0, keys.length, ...k) }
+			var updateIndex = function(full=false){
+				var k
+				;[preset_index, k] = full ?
+					buildIndex(presets)
+					: [preset_index, [...preset_index.keys()]]
+				// NOTE: preset_keys must be updated in-place...
+				preset_keys.splice(0, preset_keys.length, ...k) }
+			var renamePreset = function(from, to){
+				to = preset_index.rename(from, to, true)
+				// update keys...
+				preset_keys[preset_keys.indexOf(from)] = to
+				return to }
 
 			// history...
 			// NOTE: history is reversed in view...
 			var history = (that.config['export-history'] || [])
 				.slice()
 				.reverse()
-			var [history_index, history_keys] = buildIndex(history)
+			var [history_index, history_keys] = buildIndex(history) 
 
 			return browse.makeLister(null, function(path, make){
 				// preset list...
-				keys.length > 0
-					&& make.EditableList(keys, {
+				preset_keys.length > 0
+					&& make.EditableList(preset_keys, {
 						list_id: 'presets',
 						sortable: true,
 						update_merge: 'live',
@@ -3198,17 +3185,18 @@ var FileSystemWriterUIActions = actions.Actions({
 						// saving an empty string on item edit will clear .name...
 						allow_empty: true,
 						itemedit: function(evt, from, to){
-							var preset = getPreset(from, presets, index)
+							var preset = preset_index.get(from)
 							// reset...
 							if(to.trim() == ''){
 								delete preset.name
-								to = keys[keys.indexOf(from)] = getName(preset)
+								// XXX need to ignore .date here...
+								to = getName(preset)
 							// set...
 							} else {
 								to = preset.name = to.trim() }
-							// update index...
-							index[to] = index[from]
-							delete index[from] 
+
+							to = renamePreset(from, to)
+
 							// select item...
 							// NOTE: this is not done automatically because 
 							// 		we are changing the title .EditableList(..)
@@ -3220,35 +3208,34 @@ var FileSystemWriterUIActions = actions.Actions({
 							// edit...
 							['<small class="show-on-hover">edit</small>', 
 								function(title){
-									var preset = getPreset(title, presets, index)
+									var preset = preset_index.get(title)
+									var o = getName(preset)
 									that.exportDialog(preset)
 										.close(function(){
 											var n = getName(preset)
 											// update the list if name is affected...
-											if(n != title){
-												keys[keys.indexOf(title)] = n
-												index[n] = index[title]
-												delete index[title]
+											if(n != o){
+												n = renamePreset(o, n)
+
 												make.dialog.select(n) 
 												make.dialog.update() } })}],
 							// duplicate...
 							//['<span class="show-on-hover">&#x274F;</span>', 
 							['<small class="show-on-hover">clone</small>', 
 								function(title){
+									// clone...
 									var preset = JSON.parse(
-										JSON.stringify(
-											getPreset(title, presets, index) ))
+										JSON.stringify( preset_index.get(title) ))
 									preset.name = title + ' (copy)'
-									// place preset in list...
-									var i = index[preset.name] = index[title]+1
-									presets.splice(i, 0, preset)
-									keys.splice(keys.indexOf(title)+1, 0, preset.name)
+									// place new preset in list...
+									presets.splice(preset_keys.indexOf(title)+1, 0, preset)
+									updateIndex(true)
 									make.dialog.update() }],
 							['&diams;', 'TO_TOP'],
 							'REMOVE'],
 						// export...
 						open: function(evt, title){
-							var preset = getPreset(title, presets, index)
+							var preset = preset_index.get(title)
 							// export only if we get a good preset...
 							if(preset && getName(preset) == title){
 								console.log('>>>>>>>>>', preset)
@@ -3265,7 +3252,7 @@ var FileSystemWriterUIActions = actions.Actions({
 						that.exportDialog()
 							// new preset saved...
 							.on('save-preset', function(){
-								updateIndex()
+								updateIndex(true)
 								make.dialog.update() })
 							// close dialog on export...
 							.close(function(evt, reason){
@@ -3285,14 +3272,14 @@ var FileSystemWriterUIActions = actions.Actions({
 							// view...
 							['<small class="show-on-hover">view</small>', 
 								function(title){
-									var preset = getPreset(title, history, history_index)
+									var preset = history_index.get(title)
 									preset
 										&& that.exportDialog(
 												// prevent editing history...
 												JSON.parse(JSON.stringify( preset )) ) 
 											// new preset saved...
 											.on('save-preset', function(){
-												updateIndex()
+												updateIndex(true)
 												make.dialog.update() })
 											// close dialog on export...
 											.close(function(evt, reason){
@@ -3301,16 +3288,16 @@ var FileSystemWriterUIActions = actions.Actions({
 							// to preset...
 							['<small class="show-on-hover">save</small>', 
 								 function(title){
-									var preset = getPreset(title, history, history_index)
+									var preset = history_index.get(title)
 									if(preset){
 										that.exportPresetSave(preset) 
-										updateIndex()
+										updateIndex(true)
 										make.dialog.update() } }],
 							'REMOVE',
 						],
 						// export...
 						open: function(evt, title){
-							var preset = getPreset(title, history, history_index)
+							var preset = history_index.get(title)
 							// export only if we get a good preset...
 							if(preset && getName(preset) == title){
 								console.log('>>>>>>>>>', preset)
@@ -3331,15 +3318,15 @@ var FileSystemWriterUIActions = actions.Actions({
 			// save things after we are done...
 			.close(function(){
 				// update preset order and count...
-				that.config['export-presets'] = keys
+				that.config['export-presets'] = preset_keys
 					.map(function(e){
-						return getPreset(e, presets, index) })
+						return preset_index.get(e) })
 				// handle history delete...
 				history.length != that.config['export-history']
 					&& (that.config['export-history'] = history_keys
 						.reverse()
 						.map(function(e){
-							return getPreset(e, history, history_index) })) }) })],
+							return history_index.get(e) })) }) })],
 
 	// XXX these do note need the ui -- move to a separate feature...
 	// XXX these are essentially the same as the history API, make a 
