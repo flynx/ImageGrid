@@ -246,66 +246,56 @@ function(actions, path, value_path, options, setup){
 
 	var stateValue = function(value){
 		var path = value_path instanceof Function ?
-			value_path(value)
+			value_path(...arguments)
 			: value_path.split('.')
 
-		var key = path.pop()
+		if(value_path instanceof Function 
+				&& !(path instanceof Array)){
+			return path }
 
+		var key = path.pop()
 		var target = actions.config
 		path.forEach(function(p){
-			target = target[p] = target[p] || {}
-		})
+			target = target[p] = target[p] || {} })
 
+		// set...
 		if(value){
 			target[key] = value
 
+		// get...
 		} else {
-			return target[key]
-		}
-	}
+			return target[key] } }
 	var save = function(value){
 		stateValue(value)
-		dialog.close()
-	}
+		dialog.close() }
 
 	if(value_path 
 			&& (options.overflow == null 
 				|| options.overflow == 'save')){
-		options.overflow = save
-	}
+		options.overflow = save }
 
 	// set the path...
 	if(value_path && !options.path){
-		options.path = stateValue()
-	}
+		options.path = stateValue() }
 
 	var dialog = browse.makeListEditor(function(lst){
 			var target = actions.config
 			path.forEach(function(p){
 				target = target[p] = target[p] || {}
 			})
-
 			// get...
 			if(lst === undefined){
 				return target[key]
 
 			// set...
 			} else {
-				target[key] = lst
-			}
-		}, options)
-
+				target[key] = lst } }, options)
 
 	value_path
-		&& dialog.open(function(){
-			save(dialog.selected)
-		})
-
+		&& dialog.open(function(){ save(dialog.selected) })
 	setup
 		&& setup.call(dialog, dialog)
-
-	return dialog
-}
+	return dialog }
 
 
 // Wrapper around makeListEditor(..) enabling it to be used as an event

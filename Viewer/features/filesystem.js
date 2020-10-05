@@ -2787,7 +2787,11 @@ var FileSystemWriterUIActions = actions.Actions({
 			var res = make(['Filename $pattern: ', pattern], {
 				open: widgets.makeNestedConfigListEditor(actions, parent,
 					'export-preview-name-patterns',
-					'export-settings.preview-name-pattern', {
+					function(value){
+						return arguments.length == 0 ?
+							settings['preview-name-pattern']
+							: (settings['preview-name-pattern'] = value) },
+					{
 						length_limit: 10,
 						events: {
 							menu: function(_, p){ showExaples(p) },
@@ -2825,7 +2829,11 @@ var FileSystemWriterUIActions = actions.Actions({
 				.on('open', 
 					widgets.makeNestedConfigListEditor(actions, parent,
 						'export-level-directory-names', 
-						'export-settings.level-directory-name', {
+						function(value){
+							return arguments.length == 0 ?
+								settings['level-directory-name']
+								: (settings['level-directory-name'] = value) },
+						{
 							length_limit: 10,
 						})) },
 		// XXX should we merge this with 'size_limit'????
@@ -2838,7 +2846,10 @@ var FileSystemWriterUIActions = actions.Actions({
 				.on('open', 
 					widgets.makeNestedConfigListEditor(actions, parent,
 						'export-preview-sizes',
-						'export-settings.preview-size',
+						function(value){
+							return arguments.length == 0 ?
+								settings['preview-size']
+								: (settings['preview-size'] = value) },
 						{
 							length_limit: 10,
 							sort: function(a, b){ return parseInt(a) - parseInt(b) },
@@ -2859,7 +2870,10 @@ var FileSystemWriterUIActions = actions.Actions({
 				.on('open', 
 					widgets.makeNestedConfigListEditor(actions, parent,
 						'export-preview-size-limits',
-						'export-settings.preview-size-limit',
+						function(value){
+							return arguments.length == 0 ?
+								settings['preview-size-limit']
+								: (settings['preview-size-limit'] = value) },
 						{
 							length_limit: 10,
 							// sort ascending + keep 'no limit' at top...
@@ -2903,7 +2917,6 @@ var FileSystemWriterUIActions = actions.Actions({
 								function(path){ 
 									settings['path'] = path
 									actions.config['export-paths'].splice(0, 0, path)
-
 									parent.update()
 									parent.select(txt)
 								})
@@ -2911,7 +2924,10 @@ var FileSystemWriterUIActions = actions.Actions({
 						// XXX BUG: closing this breaks on parant.focus()...
 						['history', widgets.makeNestedConfigListEditor(actions, parent,
 							'export-paths',
-							'export-settings.path',
+							function(value){
+								return arguments.length == 0 ?
+									settings.path
+									: (settings.path = value) },
 							{
 								length_limit: 10,
 								new_item: false,
@@ -3042,7 +3058,10 @@ var FileSystemWriterUIActions = actions.Actions({
 							//widgets.makeNestedConfigListEditor(that, o,
 							open: widgets.makeNestedConfigListEditor(that, make.dialog,
 								'export-dialog-modes',
-								'export-settings.mode',
+								function(value){
+									return arguments.length == 0 ?
+										settings.mode
+										: (settings.mode = value) },
 								{
 									length_limit: 10,
 									new_item: false,
@@ -3105,12 +3124,6 @@ var FileSystemWriterUIActions = actions.Actions({
 		'exportDialog: "images"'],
 
 
-	// XXX BUG: changing values from history (button) changes the default 
-	// 		and not the current preset...
-	// 		...bug in exportDialog(..)
-	// XXX ASAP BUG: running a preset from the editor will use the default 
-	// 		settings and not the loaded preset...
-	// 		...can't reproduce... (revise)
 	// XXX UI:
 	// 		- element format:
 	// 			TITLE
