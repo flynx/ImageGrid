@@ -175,6 +175,7 @@ LESSC := npx lessc
 # 		2) set path and launch a child make -- not sure how to 
 # 		   do this...
 ELECTRON := npx electron
+# XXX stopped working while sharp started working out of the box...
 ELECTRON_REBUILD := npx electron-rebuild
 ASAR := npx asar
 ELECTRON_VERSION_FALLBACK ?= v1.8.1
@@ -319,9 +320,6 @@ DEPENDENCIES_WEB = node npm npx
 DEPENDENCIES = $(DEPENDENCIES_WEB) \
 	$(DEPENDENCIES_HELP) \
 	wget zip unzip zipnote git
-#	# XXX not needed with npx...
-#	electron electron-rebuild asar
-#	$(ELECTRON) $(ELECTRON_REBUILD) $(ASAR)
 
 
 
@@ -631,7 +629,7 @@ $(BUILD_INFO): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 $(NODE_DIR): package.json
 	npm install
 	# NOTE: this may break on some systems due to a dependency issue...
-	$(ELECTRON_REBUILD)
+#	$(ELECTRON_REBUILD)
 	@touch "$@"
 
 

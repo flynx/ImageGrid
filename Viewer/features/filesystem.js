@@ -3124,9 +3124,6 @@ var FileSystemWriterUIActions = actions.Actions({
 		'exportDialog: "images"'],
 
 
-	// XXX BUG: editing the path of a duplicate ("... (n)") preset first 
-	// 		replaces the wrong preset in the list but after reopening 
-	// 		the dialog everything is correct... 
 	// XXX UI:
 	// 		- element format:
 	// 			TITLE
@@ -3141,6 +3138,7 @@ var FileSystemWriterUIActions = actions.Actions({
 			var that = this
 			var logger = this.logger && this.logger.push('exportPresets')
 
+			// generic helpers...
 			var getName = function(preset){
 				var date = preset.date
 					&& Date.fromTimeStamp(preset.date).toShortDate()
@@ -3168,7 +3166,7 @@ var FileSystemWriterUIActions = actions.Actions({
 			var presets = that.config['export-presets'] || []
 			var [preset_index, preset_keys] = buildIndex(presets)
 
-			var updateIndex = function(full=false){
+			var updatePresetIndex = function(full=false){
 				var k
 				;[preset_index, k] = full ?
 					buildIndex(presets)
@@ -3183,9 +3181,10 @@ var FileSystemWriterUIActions = actions.Actions({
 
 			// history...
 			// NOTE: history is reversed in view...
-			var history = (that.config['export-history'] || [])
-				.slice()
-				.reverse()
+			var history = 
+				(that.config['export-history'] || [])
+					.slice()
+					.reverse()
 			var [history_index, history_keys] = buildIndex(history) 
 
 			return browse.makeLister(null, function(path, make){
@@ -3223,13 +3222,12 @@ var FileSystemWriterUIActions = actions.Actions({
 							['<small class="show-on-hover view-or-edit">edit</small>', 
 								function(title){
 									var preset = preset_index.get(title)
-									var o = getName(preset)
 									that.exportDialog(preset)
 										.close(function(){
 											var n = getName(preset)
 											// update the list if name is affected...
-											if(n != o){
-												n = renamePreset(o, n)
+											if(n != title){
+												n = renamePreset(title, n)
 
 												make.dialog.select(n) 
 												make.dialog.update() } })}],
@@ -3243,7 +3241,7 @@ var FileSystemWriterUIActions = actions.Actions({
 									preset.name = title + ' (copy)'
 									// place new preset in list...
 									presets.splice(preset_keys.indexOf(title)+1, 0, preset)
-									updateIndex(true)
+									updatePresetIndex(true)
 									make.dialog.update() }],
 							['&diams;', 'TO_TOP'],
 							'REMOVE'],
@@ -3252,7 +3250,6 @@ var FileSystemWriterUIActions = actions.Actions({
 							var preset = preset_index.get(title)
 							// export only if we get a good preset...
 							if(preset && getName(preset) == title){
-								console.log('>>>>>>>>>', preset)
 								that.exportAs(preset)
 								return make.dialog.close() }
 							// error...
@@ -3266,7 +3263,7 @@ var FileSystemWriterUIActions = actions.Actions({
 						that.exportDialog()
 							// new preset saved...
 							.on('save-preset', function(){
-								updateIndex(true)
+								updatePresetIndex(true)
 								make.dialog.update() })
 							// close dialog on export...
 							.close(function(evt, reason){
@@ -3293,7 +3290,7 @@ var FileSystemWriterUIActions = actions.Actions({
 												JSON.parse(JSON.stringify( preset )) ) 
 											// new preset saved...
 											.on('save-preset', function(){
-												updateIndex(true)
+												updatePresetIndex(true)
 												make.dialog.update() })
 											// close dialog on export...
 											.close(function(evt, reason){
@@ -3305,7 +3302,7 @@ var FileSystemWriterUIActions = actions.Actions({
 									var preset = history_index.get(title)
 									if(preset){
 										that.exportPresetSave(preset) 
-										updateIndex(true)
+										updatePresetIndex(true)
 										make.dialog.update() } }],
 							'REMOVE',
 						],
@@ -3330,14 +3327,7 @@ var FileSystemWriterUIActions = actions.Actions({
 						that
 							.select()
 							.find('.view-or-edit')
-								.click() })
-					// mark for deletion...
-					// XXX move to browse...
-					.on('D', function(){
-						that
-							.select()
-								// XXX
-							}) })
+								.click() }) })
 			// save things after we are done...
 			.close(function(){
 				// update preset order and count...
