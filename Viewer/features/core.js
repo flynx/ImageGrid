@@ -954,6 +954,18 @@ var LifeCycleActions = actions.Actions({
 					&& func.call(this)
 			}
 		}],
+
+	// helpers...
+	restart: ['System/Soft restart',
+		doc`Soft restart
+
+		This will stop, clear and then start ImageGrid.
+		`,
+		function(){
+			this
+				.stop()
+				.clear()
+				.start() }],
 })
 
 var LifeCycle = 
