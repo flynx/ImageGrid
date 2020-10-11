@@ -2644,8 +2644,6 @@ var FileSystemWriterUIActions = actions.Actions({
 		// 		...
 		// 	]
 		//
-		// XXX should this be a dict or a list???
-		// 		...a dict would require keys (gid/title??)
 		// XXX should this api be accessible from outside the ui???
 		'export-presets': [
 			{
@@ -2669,7 +2667,7 @@ var FileSystemWriterUIActions = actions.Actions({
 			},
 		],
 		'export-history-length': 50,
-		// XXX should this be stored here or like file history in session???
+		// XXX should this be stored here or like file history in session directly???
 		'export-history': [],
 	},
 
@@ -3130,7 +3128,6 @@ var FileSystemWriterUIActions = actions.Actions({
 	// 			mode / destination / format
 	// 		- button shortcuts...
 	// XXX add a 'name' field to the exportDialog(..) (???)
-	// XXX add/select "last preset used" and make it local per collection...
 	exportPresets: ['- File/Export presets and history...',
 		core.doc`
 		`,
@@ -3186,6 +3183,20 @@ var FileSystemWriterUIActions = actions.Actions({
 					.slice()
 					.reverse()
 			var [history_index, history_keys] = buildIndex(history) 
+
+			// last used preset...
+			var last_used = Object.assign({}, history[0] || {})
+			delete last_used.date
+			// get the matching preset if available...
+			last_used = presets
+				.filter(function(preset){
+					return Object.match(preset, last_used) })
+				.shift() 
+			// get the title...
+			// XXX this does not select correctly for some reason...
+			last_used = last_used ?
+				preset_index.keysOf(last_used)[0]
+				: history_keys[0]
 
 			return browse.makeLister(null, function(path, make){
 				// preset list...
@@ -3327,7 +3338,12 @@ var FileSystemWriterUIActions = actions.Actions({
 						that
 							.select()
 							.find('.view-or-edit')
-								.click() }) })
+								.click() }) 
+				// select last used...
+				// XXX HACK -- for some reason setting path: [last_used] 
+				// 		does not work correctly...
+				setTimeout(function(){
+					that.select(last_used) }, 0) })
 			// save things after we are done...
 			.close(function(){
 				// update preset order and count...
