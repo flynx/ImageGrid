@@ -3128,6 +3128,7 @@ var FileSystemWriterUIActions = actions.Actions({
 	// 			mode / destination / format
 	// 		- button shortcuts...
 	// XXX add a 'name' field to the exportDialog(..) (???)
+	// XXX Q: should we be able to change preset type???
 	exportPresets: ['- File/Export presets and history...',
 		core.doc`
 		`,
@@ -3193,7 +3194,6 @@ var FileSystemWriterUIActions = actions.Actions({
 					return Object.match(preset, last_used) })
 				.shift() 
 			// get the title...
-			// XXX this does not select correctly for some reason...
 			last_used = last_used ?
 				preset_index.keysOf(last_used)[0]
 				: history_keys[0]
@@ -3206,6 +3206,7 @@ var FileSystemWriterUIActions = actions.Actions({
 						sortable: true,
 						update_merge: 'live',
 						new_item: false,
+
 						// saving an empty string on item edit will clear .name...
 						allow_empty: true,
 						itemedit: function(evt, from, to){
@@ -3228,6 +3229,7 @@ var FileSystemWriterUIActions = actions.Actions({
 							make.dialog.one('update', 
 								function(){
 									make.dialog.select(to) }) },
+
 						buttons: [
 							// edit...
 							['<small class="show-on-hover view-or-edit">edit</small>', 
