@@ -3128,9 +3128,9 @@ var FileSystemWriterUIActions = actions.Actions({
 	// 		- element format:
 	// 			TITLE
 	// 			mode / destination / format
-	// 		- revise buttons and icons...
 	// 		- button shortcuts...
 	// XXX add a 'name' field to the exportDialog(..) (???)
+	// XXX add/select "last preset used" and make it local per collection...
 	exportPresets: ['- File/Export presets and history...',
 		core.doc`
 		`,
