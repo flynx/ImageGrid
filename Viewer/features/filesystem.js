@@ -2567,6 +2567,7 @@ module.FileSystemWriter = core.ImageGridFeatures.Feature({
 // XXX add writer UI feature...
 // 		- save as.. (browser)
 // 		- save if not base path present (browser)
+// XXX should export history and presets base be here or in the writer???
 var FileSystemWriterUIActions = actions.Actions({
 	config: {
 		// NOTE: for more docs on export settings see FileSystemWriter.config...
@@ -2675,6 +2676,16 @@ var FileSystemWriterUIActions = actions.Actions({
 	// XXX should this be here or in FileSystemWriter???
 	// 		...FileSystemWriter does not define .mode for this to work correctly...
 	exportAs: ['- File/',
+		core.doc`Get export mode from settings and export via the appropriate
+		export method.
+
+			Export via .config['export-settings']...
+			.exportAs()
+
+			Export via settings...
+			.exportAs(settings)
+		
+		`,
 		function(settings){
 			settings = settings 
 				|| this.config['export-settings']
@@ -2710,9 +2721,6 @@ var FileSystemWriterUIActions = actions.Actions({
 
 
 	// Export dialog...
-	//
-	// Export <mode> is set by:
-	// 		.config['export-mode']
 	//
 	// The fields used and their order is set by:
 	// 		.config['export-modes'][<mode>].data	(list)
@@ -3122,6 +3130,8 @@ var FileSystemWriterUIActions = actions.Actions({
 		'exportDialog: "images"'],
 
 
+	// Export presets...
+	//
 	// XXX UI:
 	// 		- element format:
 	// 			TITLE
@@ -3187,6 +3197,8 @@ var FileSystemWriterUIActions = actions.Actions({
 
 			// last used preset...
 			var last_used = Object.assign({}, history[0] || {})
+			// NOTE: this is done for last_used to be matchable with presets...
+			// 		XXX a better way to do this is to check for subset match...
 			delete last_used.date
 			// get the matching preset if available...
 			last_used = presets
@@ -3362,7 +3374,7 @@ var FileSystemWriterUIActions = actions.Actions({
 	// XXX these do note need the ui -- move to a separate feature...
 	// XXX these are essentially the same as the history API, make a 
 	// 		generic list manager???
-	// XXX need to check preset uniqueness...
+	// XXX need to check preset uniqueness... (???)
 	exportPresetSave: ['- File/', 
 		function(settings){
 			settings = settings 
@@ -3379,7 +3391,7 @@ var FileSystemWriterUIActions = actions.Actions({
 					this.config['export-presets'] 
 					|| [])
 				.push(settings) }],
-	// XXX need to check item uniqueness???
+
 	exportHistoryPush: ['- File/', 
 		function(settings){
 			settings = settings 
@@ -3398,7 +3410,6 @@ var FileSystemWriterUIActions = actions.Actions({
 			// trim the history...
 			history.length > l
 				&& history.splice(0, history.length - l) }],
-
 	clearExportHistory: ['- File/Clear export history',
 		function(){
 			delete this.config['export-history'] }],
