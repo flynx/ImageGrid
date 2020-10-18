@@ -332,6 +332,8 @@ var MetadataUIActions = actions.Actions({
 			'Iso',
 			'Quality', 'Focus Mode', 
 
+			'Rating',
+
 			'Artist', 'Copyright',
 
 			'Date/time Original', 'Create Date', 'Modify Date',
