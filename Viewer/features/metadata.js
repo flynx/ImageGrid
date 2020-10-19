@@ -170,11 +170,10 @@ var MetadataReaderActions = actions.Actions({
 							that.images[gid].metadata = m
 
 							// XXX
-							that.markChanged && that.markChanged('images', [gid])
-						}
+							that.markChanged 
+								&& that.markChanged('images', [gid]) }
 
-						resolve(data)
-					})
+						resolve(data) })
 				})
 			})
 		}],
@@ -210,7 +209,61 @@ var MetadataReaderActions = actions.Actions({
 	writeMetadata: ['- Image/Set metadata data',
 		function(image, target){
 			// XXX
-		}]
+		}],
+
+
+	// XXX add undo...
+	ratingToRibbons: ['- Ribbon|Crop/',
+		core.doc`Place images to ribbons by rating
+
+			Place images to ribbons by rating in a crop...
+			.ratingToRibbons()
+			.ratingToRibbons('crop')
+
+			Place images to ribbons by rating (in-place)...
+			.ratingToRibbons('in-place')
+
+
+		NOTE: this will override the current ribbon structure.
+		NOTE: this needs .metadata to be loaded.
+		NOTE: we do not care about the actual rating values or their 
+			number, the number of ribbons corresponds to number of used 
+			ratings and thy are sorted by their text value.
+		`,
+		function(mode='crop'){
+			var that = this
+			var images = this.images
+			var index = {}
+
+			var ribbons = this.data.order
+				.reduce(function(ribbons, gid, i){
+					var r = ((images[gid] || {}).metadata || {}).rating || 0
+					// NOTE: we can't just use the rating as ribbon gid 
+					// 		because currently number-like ribbon gids 
+					// 		break things -- needs revision...
+					var g = index[r] = index[r] || that.data.newGID()
+					// NOTE: this will create sparse ribbons...
+					;(ribbons[g] = (ribbons[g] || []))[i] = gid
+					return ribbons }, {})
+
+			// build the new data...
+			var data = mode == 'in-place' ?
+				this.data
+				: this.data.clone()
+			data.ribbons = ribbons
+			// sort by rating then replace with "gid"...
+			data.ribbon_order = Object.keys(index)
+				.sort()
+				.reverse()
+				.map(function(r){ 
+					return index[r] })
+			this.setBaseRibbon(data.ribbon_order.last())
+
+			mode == 'in-place'
+				&& this.markChanged
+				&& this.markChanged('data')
+			mode == 'crop'
+				&& this.crop(data) }],
 })
 
 var MetadataReader = 
@@ -666,6 +719,12 @@ var MetadataUIActions = actions.Actions({
 				.forEach(function(e){
 					make(...e) })
 		})],
+
+
+	cropRatingsAsRibbons: ['Ribbon|Crop/Split ratings to ribbons (crop)',
+		'ratingToRibbons: "crop"'],
+	splitRatingsAsRibbons: ['Ribbon/Split ratings to ribbons (in-place)',
+		'ratingToRibbons: "in-place"'],
 })
 
 var MetadataUI = 
@@ -715,8 +774,13 @@ module.MetadataFSUI = core.ImageGridFeatures.Feature({
 							.then(function(data){
 								client.updateMetadata() })
 							.catch(function(){
-								client.update() })
-					} }],
+								client.update() }) } }],
+
+		// reload view when .ratingToRibbons('in-place') is called...
+		['ratingToRibbons',
+			function(res, mode){
+				mode == 'in-place'
+					&& this.reload() }],
 	],
 })
 
