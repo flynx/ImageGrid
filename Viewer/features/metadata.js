@@ -780,7 +780,7 @@ module.MetadataFSUI = core.ImageGridFeatures.Feature({
 		['ratingToRibbons',
 			function(res, mode){
 				mode == 'in-place'
-					&& this.reload() }],
+					&& this.reload(true) }],
 	],
 })
 
