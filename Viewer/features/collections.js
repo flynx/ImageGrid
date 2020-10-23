@@ -310,8 +310,7 @@ var CollectionActions = actions.Actions({
 			// if a promise has not yet resolved/rejected, return it 
 			// and do not start a new one...
 			if(running[collection]){
-				return running[collection]
-			}
+				return running[collection] }
 
 			// handle collection...
 			p = running[collection] = new Promise(function(resolve, reject){
@@ -330,8 +329,7 @@ var CollectionActions = actions.Actions({
 						resolve(collection_data) })
 					.catch(function(err){
 						delete running[collection]
-						reject(err) })
-			})
+						reject(err) }) })
 
 			return p }],
 
@@ -2756,10 +2754,11 @@ var UICollectionActions = actions.Actions({
 		mode: function(){
 			return this.collections_length > 0 || 'disabled' }, },
 		mixedModeCollectionAction(function(title){
+			var that = this
 			this.ensureCollection(title)
 				.then(function(collection){
-					this.data.order.inplaceSortAs(collection.data.order)
-					this.sortImages('update') }) })],
+					that.data.order.inplaceSortAs(collection.data.order)
+					that.sortImages('update') }) })],
 })
 
 var UICollection = 
