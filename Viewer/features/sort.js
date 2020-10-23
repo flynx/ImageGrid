@@ -490,8 +490,7 @@ module.SortActions = actions.Actions({
 
 			// can't sort if we know nothing about .images
 			if(method && method.length > 0 && (!this.images || this.images.length == 0)){
-				return
-			}
+				return }
 
 			// build the compare routine...
 			method = method
@@ -544,11 +543,8 @@ module.SortActions = actions.Actions({
 					for(var i=0; i < method.length; i++){
 						res = method[i].call(that, a, b)
 						if(res != 0){
-							return res
-						}
-					}
-					return res
-				}
+							return res } }
+					return res }
 
 			// do the sort (in place)...
 			if(method && method.length > 0 && this.images){
@@ -561,8 +557,7 @@ module.SortActions = actions.Actions({
 				this.data.order.reverse()
 			}
 
-			this.data.updateImagePositions()
-		}],
+			this.data.updateImagePositions() }],
 
 	// XXX should we merge manual order handling with .sortImages(..)???
 	// XXX currently this will not toggle past 'none'
@@ -801,6 +796,7 @@ var SortUIActions = actions.Actions({
 			Show sort method doc with flat method list...
 			.showSortMethodDoc(method, false)
 
+		This will add actions with .sortMethod attribute as sort methods...
 		`,
 		widgets.makeUIDialog(function(method, expand, indent){
 			var that = this
@@ -845,8 +841,7 @@ var SortUIActions = actions.Actions({
 								// ignore the first item as we mention 
 								// it in the title...
 								.slice(1)
-								.join('\n'))))
-		})],
+								.join('\n')))) })],
 
 	// XXX should we be able to edit modes??? 
 	// XXX should this be a toggler???
@@ -857,6 +852,16 @@ var SortUIActions = actions.Actions({
 
 			var dfl = this.config['default-sort'] 
 
+			var sort_actions = new Map(
+				that.actions
+					.filter(function(e){ 
+						return that.getActionAttr(e, 'sortMethod') })
+					.map(function(e){
+						return [
+							(that.getActionAttr(e, 'doc') || e).split(/[\\\/:]/).pop(),
+							e, 
+						] }))
+
 			// XXX might be a good idea to make this generic...
 			var _makeTogglHandler = function(toggler){
 				return function(){
@@ -865,33 +870,40 @@ var SortUIActions = actions.Actions({
 					o.update()
 						.then(function(){ o.select(txt) })
 					that.toggleSlideshow('?') == 'on' 
-						&& o.parent.close()
-				}
-			}
+						&& o.parent.close() } }
 
 			var o = browse.makeLister(null, function(path, make){
 				var lister = this
 				var cur = that.toggleImageSort('?')
 
-				that.toggleImageSort('??').forEach(function(mode){
-					// skip 'none'...
-					if(mode == 'none'){
-						return
-					}
-					make(mode, {
-						cls: [
-							(mode == cur ? 'highlighted selected' : ''),
-							(mode == dfl ? 'default' : ''),
-						].join(' '),
-						// show only modes starting with upper case...
-						hidden: mode[0].toUpperCase() != mode[0],
-					})
+				// normal sort methods...
+				that.toggleImageSort('??')
+					.forEach(function(mode){
+						// skip 'none'...
+						if(mode == 'none'){
+							return }
+						make(mode, {
+							cls: [
+								(mode == cur ? 'highlighted selected' : ''),
+								(mode == dfl ? 'default' : ''),
+							].join(' '),
+							// show only modes starting with upper case...
+							hidden: mode[0].toUpperCase() != mode[0],
+						})
 						.on('open', function(){
 							that.toggleImageSort(null, mode, 
 								that.config['default-sort-order'] == 'reverse')
-							lister.parent.close()
-						})
-				})	
+							lister.parent.close() }) })	
+				// action sort methods...
+				if(sort_actions.size > 0){
+					;[...sort_actions.entries()]
+						.forEach(function([n, a]){
+							make(n, {
+								disabled: that.getActionMode(a) == 'disabled',
+							})
+							.on('open', function(){
+								that[a]()
+								make.dialog.close() }) }) }
 
 				// Commands...
 				make('---')
@@ -899,8 +911,7 @@ var SortUIActions = actions.Actions({
 				make('$Reverse images')
 					.on('open', function(){
 						that.reverseImages()
-						lister.parent.close()
-					})
+						lister.parent.close() })
 
 				// Settings...
 				make('---')
@@ -913,15 +924,19 @@ var SortUIActions = actions.Actions({
 				// handle '?' button to browse path...
 				this.showDoc = function(){
 					var method = this.select('!').text()
-					method 
-						&& method in that.config['sort-methods']
-						&& that.showSortMethodDoc(method)
-				}
+					method = sort_actions.get(method) || method
+
+					// normal sort method...
+					if(method in that.config['sort-methods']){
+						that.showSortMethodDoc(method) 
+
+					// sort action...
+					} else if(method in that){
+						that.showDoc(method) } }
 				this.keyboard.handler('General', '?', 'showDoc')
 			})
 
-			return o
-		})]	
+			return o })],
 })
 
 var SortUI = 

@@ -2444,6 +2444,7 @@ var UICollectionActions = actions.Actions({
 								.unique()))
 
 					// main collection...
+					// XXX add option to force show this...
 					!action 
 						&& collections.indexOf(MAIN_COLLECTION_TITLE) < 0
 						&& make([
@@ -2476,6 +2477,9 @@ var UICollectionActions = actions.Actions({
 						{
 							new_item: new_message ? 
 									new_message 
+								// explicitly disabled new item...
+								: (new_message === false || new_message === null) ?
+									false
 								: action ? 
 									'$New...' 
 								: '$New from current state...',
@@ -2498,7 +2502,9 @@ var UICollectionActions = actions.Actions({
 									that.newCollection(title)
 									: that.saveCollection(title) },
 
-							disabled: action ? [MAIN_COLLECTION_TITLE] : false,
+							disabled: action ? 
+								[MAIN_COLLECTION_TITLE] 
+								: false,
 
 							update_merge: 'merge',
 
@@ -2527,8 +2533,8 @@ var UICollectionActions = actions.Actions({
 				.close(function(){
 					that.collection_order = collections
 					to_remove
-						.forEach(function(title){ that.removeCollection(title) }) })
-		})],
+						.forEach(function(title){ 
+							that.removeCollection(title) }) }) })],
 	// XXX should this be able to add new collections???
 	browseImageCollections: ['Collections|Image/Image $collections...',
 		widgets.makeUIDialog(function(gid){
@@ -2742,6 +2748,18 @@ var UICollectionActions = actions.Actions({
 			make.EditableList(this.collection_order)
 		}],
 	//*/
+	
+	// XXX need to show MAIN_COLLECTION_TITLE...
+	// XXX do we need to have an option/shorthand to .sortAs(..) and .inplaceSortAs(..) ???
+	sortAsCollection: ['Collections/Sort as collection...',
+		{sortMethod: true,
+		mode: function(){
+			return this.collections_length > 0 || 'disabled' }, },
+		mixedModeCollectionAction(function(title){
+			this.ensureCollection(title)
+				.then(function(collection){
+					this.data.order.inplaceSortAs(collection.data.order)
+					this.sortImages('update') }) })],
 })
 
 var UICollection = 

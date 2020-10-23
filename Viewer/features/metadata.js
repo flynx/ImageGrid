@@ -721,6 +721,7 @@ var MetadataUIActions = actions.Actions({
 		})],
 
 
+	// shorthands...
 	cropRatingsAsRibbons: ['Ribbon|Crop/Split ratings to ribbons (crop)',
 		'ratingToRibbons: "crop"'],
 	splitRatingsAsRibbons: ['Ribbon/Split ratings to ribbons (in-place)',
