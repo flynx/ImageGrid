@@ -295,6 +295,14 @@ var CollectionActions = actions.Actions({
 		`,
 		function(collection){
 			var that = this
+			collection = collection 
+				|| MAIN_COLLECTION_TITLE
+
+			// main collection shorthand...
+			// XXX revise...
+			if(this.collection == null 
+					&& collection == MAIN_COLLECTION_TITLE){
+				return Promise.resolve(this) }
 
 			var running = this.__running_collection_ensure = 
 				this.__running_collection_ensure || {}
@@ -2762,22 +2770,50 @@ var UICollectionActions = actions.Actions({
 		}],
 	//*/
 	
-	// XXX need to force show MAIN_COLLECTION_TITLE...
-	// 		-> mixedModeCollectionAction(..) 
-	// 		-> .browseCollections(..)
-	// XXX might be a good idea to add a reverse of this, i.e. .sortCollectionAsThis(..)
-	// XXX do we need to have an option/shorthand to .sortAs(..) and .inplaceSortAs(..) ???
+
+	collectionSort: ['- Collections/',
+		core.doc`Sort collection A (sorted) as collection B (sort_as)...
+
+
+		NOTE: if sorted and sort_as are the same collection this will do nothing.
+		`,
+		function(sorted, sort_as, mode='in-place'){
+			var that = this
+			var sort = mode == 'in-place' ?
+				'inplaceSortAs'
+				: 'sortAs'
+			if(sorted == sort_as){
+				return Promise.resolve() }
+			// NOTE: need to update view if the sorted collection is loaded...
+			var loaded = sorted == this.collection
+			return Promise.all([
+				this.ensureCollection(sorted),
+				this.ensureCollection(sort_as),
+			]).then(function([sorted, sort_as]){
+				sorted.data.order[sort](sort_as.data.order)
+				sorted.data.updateImagePositions() 
+				loaded
+					 && that.sortImages('update') }) }],
+
+	// XXX revise naming...
 	sortAsCollection: ['Collections/Sort as collection...',
+		core.doc`Sort current collection as selected.`,
 		{sortMethod: true,
 		mode: function(){
 			return this.collections_length > 0 || 'disabled' }, },
 		mixedModeCollectionAction(
-			function(title){
-				var that = this
-				this.ensureCollection(title)
-					.then(function(collection){
-						that.data.order.inplaceSortAs(collection.data.order)
-						that.sortImages('update') }) }, 
+			function(sort_as){
+				return this.collectionSort(this.collection, sort_as) },
+			null,
+			{ show_main: function(){ 
+				return !!this.collection } })],
+	sortCollectionAsThis: ['- Collections/Sort collection as current...',
+		core.doc`Sort selected collection as current.`,
+		{sortMethod: true,
+		mode: 'sortAsCollection', },
+		mixedModeCollectionAction(
+			function(sorted){
+				return this.collectionSort(sorted, this.collection) },
 			null,
 			{ show_main: function(){ 
 				return !!this.collection } })],
