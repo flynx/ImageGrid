@@ -2771,10 +2771,18 @@ var UICollectionActions = actions.Actions({
 	//*/
 	
 
+	// XXX doc...
 	collectionSort: ['- Collections/',
 		core.doc`Sort collection A (sorted) as collection B (sort_as)...
 
+			.collectionSort(sorted, sort_as)
+			.collectionSort(sorted, sort_as, mode)
+				-> promise(A, B)
 
+
+		NOTE: in spite of the name this can also sort the main data/collection.
+		NOTE: if either sorted or sort_as are not given or are null the main 
+			collection is assumed by default.
 		NOTE: if sorted and sort_as are the same collection this will do nothing.
 		`,
 		function(sorted, sort_as, mode='in-place'){
@@ -2796,7 +2804,7 @@ var UICollectionActions = actions.Actions({
 					 && that.sortImages('update') }) }],
 
 	// XXX revise naming...
-	sortAsCollection: ['Collections/Sort as collection...',
+	sortAsCollection: ['Sort|Collections/Sort as collection...',
 		core.doc`Sort current collection as selected.`,
 		{sortMethod: true,
 		mode: function(){
@@ -2807,7 +2815,7 @@ var UICollectionActions = actions.Actions({
 			null,
 			{ show_main: function(){ 
 				return !!this.collection } })],
-	sortCollectionAsThis: ['- Collections/Sort collection as current...',
+	sortCollectionAsThis: ['Sort|Collections/Sort collection as current...',
 		core.doc`Sort selected collection as current.`,
 		{sortMethod: true,
 		mode: 'sortAsCollection', },
