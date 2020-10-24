@@ -2276,31 +2276,28 @@ module.AutoCollections = core.ImageGridFeatures.Feature({
 //
 // NOTE: if n > 1 and <n args are given then the given args will get 
 // 		passed to func with an appended title...
-var mixedModeCollectionAction = function(func, n, last_used_collection){
+// XXX should we use options object here a-la .browseCollections(..)???
+var mixedModeCollectionAction = function(func, n, options){
 	return widgets.uiDialog(function(){
 		var args = [...arguments]
 		// check if minimum number of arguments is reached...
 		return args.length < (n || 1) ? 
 			// show the dialog...
-			//this.browseCollections(func) 
 			this.browseCollections(function(title){ 
-					return func.call(this, ...args.concat([title])) },
-				null,
-				last_used_collection) 
+					return func.call(this, ...args.concat([title])) }, options) 
 			: func.apply(this, args) }) }
 
 // Like mixedModeCollectionAction(..) but will do nothing if enough args 
 // are given...
-var collectionGetterWrapper = function(func, n, last_used_collection){
+var collectionGetterWrapper = function(func, n, options){
 	return widgets.uiDialog(function(){
 		var args = [...arguments]
 		// check if minimum number of arguments is reached...
 		return args.length < (n || 1)
 			// show the dialog...
 			&& this.browseCollections(function(title){ 
-					return func.call(this, ...args.concat([title])) },
-				null,
-				last_used_collection) }) }
+					return func.call(this, ...args.concat([title])) }, 
+				options) }) }
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -2326,28 +2323,42 @@ var UICollectionActions = actions.Actions({
 	browseCollections: ['Collections/$Collections...',
 		core.doc`Collection list...
 
-			.browseCollections(action, new_message, last_used_collection)
+			.browseCollections(action, options)
 				-> dialog
+
+
+		options format:
+			{
+				new_message: null | false | <str>,
+
+				last_used: <bool> | <title>,
+
+				show_main: null | <bool> | <func>,
+			}
+
 
 		All arguments are optional.
 
-		If action is given last_used_collection defaults to true.
+		If action is given options.last_used defaults to true.
 
-		If last_used_collection is true then .config['collection-last-used']
+		If options.last_used is true then .config['collection-last-used']
 		is used to select the last used collection and set when selecting
 		an item.
-		It last_used_collection is a string, then .config[last_used_collection]
+		It options.last_used is a string, then .config[options.last_used]
 		will be used to store the last used collection title.
 
 		NOTE: collections are added live and not on dialog close...
 		`,
-		widgets.makeUIDialog(function(action, new_message, last_used_collection){
+		//widgets.makeUIDialog(function(action, new_message, last_used_collection){
+		widgets.makeUIDialog(function(action, options={}){
 			var that = this
-			last_used_collection = last_used_collection == null ? 
+
+			var {new_message, last_used, show_main} = options
+			last_used = options.last_used == null ? 
 					(action && 'collection-last-used')
-				: last_used_collection === true ? 
+				: options.last_used === true ? 
 					'collection-last-used' 
-				: last_used_collection
+				: options.last_used
 			var to_remove = []
 
 			var collections = that.collection_order = 
@@ -2442,12 +2453,13 @@ var UICollectionActions = actions.Actions({
 								.unique()))
 
 					// main collection...
-					// XXX add option to force show this...
-					!action 
+					var main = typeof(show_main) == 'function' ?
+						show_main.call(that)
+						: show_main
+					;(main === true
+							|| (main == null && !action))
 						&& collections.indexOf(MAIN_COLLECTION_TITLE) < 0
-						&& make([
-								MAIN_COLLECTION_TITLE,
-							], 
+						&& make([MAIN_COLLECTION_TITLE], 
 							{ 
 								events: {
 									update: function(_, title){
@@ -2500,7 +2512,8 @@ var UICollectionActions = actions.Actions({
 									that.newCollection(title)
 									: that.saveCollection(title) },
 
-							disabled: action ? 
+							disabled: (main === false 
+									|| (main == null && action)) ? 
 								[MAIN_COLLECTION_TITLE] 
 								: false,
 
@@ -2517,17 +2530,17 @@ var UICollectionActions = actions.Actions({
 				}, {
 					cls: 'collection-list',
 					// focus current collection...
-					selected: (last_used_collection 
-							&& that.config[last_used_collection]) ?
-						that.config[last_used_collection]
+					selected: (last_used 
+							&& that.config[last_used]) ?
+						that.config[last_used]
 						: JSON.stringify(
 							(that.collection || MAIN_COLLECTION_TITLE)
 								// XXX not sure it is good that we have to do this...
 								.replace(/\$/g, '')),
 				})
 				.open(function(_, title){
-					last_used_collection
-						&& (that.config[last_used_collection] = title) })
+					last_used
+						&& (that.config[last_used] = title) })
 				.close(function(){
 					that.collection_order = collections
 					to_remove
@@ -2669,8 +2682,7 @@ var UICollectionActions = actions.Actions({
 		collectionGetterWrapper(function(gids, title){ 
 			if(title == null){
 				title = gids
-				gids = null
-			}
+				gids = null }
 			this.collect(gids || 'current', title) }, 2)],
 	collectRibbon: ['Collections|Ribbon/Add $ribbon to collection...',
 		'collect: "ribbon"'],
@@ -2686,25 +2698,28 @@ var UICollectionActions = actions.Actions({
 					|| Object.keys(this.collections).length == 0) 
 				&& 'disabled' }},
 		mixedModeCollectionAction(function(title){
-			var that = this
-			this.ensureCollection(title)
-				.then(function(collection){
-					var images = collection.data.getImages('all')
+				var that = this
+				this.ensureCollection(title)
+					.then(function(collection){
+						var images = collection.data.getImages('all')
 
-					that.crop(images, false)
-				}) }, null, false)],
+						that.crop(images, false)
+					}) }, 
+			null,
+			{ last_used: false })],
 	cropOutImagesInCollection: ['Collections|Crop/Remove collection images from crop...',
 		{mode: 'cropImagesInCollection'},
 		mixedModeCollectionAction(function(title){
-			var that = this
-			this.ensureCollection(title)
-				.then(function(collection){
-					var to_remove = collection.data.getImages('all')
-					var images = that.data.getImages('loaded')
-						.filter(function(gid){ return to_remove.indexOf(gid) < 0 })
-					that.crop(images, false)
-				})
-		}, null, false)],
+				var that = this
+				this.ensureCollection(title)
+					.then(function(collection){
+						var to_remove = collection.data.getImages('all')
+						var images = that.data.getImages('loaded')
+							.filter(function(gid){ return to_remove.indexOf(gid) < 0 })
+						that.crop(images, false)
+					}) }, 
+			null,
+			{ last_used: false })],
 
 	// XXX should this be in Collections/ ???
 	editDefaultCollections: ['Interface|Collections/Edit default collections...',
@@ -2747,18 +2762,25 @@ var UICollectionActions = actions.Actions({
 		}],
 	//*/
 	
-	// XXX need to show MAIN_COLLECTION_TITLE...
+	// XXX need to force show MAIN_COLLECTION_TITLE...
+	// 		-> mixedModeCollectionAction(..) 
+	// 		-> .browseCollections(..)
+	// XXX might be a good idea to add a reverse of this, i.e. .sortCollectionAsThis(..)
 	// XXX do we need to have an option/shorthand to .sortAs(..) and .inplaceSortAs(..) ???
 	sortAsCollection: ['Collections/Sort as collection...',
 		{sortMethod: true,
 		mode: function(){
 			return this.collections_length > 0 || 'disabled' }, },
-		mixedModeCollectionAction(function(title){
-			var that = this
-			this.ensureCollection(title)
-				.then(function(collection){
-					that.data.order.inplaceSortAs(collection.data.order)
-					that.sortImages('update') }) })],
+		mixedModeCollectionAction(
+			function(title){
+				var that = this
+				this.ensureCollection(title)
+					.then(function(collection){
+						that.data.order.inplaceSortAs(collection.data.order)
+						that.sortImages('update') }) }, 
+			null,
+			{ show_main: function(){ 
+				return !!this.collection } })],
 })
 
 var UICollection = 
@@ -2888,14 +2910,12 @@ var UICollectionMarksActions = actions.Actions({
 			this.ensureCollection(title)
 				.then(function(collection){
 					var images = collection.data.getImages('all')
-
-					that.toggleMark(images, 'on')
-				})
-		})],
+					that.toggleMark(images, 'on') }) })],
 	addMarkedToCollection: ['Collections|Mark/Add marked to $collection...',
 		{mode: function(){ 
 			return this.marked.length == 0 && 'disabled' }},
-		mixedModeCollectionAction(function(title){ this.collectMarked(title) })],
+		mixedModeCollectionAction(function(title){ 
+			this.collectMarked(title) })],
 })
 
 var UICollectionMarks = 

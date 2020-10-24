@@ -896,6 +896,8 @@ var SortUIActions = actions.Actions({
 							lister.parent.close() }) })	
 				// action sort methods...
 				if(sort_actions.size > 0){
+					// XXX do we need this??
+					//make('---', {style: { opacity: 0.1, }})
 					;[...sort_actions.entries()]
 						.forEach(function([n, a]){
 							make(n, {
