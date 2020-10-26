@@ -3132,6 +3132,9 @@ var FileSystemWriterUIActions = actions.Actions({
 
 	// Export presets...
 	//
+	// XXX would be nice to be able to "export" (copy) single images as well...
+	// 		...and it would be logical to have separate presets for single 
+	// 		images and lists... (???)
 	// XXX UI:
 	// 		- element format:
 	// 			TITLE

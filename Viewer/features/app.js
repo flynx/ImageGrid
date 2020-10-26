@@ -333,6 +333,29 @@ var ElectronHostActions = actions.Actions({
 				splash.destroy()
 			}
 		}],
+
+	// XXX should this support resizing???
+	copy: ['Image|Edit/Copy image',
+		core.doc`Copy image
+
+			Copy current image (original ref)...
+			.copy()
+
+			Copy best matching preview of current image...
+			.copy(size)
+
+		`,
+		function(size){
+			var url = this.images.getBestPreview(this.current, size, true).url
+			electron.clipboard.write({
+				title: this.images.getImageFileName(),
+				text: url,
+				image: electron.nativeImage.createFromPath(url),
+			}) }],
+	paste: ['- Image|Edit/Paste image',
+		function(){
+			// XXX
+		}],
 })
 
 var ElectronHost = 
@@ -400,6 +423,46 @@ var BrowserHostActions = actions.Actions({
 						that.dom[0].style.visibility = '' }, 150)
 				}
 			})],
+
+
+	// XXX these do not work from file://
+	// XXX should this support resizing???
+	copy: ['Image|Edit/Copy image',
+		core.doc`Copy image
+
+			Copy current image (original ref)...
+			.copy()
+
+			Copy best matching preview of current image...
+			.copy(size)
+
+		NOTE: this must be called from within an event handler...
+		NOTE: this will not work with file:// paths...
+		`,
+		function(size){
+			var img = new Image;
+			var c = document.createElement("canvas");
+			var ctx = c.getContext("2d");
+
+			img.onload = function(){
+				c.width = this.naturalWidth
+				c.height = this.naturalHeight
+				ctx.drawImage(this, 0, 0)
+				c.toBlob(function(blob){
+					// copy...
+					// XXX would be nice to add a path/title here...
+					navigator.clipboard.write([
+						new ClipboardItem({
+							[blob.type]: blob,
+						}) ]) }, 
+					"image/png") }
+			img.crossOrigin = ''
+			img.src = this.images.getBestPreview(this.current, size, true).url
+		}],
+	paste: ['- Image|Edit/Paste image',
+		function(){
+			// XXX
+		}],
 })
 
 // NOTE: keep this defined last as a fallback...
@@ -626,8 +689,7 @@ module.WindowedAppControl = core.ImageGridFeatures.Feature({
 					this.size = [w, h]
 
 					cfg.devtools
-						&& this.showDevTools()
-				}
+						&& this.showDevTools() }
 
 				// restore actual window state... 
 				this.restoreWindowGeometry() 

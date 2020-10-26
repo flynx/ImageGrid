@@ -1150,6 +1150,36 @@ module.Cursor = core.ImageGridFeatures.Feature({
 
 
 /*********************************************************************/
+// Copy...
+
+// XXX implement internal copy/paste...
+var CopyImiage =
+module.CopyImiage = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-copy-image',
+	depends: [
+		'ui'
+	],
+
+	actions: actions.Actions({
+		// XXX mark copied image(s)...
+		copy: ['- Image|Edit/Copy image',
+			function(size){
+				// XXX
+			}],
+		// XXX if pasted image(s) is the one(s) marked by copy, do a shift action...
+		paste: ['- Image|Edit/Paste image',
+			function(){
+				// XXX
+			}],
+	}),
+})
+
+
+
+/*********************************************************************/
 // Touch/Control...
 //
 //	.__control_in_progress

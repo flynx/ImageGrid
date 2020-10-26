@@ -554,8 +554,7 @@ module.ImagesPrototype = {
 					: '') 
 				+ url,
 			size: preview_size,
-		}
-	},
+		} },
 
 	// Get image filename...
 	//
@@ -563,14 +562,11 @@ module.ImagesPrototype = {
 	getImageFileName: function(gid, do_unescape){
 		do_unescape = do_unescape == null ? true : do_unescape
 		if(!this[gid] || !this[gid].path){
-			return gid
-		}
+			return gid }
 		if(do_unescape){
 			return unescape(this[gid].path.split('/').pop())
 		} else {
-			return this[gid].path.split('/').pop()
-		}
-	},
+			return this[gid].path.split('/').pop() } },
 	// Get the first sequence of numbers in the file name...
 	//
 	// NOTE: if no filenmae (.path) is set, this will return gid... (???)
