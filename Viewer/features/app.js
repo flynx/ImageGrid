@@ -335,6 +335,7 @@ var ElectronHostActions = actions.Actions({
 		}],
 
 	// XXX should this support resizing???
+	// XXX might be good to rotate the image if needed...
 	copy: ['Image|Edit/Copy image',
 		core.doc`Copy image
 
@@ -426,6 +427,7 @@ var BrowserHostActions = actions.Actions({
 
 
 	// XXX these do not work from file://
+	// XXX would be nice to add a path/title here...
 	// XXX should this support resizing???
 	copy: ['Image|Edit/Copy image',
 		core.doc`Copy image
