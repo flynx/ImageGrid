@@ -43,7 +43,6 @@ core.ImageGridFeatures.Feature('imagegrid-ui-minimal', [
 	'keyboard',
 	'ui-cursor',
 	'ui-control',
-	//'ui-copy-image',
 	'ui-drag-n-drop',
 
 	// XXX use one...

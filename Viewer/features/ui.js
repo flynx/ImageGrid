@@ -1165,12 +1165,21 @@ module.CopyImiage = core.ImageGridFeatures.Feature({
 
 	actions: actions.Actions({
 		// XXX mark copied image(s)...
-		copy: ['- Image|Edit/Copy image',
+		copy: ['- Image|Edit/$Copy image',
+			core.doc`Copy image
+
+				Copy current image...
+				.copy()
+
+				Copy best matching preview of current image...
+				.copy(size)
+
+			`,
 			function(size){
 				// XXX
 			}],
 		// XXX if pasted image(s) is the one(s) marked by copy, do a shift action...
-		paste: ['- Image|Edit/Paste image',
+		paste: ['- Image|Edit/$Paste image',
 			function(){
 				// XXX
 			}],
