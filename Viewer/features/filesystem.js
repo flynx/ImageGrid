@@ -2082,6 +2082,8 @@ var FileSystemWriterActions = actions.Actions({
 	// XXX handle .image.path and other stack files...
 	// XXX local collections???
 	//
+	// XXX BUG: seems to ignore max_size...
+	// 		...might be that the value does not reach here...
 	// XXX BUG: this does not remove previews correctly...
 	// 		to reproduce:
 	// 			open: L:\media\img\my\2019
@@ -2137,16 +2139,14 @@ var FileSystemWriterActions = actions.Actions({
 					// and skip windows drives...
 					&& !/^[a-z]:[\\\/]/i.test(path)){
 				// XXX do we need to normalize???
-				path = this.location.path +'/'+ path
-			}
+				path = this.location.path +'/'+ path }
 
 			var json = this.json()
 
 			// get all loaded gids...
 			var gids = []
 			for(var r in json.data.ribbons){
-				this.data.makeSparseImages(json.data.ribbons[r], gids)
-			}
+				this.data.makeSparseImages(json.data.ribbons[r], gids) }
 			gids = gids.compact()
 
 			// build .images with loaded images...
@@ -2154,9 +2154,7 @@ var FileSystemWriterActions = actions.Actions({
 			gids.forEach(function(gid){
 				var img = json.images[gid]
 				if(img){
-					images[gid] = json.images[gid]
-				}
-			})
+					images[gid] = json.images[gid] } })
 
 			// prepare and save index to target path...
 			json.data.order = gids
@@ -2221,9 +2219,9 @@ var FileSystemWriterActions = actions.Actions({
 					Object.keys(img.preview)
 						.forEach(function(s){ 
 							var p = img.preview[s]
-							img.preview[s] = p == from_path ? to_path : p
-						})
-				}
+							img.preview[s] = p == from_path ? 
+								to_path 
+								: p }) }
 
 				// NOTE: we are copying everything to one place so no 
 				// 		need for a base path...
@@ -2245,13 +2243,11 @@ var FileSystemWriterActions = actions.Actions({
 										|| parseInt(res) > parseInt(max)) ?
 									res
 									: max
-								return true
-							}
+								return true }
 
 							// skip and remove...
 							delete previews[res]
-							replace_orig = true
-						})
+							replace_orig = true })
 						// get paths...
 						.map(function(res){ 
 							return res != max ?
@@ -2275,18 +2271,15 @@ var FileSystemWriterActions = actions.Actions({
 						.forEach(function(preview_path){
 							var to
 							if(preview_path == null){
-								return
-							}
+								return }
 							if(preview_path instanceof Array){
 								to = preview_path[1]
-								preview_path = preview_path[0]
-							}
+								preview_path = preview_path[0] }
 
 							// we got a preview that is the same image as .path
 							if(preview_path == to_path){
 								to = to_path
-								preview_path = from_path	
-							}
+								preview_path = from_path }
 
 							var from = (img_base || base_dir) +'/'+ preview_path
 							to = path +'/'+ (to || preview_path)
@@ -2295,8 +2288,8 @@ var FileSystemWriterActions = actions.Actions({
 							// NOTE: these can occur because the same image can
 							// 		be included as a preview and as .path...
 							if(seen.has(to)){
-								return
-							}
+								return }
+
 							seen.add(to)
 
 							// XXX use queue for progress reporting...
@@ -2315,11 +2308,7 @@ var FileSystemWriterActions = actions.Actions({
 									.then(function(){
 										logger && logger.emit('done', to) })
 									.catch(function(err){
-										logger && logger.emit('error', err) }))
-							}
-						})
-				}
-			})
+										logger && logger.emit('error', err) })) } }) } })
 
 			// prep the index...
 			var index = this.prepareIndexForWrite(json, true)
@@ -2342,8 +2331,7 @@ var FileSystemWriterActions = actions.Actions({
 						&& child_process
 							.spawn('attrib', ['+h', index_path]) }))
 
-			return Promise.all(queue)
-		}],
+			return Promise.all(queue) }],
 
 	// XXX might also be good to save/load the export options to .ImageGrid-export.json
 	// XXX resolve env variables in path... (???)
