@@ -2010,21 +2010,18 @@ var FileSystemWriterActions = actions.Actions({
 			// XXX
 			if(path instanceof Array){
 				console.error('saving to merged indexes not yet supported...')
-				return
-			}
+				return }
 
 			// XXX
 			if(path == null && this.location.load != 'loadIndex'){
-				path = this.location.path
-			}
+				path = this.location.path }
 
 			// resolve relative paths...
 			if(/^(\.\.?[\\\/]|[^\\\/])/.test(path) 
 					// and skip windows drives...
 					&& !/^[a-z]:[\\\/]/i.test(path)){
 				// XXX do we need to normalize???
-				path = this.location.path +'/'+ path
-			}
+				path = this.location.path +'/'+ path }
 
 			// XXX get real base path...
 			//path = path || this.location.path +'/'+ this.config['index-dir']
@@ -2051,16 +2048,13 @@ var FileSystemWriterActions = actions.Actions({
 						&& (process.platform == 'win32' 
 							|| process.platform == 'win64')
 						&& child_process
-							.spawn('attrib', ['+h', full_path])
-				})
+							.spawn('attrib', ['+h', full_path]) })
 				.then(function(){
 					location.load = 'loadIndex'
 					location.from = index.date
 
 					//return location
-					return index
-				})
-		}],
+					return index }) }],
 
 	// XXX add name conflict resolution strategies (pattern)...
 	// 		...use the same strategy as for .exportDirs(..)
