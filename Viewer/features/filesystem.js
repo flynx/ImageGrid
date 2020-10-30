@@ -2131,7 +2131,9 @@ var FileSystemWriterActions = actions.Actions({
 			// XXX make this dependant on max_size....
 			include_orig = include_orig || true
 
-			var resize = max_size && this.makeResizedImage
+			// XXX get value from settings...
+			var resize = max_size 
+				&& this.makeResizedImage
 
 			// clear/backup target...
 			clean_target_dir = clean_target_dir === undefined ? 
@@ -2252,18 +2254,17 @@ var FileSystemWriterActions = actions.Actions({
 									res
 									: max
 								return true }
-
 							// skip and remove...
 							delete previews[res]
 							replace_orig = true })
 						// get paths...
 						.map(function(res){ 
-							return res != max ?
-								decodeURI(previews[res]) 
-								// NOTE: we will skip including the preview 
-								// 		we are using as the primary image to
-								// 		save space...
-								: null })
+							if(res != max){
+								return decodeURI(previews[res]) }
+							// NOTE: we will skip including the preview 
+							// 		we are using as the primary image to
+							// 		save space...
+							delete previews[res] })
 						// add primary image (copy)...
 						// XXX check if any of the previews/main images 
 						// 		matches the size and copy instead of resize...
@@ -2327,7 +2328,12 @@ var FileSystemWriterActions = actions.Actions({
 			resize
 				&& include_orig
 				&& queue
-					.push(this.makeResizedImage(gids, max_size, path, { logger }))
+					.push(this.makeResizedImage(gids, max_size, path, { 
+						// NOTE: we do not transform here so as to keep 
+						// 		the index as-is, minimizing changes...
+						transform: false, 
+						logger, 
+					}))
 
 			// index...
 			var index = this.prepareIndexForWrite(json, true)

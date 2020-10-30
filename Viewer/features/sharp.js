@@ -170,7 +170,8 @@ var SharpActions = actions.Actions({
 				transform: ...,
 				crop: ...,
 
-				logger: ...
+				timestamp: ...,
+				logger: ...,
 ,			}
 
 
@@ -220,26 +221,24 @@ var SharpActions = actions.Actions({
 				overwrite,
 
 				// transformations...
-				// XXX not implemented...
 				transform, 
 				// XXX not implemented...
 				crop, 
 
+				timestamp,
 				logger, 
 			} = options
 			// defaults...
 			pattern = pattern || '%n'
-			/* XXX
 			transform = transform === undefined ? 
 				true 
 				: transform
-			//*/
+			timestamp = timestamp || Date.timeStamp()
 			logger = logger || this.logger
 			logger = logger && logger.push('Resize')
 
 			// backup...
 			// XXX make backup name pattern configurable...
-			var timestamp = Date.timeStamp()
 			var backupName = function(to){
 				var i = 0
 				while(fse.existsSync(`${to}.${timestamp}.bak`+ (i || ''))){
@@ -301,21 +300,17 @@ var SharpActions = actions.Actions({
 											.clone()
 											// handle transform (.orientation / .flip) and .crop...
 											.run(function(){
+												var img_data = that.images[gid]
+												if(transform && (img_data.orientation || img_data.flipped)){
+													img_data.orientation
+														&& this.rotate(img_data.orientation)
+													img_data.flipped
+														&& img_data.flipped.includes('horizontal')
+														&& this.flip() }
+													img_data.flipped
+														&& img_data.flipped.includes('vertical')
+														&& this.flop() 
 												// XXX
-												if(transform || crop){
-													throw new Error('.makeResizedImage(..): '
-														+[
-															transform ? 'transform' : [],
-															crop ? 'crop' : [],
-														].flat().join(' and ')
-														+' not implemented...') } 
-												// XXX need clear spec defining what 
-												// 		order transforms are applied 
-												// 		and in which coordinates we 
-												// 		crop (i.e. pre/post transform)...
-												if(transform){
-													// XXX
-												}
 												if(crop){
 													// XXX
 												}
@@ -444,8 +439,7 @@ var SharpActions = actions.Actions({
 					img.orientation = o.orientation
 					img.flipped = o.flipped
 
-					that.markChanged('images', [data.gid])
-				}	
+					that.markChanged('images', [data.gid]) }	
 
 				// NOTE: this will handle both 'queue' and 'resolved' statuses...
 				logger && 
@@ -482,8 +476,7 @@ var SharpActions = actions.Actions({
 										}
 										data == 'completed' ?
 											resolve()
-											: post_handler(err, data) }
-							}) }))
+											: post_handler(err, data) } }) }))
 
 			// now do the work (sync)...
 			} else {
