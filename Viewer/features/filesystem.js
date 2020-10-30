@@ -2083,8 +2083,7 @@ var FileSystemWriterActions = actions.Actions({
 	// XXX local collections???
 	//
 	// XXX BUG: seems to ignore max_size...
-	// 		...might be that the value does not reach here...
-	// 		are we getting all the sttings out correctly???
+	// 		...'preview-size' does not affect the base image size...
 	// XXX BUG: this does not remove previews correctly...
 	// 		to reproduce:
 	// 			open: L:\media\img\my\2019
@@ -2115,7 +2114,9 @@ var FileSystemWriterActions = actions.Actions({
 			if(path && typeof(path) != typeof('str')){
 				settings = path
 				path = settings.path }
-			settings = this.config['export-settings'] || {}
+			settings = settings 
+				|| this.config['export-settings'] 
+				|| {}
 			// XXX resolve env variables in path...
 			// 		...also add ImageGrid specifics: $IG_INDEX, ...
 			// XXX
@@ -2334,6 +2335,8 @@ var FileSystemWriterActions = actions.Actions({
 
 			return Promise.all(queue) }],
 
+	// XXX BUG: seems to ignore max_size...
+	// 		...'preview-size' does not affect the base image size...
 	// XXX might also be good to save/load the export options to .ImageGrid-export.json
 	// XXX resolve env variables in path... (???)
 	// XXX make custom previews (option)...
@@ -2362,7 +2365,9 @@ var FileSystemWriterActions = actions.Actions({
 			if(path && typeof(path) != typeof('str')){
 				settings = path
 				path = settings.path }
-			settings = this.config['export-settings'] || {}
+			settings = settings 
+				|| this.config['export-settings'] 
+				|| {}
 			// XXX resolve env variables in path...
 			// 		...also add ImageGrid specifics: $IG_INDEX, ...
 			// XXX
@@ -2474,8 +2479,7 @@ var FileSystemWriterActions = actions.Actions({
 									logger && logger.emit('queued', to)
 
 									var res = !fse.existsSync(to)
-										&& copy(from, to)
-								}
+										&& copy(from, to) }
 
 								// destination exists...
 								if(!res){
@@ -2486,18 +2490,13 @@ var FileSystemWriterActions = actions.Actions({
 										.then(function(){
 											logger && logger.emit('done', to) })
 										.catch(function(err){
-											logger && logger.emit('error', err) })
-								}
-							})
-						})
+											logger && logger.emit('error', err) }) } }) })
 
 					to_dir += level_dir != null ? 
 						'/'+level_dir
 						: ''
 
-					return res
-				}))
-		}]
+					return res })) }]
 })
 
 
