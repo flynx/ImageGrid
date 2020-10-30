@@ -2082,29 +2082,24 @@ var FileSystemWriterActions = actions.Actions({
 	// XXX handle .image.path and other stack files...
 	// XXX local collections???
 	//
+	// XXX ASAP test settings['export-mode'] = 'copy best match'
 	// XXX BUG: max_size is measured by preview size and ignores main 
 	// 		image size...
 	// 		...this results in exported images being previews ONLY IF 
 	// 		they have previews larger than max_size...
-	// XXX BUG: this does not remove previews correctly...
-	// 		to reproduce:
-	// 			open: L:\media\img\my\2019
-	// 			exportIndex: with max_size=400
-	// 				-> main preview is not replaced
-	// 				-> preivew size 350px not copied but kept in index...
-	// 		temporary workaround:
-	//			ig.getPreviews('*')
-	//				.then(function(){
-	//					ig.markChanged('images')
-	//					console.log('done.') })
 	// XXX when no previews present this should create at least one file
 	// 		of max_size...
+	// XXX might also be good to save/load the export options to .ImageGrid-export.json
 	// XXX log gid count instead of file count...
 	exportIndex: ['- File/Export/Export index',
 		core.doc`
 
 			.exportIndex(path)
 			.exportIndex(settings)
+
+		settings format:
+			{
+			}
 
 		`,
 		function(path, max_size, include_orig, clean_target_dir, logger){
@@ -2130,10 +2125,9 @@ var FileSystemWriterActions = actions.Actions({
 				|| null
 			// XXX make this dependant on max_size....
 			include_orig = include_orig || true
-
-			// XXX get value from settings...
 			var resize = max_size 
 				&& this.makeResizedImage
+				&& settings['export-mode'] != 'copy best match'
 
 			// clear/backup target...
 			clean_target_dir = clean_target_dir === undefined ? 
@@ -2358,17 +2352,14 @@ var FileSystemWriterActions = actions.Actions({
 
 			return Promise.all(queue) }],
 
-	// XXX ASAP add option to control copy/resize -> .makeResizedImage(..)...
+	// XXX ASAP test settings['export-mode'] = 'copy best match'
 	// XXX might also be good to save/load the export options to .ImageGrid-export.json
 	// XXX resolve env variables in path... (???)
 	// XXX make custom previews (option)...
-	// 		...should this be a function of .images.getBestPreview(..)???
 	// XXX report errors...
 	// XXX stop the process on errors...
 	// XXX use tasks...
 	// XXX check global index ('%I') in crop...
-	// XXX add option to "clean" destination...
-	// 		...i.e. if destination exists then move it to .removed/<date>/
 	// XXX make clean_target more error tolerant...
 	exportDirs: ['- File/Export/Export ribbons as directories',
 		core.doc`Export ribbons as directories
@@ -2418,6 +2409,9 @@ var FileSystemWriterActions = actions.Actions({
 			size = size 
 				|| settings['preview-size'] 
 				|| 1000
+			// XXX needs testing...
+			var resize = this.makeResizedImage
+				&& settings['export-mode'] != 'copy best match'
 			pattern = pattern 
 				|| settings['preview-name-pattern'] 
 				|| EXPORT_PREVIEW_NAME
@@ -2601,6 +2595,7 @@ var FileSystemWriterUIActions = actions.Actions({
 					// 		this is set...
 					// XXX need to add option to save full index...
 					'size_limit',
+					'export_mode',
 					// XXX might be a good idea to include source data links
 					//'include_source_url', // bool
 					'comment',
@@ -2613,12 +2608,11 @@ var FileSystemWriterUIActions = actions.Actions({
 					//'name',
 					'pattern',
 					'size',
+					'export_mode',
 					'include_virtual',
 					'base_path',
 					'target_dir',
 					'clean_target_dir',
-					// XXX add option to disable this...
-					//'level_dir',
 				],
 			},
 		},
@@ -3002,6 +2996,21 @@ var FileSystemWriterUIActions = actions.Actions({
 						!settings['include-virtual'] 
 					elem.find('.text').last()
 						.text(v ? 'yes' : 'no') }, }) },
+		'export_mode': function(actions, make, parent, settings){
+			if(!actions.makeResizedImage){
+				return }
+			settings['export-mode'] = 
+				settings['export-mode'] 
+				|| 'resize'
+			var elem = make(['Export $mode: ', settings['export-mode'] ], 
+				{ open: function(){
+					var v = settings['export-mode'] = 
+						settings['export-mode'] == 'resize' ?
+							'copy best match'
+							: 'resize'
+					elem.find('.text')
+						.last()
+							.text(v) }, }) },
 		'clean_target_dir': function(actions, make, parent, settings){
 			settings['clean-target'] = !!settings['clean-target']
 			var elem = make([
