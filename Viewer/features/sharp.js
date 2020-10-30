@@ -237,7 +237,14 @@ var SharpActions = actions.Actions({
 			logger = logger || this.logger
 			logger = logger && logger.push('Resize')
 
+			// backup...
+			// XXX make backup name pattern configurable...
 			var timestamp = Date.timeStamp()
+			var backupName = function(to){
+				var i = 0
+				while(fse.existsSync(`${to}.${timestamp}.bak`+ (i || ''))){
+					i++ }
+				return `${to}.${timestamp}.bak`+ (i || '') }
 
 			return Promise.all(images
 				.map(function(gid){
@@ -257,7 +264,7 @@ var SharpActions = actions.Actions({
 
 					var img = sharp(source)
 					return (skipSmaller ?
-							// skip source if smaller...
+							// skip if smaller than size...
 							img
 								.metadata()
 								.then(function(m){
@@ -268,9 +275,10 @@ var SharpActions = actions.Actions({
 												&& Math.min(m.width, m.height) < size)){
 										logger && logger.emit('skipping', to)
 										return }
+									// continue...
 									return img })
 							: Promise.resolve(img))
-						// write...
+						// prepare to write...
 						.then(function(img){
 							return img 
 								&& ensureDir(pathlib.dirname(to))
@@ -278,14 +286,8 @@ var SharpActions = actions.Actions({
 										// handle existing image...
 										if(fse.existsSync(to)){
 											// rename...
-											// XXX make backup name pattern configurable...
 											if(overwrite == 'backup'){
-												var i = 0
-												while(fse.existsSync(`${to}.${timestamp}.bak`+ (i || ''))){
-													i++ }
-												fse.renameSync(
-													to,
-													`${to}.${timestamp}.bak`+ (i || ''))
+												fse.renameSync(to, backupName(to))
 											// remove...
 											} else if(overwrite){
 												fse.removeSync(to)
