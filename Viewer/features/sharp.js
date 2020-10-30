@@ -119,7 +119,9 @@ var SharpActions = actions.Actions({
 			this.previewConstructorWorker && this.previewConstructorWorker.kill()
 			delete this.previewConstructorWorker }],
 
-	// XXX should this resize up??? ...option???
+	// XXX Q: if skipSmaller and overwrite: 'backup' and image smaller (skiped) do we backup???
+	// 		...I think no...
+	// XXX make backup name pattern configurable...
 	// XXX add transform/crop support...
 	// XXX revise logging...
 	makeResizedImage: ['- Image/',
@@ -141,18 +143,28 @@ var SharpActions = actions.Actions({
 				// output image name...
 				//
 				// Used if processing a single image, ignored otherwise.
-				name: <str>,
+				name: null | <str>,
 
 				// image name pattern and data...
 				//
 				// NOTE: for more info on pattern see: .formatImageName(..)
-				pattern: <str>,
-				data: { .. },
+				pattern: null | <str>,
+				data: null | { .. },
+
+				// if true and image is smaller than size enlarge it...
+				// 
+				// default: null / false
+				enlarge: null | true,
 
 				// overwrite, backup or skip (default) existing images...
 				//
 				// default: null / false
-				overwrite: true | 'backup' | false,
+				overwrite: null | true | 'backup',
+
+				// if true do not write an image if it's smaller than size...
+				// 
+				// default: null / false
+				skipSmaller: null | true,
 
 				// XXX not implemented...
 				transform: ...,
@@ -162,6 +174,7 @@ var SharpActions = actions.Actions({
 ,			}
 
 
+		NOTE: all options are optional.
 		NOTE: this will not overwrite existing images.
 		`,
 		function(images, size, path, options={}){
@@ -200,8 +213,12 @@ var SharpActions = actions.Actions({
 				name, 
 				pattern, 
 				data, 
+
 				// file handling...
+				enlarge,
+				skipSmaller,
 				overwrite,
+
 				// transformations...
 				// XXX not implemented...
 				transform, 
@@ -238,58 +255,81 @@ var SharpActions = actions.Actions({
 
 					logger && logger.emit('queued', to)
 
-					// existing image...
-					if(fse.existsSync(to)){
-						// rename...
-						if(overwrite == 'backup'){
-							var i = 0
-							while(fse.existsSync(`${to}.${timestamp}'-bak`+ (i || ''))){
-								i++ }
-							fse.renameSync(
-								to,
-								fse.existsSync(`${to}.${timestamp}'-bak`+ (i || '')))
-						// remove...
-						} else if(overwrite){
-							fse.removeSync(to)
-						// skip...
-						} else {
-							logger && logger.emit('skipping', to)
-							return } }
+					var img = sharp(source)
+					return (skipSmaller ?
+							// skip source if smaller...
+							img
+								.metadata()
+								.then(function(m){
+									// skip...
+									if((fit == 'inside'
+												&& Math.max(m.width, m.height) < size)
+											|| (fit == 'outside'
+												&& Math.min(m.width, m.height) < size)){
+										logger && logger.emit('skipping', to)
+										return }
+									return img })
+							: Promise.resolve(img))
+						// write...
+						.then(function(img){
+							return img 
+								&& ensureDir(pathlib.dirname(to))
+									.then(function(){
+										// handle existing image...
+										if(fse.existsSync(to)){
+											// rename...
+											// XXX make backup name pattern configurable...
+											if(overwrite == 'backup'){
+												var i = 0
+												while(fse.existsSync(`${to}.${timestamp}.bak`+ (i || ''))){
+													i++ }
+												fse.renameSync(
+													to,
+													`${to}.${timestamp}.bak`+ (i || ''))
+											// remove...
+											} else if(overwrite){
+												fse.removeSync(to)
+											// skip...
+											} else {
+												logger && logger.emit('skipping', to)
+												return } }
 
-					return ensureDir(pathlib.dirname(to))
-						.then(function(){
-							return sharp(source)
-								.clone()
-								// handle transform (.orientation / .flip) and .crop...
-								.run(function(){
-									// XXX
-									if(transform || crop){
-										throw new Error('.makeResizedImage(..): '
-											+[
-												transform ? 'transform' : [],
-												crop ? 'crop' : [],
-											].flat().join(' and ')
-											+' not implemented...') } 
-									// XXX need clear spec defining what 
-									// 		order transforms are applied 
-									// 		and in which coordinates we 
-									// 		crop (i.e. pre/post transform)...
-									if(transform){
-									}
-									if(crop){
-									}
-								})
-								.resize({
-									width: size,
-									height: size,
-									fit: fit,
-								})
-								.withMetadata()
-								.toFile(to) 
-								.then(function(){
-									logger 
-										&& logger.emit('done', to) })}) })) }],
-
+										// write...
+										return img
+											.clone()
+											// handle transform (.orientation / .flip) and .crop...
+											.run(function(){
+												// XXX
+												if(transform || crop){
+													throw new Error('.makeResizedImage(..): '
+														+[
+															transform ? 'transform' : [],
+															crop ? 'crop' : [],
+														].flat().join(' and ')
+														+' not implemented...') } 
+												// XXX need clear spec defining what 
+												// 		order transforms are applied 
+												// 		and in which coordinates we 
+												// 		crop (i.e. pre/post transform)...
+												if(transform){
+													// XXX
+												}
+												if(crop){
+													// XXX
+												}
+											})
+											.resize({
+												width: size,
+												height: size,
+												fit: fit,
+												withoutEnlargement: !enlarge,
+											})
+											.withMetadata()
+											.toFile(to) 
+											.then(function(){
+												logger 
+													&& logger.emit('done', to) }) }) }) })) }],
+										
 	// XXX use .makeResizedImage(..)
 	// XXX should this account for non-jpeg images???
 	// XXX BUG?: this breaks on PNG images...
