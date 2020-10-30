@@ -2082,8 +2082,10 @@ var FileSystemWriterActions = actions.Actions({
 	// XXX handle .image.path and other stack files...
 	// XXX local collections???
 	//
-	// XXX BUG: seems to ignore max_size...
-	// 		...'preview-size' does not affect the base image size...
+	// XXX BUG: max_size is measured by preview size and ignores main 
+	// 		image size...
+	// 		...this results in exported images being previews ONLY IF 
+	// 		they have previews larger than max_size...
 	// XXX BUG: this does not remove previews correctly...
 	// 		to reproduce:
 	// 			open: L:\media\img\my\2019
@@ -2123,9 +2125,13 @@ var FileSystemWriterActions = actions.Actions({
 			path = path || './exported'
 			path = util.normalizePath(path)
 
-			max_size = parseInt(max_size || settings['preview-size-limit']) || null
+			max_size = parseInt(max_size 
+					|| settings['preview-size-limit']) 
+				|| null
 			// XXX make this dependant on max_size....
 			include_orig = include_orig || true
+
+			var resize = max_size && this.makeResizedImage
 
 			// clear/backup target...
 			clean_target_dir = clean_target_dir === undefined ? 
@@ -2258,8 +2264,12 @@ var FileSystemWriterActions = actions.Actions({
 								// 		we are using as the primary image to
 								// 		save space...
 								: null })
-						// add primary image...
-						.concat(include_orig && img.path ? 
+						// add primary image (copy)...
+						// XXX check if any of the previews/main images 
+						// 		matches the size and copy instead of resize...
+						.concat((!resize
+								&& include_orig 
+								&& img.path) ? 
 							[[
 								(replace_orig && max != null) ? 
 									// replace the base image with the 
@@ -2306,18 +2316,25 @@ var FileSystemWriterActions = actions.Actions({
 								// XXX do we queue these or let the OS handle it???
 								// 		...needs testing, if node's fs queues the io
 								// 		internally then we do not need to bother...
-								queue.push(copy(from, to)
-									.then(function(){
-										logger && logger.emit('done', to) })
-									.catch(function(err){
-										logger && logger.emit('error', err) })) } }) } })
+								queue
+									.push(copy(from, to)
+										.then(function(){
+											logger && logger.emit('done', to) })
+										.catch(function(err){
+											logger && logger.emit('error', err) })) } }) } })
 
-			// prep the index...
+			// primary image (resize)...
+			resize
+				&& include_orig
+				&& queue
+					.push(this.makeResizedImage(gids, max_size, path, { logger }))
+
+			// index...
 			var index = this.prepareIndexForWrite(json, true)
-
 			// NOTE: if we are to use .saveIndex(..) here, do not forget
 			// 		to reset .changes
-			queue.push(
+			queue
+				.push(
 					file.writeIndex(
 						index.index,
 						index_path, 
@@ -2335,8 +2352,7 @@ var FileSystemWriterActions = actions.Actions({
 
 			return Promise.all(queue) }],
 
-	// XXX BUG: seems to ignore max_size...
-	// 		...'preview-size' does not affect the base image size...
+	// XXX ASAP add option to control copy/resize -> .makeResizedImage(..)...
 	// XXX might also be good to save/load the export options to .ImageGrid-export.json
 	// XXX resolve env variables in path... (???)
 	// XXX make custom previews (option)...
@@ -2458,8 +2474,14 @@ var FileSystemWriterActions = actions.Actions({
 										&& !fse.existsSync(to)
 										&& outputFile(to, img.text || '')
 
-								// normal images...
+								// normal images (resize)...
+								} else if(that.makeResizedImage){
+									// XXX can we make this batch...
+									return that.makeResizedImage(gid, size, img_dir, { name, logger })
+
+								// normal images (copy)...
 								} else {
+									//*/
 									// NOTE: we are intentionally losing image dir 
 									// 		name here -- we do not need to preserve 
 									// 		topology when exporting...
@@ -2469,10 +2491,6 @@ var FileSystemWriterActions = actions.Actions({
 									var from = (img.base_path || base_dir) 
 											+'/'
 											+ that.images.getBestPreview(gid, size).url
-
-
-									// XXX see if we need to make a preview (sharp)
-									// XXX
 
 									var to = img_dir +'/'+ name
 

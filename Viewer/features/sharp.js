@@ -34,6 +34,7 @@ if(typeof(process) != 'undefined'){
 /*********************************************************************/
 
 if(typeof(process) != 'undefined'){
+	var copy = file.denodeify(fse.copy)
 	var ensureDir = file.denodeify(fse.ensureDir)
 }
 
@@ -112,15 +113,184 @@ var SharpActions = actions.Actions({
 					}
 				})
 
-			this.previewConstructorWorker.__post_handlers = {}
-		}],
+			this.previewConstructorWorker.__post_handlers = {} }],
 	stopPreviewWorker: ['- Sharp/',
 		function(){
 			this.previewConstructorWorker && this.previewConstructorWorker.kill()
-			delete this.previewConstructorWorker
-		}],
+			delete this.previewConstructorWorker }],
+
+	// XXX should this resize up??? ...option???
+	// XXX add transform/crop support...
+	// XXX revise logging...
+	makeResizedImage: ['- Image/',
+		core.doc`Make resized image(s)...
+
+			.makeResizedImage(gid, size, path[, options])
+			.makeResizedImage(gids, size, path[, options])
+				-> promise
 
 
+		Image size formats:
+			500px		- resize to make image's *largest* dimension 500 pixels (default).
+			500p		- resize to make image's *smallest* dimension 500 pixels.
+			500			- same as 500px
+
+
+		options format:
+			{
+				// output image name...
+				//
+				// Used if processing a single image, ignored otherwise.
+				name: <str>,
+
+				// image name pattern and data...
+				//
+				// NOTE: for more info on pattern see: .formatImageName(..)
+				pattern: <str>,
+				data: { .. },
+
+				// overwrite, backup or skip (default) existing images...
+				//
+				// default: null / false
+				overwrite: true | 'backup' | false,
+
+				// XXX not implemented...
+				transform: ...,
+				crop: ...,
+
+				logger: ...
+,			}
+
+
+		NOTE: this will not overwrite existing images.
+		`,
+		function(images, size, path, options={}){
+			var that = this
+
+			// sanity check...
+			if(arguments.length < 3){
+				throw new Error('.makeResizedImage(..): '
+					+'need at least images, size and path.') }
+			// get/normalize images...
+			//images = images || this.current
+			images = images 
+				|| 'all'
+			// keywords...
+			images = images == 'all' ? 
+					this.data.getImages('all')
+				: images == 'current' ? 
+					this.current
+				: images
+			images = images instanceof Array ? 
+				images 
+				: [images]
+			// sizing...
+			var fit = 
+				typeof(size) == typeof('str') ?
+					(size.endsWith('px') ?
+						'inside'
+					: size.endsWith('p') ?
+						'outside'
+					: 'inside')
+				: 'inside'
+			size = parseInt(size)
+			// options...
+			var {
+				// naming...
+				name, 
+				pattern, 
+				data, 
+				// file handling...
+				overwrite,
+				// transformations...
+				// XXX not implemented...
+				transform, 
+				// XXX not implemented...
+				crop, 
+
+				logger, 
+			} = options
+			// defaults...
+			pattern = pattern || '%n'
+			/* XXX
+			transform = transform === undefined ? 
+				true 
+				: transform
+			//*/
+			logger = logger || this.logger
+			logger = logger && logger.push('Resize')
+
+			var timestamp = Date.timeStamp()
+
+			return Promise.all(images
+				.map(function(gid){
+					// skip non-images...
+					if(that.images[gid].type != undefined){
+						return }
+
+					// paths...
+					var source = that.getImagePath(gid)
+					var to = pathlib.join(
+						path, 
+						(images.length == 1 && name) ?
+							name
+							: that.formatImageName(pattern, gid, data || {}))
+
+					logger && logger.emit('queued', to)
+
+					// existing image...
+					if(fse.existsSync(to)){
+						// rename...
+						if(overwrite == 'backup'){
+							var i = 0
+							while(fse.existsSync(`${to}.${timestamp}'-bak`+ (i || ''))){
+								i++ }
+							fse.renameSync(
+								to,
+								fse.existsSync(`${to}.${timestamp}'-bak`+ (i || '')))
+						// remove...
+						} else if(overwrite){
+							fse.removeSync(to)
+						// skip...
+						} else {
+							logger && logger.emit('skipping', to)
+							return } }
+
+					return ensureDir(pathlib.dirname(to))
+						.then(function(){
+							return sharp(source)
+								.clone()
+								// handle transform (.orientation / .flip) and .crop...
+								.run(function(){
+									// XXX
+									if(transform || crop){
+										throw new Error('.makeResizedImage(..): '
+											+[
+												transform ? 'transform' : [],
+												crop ? 'crop' : [],
+											].flat().join(' and ')
+											+' not implemented...') } 
+									// XXX need clear spec defining what 
+									// 		order transforms are applied 
+									// 		and in which coordinates we 
+									// 		crop (i.e. pre/post transform)...
+									if(transform){
+									}
+									if(crop){
+									}
+								})
+								.resize({
+									width: size,
+									height: size,
+									fit: fit,
+								})
+								.withMetadata()
+								.toFile(to) 
+								.then(function(){
+									logger 
+										&& logger.emit('done', to) })}) })) }],
+
+	// XXX use .makeResizedImage(..)
 	// XXX should this account for non-jpeg images???
 	// XXX BUG?: this breaks on PNG images...
 	// XXX log: count gids and not specific images...
@@ -150,12 +320,17 @@ var SharpActions = actions.Actions({
 
 			// get/normalize images...
 			//images = images || this.current
-			images = images || 'all'
+			images = images 
+				|| 'all'
 			// keywords...
-			images = images == 'all' ? this.data.getImages('all')
-				: images == 'current' ? this.current
+			images = images == 'all' ? 
+					this.data.getImages('all')
+				: images == 'current' ? 
+					this.current
 				: images
-			images = images instanceof Array ? images : [images]
+			images = images instanceof Array ? 
+				images 
+				: [images]
 
 			//
 			// Format:
@@ -203,8 +378,7 @@ var SharpActions = actions.Actions({
 						.unique()
 
 			} else {
-				sizes = cfg_sizes
-			}
+				sizes = cfg_sizes }
 
 			var path_tpl = that.config['preview-path-template']
 				.replace(/\$INDEX|\$\{INDEX\}/g, that.config['index-dir'] || '.ImageGrid')
@@ -280,8 +454,7 @@ var SharpActions = actions.Actions({
 								sizes, 
 								base_path, 
 								path_tpl, 
-								post_handler) }))}
-		}],
+								post_handler) }))} }],
 })
 
 

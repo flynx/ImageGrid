@@ -80,8 +80,7 @@ function(images, sizes, base_path, target_tpl, callback){
 					.map(function(res){
 						// skip if image is smaller than res...
 						if(res >= orig_res){
-							return 
-						}
+							return }
 
 						var rel = target 
 							.replace(/\$RESOLUTION|\$\{RESOLUTION\}/g, res)
