@@ -62,8 +62,7 @@ function normalizeOrientation(orientation){
 				7: ['horizontal'],
 				8: null,
 			})[orientation],
-	}
-}
+	} }
 
 
 
@@ -119,6 +118,16 @@ var SharpActions = actions.Actions({
 			this.previewConstructorWorker && this.previewConstructorWorker.kill()
 			delete this.previewConstructorWorker }],
 
+	// XXX need to destinguish if something was written in the promise chain...
+	// 		...return false???
+	// 		......should the return value be a bit more informative???
+	// 		something like:
+	// 			{
+	// 				gid: ..
+	// 				path: ..
+	// 				status: ..
+	// 				...
+	// 			}
 	// XXX make backup name pattern configurable...
 	// XXX add crop support...
 	// XXX revise logging...
@@ -247,7 +256,7 @@ var SharpActions = actions.Actions({
 				.map(function(gid){
 					// skip non-images...
 					if(that.images[gid].type != undefined){
-						return }
+						return false }
 
 					// paths...
 					var source = that.getImagePath(gid)
@@ -271,7 +280,7 @@ var SharpActions = actions.Actions({
 											|| (fit == 'outside'
 												&& Math.min(m.width, m.height) < size)){
 										logger && logger.emit('skipping', to)
-										return }
+										return false }
 									// continue...
 									return img })
 							: Promise.resolve(img))
@@ -291,7 +300,7 @@ var SharpActions = actions.Actions({
 											// skip...
 											} else {
 												logger && logger.emit('skipping', to)
-												return } }
+												return false } }
 
 										// write...
 										return img
@@ -323,9 +332,87 @@ var SharpActions = actions.Actions({
 											.toFile(to) 
 											.then(function(){
 												logger 
-													&& logger.emit('done', to) }) }) }) })) }],
+													&& logger.emit('done', to) 
+												return img }) }) }) })) }],
+
+	// XXX do better logging... 
+	// XXX test against .makePreviews(..) for speed...
+	// XXX EXPERIMENTAL
+	makePreviews2: ['- Image/',
+		function(images, sizes, base_path, logger){
+			var that = this
+			logger = logger || this.logger
+			logger = logger && logger.push('Previews')
+
+			// get/normalize images...
+			//images = images || this.current
+			images = images 
+				|| 'all'
+			// keywords...
+			images = images == 'all' ? 
+					this.data.getImages('all')
+				: images == 'current' ? 
+					this.current
+				: images
+			images = images instanceof Array ? 
+				images 
+				: [images]
+			// get/normalize sizes....
+			var cfg_sizes = this.config['preview-sizes'].slice() || []
+			cfg_sizes
+				.sort()
+				.reverse()
+			// XXX revise...
+			if(sizes){
+				sizes = sizes instanceof Array ? sizes : [sizes]
+				// normalize to preview size...
+				sizes = (this.config['preview-normalized'] ? 
+					sizes
+						.map(function(s){ 
+							return cfg_sizes.filter(function(c){ return c >= s }).pop() || s })
+					: sizes)
+						.unique()
+			} else {
+				sizes = cfg_sizes }
+
+			var path_tpl = that.config['preview-path-template']
+				.replace(/\$INDEX|\$\{INDEX\}/g, that.config['index-dir'] || '.ImageGrid')
+
+			return Promise.all(images
+				.map(function(gid){
+					var img = that.images[gid]
+					var base = base_path 
+						|| img.base_path 
+						|| that.location.path
+					return sizes
+						.map(function(size){
+							var name = path = path_tpl
+								.replace(/\$RESOLUTION|\$\{RESOLUTION\}/g, parseInt(size))
+								.replace(/\$GID|\$\{GID\}/g, gid) 
+								.replace(/\$NAME|\$\{NAME\}/g, img.name)
+
+							return that.makeResizedImage(gid, size, base, { 
+									name, 
+									skipSmaller: true,
+									transform: false,
+									logger,
+								})
+								.then(function([res]){
+									// XXX this does not appears to work...
+									if(!res){
+										return false }
+
+									// update metadata...
+									// XXX make this optional (for testing)...
+									var preview = img.preview = img.preview || {} 
+									preview[parseInt(size) + 'px'] = name
+									that.markChanged('images', [gid])
+
+									return [gid, size, name] }) }) })
+				.flat()) }],
 										
 	// XXX use .makeResizedImage(..)
+	// XXX not sure why are we messing with orientation here...
 	// XXX should this account for non-jpeg images???
 	// XXX log: count gids and not specific images...
 	makePreviews: ['Sharp|File/Make image $previews',
