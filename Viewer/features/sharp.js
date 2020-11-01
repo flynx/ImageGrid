@@ -9,7 +9,8 @@
 
 var actions = require('lib/actions')
 var features = require('lib/features')
-var preview = require('lib/preview')
+// XXX REMOVE...
+//var preview = require('lib/preview')
 
 var core = require('features/core')
 
@@ -81,6 +82,7 @@ var SharpActions = actions.Actions({
 		// 		from filesystem.IndexFormat...
 	},
 
+	/* XXX REMOVE ???
 	// NOTE: post handlers are pushed in .makePreviews(..)
 	// XXX might be a good idea to make this a bit more generic...
 	// XXX might be a good idea to use tasks to throttle....
@@ -117,6 +119,7 @@ var SharpActions = actions.Actions({
 		function(){
 			this.previewConstructorWorker && this.previewConstructorWorker.kill()
 			delete this.previewConstructorWorker }],
+	//*/
 
 	// XXX need to destinguish if something was written in the promise chain...
 	// 		...return false???
@@ -241,7 +244,9 @@ var SharpActions = actions.Actions({
 				true 
 				: transform
 			timestamp = timestamp || Date.timeStamp()
-			logger = logger || this.logger
+			logger = logger !== false ?
+				(logger || this.logger)
+				: false
 			logger = logger && logger.push('Resize')
 
 			// backup...
@@ -255,7 +260,8 @@ var SharpActions = actions.Actions({
 			return Promise.all(images
 				.map(function(gid){
 					// skip non-images...
-					if(that.images[gid].type != undefined){
+					if(!['image', null, undefined]
+							.includes(that.images[gid].type)){
 						return false }
 
 					// paths...
@@ -335,14 +341,38 @@ var SharpActions = actions.Actions({
 													&& logger.emit('done', to) 
 												return img }) }) }) })) }],
 
-	// XXX do better logging... 
 	// XXX test against .makePreviews(..) for speed...
+	// XXX this does not update image.base_path -- is this correct???
+	// XXX do we need to be able to run this in a worker???
 	// XXX EXPERIMENTAL
-	makePreviews2: ['- Image/',
+	makePreviews: ['Sharp|File/Make image $previews',
+		core.doc`Make image previews
+
+			Make previews for all images...
+			.makePreviews()
+			.makePreviews('all')
+				-> actions
+
+			Make previews for current image...
+			.makePreviews('current')
+				-> actions
+
+			Make previews for specific image(s)...
+			.makePreviews(gid)
+			.makePreviews([gid, gid, ..])
+				-> actions
+	
+		`,
 		function(images, sizes, base_path, logger){
 			var that = this
-			logger = logger || this.logger
+
+			var logger_mode = this.config['preview-progress-mode'] || 'gids'
+			logger = logger !== false ?
+				(logger || this.logger)
+				: false
+			var gid_logger = logger && logger.push('Images')
 			logger = logger && logger.push('Previews')
+
 
 			// get/normalize images...
 			//images = images || this.current
@@ -384,26 +414,32 @@ var SharpActions = actions.Actions({
 					var base = base_path 
 						|| img.base_path 
 						|| that.location.path
+
+					gid_logger && gid_logger.emit('queued', gid)
+
 					return sizes
-						.map(function(size){
+						.map(function(size, i){
 							var name = path = path_tpl
 								.replace(/\$RESOLUTION|\$\{RESOLUTION\}/g, parseInt(size))
 								.replace(/\$GID|\$\{GID\}/g, gid) 
 								.replace(/\$NAME|\$\{NAME\}/g, img.name)
-
 							return that.makeResizedImage(gid, size, base, { 
 									name, 
 									skipSmaller: true,
 									transform: false,
-									logger,
+									logger: logger_mode == 'gids' ? 
+										false 
+										: logger,
 								})
 								.then(function([res]){
-									// XXX this does not appears to work...
+									i == sizes.length-1
+										&& gid_logger && gid_logger.emit('done', gid)
+
+									// did not create a preview...
 									if(!res){
 										return false }
 
 									// update metadata...
-									// XXX make this optional (for testing)...
 									var preview = img.preview = img.preview || {} 
 									preview[parseInt(size) + 'px'] = name
 									that.markChanged('images', [gid])
@@ -411,11 +447,11 @@ var SharpActions = actions.Actions({
 									return [gid, size, name] }) }) })
 				.flat()) }],
 										
-	// XXX use .makeResizedImage(..)
+	/* XXX REMOVE...
 	// XXX not sure why are we messing with orientation here...
 	// XXX should this account for non-jpeg images???
 	// XXX log: count gids and not specific images...
-	makePreviews: ['Sharp|File/Make image $previews',
+	_makePreviews: ['Sharp|File/Make image $previews',
 		core.doc`Make image previews
 
 			Make previews for all images...
@@ -574,6 +610,7 @@ var SharpActions = actions.Actions({
 								base_path, 
 								path_tpl, 
 								post_handler) }))} }],
+	//*/
 })
 
 

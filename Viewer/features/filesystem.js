@@ -57,12 +57,12 @@ var IndexFormatActions = actions.Actions({
 
 		'preview-sizes': [
 			75,
-			150,
-			350,
+			200,
+			480,
 			900,
-			1000,
-			1280,
-			1920,
+			1080,
+			1440,
+			2160,
 		],
 
 		// Supported fields:
