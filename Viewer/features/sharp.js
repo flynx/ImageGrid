@@ -467,6 +467,11 @@ var SharpActions = actions.Actions({
 				&& new Set(this.ribbons.getImageGIDs())
 
 			/*/ XXX set this to tmp for .location.load =='loadImages'
+			// XXX add preview cache directory...
+			// 		- user defined path
+			// 		- cleanable 
+			// 			partially (remove orphans) / full...
+			// 		- not sure how to index...
 			var base_path = that.location.load == 'loadIndex' ?
 				null
 				: tmp
@@ -494,6 +499,7 @@ var SharpActions = actions.Actions({
 							img.flipped = o.flipped
 
 							// if image too large, generate preview(s)...
+							// XXX EXPERIMENTAL...
 							var size_threshold = that.config['preview-generate-threshold']
 							if(size_threshold
 									&& img.preview == null
