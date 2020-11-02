@@ -466,6 +466,14 @@ var SharpActions = actions.Actions({
 			var loaded = this.ribbons
 				&& new Set(this.ribbons.getImageGIDs())
 
+			/*/ XXX set this to tmp for .location.load =='loadImages'
+			var base_path = that.location.load == 'loadIndex' ?
+				null
+				: tmp
+			/*/
+			var base_path
+			//*/
+
 			return images
 				.mapChunks(function(gid){
 					return sharp(that.getImagePath(gid))
@@ -485,17 +493,19 @@ var SharpActions = actions.Actions({
 							img.orientation = o.orientation || 0
 							img.flipped = o.flipped
 
-							/* XXX should generate previews in a temp dir or as data-urls...
 							// if image too large, generate preview(s)...
 							var size_threshold = that.config['preview-generate-threshold']
 							if(size_threshold
+									&& img.preview == null
 									&& Math.max(metadata.width, metadata.height) > size_threshold){
 								logger && logger.emit('Image too large', gid)
-								// XXX might be a good idea to only generate 
-								// 		a single preview...
-								// XXX 
-								this.makePreviews(gid) }
-							//*/
+								// XXX make this more generic...
+								// 		...if 'loadImages' should create previews in tmp...
+								that.location.load == 'loadIndex'
+									&& that.makePreviews(gid, 
+										that.config['preview-sizes-priority'] || 1080,
+										base_path,
+										logger) }
 
 							// XXX EXIF -- keep compatible with exiftool...
 							// 		- dates
