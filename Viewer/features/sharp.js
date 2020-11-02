@@ -82,6 +82,8 @@ var SharpActions = actions.Actions({
 		// 	'files'
 		'preview-progress-mode': 'gids',
 
+		'preview-generate-threshold': 2000,
+
 		// NOTE: this uses 'preview-sizes' and 'preview-path-template' 
 		// 		from filesystem.IndexFormat...
 	},
@@ -422,8 +424,13 @@ var SharpActions = actions.Actions({
 
 
 	// XXX should this update all images or just the ones that have no metadata???
+	// XXX would be nice to be able to abort this...
+	// 		...and/or have a generic abort protocol triggered when loading...
+	// XXX make each section optional...
 	// XXX revise name...
 	cacheImageMetadata: ['- Sharp|Image/',
+		core.doc`
+		`,
 		function(images, logger){
 			var that = this
 
@@ -452,34 +459,57 @@ var SharpActions = actions.Actions({
 			logger = logger && logger.push('Caching image metadata')
 			logger && logger.emit('queued', images)
 
+			// NOTE: we are caching this to avoid messing things up when 
+			// 		loading before this was finished...
+			var cached_images = this.images
+
 			var loaded = this.ribbons
-				&& this.ribbons.getImageGIDs()
+				&& new Set(this.ribbons.getImageGIDs())
 
 			return images
 				.mapChunks(function(gid){
-					var img = that.images[gid]
 					return sharp(that.getImagePath(gid))
 						.metadata()
-						.then(function(data){
-							var o = normalizeOrientation(data.orientation)
+						.catch(function(){
+							logger && logger.emit('skipping', gid) })
+						.then(function(metadata){
+							// XXX what should we return in case of an error???
+							if(metadata == null){
+								return }
+
+							var img = cached_images[gid]
+
+							var o = normalizeOrientation(metadata.orientation)
 							// NOTE: we need to set orientation to something
 							// 		or we'll check it again and again...
 							img.orientation = o.orientation || 0
 							img.flipped = o.flipped
 
+							/* XXX should generate previews in a temp dir or as data-urls...
+							// if image too large, generate preview(s)...
+							var size_threshold = that.config['preview-generate-threshold']
+							if(size_threshold
+									&& Math.max(metadata.width, metadata.height) > size_threshold){
+								logger && logger.emit('Image too large', gid)
+								// XXX might be a good idea to only generate 
+								// 		a single preview...
+								// XXX 
+								this.makePreviews(gid) }
+							//*/
+
 							// XXX EXIF -- keep compatible with exiftool...
 							// 		- dates
 							// 		- camera / lens / ...
-							var exif = data.exif 
-								&& exifReader(data.exif) 
+							var exif = metadata.exif 
+								&& exifReader(metadata.exif) 
 							// XXX
 
 							// xmp:Rating...
-							var rating = data.xmp 
+							var rating = metadata.xmp 
 								// NOTE: we do not need the full XML 
 								// 		fluff here, just get some values...
 								&& parseInt(
-									(data.xmp.toString()
+									(metadata.xmp.toString()
 											.match(/(?<match><(xmp:Rating)[^>]*>(?<value>.*)<\/\2>)/i) 
 										|| {groups: {}})
 									.groups.value)
@@ -487,24 +517,20 @@ var SharpActions = actions.Actions({
 								&& (img.metadata = img.metadata || {})
 								&& (img.metadata.rating = rating || 0)
 
-							// XXX check size and create preview if needed...
-							// 		...might be a good idea to keep previews 
-							// 		as data urls (or tmp-dir) if no index exists and 
-							// 		queue their creation on save...
-
 							that.markChanged('images', [gid])
 
 							logger && logger.emit('done', gid)
 
 							// update image to use the orientation...
 							loaded
-								&& loaded.includes(gid)
-								&& that.ribbons.updateImage(gid) }) }) }],
+								&& loaded.has(gid)
+								&& that.ribbons.updateImage(gid) 
+
+							return gid }) }) }],
 })
 
 
 // XXX need to auto-generate previews for very large images...
-// XXX read exif/xmp/...
 var Sharp = 
 module.Sharp = core.ImageGridFeatures.Feature({
 	title: '',
@@ -528,13 +554,22 @@ module.Sharp = core.ImageGridFeatures.Feature({
 		//*/
 
 		// set orientation if not defined...
-		// XXX this would be a great place to parse EXIF metadata...
-		// XXX check size and create preview if needed...
+		// NOTE: progress on this is not shown so as to avoid spamming 
+		// 		the UI...
+		// XXX should this be pre or post???
+		// 		...creating a preview would be more logical than trying 
+		// 		to load a gigantic image, maybe even loading a placeholder
+		// 		while doing so...
+		//['updateImage.pre',
+		//	function(gid){
 		['updateImage',
 			function(_, gid){
-				this.images[gid]
-					&& this.images[gid].orientation == null
-					&& this.cacheImageMetadata(gid, false) }],
+				var img = this.images[gid]
+				img
+					&& img.orientation == null
+					&& this.cacheImageMetadata(gid, false) 
+					&& this.logger 
+						&& this.logger.emit('Caching metadata for', gid) }],
 
 		// XXX need to:
 		// 		- if image too large to set the preview to "loading..."
