@@ -24,6 +24,7 @@ if(typeof(process) != 'undefined'){
 	var fse = requirejs('fs-extra')
 	var pathlib = requirejs('path')
 	var glob = requirejs('glob')
+	var exifReader = requirejs('exif-reader')
 
 	var file = require('imagegrid/file')
 }
@@ -62,6 +63,11 @@ function normalizeOrientation(orientation){
 				8: null,
 			})[orientation],
 	} }
+
+
+var exifReader2exiftool = {
+}
+
 
 
 
@@ -308,17 +314,26 @@ var SharpActions = actions.Actions({
 			Make previews for all images...
 			.makePreviews()
 			.makePreviews('all')
-				-> actions
+				-> promise
 
 			Make previews for current image...
 			.makePreviews('current')
-				-> actions
+				-> promise
 
 			Make previews for specific image(s)...
 			.makePreviews(gid)
 			.makePreviews([gid, gid, ..])
-				-> actions
+				-> promise
+
+
+			Make previews of images, size and at base_path...
+			.makePreviews(images, sizes)
+			.makePreviews(images, sizes, base_path)
+				-> promise
+
 	
+		NOTE: if base_path is given .images will not be updated with new 
+			preview paths...
 		`,
 		function(images, sizes, base_path, logger){
 			var that = this
@@ -397,16 +412,99 @@ var SharpActions = actions.Actions({
 										return false }
 
 									// update metadata...
-									var preview = img.preview = img.preview || {} 
-									preview[parseInt(size) + 'px'] = name
-									that.markChanged('images', [gid])
+									if(!base_path){
+										var preview = img.preview = img.preview || {} 
+										preview[parseInt(size) + 'px'] = name
+										that.markChanged('images', [gid]) }
 
 									return [gid, size, name] }) }) })
 				.flat()) }],
+
+
+	// XXX should this update all images or just the ones that have no metadata???
+	// XXX revise name...
+	cacheImageMetadata: ['- Sharp|Image/',
+		function(images, logger){
+			var that = this
+
+			// get/normalize images...
+			//images = images || this.current
+			images = images 
+				|| 'current'
+			// keywords...
+			images = 
+				images == 'all' ? 
+					this.data.getImages('all')
+				: images == 'loaded' ?
+					(this.ribbons ?
+						this.ribbons.getImageGIDs()
+						: this.data.getImages('all'))
+				: images == 'current' ? 
+					this.current
+				: images
+			images = images instanceof Array ? 
+				images 
+				: [images]
+
+			logger = logger !== false ?
+				(logger || this.logger)
+				: false
+			logger = logger && logger.push('Caching image metadata')
+			logger && logger.emit('queued', images)
+
+			var loaded = this.ribbons
+				&& this.ribbons.getImageGIDs()
+
+			return images
+				.mapChunks(function(gid){
+					var img = that.images[gid]
+					return sharp(that.getImagePath(gid))
+						.metadata()
+						.then(function(data){
+							var o = normalizeOrientation(data.orientation)
+							// NOTE: we need to set orientation to something
+							// 		or we'll check it again and again...
+							img.orientation = o.orientation || 0
+							img.flipped = o.flipped
+
+							// XXX EXIF -- keep compatible with exiftool...
+							// 		- dates
+							// 		- camera / lens / ...
+							var exif = data.exif 
+								&& exifReader(data.exif) 
+							// XXX
+
+							// xmp:Rating...
+							var rating = data.xmp 
+								// NOTE: we do not need the full XML 
+								// 		fluff here, just get some values...
+								&& parseInt(
+									(data.xmp.toString()
+											.match(/(?<match><(xmp:Rating)[^>]*>(?<value>.*)<\/\2>)/i) 
+										|| {groups: {}})
+									.groups.value)
+							rating
+								&& (img.metadata = img.metadata || {})
+								&& (img.metadata.rating = rating || 0)
+
+							// XXX check size and create preview if needed...
+							// 		...might be a good idea to keep previews 
+							// 		as data urls (or tmp-dir) if no index exists and 
+							// 		queue their creation on save...
+
+							that.markChanged('images', [gid])
+
+							logger && logger.emit('done', gid)
+
+							// update image to use the orientation...
+							loaded
+								&& loaded.includes(gid)
+								&& that.ribbons.updateImage(gid) }) }) }],
 })
 
 
 // XXX need to auto-generate previews for very large images...
+// XXX read exif/xmp/...
 var Sharp = 
 module.Sharp = core.ImageGridFeatures.Feature({
 	title: '',
@@ -423,34 +521,20 @@ module.Sharp = core.ImageGridFeatures.Feature({
 	isApplicable: function(){ return !!sharp },
 
 	handlers: [
+		/* XXX not sure if we need this...
+		['loadImages',
+			function(){
+				this.cacheImageMetadata('all', false) }],
+		//*/
+
 		// set orientation if not defined...
+		// XXX this would be a great place to parse EXIF metadata...
+		// XXX check size and create preview if needed...
 		['updateImage',
 			function(_, gid){
-				var that = this
-				var img = this.images[gid]
-
-				if(img && img.orientation == null){
-					img.orientation = 0
-
-					sharp(this.getImagePath(gid))
-						.metadata()
-						.then(function(data){
-							var o = normalizeOrientation(data.orientation)
-
-							// NOTE: we need to set orientation to something
-							// 		or we'll check it again and again...
-							img.orientation = o.orientation || 0
-							img.flipped = o.flipped
-
-							that.markChanged('images', [gid])
-
-							// update image to use the orientation...
-							// XXX this might be a source for recursion 
-							// 		as it triggers .updateImage(..) again...
-							that.ribbons && that.ribbons.updateImage(gid)
-						})
-				}
-			}],
+				this.images[gid]
+					&& this.images[gid].orientation == null
+					&& this.cacheImageMetadata(gid, false) }],
 
 		// XXX need to:
 		// 		- if image too large to set the preview to "loading..."

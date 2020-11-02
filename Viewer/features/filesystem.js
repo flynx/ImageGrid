@@ -55,6 +55,7 @@ var IndexFormatActions = actions.Actions({
 	config: {
 		'index-dir': '.ImageGrid',
 
+		// XXX should these be 'p' or 'px' (current)...
 		'preview-sizes': [
 			75,
 			200,

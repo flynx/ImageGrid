@@ -621,6 +621,34 @@ var BaseRibbonsPrototype = {
 		return img
 	},
 
+	// Get images...
+	//
+	// 	.getImages()
+	// 		-> images
+	//
+	// 	.getImages(jquery)
+	// 	.getImages(ribbon)
+	// 		-> images
+	//
+	// 	.getImages(ribbon-gid)
+	// 		-> images
+	//
+	getImages: function(target){
+		return (target instanceof jQuery ?
+					target
+				// gid...
+				: target ?
+					this.viewer.find(RIBBON + '[gid='+ target +']')
+				// viewer...
+				: this.viewer)
+			.find(IMAGE) },
+	// same as .getImages(..) but returns a list of gids...
+	getImageGIDs: function(target){
+		return this.getImages(...arguments)
+			.map(function(_, e){
+				return e.getAttribute('gid') })
+   			.toArray() },
+
 	// Get image marks...
 	//
 	//	.getImageMarks(gid)
