@@ -19,114 +19,13 @@ var features = require('lib/features')
 var core = require('features/core')
 
 var object = require('lib/object')
+var types = require('lib/types')
 
 
 
 /*********************************************************************/
 // helpers...
 
-// Cooperative promise object...
-// 
-// This is like a promise but is not resolved internally, rather this 
-// resolves (is set) via a different promise of value passed to it via 
-// the .set(..) method...
-// 
-// Example:
-// 	// create a promise...
-// 	var p = (new CooperativePromise())
-// 		// bind normally...
-// 		.then(function(){ .. })
-// 		
-// 	// this will resolve p and trigger all the .then(..) callbacks...
-// 	p.set(new Promise(function(resolve, reject){ resolve() }))
-// 	
-// Note that .set(..) can be passed any value, passing a non-promise has
-// the same effect as passing the same value to resolve(..) of a Promise
-// object...
-// 
-// XXX should this be a separate package???
-// XXX can we make this an instance of Promise for passing the
-// 		x instanceof Promise test???
-var CooperativePromisePrototype = {
-	__base: null,
-	__promise: null,
-
-	// XXX error if already set...
-	set: function(promise){
-		if(this.__promise == null){
-			// setting a non-promise...
-			if(promise.catch == null && promise.then == null){
-				Object.defineProperty(this, '__promise', {
-					value: false,
-					enumerable: false,
-				})
-				this.__resolve(promise)
-				
-			// setting a promise...
-			} else {
-				Object.defineProperty(this, '__promise', {
-					value: promise,
-					enumerable: false,
-				})
-
-				// connect the base and the set promises...
-				promise.catch(this.__reject.bind(this))
-				promise.then(this.__resolve.bind(this))
-
-				// cleanup...
-				delete this.__base
-			}
-
-			// cleanup...
-			delete this.__resolve
-			delete this.__reject
-
-		} else {
-			// XXX throw err???
-			console.error('Setting a cooperative promise twice', this)
-		}
-	},
-
-	// Promise API...
-	catch: function(func){
-		return (this.__promise || this.__base).catch(func) },
-	then: function(func){
-		return (this.__promise || this.__base).then(func) },
-
-	__init__: function(){
-		var that = this
-		var base = new Promise(function(resolve, reject){
-			Object.defineProperties(that, {
-				__resolve: {
-					value: resolve,
-					enumerable: false,
-					configurable: true,
-				},
-				__reject: {
-					value: reject,
-					enumerable: false,
-					configurable: true,
-				},
-			})
-		})
-
-		Object.defineProperty(this, '__base', {
-			value: base,
-			enumerable: false,
-			configurable: true,
-		})
-	},
-}
-
-var CooperativePromise =
-module.CooperativePromise =
-object.Constructor('CooperativePromise', 
-	Promise,
-	CooperativePromisePrototype)
-
-
-//---------------------------------------------------------------------
-	
 // XXX would be nice to list the protocols supported by the action in 
 // 		an action attr...
 var makeProtocolHandler =
@@ -192,8 +91,7 @@ var PeerActions = actions.Actions({
 					return that.getActionAttr(action, '__peer__') == id }
 				// get all peer actions...
 				: function(action){
-					return that.getActionAttr(action, '__peer__') })
-		}],
+					return that.getActionAttr(action, '__peer__') }) }],
 	// XXX should this also check props???
 	isPeerAction: ['- System/Peer/',
 		function(name){
@@ -208,9 +106,11 @@ var PeerActions = actions.Actions({
 	// XXX the events should get called on the peer too -- who is 
 	// 		responsible for this???
 	peerConnect: ['- System/Peer/',
-		function(id, options){ return new CooperativePromise() }],
+		function(id, options){ 
+			return new Promise.cooperative() }],
 	peerDisconnect: ['- System/Peer/',
-		function(id){ return new CooperativePromise() }],
+		function(id){ 
+			return new Promise.cooperative() }],
 
 	// events...
 	// XXX do proper docs...
@@ -229,13 +129,14 @@ var PeerActions = actions.Actions({
 	peerCall: ['- System/Peer/',
 		function(id, action){
 			var args = [...arguments].slice(2)
-			return this.peerApply(id, action, args)
-		}],
+			return this.peerApply(id, action, args) }],
 	peerApply: ['- System/Peer/',
-		function(id, action, args){ return new CooperativePromise() }],
+		function(id, action, args){ 
+			return new Promise.cooperative() }],
 
 	peerList: ['- System/Peer/',
-		function(){ return Object.keys(this.__peers || {}) }],
+		function(){ 
+			return Object.keys(this.__peers || {}) }],
 
 	// XXX do we need these???
 	// XXX format spec!!!
@@ -287,8 +188,7 @@ var ChildProcessPeerActions = actions.Actions({
 				if(this.__peers 
 						&& id in this.__peers 
 						&& this.__peers[id].peer.connected){
-					return resolve(id) 
-				}
+					return resolve(id) }
 
 				this.__peers = this.__peers || {}
 
@@ -307,13 +207,9 @@ var ChildProcessPeerActions = actions.Actions({
 
 						callback 
 							&& (delete this.__peer_result_callbacks[msg.id])
-							&& callback(msg.value, msg.error)
-					}
-				}).bind(this))
+							&& callback(msg.value, msg.error) } }).bind(this))
 
-				resolve(id)
-			}).bind(this))
-		})],
+				resolve(id) }).bind(this)) })],
 	// XXX should this call .stop() on the child???
 	// 		...does the child handle kill gracefully???
 	peerDisconnect: ['- System/Peer/',
@@ -329,8 +225,7 @@ var ChildProcessPeerActions = actions.Actions({
 				that.__peers[id].peer.kill()
 				delete that.__peers[id]
 
-			}).bind(this))
-		})],
+			}).bind(this)) })],
 
 	// XXX can we do sync???
 	// 		...this would be useful to 100% match the action api and 
@@ -358,8 +253,7 @@ var ChildProcessPeerActions = actions.Actions({
 				var handlers = this.__peer_result_callbacks = this.__peer_result_callbacks || {}
 				handlers[call_id] = function(res, err){ err ? reject(err) : resolve(res) }
 
-			}).bind(this))
-		})],
+			}).bind(this)) })],
 })
 
 

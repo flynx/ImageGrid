@@ -32,13 +32,19 @@ if(typeof(process) != 'undefined'){
 
 
 /*********************************************************************/
+// helpers...
 
 if(typeof(process) != 'undefined'){
 	var copy = file.denodeify(fse.copy)
 	var ensureDir = file.denodeify(fse.ensureDir)
 }
 
-function normalizeOrientation(orientation){
+
+//---------------------------------------------------------------------
+
+var normalizeOrientation =
+module.normalizeOrientation =
+function(orientation){
 	return {
 		orientation: ({
 				0: 0,
@@ -65,8 +71,93 @@ function normalizeOrientation(orientation){
 	} }
 
 
-var exifReader2exiftool = {
+
+//---------------------------------------------------------------------
+// Convert image metadata from exif-reader output to format compatible 
+// with exiftool (features/metadata.js)
+
+// Format:
+// 	{
+// 		// simple key-key pair...
+// 		'path.to.value': 'output-key',
+//
+// 		// key with value handler...
+// 		'path.to.other.value': ['output-key', handler],
+//
+// 		// alias to handler...
+// 		'path.to.yet.another.value': ['output-key', 'path.to.other.value'],
+// 	}
+//
+var EXIF_FORMAT =
+module.EXIF_FORMAT = {
+	// camera / lens...
+	'image.Make': 'make',
+	'image.Model': 'cameraModelName',
+	'image.Software': 'software',
+	'exif.LensModel': 'lensModel',
+
+	// exposure...
+	'exif.ISO': 'iso',
+	'exif.FNumber': ['fNumber', 
+		function(v){ return 'f/'+v }],
+	'exif.ExposureTime': ['exposureTime',
+		// NOTE: this is a bit of a brute-fore approach but for shutter 
+		// 		speeds this should not matter...
+		function(v){
+			if(v > 0.5){
+				return ''+ v }
+			for(var d = 1; (v * d) % 1 != 0; d++){}
+			return (v * d) +'/'+ d }],
+
+	// dates...
+	'exif.DateTimeOriginal': ['date/timeOriginal',
+		function(v){
+			return v.toShortDate() }],
+	'image.ModifyDate': ['modifyDate', 
+		'exif.DateTimeOriginal'],
+
+	// IPCT...
+	'image.Artist': 'artist',
+	'image.Copyright': 'copyright',
+
+	// XXX anything else???
 }
+
+var exifReader2exiftool = 
+module.exifReader2exiftool =
+function(data){
+	return Object.entries(EXIF_FORMAT)
+		// handle exif/image/...
+		.reduce(function(res, [path, to]){
+			var handler
+			;[to, handler] = to instanceof Array ?
+				to
+				: [to]
+			// resolve handler reference/alias...
+			while(typeof(handler) == typeof('str')){
+				handler = EXIF_FORMAT[handler][1] }
+			// resolve source path...
+			var value = path.split(/\./g)
+				.reduce(function(res, e){ 
+					return res && res[e] }, data)
+			// set the value...
+			if(value !== undefined){
+				res[to] = handler ?
+					handler(value)
+					: value }
+			return res }, {})
+		// handle xmp...
+		.run(function(){
+			var rating = data.xmp 
+				// NOTE: we do not need the full XML 
+				// 		fluff here, just get some values...
+				&& parseInt(
+					(data.xmp.toString()
+							.match(/(?<match><(xmp:Rating)[^>]*>(?<value>.*)<\/\2>)/i) 
+						|| {groups: {}})
+					.groups.value)
+			rating
+				&& (this.rating = rating) }) }
 
 
 
@@ -423,9 +514,10 @@ var SharpActions = actions.Actions({
 				.flat()) }],
 
 
-	// XXX should this update all images or just the ones that have no metadata???
+	// XXX add support for offloading the processing to a thread/worker...
 	// XXX would be nice to be able to abort this...
 	// 		...and/or have a generic abort protocol triggered when loading...
+	// 		...use task queue???
 	// XXX make each section optional...
 	// XXX revise name...
 	cacheImageMetadata: ['- Sharp|Image/',
@@ -498,6 +590,20 @@ var SharpActions = actions.Actions({
 							img.orientation = o.orientation || 0
 							img.flipped = o.flipped
 
+							// read the metadata...
+							var exif = metadata.exif 
+								&& exifReader(metadata.exif) 
+							exif
+								&& Object.assign(
+									(img.metadata = img.metadata || {}), 
+									exifReader2exiftool(exif),
+									// mark metadata as partial read...
+									//
+									// NOTE: partial metadata will get reread by 
+									// 		the metadata feature upon request...
+									// XXX revise name...
+									{ ImageGridPartialMetadata: true })
+
 							// if image too large, generate preview(s)...
 							// XXX EXPERIMENTAL...
 							var size_threshold = that.config['preview-generate-threshold']
@@ -513,31 +619,11 @@ var SharpActions = actions.Actions({
 										base_path,
 										logger) }
 
-							// XXX EXIF -- keep compatible with exiftool...
-							// 		- dates
-							// 		- camera / lens / ...
-							var exif = metadata.exif 
-								&& exifReader(metadata.exif) 
-							// XXX
-
-							// xmp:Rating...
-							var rating = metadata.xmp 
-								// NOTE: we do not need the full XML 
-								// 		fluff here, just get some values...
-								&& parseInt(
-									(metadata.xmp.toString()
-											.match(/(?<match><(xmp:Rating)[^>]*>(?<value>.*)<\/\2>)/i) 
-										|| {groups: {}})
-									.groups.value)
-							rating
-								&& (img.metadata = img.metadata || {})
-								&& (img.metadata.rating = rating || 0)
-
 							that.markChanged('images', [gid])
 
 							logger && logger.emit('done', gid)
 
-							// update image to use the orientation...
+							// update loaded image to use the orientation...
 							loaded
 								&& loaded.has(gid)
 								&& that.ribbons.updateImage(gid) 
@@ -564,9 +650,11 @@ module.Sharp = core.ImageGridFeatures.Feature({
 
 	handlers: [
 		/* XXX not sure if we need this...
+		// XXX this is best done in a thread + needs to be abortable...
 		['loadImages',
 			function(){
-				this.cacheImageMetadata('all', false) }],
+				//this.cacheImageMetadata('all', false) }],
+				this.cacheImageMetadata('all') }],
 		//*/
 
 		// set orientation if not defined...

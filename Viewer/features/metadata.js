@@ -57,8 +57,7 @@ var MetadataActions = actions.Actions({
 			if(this.images && this.images[gid]){
 				return this.images[gid].metadata || {}
 			}
-			return null
-		}],
+			return null }],
 	setMetadata: ['- Image/Set metadata data',
 		function(image, metadata, merge){
 			var that = this
@@ -70,12 +69,8 @@ var MetadataActions = actions.Actions({
 					Object.keys(metadata).forEach(function(k){
 						m[k] = metadata[k]
 					})
-
 				} else {
-					this.images[gid].metadata = metadata
-				}
-			}
-		}]
+					this.images[gid].metadata = metadata } } }]
 })
 
 var Metadata = 
@@ -119,21 +114,19 @@ var MetadataReaderActions = actions.Actions({
 			var img = this.images && this.images[gid]
 
 			if(!image && !img){
-				return false
-			}
+				return false }
 
 			//var full_path = path.normalize(img.base_path +'/'+ img.path)
 			var full_path = this.getImagePath(gid)
 
 			return new Promise(function(resolve, reject){
-				if(!force && img.metadata){
-					return resolve(img.metadata)
-				}
+				if(!force 
+						&& !(img.metadata || {}).ImageGridPartialMetadata){
+					return resolve(img.metadata) }
 
 				fs.readFile(full_path, function(err, file){
 					if(err){
-						return reject(err)
-					}
+						return reject(err) }
 
 					// read stat...
 					if(!that.images[gid].birthtime){
@@ -173,10 +166,7 @@ var MetadataReaderActions = actions.Actions({
 							that.markChanged 
 								&& that.markChanged('images', [gid]) }
 
-						resolve(data) })
-				})
-			})
-		}],
+						resolve(data) }) }) }) }],
 
 	// XXX STUB: add support for this to .readMetadata(..)
 	readAllMetadata: ['File/Read all metadata',
@@ -202,8 +192,7 @@ var MetadataReaderActions = actions.Actions({
 					q.enqueue('metadata', read(gid))
 				})
 			
-			return q
-		}],
+			return q }],
 
 	// XXX take image Metadata and write it to target...
 	writeMetadata: ['- Image/Set metadata data',
@@ -651,9 +640,7 @@ var MetadataUIActions = actions.Actions({
 						&& (that.config['metadata-graph-config'] = {
 							graph: this.graph.graph,
 							mode: this.graph.mode,
-						})
-				})
-		})],
+						}) }) })],
 
 	metadataSection: ['- Image/',
 		{ sortedActionPriority: 'normal' },
@@ -663,16 +650,18 @@ var MetadataUIActions = actions.Actions({
 			var field_order = this.config['metadata-field-order'] || []
 			var x = field_order.length + 1
 
+			// NOTE: this is called on showMetadata.pre in the .handlers 
+			// 		feature section...
 			make.dialog.updateMetadata = 
 				function(metadata){
-					metadata = metadata || that.getMetadata()
+					metadata = metadata 
+						|| that.getMetadata()
 
 					// build new data set and update view...
 					//this.options.data = _buildInfoList(image, metadata)
 					this.update()
 
-					return this
-				}
+					return this }
 
 			// build fields...
 			var fields = []
@@ -691,15 +680,12 @@ var MetadataUIActions = actions.Actions({
 							return
 
 						} else if(mode == 'disabled') {
-							opts.disabled = true
-						}
-					}
+							opts.disabled = true } }
 
 					fields.push([
 						[ n + ': ', metadata[k] ], 
 						opts,
-					])
-				})
+					]) })
 
 			// make fields...
 			fields
@@ -717,8 +703,7 @@ var MetadataUIActions = actions.Actions({
 					this.length > 0
 						&& make.Separator() })
 				.forEach(function(e){
-					make(...e) })
-		})],
+					make(...e) }) })],
 
 
 	// shorthands...
