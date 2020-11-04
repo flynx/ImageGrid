@@ -32,17 +32,16 @@ var widgets = require('features/ui-widgets')
 /*********************************************************************/
 // helpers...
 
+// XXX this includes a WebKit bug patch -- see inside...
 var img2canvas = 
 function({url, orientation, flipped}, callback){
-	var img = new Image
-
 
 	// XXX PATCH...
 	// XXX <canvas>.drawImage(..) seems to take EXIF into account, ignoring 
 	// 		the .imageOrientation setting both the canvas and image are in
 	// 		DOM and the image needs to be added to dom before .src is set
 	var PATCHED_ELEMENTS
-	var PATCH_BUG = function(e){
+	var PATCH = function(e){
 		PATCHED_ELEMENTS = 
 			PATCHED_ELEMENTS
 			|| document.body.appendChild(
@@ -56,13 +55,13 @@ function({url, orientation, flipped}, callback){
 						this.style.opacity = 0
 						this.style.overflow = 'hidden' }))
 		PATCHED_ELEMENTS.appendChild(e) }
+	// XXX PATCH...
 	var CLEANUP_PATCH = function(){
 		PATCHED_ELEMENTS
 			.parentElement
 				.removeChild(PATCHED_ELEMENTS) }
-	// XXX END PATCH...
-	
 
+	var img = new Image
 	img.onload = function(){
 		var width = this.naturalWidth
 		var height = this.naturalHeight
@@ -71,7 +70,7 @@ function({url, orientation, flipped}, callback){
 		c.style.imageOrientation = 'none'
 
 		// XXX PATCH...
-		PATCH_BUG(c)
+		PATCH(c)
 
 		var ctx = c.getContext('2d')
 		// prepare for rotate...
@@ -104,12 +103,13 @@ function({url, orientation, flipped}, callback){
 	// prevent the browser from rotating the image via exif...
 	img.style.imageOrientation = 'none'
 	img.crossOrigin = ''
-	img.src = url 
 
 	// XXX PATCH...
-	PATCH_BUG(img)
+	PATCH(img)
 
+	img.src = url 
 	return img }
+
 
 
 

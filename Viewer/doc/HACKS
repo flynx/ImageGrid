@@ -3,6 +3,20 @@ Hacks and fixes
 ===============
 
 
+20201104:
+Chrome v83 / Electron 9.3.3
+
+WebKit canvas' .drawImage(..) ignores its and images .style.imageOrientation 
+unless both are added to DOM.
+
+FIX:
+- features/app.js: img2canvas(..) quietly adds the elements to DOM and then cleans up
+
+TODO:
+- test in browser...
+- test in newer versions of browser / electron...
+- if not fixed report...
+
 
 
 20200830: 
@@ -21,10 +35,10 @@ Chrome messing up fullscreen colors unless a <video> tag is present.
 
 FIX:
 - data/blank.mp4: added
-- index.html/electron.html: added <video> tag with data/blank.mp4 as source
+- index.html / electron.html: added <video> tag with data/blank.mp4 as source
 
 TODO:
-- document and post a bug report
+- report this...
 
 
 

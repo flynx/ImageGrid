@@ -649,11 +649,10 @@ module.Sharp = core.ImageGridFeatures.Feature({
 	isApplicable: function(){ return !!sharp },
 
 	handlers: [
-		/* XXX not sure if we need this...
-		// XXX this is best done in a thread + needs to be abortable...
+		/* XXX this needs to be run in the background...
+		// XXX this is best done in a thread + needs to be abortable (on .load(..))...
 		['loadImages',
 			function(){
-				//this.cacheImageMetadata('all', false) }],
 				this.cacheImageMetadata('all') }],
 		//*/
 
