@@ -30,6 +30,90 @@ var widgets = require('features/ui-widgets')
 
 
 /*********************************************************************/
+// helpers...
+
+var img2canvas = 
+function({url, orientation, flipped}, callback){
+	var img = new Image
+
+
+	// XXX PATCH...
+	// XXX <canvas>.drawImage(..) seems to take EXIF into account, ignoring 
+	// 		the .imageOrientation setting both the canvas and image are in
+	// 		DOM and the image needs to be added to dom before .src is set
+	var PATCHED_ELEMENTS
+	var PATCH_BUG = function(e){
+		PATCHED_ELEMENTS = 
+			PATCHED_ELEMENTS
+			|| document.body.appendChild(
+				document.createElement('div')
+					.run(function(){
+						this.style.position = 'absolute'
+						this.style.with = '0'
+						this.style.height = '0'
+						this.style.top = '200%'
+						this.style.left = '0'
+						this.style.opacity = 0
+						this.style.overflow = 'hidden' }))
+		PATCHED_ELEMENTS.appendChild(e) }
+	var CLEANUP_PATCH = function(){
+		PATCHED_ELEMENTS
+			.parentElement
+				.removeChild(PATCHED_ELEMENTS) }
+	// XXX END PATCH...
+	
+
+	img.onload = function(){
+		var width = this.naturalWidth
+		var height = this.naturalHeight
+
+		var c = document.createElement('canvas')
+		c.style.imageOrientation = 'none'
+
+		// XXX PATCH...
+		PATCH_BUG(c)
+
+		var ctx = c.getContext('2d')
+		// prepare for rotate...
+		// 90 / 270
+		if(orientation == 90 || orientation == 270){
+			var w = c.width = this.naturalHeight
+			var h = c.height = this.naturalWidth
+		// 0 / 180
+		} else {
+			var w = c.width = this.naturalWidth
+			var h = c.height = this.naturalHeight }
+		// prepare for flip...
+		var x = flipped && flipped.includes('horizontal') ? 
+			-1 
+			: 1
+		var y = flipped && flipped.includes('vertical') ? 
+			-1 
+			: 1
+
+		ctx.translate(w/2, h/2)
+		ctx.rotate(orientation * Math.PI/180)
+		ctx.scale(x, y)
+		ctx.drawImage(this, -width/2, -height/2)
+
+		// XXX PATCH...
+		CLEANUP_PATCH()
+
+		callback.call(this, c) }
+
+	// prevent the browser from rotating the image via exif...
+	img.style.imageOrientation = 'none'
+	img.crossOrigin = ''
+	img.src = url 
+
+	// XXX PATCH...
+	PATCH_BUG(img)
+
+	return img }
+
+
+
+/*********************************************************************/
 
 var Widget = 
 module.Widget = core.ImageGridFeatures.Feature({
@@ -347,12 +431,28 @@ var ElectronHostActions = actions.Actions({
 
 		`,
 		function(size){
+			/* XXX this does not rotate the image...
 			var url = this.images.getBestPreview(this.current, size, true).url
 			electron.clipboard.write({
 				title: this.images.getImageFileName(),
 				text: url,
 				image: electron.nativeImage.createFromPath(url),
-			}) }],
+			}) 
+			//*/
+			var that = this
+			var url = this.images.getBestPreview(this.current, size, true).url
+			img2canvas({
+				url,
+				...this.images[this.current] 
+			}, function(c){
+				electron.clipboard.write({
+					title: that.images.getImageFileName(),
+					text: url,
+					// XXX this seems not to work with images with exif 
+					// 		orientation -- the ig orientation seems to be 
+					// 		ignored...
+					image: electron.nativeImage.createFromDataURL(c.toDataURL('image/png')),
+				}) }) }],
 	paste: ['- Image|Edit/Paste image',
 		function(){
 			// XXX
@@ -436,14 +536,10 @@ var BrowserHostActions = actions.Actions({
 		NOTE: this will not work with file:// paths...
 		`,
 		function(size){
-			var img = new Image;
-			var c = document.createElement("canvas");
-			var ctx = c.getContext("2d");
-
-			img.onload = function(){
-				c.width = this.naturalWidth
-				c.height = this.naturalHeight
-				ctx.drawImage(this, 0, 0)
+			img2canvas({
+				url: this.images.getBestPreview(this.current, size, true).url ,
+				...this.images[this.current] 
+			}, function(c){
 				c.toBlob(function(blob){
 					// copy...
 					// XXX would be nice to add a path/title here...
@@ -451,9 +547,7 @@ var BrowserHostActions = actions.Actions({
 						new ClipboardItem({
 							[blob.type]: blob,
 						}) ]) }, 
-					"image/png") }
-			img.crossOrigin = ''
-			img.src = this.images.getBestPreview(this.current, size, true).url
+					"image/png") })
 		}],
 	paste: ['- Image|Edit/Paste image',
 		function(){
