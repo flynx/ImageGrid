@@ -259,7 +259,7 @@ var SharpActions = actions.Actions({
 
 			abort.cleanup(function(reason, res){
 				logger 
-					&& logger.emit('close')
+					&& logger.emit('done')
 					&& reason == 'aborted'
 						&& logger.emit(res) })
 
@@ -448,8 +448,12 @@ var SharpActions = actions.Actions({
 			var CHUNK_SIZE = 4
 
 			abort.cleanup(function(reason, res){
+				gid_logger
+					&& gid_logger.emit('done')
+					&& reason == 'aborted'
+						&& gid_logger.emit(res)
 				logger 
-					&& logger.emit('close')
+					&& logger.emit('done')
 					&& reason == 'aborted'
 						&& logger.emit(res) })
 
@@ -461,7 +465,6 @@ var SharpActions = actions.Actions({
 			logger = logger && logger.push('Previews', {onclose: abort})
 
 			// get/normalize images...
-			//images = images || this.current
 			images = images 
 				|| 'all'
 			// keywords...
@@ -494,6 +497,8 @@ var SharpActions = actions.Actions({
 			var path_tpl = that.config['preview-path-template']
 				.replace(/\$INDEX|\$\{INDEX\}/g, that.config['index-dir'] || '.ImageGrid')
 
+			gid_logger && gid_logger.emit('queued', images)
+
 			return images
 				.mapChunks(CHUNK_SIZE, function(gid){
 					if(abort.isAborted){
@@ -503,8 +508,6 @@ var SharpActions = actions.Actions({
 					var base = base_path 
 						|| img.base_path 
 						|| that.location.path
-
-					gid_logger && gid_logger.emit('queued', gid)
 
 					return sizes
 						.map(function(size, i){
@@ -575,8 +578,10 @@ var SharpActions = actions.Actions({
 				-> promise([ gid | null, .. ])
 
 
-		This quickly reads/caches essential (.orientation and .flipped) 
-		metadata and some non-essential but already there values.
+		This will:
+			- quickly reads/caches essential (.orientation and .flipped) metadata
+			- quickly read some non-essential but already there values
+			- generate priority previews for very large images (only when in index)
 
 
 		This will overwrite/update if:
@@ -597,7 +602,7 @@ var SharpActions = actions.Actions({
 
 			abort.cleanup(function(reason, res){
 				logger 
-					&& logger.emit('close')
+					&& logger.emit('done')
 					&& reason == 'aborted'
 						&& logger.emit(res)
 				delete that.__cache_metadata_reading })
@@ -768,7 +773,6 @@ var SharpActions = actions.Actions({
 })
 
 
-// XXX need to auto-generate previews for very large images...
 var Sharp = 
 module.Sharp = core.ImageGridFeatures.Feature({
 	title: '',
