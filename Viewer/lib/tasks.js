@@ -17,6 +17,13 @@ var object = require('lib/object')
 var QueuePrototype = Object.create(actions.MetaActions)
 
 
+// XXX might be good to add a Promise-like api:
+// 			.then(..)
+// 			.catch(..)
+// 			.finally(..)
+// 		...but since the queue may be fed and running without stopping
+// 		not sure what purpose these can serve if they are global...
+// 		...these could have the semantics of run after last task added...
 // XXX need a mechanism to either queue chains of tasks that depend on 
 // 		on the previous results or a way to delay a task until what it
 // 		needs is finished...
@@ -49,9 +56,7 @@ module.QueueActions = actions.Actions(QueuePrototype, {
 						: 0)
 					+ (typeof(b) == typeof(1) ? b 
 						: that[b] ? that[b].len 
-						: 0) 
-			}, 0)
-	},
+						: 0) }, 0) },
 	set length(val){},
 
 	// can be:
@@ -71,8 +76,7 @@ module.QueueActions = actions.Actions(QueuePrototype, {
 	//
 	// XXX should be more informative -- now supports only 'running' and 'stopped'
 	get state(){
-		return this._state || 'stopped'
-	},
+		return this._state || 'stopped' },
 
 
 	// General task life cycle events...
@@ -111,8 +115,8 @@ module.QueueActions = actions.Actions(QueuePrototype, {
 			} else {
 				var tag = null
 				var task = a
-				var mode = b
-			}
+				var mode = b }
+
 			mode = mode || this.config['default-queue-mode']
 			var ready = this.__ready = this.__ready || []
 
@@ -120,22 +124,19 @@ module.QueueActions = actions.Actions(QueuePrototype, {
 			this.taskQueued(tag, task, mode)
 
 			// restart in case the queue was depleted...
-			this._run()
-		}],
+			this._run() }],
 	unqueue: ['',
 		function(a, b){
 			var that = this
 			var ready = this.__ready
 			// empty queue...
 			if(ready == null || ready.len == 0){
-				return
-			}
+				return }
 
 			// special case -- drop all...
 			if(a == '*'){
 				ready.splice(0, ready.length)
-				return
-			}
+				return }
 
 			// XXX prep args...
 			var tag = typeof(a) == typeof('str') ? a : b
@@ -143,8 +144,7 @@ module.QueueActions = actions.Actions(QueuePrototype, {
 
 			// no args...
 			if(tag == null && task == null){
-				return
-			}
+				return }
 
 			// remove matching tasks from the queue...
 			ready.forEach(function(e, i){
@@ -155,17 +155,13 @@ module.QueueActions = actions.Actions(QueuePrototype, {
 						// both task and tag given...
 						: e[0] == tag && e[1] === task){
 					delete ready[i]
-					that.taskDropped(e[0], e[1], e[2])
-				}
-			})
-		}],
+					that.taskDropped(e[0], e[1], e[2]) } }) }],
 	delay: ['',
 		function(a, b){
 			var ready = this.__ready
 			// empty queue...
 			if(ready == null || ready.len == 0){
-				return
-			}
+				return }
 
 			// XXX prep args...
 			var tag = typeof(a) == typeof('str') ? a : b
@@ -173,8 +169,7 @@ module.QueueActions = actions.Actions(QueuePrototype, {
 
 			// no args...
 			if(tag == null && task == null){
-				return
-			}
+				return }
 
 			var delayed = []
 			// remove the matching tasks...
@@ -188,19 +183,14 @@ module.QueueActions = actions.Actions(QueuePrototype, {
 
 				if(res){
 					delete ready[i]
-
-					delayed.push(e)
-				}
-			})
+					delayed.push(e) } })
 
 			// push delayed list to the end of the queue...
 			delayed.forEach(function(e){
-				ready.push(e)
-			})
+				ready.push(e) })
 
 			// restart in case the queue was depleted...
-			this._run()
-		}],
+			this._run() }],
 
 	// Run the queue...
 	//
@@ -230,8 +220,7 @@ module.QueueActions = actions.Actions(QueuePrototype, {
 	_run: ['',
 		function(){
 			if(this.__is_running){
-				return
-			}
+				return }
 
 			var that = this
 			var size = this.config['running-pool-size'] 
@@ -249,8 +238,7 @@ module.QueueActions = actions.Actions(QueuePrototype, {
 				// XXX this might race...
 				var elem = that.__ready.shift()
 				if(elem == null){
-					return 
-				}
+					return }
 
 				var task = elem[1]
 				that.__is_running = true
@@ -292,9 +280,7 @@ module.QueueActions = actions.Actions(QueuePrototype, {
 								that.done()
 
 								that.config['clear-on-done'] 
-									&& that.clear()
-							}
-						})
+									&& that.clear() } })
 						// push to done and ._run some more...
 						.then(function(){
 							// pop self of .__running
@@ -316,9 +302,7 @@ module.QueueActions = actions.Actions(QueuePrototype, {
 								that.done()
 
 								that.config['clear-on-done']
-									&& that.clear()
-							}
-						})
+									&& that.clear() } })
 
 				// other...
 				} else {
@@ -338,13 +322,10 @@ module.QueueActions = actions.Actions(QueuePrototype, {
 						that.done()
 
 						that.config['clear-on-done'] 
-							&& that.clear()
-					}
-				}
+							&& that.clear() } }
 			})() }
 
-			delete that.__is_running
-		}],
+			delete that.__is_running }],
 
 	// State manipulation actions...
 	//
@@ -352,12 +333,10 @@ module.QueueActions = actions.Actions(QueuePrototype, {
 	start: ['',
 		function(){
 			this._state = 'ready'
-			this._run()
-		}],
+			this._run() }],
 	stop: ['',
 		function(){
-			delete this._state
-		}],
+			delete this._state }],
 	clear: ['',
 		function(){
 			// XXX should this stop???
@@ -365,14 +344,14 @@ module.QueueActions = actions.Actions(QueuePrototype, {
 			delete this.__ready
 			delete this.__running
 			delete this.__failed
-			delete this.__done
-		}],
+			delete this.__done }],
 })
 
 
 var Queue = 
 module.Queue = 
 object.Constructor('Queue', QueueActions)
+
 
 
 

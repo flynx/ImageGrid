@@ -77,8 +77,7 @@ $(function(){
 	} catch(err){
 		console.error(err)
 		//throw err
-		return
-	}
+		return }
 
 
 	// used to switch experimental actions on (set to true) or off (unset or false)...
@@ -105,8 +104,7 @@ $(function(){
 				err.missing_suggested)
 		err.missing.length > 0
 			&& console.warn('Missing dependencies:', 
-				err.missing)
-	}
+				err.missing) }
 
 
 	// setup the viewer...

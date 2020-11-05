@@ -7,6 +7,8 @@
 (function(require){ var module={} // make module AMD/node compatible...
 /*********************************************************************/
 
+var array = require('lib/types/Array')
+
 var actions = require('lib/actions')
 var features = require('lib/features')
 
@@ -245,13 +247,22 @@ var SharpActions = actions.Actions({
 		NOTE: all options are optional.
 		NOTE: this will not overwrite existing images.
 		`,
-		function(images, size, path, options={}){
+		core.abortablePromise('makeResizedImage', function(abort, images, size, path, options={}){
 			var that = this
 
 			// sanity check...
 			if(arguments.length < 3){
 				throw new Error('.makeResizedImage(..): '
 					+'need at least images, size and path.') }
+
+			var CHUNK_SIZE = 4
+
+			abort.cleanup(function(reason, res){
+				logger 
+					&& logger.emit('close')
+					&& reason == 'aborted'
+						&& logger.emit(res) })
+
 			// get/normalize images...
 			//images = images || this.current
 			images = images 
@@ -304,7 +315,7 @@ var SharpActions = actions.Actions({
 			logger = logger !== false ?
 				(logger || this.logger)
 				: false
-			logger = logger && logger.push('Resize')
+			logger = logger && logger.push('Resize', {onclose: abort})
 
 			// backup...
 			// XXX make backup name pattern configurable...
@@ -314,8 +325,11 @@ var SharpActions = actions.Actions({
 					i++ }
 				return `${to}.${timestamp}.bak`+ (i || '') }
 
-			return Promise.all(images
-				.map(function(gid){
+			return images
+				.mapChunks(CHUNK_SIZE, function(gid){
+					if(abort.isAborted){
+						throw array.StopIteration('aborted') }
+
 					// skip non-images...
 					if(!['image', null, undefined]
 							.includes(that.images[gid].type)){
@@ -342,7 +356,7 @@ var SharpActions = actions.Actions({
 												&& Math.max(m.width, m.height) < size)
 											|| (fit == 'outside'
 												&& Math.min(m.width, m.height) < size)){
-										skipping(gid)
+										logger && logger.emit('skipping', gid)
 										return }
 									// continue...
 									return img })
@@ -362,7 +376,7 @@ var SharpActions = actions.Actions({
 												fse.removeSync(to)
 											// skip...
 											} else {
-												skipping(gid)
+												logger && logger.emit('skipping', gid)
 												return } }
 
 										// write...
@@ -396,11 +410,11 @@ var SharpActions = actions.Actions({
 											.then(function(){
 												logger 
 													&& logger.emit('done', to) 
-												return img }) }) }) })) }],
+												return img }) }) }) }) })],
 
-	// XXX test against .makePreviews(..) for speed...
 	// XXX this does not update image.base_path -- is this correct???
-	// XXX do we need to be able to run this in a worker???
+	// XXX add support for offloading the processing to a thread/worker...
+	// XXX should we use task.Queue()???
 	makePreviews: ['Sharp|File/Make image $previews',
 		core.doc`Make image previews
 
@@ -428,16 +442,23 @@ var SharpActions = actions.Actions({
 		NOTE: if base_path is given .images will not be updated with new 
 			preview paths...
 		`,
-		function(images, sizes, base_path, logger){
+		core.abortablePromise('makePreviews', function(abort, images, sizes, base_path, logger){
 			var that = this
+
+			var CHUNK_SIZE = 4
+
+			abort.cleanup(function(reason, res){
+				logger 
+					&& logger.emit('close')
+					&& reason == 'aborted'
+						&& logger.emit(res) })
 
 			var logger_mode = this.config['preview-progress-mode'] || 'gids'
 			logger = logger !== false ?
 				(logger || this.logger)
 				: false
-			var gid_logger = logger && logger.push('Images')
-			logger = logger && logger.push('Previews')
-
+			var gid_logger = logger && logger.push('Images', {onclose: abort})
+			logger = logger && logger.push('Previews', {onclose: abort})
 
 			// get/normalize images...
 			//images = images || this.current
@@ -473,8 +494,11 @@ var SharpActions = actions.Actions({
 			var path_tpl = that.config['preview-path-template']
 				.replace(/\$INDEX|\$\{INDEX\}/g, that.config['index-dir'] || '.ImageGrid')
 
-			return Promise.all(images
-				.map(function(gid){
+			return images
+				.mapChunks(CHUNK_SIZE, function(gid){
+					if(abort.isAborted){
+						throw array.StopIteration('aborted') }
+
 					var img = that.images[gid]
 					var base = base_path 
 						|| img.base_path 
@@ -484,6 +508,9 @@ var SharpActions = actions.Actions({
 
 					return sizes
 						.map(function(size, i){
+							if(abort.isAborted){
+								throw array.StopIteration('aborted') }
+
 							var name = path = path_tpl
 								.replace(/\$RESOLUTION|\$\{RESOLUTION\}/g, parseInt(size))
 								.replace(/\$GID|\$\{GID\}/g, gid) 
@@ -512,14 +539,12 @@ var SharpActions = actions.Actions({
 											&& that.markChanged('images', [gid]) }
 
 									return [gid, size, name] }) }) })
-				.flat()) }],
-
+				.then(function(res){
+					return res.flat() }) })],
 
 	// XXX add support for offloading the processing to a thread/worker...
-	// XXX would be nice to be able to abort this...
-	// 		...and/or have a generic abort protocol triggered when loading...
-	// 		...use task queue???
-	// XXX make each section optional...
+	// XXX should we use task.Queue()???
+	__cache_metadata_reading: null,
 	cacheMetadata: ['- Sharp|Image/',
 		core.doc`Cache metadata
 
@@ -550,21 +575,41 @@ var SharpActions = actions.Actions({
 				-> promise([ gid | null, .. ])
 
 
+		This quickly reads/caches essential (.orientation and .flipped) 
+		metadata and some non-essential but already there values.
+
+
+		This will overwrite/update if:
+			- .orientation and .flipped iff image .orientation AND .flipped 
+				are unset or force is true
+			- metadata if image .metadata is not set or 
+				.metadata.ImageGridMetadata is not set
+			- all metadata if force is set to true
+
+
 		NOTE: this will effectively update metadata format to the new spec...
+		NOTE: for info on full metadata format see: .readMetadata(..)
 		`,
-		function(images, logger){
+		core.abortablePromise('cacheMetadata', function(abort, images, logger){
 			var that = this
 
+			var CHUNK_SIZE = 4
+
+			abort.cleanup(function(reason, res){
+				logger 
+					&& logger.emit('close')
+					&& reason == 'aborted'
+						&& logger.emit(res)
+				delete that.__cache_metadata_reading })
+
 			// handle logging and processing list...
-			// NOTE: these will maintain .__metadata_reading helping 
+			// NOTE: these will maintain .__cache_metadata_reading helping 
 			// 		avoid processing an image more than once at the same 
 			// 		time...
 			var done = function(gid, msg){
 				logger && logger.emit(msg || 'done', gid)
-				if(that.__metadata_reading){
-					that.__metadata_reading.delete(gid) 
-					if(that.__metadata_reading.size == 0){
-						delete that.__metadata_reading } }
+				if(that.__cache_metadata_reading){
+					that.__cache_metadata_reading.delete(gid) }
 				return gid }
 			var skipping = function(gid){
 				return done(gid, 'skipping') }
@@ -601,13 +646,14 @@ var SharpActions = actions.Actions({
 					images 
 					: [images])
 				.filter(function(gid){
-					return !that.__metadata_reading
-						|| !that.__metadata_reading.has(gid) })
+					return !that.__cache_metadata_reading
+						|| !that.__cache_metadata_reading.has(gid) })
 
 			logger = logger !== false ?
 				(logger || this.logger)
 				: false
-			logger = logger && logger.push('Caching image metadata')
+			logger = logger 
+				&& logger.push('Caching image metadata', {onclose: abort})
 			logger && logger.emit('queued', images)
 
 			/*/ XXX set this to tmp for .location.load =='loadImages'
@@ -624,11 +670,15 @@ var SharpActions = actions.Actions({
 			//*/
 
 			return images
-				.mapChunks(function(gid){
+				.mapChunks(CHUNK_SIZE, function(gid){
+					// abort...
+					if(abort.isAborted){
+						throw array.StopIteration('aborted') }
+
 					var img = cached_images[gid]
 					var path = img && that.getImagePath(gid)
-					;(that.__metadata_reading = 
-							that.__metadata_reading || new Set())
+					;(that.__cache_metadata_reading = 
+							that.__cache_metadata_reading || new Set())
 						.add(gid)
 
 					// skip...
@@ -702,11 +752,19 @@ var SharpActions = actions.Actions({
 							that.ribbons
 								&& that.ribbons.updateImage(gid) 
 
-							return done(gid) }) }) }],
+							return done(gid) }) }) })],
 	cacheAllMetadata: ['- Sharp|Image/',
 		core.doc`Cache all metadata
 		NOTE: this is a shorthand to .cacheMetadata('all', ..)`,
 		'cacheMetadata: "all" ...'],
+
+
+	// shorthands...
+	// XXX do we need these???
+	abortMakePreviews: ['- Sharp/',
+		'abort: "makePreviews"'],
+	abortCacheMetadata: ['- Sharp/',
+		'abort: "cacheMetadata"'],
 })
 
 
@@ -727,9 +785,19 @@ module.Sharp = core.ImageGridFeatures.Feature({
 	isApplicable: function(){ return !!sharp },
 
 	handlers: [
-		/* XXX this needs to be run in the background...
+		// XXX
+		['load.pre',
+			function(){
+				this.abort([
+					'makeResizedImage',
+					'makePreviews',
+					'cacheMetadata',
+				]) }],
+
+		//* XXX this needs to be run in the background...
 		// XXX this is best done in a thread + needs to be abortable (on .load(..))...
-		['loadImages',
+		[['loadImages', 
+				'loadNewImages'],
 			function(){
 				this.cacheMetadata('all') }],
 		//*/

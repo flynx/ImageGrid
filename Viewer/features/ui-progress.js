@@ -24,28 +24,6 @@ var ProgressActions = actions.Actions({
 		'progress-update-min': 200,
 	},
 
-	// Progress bar widget...
-	//
-	// 	Create progress bar...
-	// 	.showProgress('text')
-	//
-	// 	Update progress bar (value, max, msg)...
-	// 	.showProgress('text', 0, 10)
-	// 	.showProgress('text', 10, 50, 'message')
-	//
-	// 	Update progress bar value (has no effect if max is not set)...
-	// 	.showProgress('text', 10)
-	//
-	// 	Close progress bar...
-	// 	.showProgress('text', 'close')
-	//
-	// 	Relative progress modification...
-	// 	.showProgress('text', '+1')
-	// 	.showProgress('text', '+0', '+1')
-	//
-	// 	.showProgress(logger)
-	//
-	//
 	// XXX add message to be shown...
 	// XXX should we report errors and stoppages??? (error state??)
 	// XXX multiple containers...
@@ -53,9 +31,39 @@ var ProgressActions = actions.Actions({
 	// XXX revise styles...
 	__progress_cache: null,
 	showProgress: ['- Interface/Show progress bar...',
-		function(text, value, max){
+		core.doc`Progress bar widget...
+	
+			Create progress bar...
+			.showProgress('text')
+		
+			Update progress bar (value, max, msg)...
+			.showProgress('text', 0, 10)
+			.showProgress('text', 10, 50, 'message')
+		
+			Update progress bar value (has no effect if max is not set)...
+			.showProgress('text', 10)
+		
+			Close progress bar...
+			.showProgress('text', 'close')
+		
+			Relative progress modification...
+			.showProgress('text', '+1')
+			.showProgress('text', '+0', '+1')
+		
+			.showProgress(logger)
+	
+	
+		`,
+		function(text, value, max, attrs){
 			var that = this
 			var viewer = this.dom
+
+			// get attrs...
+			var args = [...arguments]
+			attrs = args.slice(1).last() instanceof Object ?
+				args.pop()
+				: null
+			;[text, value, max] = args
 
 			var msg = text instanceof Array ? text.slice(1).join(': ') : null
 			text = text instanceof Array ? text[0] : text
@@ -63,7 +71,10 @@ var ProgressActions = actions.Actions({
 			// make sure we do not update too often...
 			if(value != 'close'){
 				var cache = (this.__progress_cache = this.__progress_cache || {})
-				cache = cache[text] = cache[text] || {}
+				cache = cache[text] = 
+					Object.assign(
+						cache[text] || {},
+						attrs || {})
 
 				var updateValue = function(name, value){
 					var v = cache[name] || 0
@@ -115,7 +126,11 @@ var ProgressActions = actions.Actions({
 					.text(text)
 					// close button...
 					.append($('<span class="close">&times;</span>')
-						.on('click', function(){ widget.trigger('progressClose') }))
+						.on('click', function(){ 
+							var cache = (that.__progress_cache || {})[text]
+							cache.onclose
+								&& cache.onclose() 
+							widget.trigger('progressClose') }))
 					// state...
 					.append($('<span/>')
 						.addClass('progress-details'))
@@ -125,10 +140,12 @@ var ProgressActions = actions.Actions({
 					.on('progressClose', function(){ 
 						widget
 							.fadeOut(that.config['progress-fade-duration'] || 200, function(){
-								var cache = (that.__progress_cache || {})
-								cache[text].timeout 
-									&& clearTimeout(cache[text].timeout)
-								delete cache[text]
+								var cache = (that.__progress_cache || {})[text]
+								cache.timeout 
+									&& clearTimeout(cache.timeout)
+								cache.ondone
+									&& cache.ondone()
+								delete (that.__progress_cache || {})[text]
 								$(this).remove() }) })
 					.appendTo(container)
 				: widget
@@ -169,7 +186,7 @@ var ProgressActions = actions.Actions({
 	// handle logger progress...
 	// XXX revise...
 	handleLogItem: ['- System/',
-		function(path, status, ...rest){
+		function(logger, path, status, ...rest){
 			var msg = path.join(': ')
 			var l = (rest.length == 1 && rest[0] instanceof Array) ?
 				rest[0].length
@@ -196,24 +213,24 @@ var ProgressActions = actions.Actions({
 			// close...
 			// XXX is the right keyword...
 			if(status == 'done' && rest.length == 0){
-				this.showProgress(path, 'close')
+				this.showProgress(path, 'close', logger)
 
 			// report progress...
 			// XXX HACK -- need meaningful status...
 			} else if(add.includes(status)){
-				this.showProgress(path, '+0', '+'+l)
+				this.showProgress(path, '+0', '+'+l, logger)
 
 			} else if(done.includes(status)){
-				this.showProgress(path, '+'+l)
+				this.showProgress(path, '+'+l, logger)
 
 			} else if(skipped.includes(status)){
 				// XXX if everything is skipped the indicator does not 
 				// 		get hidden...
-				this.showProgress(path, '+'+l)
+				this.showProgress(path, '+'+l, logger)
 
 			// XXX STUB...
 			} else if(status == 'error' ){
-				this.showProgress(['Error'].concat(msg), '+0', '+'+l)
+				this.showProgress(['Error'].concat(msg), '+0', '+'+l, logger)
 			}
 		}],
 })

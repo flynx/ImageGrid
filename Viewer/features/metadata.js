@@ -106,7 +106,18 @@ var MetadataReaderActions = actions.Actions({
 	// XXX this uses .markChanged(..) form filesystem.FileSystemWriter 
 	// 		feature, but technically does not depend on it...
 	// XXX should we store metadata in an image (current) or in fs???
+	// XXX should this set .orientation / .flipped if they are not set???
 	readMetadata: ['- Image/Get metadata data',
+		core.doc`
+
+		This will overwrite/update if:
+			- image .metadata is not set
+			- image .metadata.ImageGridMetadata is not 'full'
+			- force is true
+
+
+		NOTE: also see: .cacheMetadata(..)
+		`,
 		function(image, force){
 			var that = this
 
@@ -169,6 +180,7 @@ var MetadataReaderActions = actions.Actions({
 
 						resolve(data) }) }) }) }],
 
+	// XXX make this abortable...
 	// XXX STUB: add support for this to .readMetadata(..)
 	readAllMetadata: ['File/Read all metadata',
 		function(){
@@ -254,6 +266,12 @@ var MetadataReaderActions = actions.Actions({
 				&& this.markChanged('data')
 			mode == 'crop'
 				&& this.crop(data) }],
+
+	// shorthands...
+	cropRatingsAsRibbons: ['Ribbon|Crop/Crop ratings to ribbons',
+		'ratingToRibbons: "crop"'],
+	splitRatingsAsRibbons: ['Ribbon/Split ratings to ribbons (in-place)',
+		'ratingToRibbons: "in-place"'],
 })
 
 var MetadataReader = 
@@ -705,13 +723,6 @@ var MetadataUIActions = actions.Actions({
 						&& make.Separator() })
 				.forEach(function(e){
 					make(...e) }) })],
-
-
-	// shorthands...
-	cropRatingsAsRibbons: ['Ribbon|Crop/Split ratings to ribbons (crop)',
-		'ratingToRibbons: "crop"'],
-	splitRatingsAsRibbons: ['Ribbon/Split ratings to ribbons (in-place)',
-		'ratingToRibbons: "in-place"'],
 })
 
 var MetadataUI = 

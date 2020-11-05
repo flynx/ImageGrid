@@ -18,6 +18,7 @@
 * 	- introspection
 * 	- lifecycle
 * 		base life-cycle events (start/stop/..)
+* 		base abort api
 *	- serialization
 *		base methods to handle loading, serialization and cloning...
 *	- cache
@@ -226,6 +227,8 @@ var LoggerActions = actions.Actions({
 	Logger: object.Constructor('BaseLogger', {
 		doc: `Logger object constructor...`,
 
+		quiet: false,
+
 		__context: null,
 		get context(){
 			return this.__context || this.root.__context },
@@ -324,11 +327,20 @@ var LoggerActions = actions.Actions({
 
 
 		// main API...
+		//
+		// 	.push(str, ...)
+		//
+		// 	.push(str, ..., attrs)
+		//
 		push: function(...msg){
+			attrs = typeof(msg.last()) != typeof('str') ?
+				msg.pop()
+				: {}
 			return msg.length == 0 ?
 				this
 				: Object.assign(
 					this.constructor(),
+					attrs,
 					{
 						root: this.root,
 						path: this.path.concat(msg),
@@ -359,7 +371,7 @@ var LoggerActions = actions.Actions({
 			// call context log handler...
 			this.context
 				&& this.context.handleLogItem
-				&& this.context.handleLogItem(this.path, status, ...rest)
+				&& this.context.handleLogItem(this, this.path, status, ...rest)
 			return this },
 
 
@@ -379,15 +391,16 @@ var LoggerActions = actions.Actions({
 
 	// XXX move this to console-logger???
 	handleLogItem: ['- System/',
-		function(path, status, ...rest){
-			console.log(
-				path.join(': ') + (path.length > 0 ? ': ' : '')
-					+ status 
-					+ (rest.length > 1 ? 
-							':\n\t'
-						: rest.length == 1 ?
-							': '
-						: ''), ...rest) }],
+		function(logger, path, status, ...rest){
+			logger.quiet
+				|| console.log(
+					path.join(': ') + (path.length > 0 ? ': ' : '')
+						+ status 
+						+ (rest.length > 1 ? 
+								':\n\t'
+							: rest.length == 1 ?
+								': '
+							: ''), ...rest) }],
 })
 
 var Logger = 
@@ -582,6 +595,82 @@ module.Introspection = ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 // System life-cycle...
+
+// XXX docs...
+//
+// 	action: ['Path/To/Action',
+// 		abortablePromise('abort-id', function(abort, ...args){
+//
+// 			abort.cleanup(function(reason, res){
+// 				if(reason == 'done'){
+// 					// ...
+// 				}
+// 				if(reason == 'aborted'){
+// 					// ...
+// 				}
+// 			})
+//
+// 			return new Promise(function(resolve, reject){ 
+// 				// ... 
+//
+// 				if(abort.isAborted){
+//					// handle abort...
+// 				}
+//
+//				// ...
+// 			}) })],
+//
+//
+// NOTE: if the returned promise is not resolved .cleanup(..) will not 
+// 		be called even if the appropriate .abort(..) as called...
+var abortablePromise =
+module.abortablePromise = 
+function(title, func){
+	return Object.assign(
+		function(...args){
+			var that = this
+
+			var abort = object.mixinFlat(
+				this.abortable(title, function(){
+					that.clearAbortable(title, abort) 
+					return abort }), 
+				{
+					get isAborted(){
+						return !((that.__abortable || new Map())
+							.get(title) || new Set())
+								.has(this) },
+
+					__cleanup: null,
+					cleanup: function(func){
+						var args = [...arguments]
+						var reason = this.isAborted ? 
+							'aborted' 
+							: 'done'
+						typeof(func) == 'function' ?
+							// register handler...
+							(this.__cleanup = this.__cleanup 
+								|| new Set()).add(func)
+							// call cleanup handlers...
+							: [...(this.__cleanup || [])]
+								.forEach(function(f){ 
+									f.call(that, reason, ...args) }) 
+						return this },
+				})
+
+			return func.call(this, abort, ...args) 
+				.then(function(res){
+					abort.cleanup(res)()
+					return res })
+				.catch(function(res){
+					abort.cleanup(res)() }) },
+		{
+			toString: function(){
+				return `core.abortablePromise('${ title }', \n${ func.toString() })` },
+		}) }
+
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
 // XXX should his have state???
 // 		...if so, should this be a toggler???
@@ -966,6 +1055,98 @@ var LifeCycleActions = actions.Actions({
 				.stop()
 				.clear()
 				.start() }],
+
+
+	// Abortable...
+	//
+	// Format:
+	// 	Map({
+	// 		title: Set([ func, ... ]),
+	// 		...
+	// 	})
+	//
+	__abortable: null,
+
+	abortable: ['- System/Register abort handler',
+		doc`Register abortable action
+
+			.abortable(title, func)
+				-> func
+
+		`,
+		function(title, callback){
+			// reserved titles...
+			if(title == 'all' || title == '*'){
+				throw new Error('.abortable(..): can not set reserved title: "'+ title +'".') }
+
+			var abortable = this.__abortable = this.__abortable || new Map()
+			var set = abortable.get(title) || new Set()
+			abortable.set(title, set)
+			set.add(callback) 
+
+			return actions.ASIS(callback) }],
+	clearAbortable: ['- System/Clear abort handler(s)',
+		doc`Clear abort handler(s)
+
+			Clear abort handler...
+			.clearAbortable(title, callback)
+
+			Clear all abort handlers for title...
+			.clearAbortable(title)
+			.clearAbortable(title, 'all')
+
+			Clear all abort handlers...
+			.clearAbortable('all')
+
+		`,
+		function(title, callback){
+			callback = callback || '*'
+
+			// clear all...
+			if(title == '*' || title == 'all'){
+				delete this.__abortable }
+
+			var set = ((this.__abortable || new Map()).get(title) || new Set())
+			// clear specific handler...
+			callback != '*' 
+				&& callback != 'all'
+				&& set.delete(callback)
+			// cleanup / clear title...
+			;(set.size == 0 
+					|| callback == '*' 
+					|| callback == 'all')
+				&& (this.__abortable || new Set()).delete(title) 
+			// cleanup...
+			this.__abortable
+				&& this.__abortable.size == 0
+				&& (delete this.__abortable) }],
+	abort: ['- System/Run abort handler(s)',
+		doc`
+
+			.abort(title)
+			.abort([title, .. ])
+
+			.abort('all')
+
+		`,
+		function(title){
+			title = title == '*' || title == 'all' ?
+					[...(this.__abortable || new Map()).keys()]
+				: title instanceof Array ?
+					title
+				: [title]
+
+			this.__abortable
+				&& title
+					.forEach(function(title){
+						[...(this.__abortable || new Map()).get(title) || []]
+							.forEach(function(f){ f() })
+						this.__abortable
+							&& this.__abortable.delete(title) }.bind(this))
+			// cleanup...
+			this.__abortable
+				&& this.__abortable.size == 0
+				&& (delete this.__abortable) }],
 })
 
 var LifeCycle = 

@@ -2189,13 +2189,13 @@ var BrowseActionsActions = actions.Actions({
 		// 		it to sort an prioritize stuff...
 		'action-category-order': [
 			'99:$File',
+				// ...
 				// We can order any sub-tree we want in the same manner 
 				// as the root...
 				'File/-80:Clear viewer',
 				'File/-90:Close viewer',
 				// Non existing elements will not get drawn...
 				//'File/-99:moo',
-			// XXX this seems over-crowded -- revise!!!
 			'99:$Edit',
 				'Edit/90:Undo',
 				'Edit/90:Redo',
@@ -2210,10 +2210,12 @@ var BrowseActionsActions = actions.Actions({
 				'Edit/70:.*shift.*',
 				'Edit/60:.*rotate.*',
 				'Edit/50:.*flip.*',
+				// ...
 			'$Navigate',
 				'Navigate/90:.*image.*',
 				'Navigate/80:.*screen.*',
 				'Navigate/70:.*ribbon.*',
+				// ...
 			'$Image',
 				'Image/99:$Copy image',
 				'Image/99:.*copy.*',
@@ -2229,6 +2231,7 @@ var BrowseActionsActions = actions.Actions({
 				'Image/65:.*shift.*',
 				'Image/60:.*rotate.*',
 				'Image/55:.*flip.*',
+				// ...
 				'Image/-70:---',
 				'Image/-70:.*remove.*',
 			'$Virtual block',
@@ -2238,14 +2241,25 @@ var BrowseActionsActions = actions.Actions({
 				'Virtual block/60:.*mark.*',
 				'Virtual block/50:---',
 				'Virtual block/40:.*crop.*',
+				// ...
 			'$Ribbon',
+				'Ribbon/80:set.*',
+				'Ribbon/70:.*shift.*',
+				'Ribbon/60:.*merge.*',
+				'Ribbon/50:Flatten',
+				'Ribbon/40:.*split.*',
+				'Ribbon/30:.*crop.*',
+				'Ribbon/20:.*order.*',
+				'Ribbon/20:.*align.*',
+				// ...
+				'Ribbon/-60:Add.*collection.*',
 				'Ribbon/-70:---',
 				'Ribbon/-70:.*remove.*',
 			'$Crop',
 				'Crop/80:Crop $marked images',
 				'Crop/80:Crop $bookmarked images',
 				'Crop/70:$Crop',
-				'Crop/70:$Flatten',
+				'Crop/70:Crop $flatten',
 
 				// Path patterns...
 				// 
@@ -2279,32 +2293,35 @@ var BrowseActionsActions = actions.Actions({
 				'Crop/-70:---',
 				//*/
 
+				// ...
 				'Crop/-50:---',
 				'Crop/-60:Remove from crop',
 				'Crop/-70:Remove ribbon.*',
 				'Crop/-71:Remove marked.*',
 				'Crop/-72:.*remove.*',
-
 				'Crop/-75:---',
-
 				'Crop/-80:Uncrop keeping image order',
 				'Crop/-81:Uncrop all',
 				'Crop/-82:$Uncrop',
 			'Co$llections',
+				// ...
 				'Collections/-50:.*exit.*',
 				'Collections/-60:.*edit.*',
 				'Collections/-70:---',
 				'Collections/-70:.*remove.*',
 			'$Tag',
+				// ...
 				// XXX revise...
 				'Tag/-80:---',
 				'Tag/-90:.*remove.*',
 			'$Mark',
+				// ...
 				'Mark/-75:.*collection...',
 				'Mark/-80:---',
 				'Mark/-80:.*remove.*',
 				'Mark/-90:.*unmark.*',
 			'$Bookmark',
+				// ...
 				'Bookmark/-80:---',
 				'Bookmark/-80:.*remove.*',
 
@@ -2312,6 +2329,7 @@ var BrowseActionsActions = actions.Actions({
 
 			'-40:Interface',
 				'Interface/90:Theme',
+				// ...
 			'-50:$Workspace',
 			'-60:System',
 			'-70:$Help',

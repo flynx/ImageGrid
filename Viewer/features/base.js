@@ -1575,7 +1575,7 @@ module.CropActions = actions.Actions({
 			return this.crop(list.slice(list.indexOf(image)), flatten) }],
 	
 	// XXX not sure if we actually need this...
-	cropFlatten: ['Crop/$Flatten',
+	cropFlatten: ['Crop|Ribbon/Crop $flatten',
 		{mode: function(){ 
 			return this.data.ribbon_order.length <= 1 && 'disabled' }},
 		function(list){ this.data.length > 0 && this.crop(list, true) }],
