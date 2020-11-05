@@ -446,7 +446,7 @@ var ElectronHostActions = actions.Actions({
 				...this.images[this.current] 
 			}, function(c){
 				electron.clipboard.write({
-					title: that.images.getImageFileName(),
+					bookmark: that.images.getImageFileName(),
 					text: url,
 					// XXX this seems not to work with images with exif 
 					// 		orientation -- the ig orientation seems to be 

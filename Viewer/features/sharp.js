@@ -342,8 +342,8 @@ var SharpActions = actions.Actions({
 												&& Math.max(m.width, m.height) < size)
 											|| (fit == 'outside'
 												&& Math.min(m.width, m.height) < size)){
-										logger && logger.emit('skipping', to)
-										return false }
+										skipping(gid)
+										return }
 									// continue...
 									return img })
 							: Promise.resolve(img))
@@ -362,8 +362,8 @@ var SharpActions = actions.Actions({
 												fse.removeSync(to)
 											// skip...
 											} else {
-												logger && logger.emit('skipping', to)
-												return false } }
+												skipping(gid)
+												return } }
 
 										// write...
 										return img
@@ -508,7 +508,8 @@ var SharpActions = actions.Actions({
 									if(!base_path){
 										var preview = img.preview = img.preview || {} 
 										preview[parseInt(size) + 'px'] = name
-										that.markChanged('images', [gid]) }
+										that.markChanged
+											&& that.markChanged('images', [gid]) }
 
 									return [gid, size, name] }) }) })
 				.flat()) }],
@@ -519,12 +520,67 @@ var SharpActions = actions.Actions({
 	// 		...and/or have a generic abort protocol triggered when loading...
 	// 		...use task queue???
 	// XXX make each section optional...
-	// XXX revise name...
-	cacheImageMetadata: ['- Sharp|Image/',
-		core.doc`
+	cacheMetadata: ['- Sharp|Image/',
+		core.doc`Cache metadata
+
+			Cache metadata for current image...
+			.cacheMetadata()
+			.cacheMetadata('current')
+				-> promise([ gid | null ])
+
+			Force cache metadata for current image...
+			.cacheMetadata(true)
+			.cacheMetadata('current', true)
+				-> promise([ gid | null ])
+
+			Cache metadata for all images...
+			.cacheMetadata('all')
+				-> promise([ gid | null, .. ])
+
+			Force cache metadata for all images...
+			.cacheMetadata('all', true)
+				-> promise([ gid | null, .. ])
+
+			Cache metadata for specific images...
+			.cacheMetadata([ gid, .. ])
+				-> promise([ gid | null, .. ])
+
+			Force cache metadata for specific images...
+			.cacheMetadata([ gid, .. ], true)
+				-> promise([ gid | null, .. ])
+
+
+		NOTE: this will effectively update metadata format to the new spec...
 		`,
 		function(images, logger){
 			var that = this
+
+			// handle logging and processing list...
+			// NOTE: these will maintain .__metadata_reading helping 
+			// 		avoid processing an image more than once at the same 
+			// 		time...
+			var done = function(gid, msg){
+				logger && logger.emit(msg || 'done', gid)
+				if(that.__metadata_reading){
+					that.__metadata_reading.delete(gid) 
+					if(that.__metadata_reading.size == 0){
+						delete that.__metadata_reading } }
+				return gid }
+			var skipping = function(gid){
+				return done(gid, 'skipping') }
+
+			var force = false
+			if(images === true){
+				force = true
+				images = null
+
+			} else if(logger === true){
+				force = true
+				logger = arguments[2] }
+
+			// NOTE: we are caching this to avoid messing things up when 
+			// 		loading before this was finished...
+			var cached_images = this.images
 
 			// get/normalize images...
 			//images = images || this.current
@@ -541,22 +597,18 @@ var SharpActions = actions.Actions({
 				: images == 'current' ? 
 					this.current
 				: images
-			images = images instanceof Array ? 
-				images 
-				: [images]
+			images = (images instanceof Array ? 
+					images 
+					: [images])
+				.filter(function(gid){
+					return !that.__metadata_reading
+						|| !that.__metadata_reading.has(gid) })
 
 			logger = logger !== false ?
 				(logger || this.logger)
 				: false
 			logger = logger && logger.push('Caching image metadata')
 			logger && logger.emit('queued', images)
-
-			// NOTE: we are caching this to avoid messing things up when 
-			// 		loading before this was finished...
-			var cached_images = this.images
-
-			var loaded = this.ribbons
-				&& new Set(this.ribbons.getImageGIDs())
 
 			/*/ XXX set this to tmp for .location.load =='loadImages'
 			// XXX add preview cache directory...
@@ -573,36 +625,62 @@ var SharpActions = actions.Actions({
 
 			return images
 				.mapChunks(function(gid){
+					var img = cached_images[gid]
+					var path = img && that.getImagePath(gid)
+					;(that.__metadata_reading = 
+							that.__metadata_reading || new Set())
+						.add(gid)
+
+					// skip...
+					if(!(img && path
+							&& (force
+								// high priority must be preset...
+								|| (img.orientation == null
+									&& img.flipped == null)
+								// update metadata...
+								|| (img.metadata || {}).ImageGridMetadata == null))){
+						skipping(gid)
+						return }
+
 					return sharp(that.getImagePath(gid))
 						.metadata()
 						.catch(function(){
-							logger && logger.emit('skipping', gid) })
+							skipping(gid) })
 						.then(function(metadata){
-							// XXX what should we return in case of an error???
+							// no metadata...
 							if(metadata == null){
+								skipping(gid)
 								return }
 
-							var img = cached_images[gid]
-
 							var o = normalizeOrientation(metadata.orientation)
-							// NOTE: we need to set orientation to something
-							// 		or we'll check it again and again...
-							img.orientation = o.orientation || 0
-							img.flipped = o.flipped
+							;(force || img.orientation == null)
+								// NOTE: we need to set orientation to something
+								// 		or we'll check it again and again...
+								&& (img.orientation = o.orientation || 0)
+							;(force || img.flipped == null)
+								&& (img.flipped = o.flipped)
+
+							// mark metadata as partially read...
+							// NOTE: this will intentionally overwrite the 
+							// 		previous reader mark/mode...
+							img.metadata =
+								Object.assign(
+									img.metadata || {}, 
+									{ 
+										ImageGridMetadataReader: 'sharp/exif-reader/ImageGrid',
+										// mark metadata as partial read...
+										// NOTE: partial metadata will get reread by 
+										// 		the metadata feature upon request...
+										ImageGridMetadata: 'partial', 
+									})
 
 							// read the metadata...
 							var exif = metadata.exif 
 								&& exifReader(metadata.exif) 
 							exif
 								&& Object.assign(
-									(img.metadata = img.metadata || {}), 
-									exifReader2exiftool(exif),
-									// mark metadata as partial read...
-									//
-									// NOTE: partial metadata will get reread by 
-									// 		the metadata feature upon request...
-									// XXX revise name...
-									{ ImageGridPartialMetadata: true })
+									img.metadata, 
+									exifReader2exiftool(exif))
 
 							// if image too large, generate preview(s)...
 							// XXX EXPERIMENTAL...
@@ -619,16 +697,16 @@ var SharpActions = actions.Actions({
 										base_path,
 										logger) }
 
-							that.markChanged('images', [gid])
-
-							logger && logger.emit('done', gid)
-
-							// update loaded image to use the orientation...
-							loaded
-								&& loaded.has(gid)
+							that.markChanged
+								&& that.markChanged('images', [gid])
+							that.ribbons
 								&& that.ribbons.updateImage(gid) 
 
-							return gid }) }) }],
+							return done(gid) }) }) }],
+	cacheAllMetadata: ['- Sharp|Image/',
+		core.doc`Cache all metadata
+		NOTE: this is a shorthand to .cacheMetadata('all', ..)`,
+		'cacheMetadata: "all" ...'],
 })
 
 
@@ -653,7 +731,7 @@ module.Sharp = core.ImageGridFeatures.Feature({
 		// XXX this is best done in a thread + needs to be abortable (on .load(..))...
 		['loadImages',
 			function(){
-				this.cacheImageMetadata('all') }],
+				this.cacheMetadata('all') }],
 		//*/
 
 		// set orientation if not defined...
@@ -667,12 +745,12 @@ module.Sharp = core.ImageGridFeatures.Feature({
 		//	function(gid){
 		['updateImage',
 			function(_, gid){
-				var img = this.images[gid]
-				img
-					&& img.orientation == null
-					&& this.cacheImageMetadata(gid, false) 
-					&& this.logger 
-						&& this.logger.emit('Caching metadata for', gid) }],
+				var that = this
+				this.cacheMetadata(gid, false) 
+					.then(function([res]){
+						res 
+							&& that.logger 
+								&& that.logger.emit('Cached metadata for', gid) }) }],
 
 		// XXX need to:
 		// 		- if image too large to set the preview to "loading..."

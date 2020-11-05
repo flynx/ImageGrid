@@ -121,7 +121,7 @@ var MetadataReaderActions = actions.Actions({
 
 			return new Promise(function(resolve, reject){
 				if(!force 
-						&& !(img.metadata || {}).ImageGridPartialMetadata){
+						&& (img.metadata || {}).ImageGridMetadata == 'full'){
 					return resolve(img.metadata) }
 
 				fs.readFile(full_path, function(err, file){
@@ -150,19 +150,20 @@ var MetadataReaderActions = actions.Actions({
 							reject(data)
 
 						} else {
-							// store metadata...
-							// XXX 
-
 							// convert to a real dict...
 							// NOTE: exiftool appears to return an array 
 							// 		object rather than an actual dict/object
 							// 		and that is not JSON compatible....
-							var m = {}
-							Object.keys(data).forEach(function(k){ m[k] = data[k] })
-
-							that.images[gid].metadata = m
-
-							// XXX
+							that.images[gid].metadata =
+								Object.assign(
+									// XXX do we need to update or overwrite??
+									that.images[gid].metadata || {},
+									data,
+									{
+										ImageGridMetadataReader: 'exiftool/ImageGrid',
+										// mark metadata as full read...
+										ImageGridMetadata: 'full',
+									})
 							that.markChanged 
 								&& that.markChanged('images', [gid]) }
 
