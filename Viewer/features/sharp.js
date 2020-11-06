@@ -658,7 +658,7 @@ var SharpActions = actions.Actions({
 				(logger || this.logger)
 				: false
 			logger = logger 
-				&& logger.push('Caching image metadata', {onclose: abort})
+				&& logger.push('Caching image metadata', {onclose: abort, quiet: true})
 			logger && logger.emit('queued', images)
 
 			/*/ XXX set this to tmp for .location.load =='loadImages'
@@ -766,6 +766,8 @@ var SharpActions = actions.Actions({
 
 	// shorthands...
 	// XXX do we need these???
+	abortMakeResizedImage: ['- Sharp/',
+		'abort: "makeResizedImage"'],
 	abortMakePreviews: ['- Sharp/',
 		'abort: "makePreviews"'],
 	abortCacheMetadata: ['- Sharp/',
