@@ -156,6 +156,13 @@ module.QueueActions = actions.Actions(QueuePrototype, {
 						: e[0] == tag && e[1] === task){
 					delete ready[i]
 					that.taskDropped(e[0], e[1], e[2]) } }) }],
+	// prioritize tasks by bumping them to start of queue...
+	// XXX
+	prioritize: ['',
+		function(){
+			// XXX
+		}],
+	// delay tasks by pushing then to end of queue...
 	delay: ['',
 		function(a, b){
 			var ready = this.__ready

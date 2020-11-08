@@ -2442,7 +2442,7 @@ function(title, func){
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
 var makeTaskAction = 
-function(name, state, callback){
+function(name, from, to, callback){
 	return function(title, task='all'){
 		title = title == '*' || title == 'all' ?
 				[...(this.__running_tasks || new Map()).keys()]
@@ -2454,17 +2454,24 @@ function(name, state, callback){
 				.forEach(function(title){
 					[...(this.__running_tasks || new Map()).get(title) || []]
 						.forEach(function(t){ 
+							// filter task...
 							;(task == 'all' 
 									|| task == '*' 
 									|| task === t
 									|| (task instanceof Array 
 										&& task.includes(t)))
+								// filter states...
+								&& (from == '*' 
+									|| from == 'all' 
+									|| t.state == from)
+								// XXX do we retrigger???
+								//&& t.state != to
 								// call handler...
 								&& t[name] 
 								&& t[name]() !== false
 								// state...
-								&& state 
-									&& (t.state = state) }) 
+								&& to 
+									&& (t.state = to) }) 
 					callback
 						&& callback.call(this, title, task) }.bind(this)) 
 			// cleanup...
@@ -2501,6 +2508,8 @@ var TaskActions = actions.Actions({
 	// XXX might be a good idea to make this compatible with tasks.Queue(..)
 	// 		...and return a queue if not task is given??
 	Task: ['- System/',
+		doc`
+		`,
 		function(title, task){
 			// reserved titles...
 			if(title == 'all' || title == '*'){
@@ -2572,17 +2581,20 @@ var TaskActions = actions.Actions({
 	get tasks(){
 		return this.actions.filter(function(action){
 			return !!this.getActionAttr(action, '__task__') }.bind(this)) },
-	get running(){
+
+	get tasksActive(){
+		return this.getTasks() },
+	get tasksRunning(){
 		return this.getTasks('all', 'running') },
-	get paused(){
+	get tasksPaused(){
 		return this.getTasks('all', 'paused') },
 
-	pause: ['- System/',
-		makeTaskAction('pause', 'paused')],
-	resume: ['- System/',
-		makeTaskAction('resume', 'running')],
-	_abort: ['- System/',
-		makeTaskAction('abort', null,
+	pauseTask: ['- System/',
+		makeTaskAction('pause', 'running', 'paused')],
+	resumeTask: ['- System/',
+		makeTaskAction('resume', 'paused', 'running')],
+	abortTask: ['- System/',
+		makeTaskAction('abort', 'all', null,
 			function(title, task='all'){
 				this.__running_tasks
 					&& (task == 'all' 
