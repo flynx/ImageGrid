@@ -20,7 +20,7 @@
   "dependencies": {
     "app-module-path": "^1.0.6",
     "async-json": "0.0.2",
-    "electron": "^9.3.3",
+    "electron": "^9.3.4",
     "exif-reader": "^1.0.3",
     "exiftool": "^0.0.3",
     "fs-extra": "^7.0.1",
@@ -32,7 +32,7 @@
     "ig-argv": "^2.15.0",
     "ig-features": "^3.4.2",
     "ig-object": "^5.2.8",
-    "ig-types": "^3.4.2",
+    "ig-types": "^3.5.1",
     "moment": "^2.29.1",
     "object-run": "^1.0.1",
     "requirejs": "^2.3.6",

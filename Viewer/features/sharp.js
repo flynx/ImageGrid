@@ -821,11 +821,14 @@ module.Sharp = core.ImageGridFeatures.Feature({
 		['updateImage',
 			function(_, gid){
 				var that = this
-				this.cacheMetadata(gid, false) 
-					.then(function([res]){
-						res 
-							&& that.logger 
-								&& that.logger.emit('Cached metadata for', gid) }) }],
+				// NOTE: as this directly affects the visible lag, this 
+				// 		must be as fast as possible...
+				;((this.images[gid] || {}).metadata || {}).ImageGridMetadata
+					|| this.cacheMetadata(gid, false) 
+						.then(function([res]){
+							res 
+								&& that.logger 
+									&& that.logger.emit('Cached metadata for', gid) }) }],
 
 		// XXX need to:
 		// 		- if image too large to set the preview to "loading..."
