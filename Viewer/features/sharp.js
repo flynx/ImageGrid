@@ -125,11 +125,12 @@ module.EXIF_FORMAT = {
 	// XXX anything else???
 }
 
+// NOTE: this only reads the .rating from xmp...
 var exifReader2exiftool = 
 module.exifReader2exiftool =
-function(data){
+function(exif, xmp){
 	return Object.entries(EXIF_FORMAT)
-		// handle exif/image/...
+		// handle exif...
 		.reduce(function(res, [path, to]){
 			var handler
 			;[to, handler] = to instanceof Array ?
@@ -141,7 +142,7 @@ function(data){
 			// resolve source path...
 			var value = path.split(/\./g)
 				.reduce(function(res, e){ 
-					return res && res[e] }, data)
+					return res && res[e] }, exif)
 			// set the value...
 			if(value !== undefined){
 				res[to] = handler ?
@@ -150,11 +151,11 @@ function(data){
 			return res }, {})
 		// handle xmp...
 		.run(function(){
-			var rating = data.xmp 
+			var rating = xmp 
 				// NOTE: we do not need the full XML 
 				// 		fluff here, just get some values...
 				&& parseInt(
-					(data.xmp.toString()
+					(xmp.toString()
 							.match(/(?<match><(xmp:Rating)[^>]*>(?<value>.*)<\/\2>)/i) 
 						|| {groups: {}})
 					.groups.value)
@@ -735,7 +736,7 @@ var SharpActions = actions.Actions({
 							exif
 								&& Object.assign(
 									img.metadata, 
-									exifReader2exiftool(exif))
+									exifReader2exiftool(exif, metadata.xmp))
 
 							// if image too large, generate preview(s)...
 							// XXX EXPERIMENTAL...
