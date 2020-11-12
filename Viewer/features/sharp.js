@@ -601,11 +601,17 @@ var SharpActions = actions.Actions({
 
 			var CHUNK_SIZE = 4
 
+			// XXX this seems to be called prematurely...
 			abort.cleanup(function(reason, res){
+				console.log('!!!!!!',
+					logger && logger.log.length,
+					reason, res)
+				/*
 				logger 
 					&& logger.emit('done')
 					&& reason == 'aborted'
 						&& logger.emit(res)
+				//*/
 				delete that.__cache_metadata_reading })
 
 			// handle logging and processing list...

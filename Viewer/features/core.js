@@ -2441,6 +2441,107 @@ function(title, func){
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
+var Task =
+module.Task =
+object.Constructor('Task', {
+})
+
+
+//
+//	eventMethod(name[, func])
+//	eventMethod(name[, func], 'hidden')
+//		-> method
+//
+//	eventMethod(name[, func], 'visible')
+//		-> method
+//
+//
+//	Bind handler...
+//	method(handler)
+//		-> this
+//
+//	Unbind handler...
+//	method(handler, false)
+//		-> this
+//
+//	Trigger handlers...
+//	method(...args)
+//		-> this
+//
+//
+//	func(handle, ...args)
+//
+//
+// XXX move this someplace generic...
+var eventMethod = function(name, func, mode='hidden'){
+	// no func given...
+	if(typeof(func) != 'function'){
+		mode = func
+		func = undefined }
+	// hidden handler list...
+	var handlers = mode == 'hidden' && []
+
+	return function(func, mode){
+		handlers = handlers === false ?
+			this['__'+name]
+			: handlers
+		// bind/unbind event handler...
+		if(typeof(func) == 'function'){
+			mode === false ?
+				handlers.splice(handlers.indexOf(func), 1)
+				: handlers.push(func) 
+		// trigger the event...
+		} else {
+			var args = [...arguments]
+			var handle = function(){
+				handlers
+					.forEach(function(handler){ 
+						handler(...args) }) } 
+			func ?
+				func.call(this, handle, ...args) 
+				: handle(...args)}
+		return this } }
+
+var taskAction =
+module.taskAction =
+function(title, func){
+	return Object.assign(
+		task(function(){
+			var that = this
+
+			// XXX
+			var ticket = {
+				// XXX revise naming...
+				start: eventMethod('start', function(handle, ...args){
+				}),
+				pause: eventMethod('pause', function(handle, ...args){
+				}),
+				abort: eventMethod('abort', function(handle, ...args){
+					if(!this.state != 'done'){
+						this.abortTask(title) 
+						handle(...args) } }),
+
+				// can be:
+				// 	- ready
+				// 	- running
+				// 	- done
+				get state(){
+				},
+			}
+
+			return func.call(this, ticket, ...args)
+				.then(function(){
+				})
+				.catch(function(){
+				}) }),
+		{
+			toString: function(){
+				return `core.taskAction('${ title }', \n${ func.toString() })` },
+		}) }
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
 var makeTaskAction = 
 function(name, from, to, callback){
 	return function(title, task='all'){
