@@ -2447,12 +2447,57 @@ object.Constructor('Task', {
 })
 
 
+// XXX add .toString(..) 
+var bareEventMethod = function(name, func, options={}){
+	var hidden
+	var method
+	return object.mixinFlat(
+		method = function(func, mode){
+			var handlers = 
+				// hidden...
+				options.handlerLocation == 'hidden' ?
+					(hidden = hidden || [])
+				// function...
+				: options.handlerLocation == 'method' ?
+					(method.__event_handlers__ = method.__event_handlers__ || [])
+				// context (default)...
+				: ((this.__event_handlers__ = this.__event_handlers__ || {})[name] =
+					this.__event_handlers__[name] || [])
+
+			var args = [...arguments]
+			var handle = function(){
+				handlers
+					.forEach(function(handler){ 
+						handler(...args) }) } 
+			var res
+			func ?
+				(res = func.call(this, handle, ...args))
+				: handle(...args)
+
+			return res },
+		{
+			__event__: true,
+			get __event_handler_location__(){
+				return ['hidden', 'method'].includes(options.handlerLocation) ?
+					options.handlerLocation
+					: 'context' },
+			__event_handler_remove__: function(context, func){
+				var handlers = 
+					(options.handlerLocation == 'hidden' ? 
+						hidden
+					: options.handlerLocation == 'method' ?
+						method.__event_handlers__
+					: (context.__event_handlers__ || {})[name]) || []
+				handlers.splice(handlers.indexOf(func), 1)
+				return this },
+			toString: function(){
+				return func.toString()
+					.replace(/^(function[^(]*\()[^,)]*, ?/, '$1') },
+		}) } 
+
+
 //
 //	eventMethod(name[, func])
-//	eventMethod(name[, func], 'hidden')
-//		-> method
-//
-//	eventMethod(name[, func], 'visible')
 //		-> method
 //
 //
@@ -2473,39 +2518,56 @@ object.Constructor('Task', {
 //
 //
 // XXX move this someplace generic...
-var eventMethod = function(name, func, mode='hidden'){
-	// no func given...
-	if(typeof(func) != 'function'){
-		mode = func
-		func = undefined }
-	// hidden handler list...
-	var handlers = mode == 'hidden' && []
+// XXX should this be an EventFunction callable...
+var eventMethod = function(name, func, options={}){
+	return Object.assign(
+		bareEventMethod(name, 
+			function(handle, ...args){
+				// add handler...
+				// XXX handle handler tags...
+				if(typeof(args[0]) == 'function'){
+					var handlers = 
+						// hidden...
+						options.handlerLocation == 'hidden' ?
+							(hidden = hidden || [])
+						// function...
+						: options.handlerLocation == 'method' ?
+							(method.__event_handlers__ = method.__event_handlers__ || [])
+						// context (default)...
+						: ((this.__event_handlers__ = this.__event_handlers__ || {})[name] =
+							this.__event_handlers__[name] || [])
+					// add handler...
+					handlers.push(args[1])
+					
+				// call the action...
+				} else {
+					func.call(handle, ...args) }
 
-	return function(func, mode){
-		handlers = handlers === false ?
-			this['__'+name]
-			: handlers
-		// bind/unbind event handler...
-		if(typeof(func) == 'function'){
-			mode === false ?
-				handlers.splice(handlers.indexOf(func), 1)
-				: handlers.push(func) 
-		// trigger the event...
-		} else {
-			var args = [...arguments]
-			var handle = function(){
-				handlers
-					.forEach(function(handler){ 
-						handler(...args) }) } 
-			func ?
-				func.call(this, handle, ...args) 
-				: handle(...args)}
-		return this } }
+				return this }, 
+			options),
+   		{
+			// NOTE: this is a copy of bareEventMethod's .toString() as we 
+			// 		still need to base the doc on the user's func...
+			toString: function(){
+				return func.toString()
+					.replace(/^(function[^(]*\()[^,)]*, ?/, '$1') },
+		}) }
+
+var EventHandlerMixin = {
+	on: function(event, func){
+	},
+	off: function(event, func){
+	},
+	trigger: function(event, ...args){
+	},
+}
+
 
 var taskAction =
 module.taskAction =
 function(title, func){
-	return Object.assign(
+	var action
+	return (action = Object.assign(
 		task(function(){
 			var that = this
 
@@ -2513,12 +2575,16 @@ function(title, func){
 			var ticket = {
 				// XXX revise naming...
 				start: eventMethod('start', function(handle, ...args){
-				}),
+					if(this.state == 'ready'){
+						that.resumeTask(title, action)
+						handle(...args) } }),
 				pause: eventMethod('pause', function(handle, ...args){
-				}),
+					if(this.state == 'running'){
+						that.pauseTask(title, action)
+						handle(...args) } }),
 				abort: eventMethod('abort', function(handle, ...args){
 					if(!this.state != 'done'){
-						this.abortTask(title) 
+						that.abortTask(title, action) 
 						handle(...args) } }),
 
 				// can be:
@@ -2537,7 +2603,7 @@ function(title, func){
 		{
 			toString: function(){
 				return `core.taskAction('${ title }', \n${ func.toString() })` },
-		}) }
+		})) }
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
