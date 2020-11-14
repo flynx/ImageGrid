@@ -1563,12 +1563,12 @@ module.CropActions = actions.Actions({
 	// XXX save a crop (catalog)..
 	// XXX
 	
-	cropBefore: ['Crop/Crop current and $befor$e',
+	cropBefore: ['Crop|Image/Crop current and $befor$e',
 		function(image, flatten){
 			image = image || this.current
 			var list = this.data.getImages()
 			return this.crop(list.slice(0, list.indexOf(image)+1), flatten) }],
-	cropAfter: ['Crop/Crop current and $after',
+	cropAfter: ['Crop|Image/Crop current and $after',
 		function(image, flatten){
 			image = image || this.current
 			var list = this.data.getImages()
@@ -1621,7 +1621,7 @@ module.CropActions = actions.Actions({
 
 			this.crop(crop, flatten) 
 		}],
-	cropOutRibbonsBelow: ['Crop/Crop out ribbons be$low',
+	cropOutRibbonsBelow: ['Crop|Ribbon/Crop out ribbons be$low',
 		function(ribbon, flatten){
 			if(this.data.length == 0){
 				return
