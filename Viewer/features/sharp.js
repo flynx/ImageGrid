@@ -603,12 +603,12 @@ var SharpActions = actions.Actions({
 
 			// XXX this seems to be called prematurely...
 			abort.cleanup(function(reason, res){
-				console.log('!!!!!!',
+				console.log('### ABORT:\n    ',
 					logger && logger.log.length,
 					reason, res)
 				/*
 				logger 
-					&& logger.emit('done')
+					&& logger.emit('close')
 					&& reason == 'aborted'
 						&& logger.emit(res)
 				//*/

@@ -128,6 +128,7 @@ var ProgressActions = actions.Actions({
 					.append($('<span class="close">&times;</span>')
 						.on('click', function(){ 
 							var cache = (that.__progress_cache || {})[text]
+							// XXX do we need both close and done callbacks???
 							cache.onclose
 								&& cache.onclose() 
 							widget.trigger('progressClose') }))
@@ -143,6 +144,7 @@ var ProgressActions = actions.Actions({
 								var cache = (that.__progress_cache || {})[text]
 								cache.timeout 
 									&& clearTimeout(cache.timeout)
+								// XXX do we need both close and done callbacks???
 								cache.ondone
 									&& cache.ondone()
 								delete (that.__progress_cache || {})[text]
@@ -175,6 +177,7 @@ var ProgressActions = actions.Actions({
 			// auto-close...
 			if(value && value >= (max || 0)){
 				widget.attr('close-timeout', 
+					// XXX BUG: this appears to get triggered after we close progress...
 					JSON.stringify(setTimeout(function(){ 
 						widget.trigger('progressClose') 
 					}, this.config['progress-done-delay'] || 1000))) }
@@ -209,10 +212,13 @@ var ProgressActions = actions.Actions({
 				'skipped',
 				'removed',
 			]
+			var close = [
+				'close',
+				'end',
+			]
 
 			// close...
-			// XXX is the right keyword...
-			if(status == 'done' && rest.length == 0){
+			if(close.includes(status)){
 				this.showProgress(path, 'close', logger)
 
 			// report progress...
