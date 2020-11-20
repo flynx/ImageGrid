@@ -57,8 +57,7 @@ var ExampleActions = actions.Actions({
 			console.log('exampleDebouncedAction: This can\'t be called more often than once per 1 second.')
 			console.log('exampleDebouncedAction: note that within this second only the original return value is returned.')
 			console.log('    <', args)
-			return args
-		})],
+			return args })],
 	exampleAliasDebounced: ['Test/',
 		core.debounce(1000, 'exampleAction: ...')],
 
@@ -69,20 +68,16 @@ var ExampleActions = actions.Actions({
 				function(){ console.log('exampleAfterActionCall: done.') })
 			// schedule a call after the top action call...
 			this.afterAction('top', 
-				function(){ console.log('exampleAfterActionCall: final done.') })
-		}],
+				function(){ console.log('exampleAfterActionCall: final done.') }) }],
 	exampleNestedAfterActionCall: ['Test/',
 		function(){
 			this.afterAction(function(){ console.log('exampleNestedAfterActionCall: done.') })
-
-			this.exampleAfterActionCall()
-		}],
+			this.exampleAfterActionCall() }],
 
 	// a normal method...
 	exampleMethod: function(){
 		console.log('example method:', [...arguments])
-		return 'example result'
-	},
+		return 'example result' },
 
 	// XXX does not work -- see actions.Actions(..) for details...
 	exampleAlias: ['Test/Action alias',
@@ -100,14 +95,12 @@ var ExampleActions = actions.Actions({
 		//{await: true},
 		function(t){
 			return new Promise(function(resolve){
-				setTimeout(function(){ resolve() }, t || 1000) })
-		}],
+				setTimeout(function(){ resolve() }, t || 1000) }) }],
 	exampleAsyncAction: ['- Test/',
 		{await: false},
 		function(t){ 
 			return new Promise(function(resolve){
-				setTimeout(function(){ resolve() }, t || 1000) })
-		}],
+				setTimeout(function(){ resolve() }, t || 1000) }) }],
 
 	// Togglers...
 	//
@@ -193,9 +186,7 @@ var ExampleActions = actions.Actions({
 					delete this.__example_toggler_state
 
 				} else {
-					this.__example_toggler_state = state
-				}
-			},
+					this.__example_toggler_state = state } },
 			// List of states...
 			// NOTE: this can be a string for bool states and a list for
 			// 		togglers with multiple states...
@@ -216,19 +207,15 @@ var ExampleActions = actions.Actions({
 					delete this.__example_full_toggler_state
 
 				} else {
-					this.__example_full_toggler_state = state
-				}
-			},
+					this.__example_full_toggler_state = state } },
 			// List of states...
 			['A', 'B', 'C'],
 			// pre-callback (optional)
 			function(){
-				console.log('Changing state from:', this.exampleTogglerFull('?'))
-			},
+				console.log('Changing state from:', this.exampleTogglerFull('?')) },
 			// post-callback...
 			function(){
-				console.log('Changing state to:', this.exampleTogglerFull('?'))
-			})],
+				console.log('Changing state to:', this.exampleTogglerFull('?')) })],
 
 	// XXX docs...
 	// XXX BUG? false is not shown in the dialog button...
@@ -253,8 +240,7 @@ var ExampleActions = actions.Actions({
 			['A', 'B', 'C', 'none'],
 			// post-callback (optional)...
 			function(state){
-				console.log('exampleConfigToggler: callback: shifting state to:', state)
-			})],
+				console.log('exampleConfigToggler: callback: shifting state to:', state) })],
 	// XXX docs...
 	exampleConfigTogglerFull: ['- Test/',
 		core.makeConfigToggler(
@@ -262,23 +248,19 @@ var ExampleActions = actions.Actions({
 			'example-option-full',
 			// option states...
 			function(){
-				return ['A', 'B', 'C', 'none']
-			},
+				return ['A', 'B', 'C', 'none'] },
 			// pre-callback...
 			function(state){
 				if(state == 'C'){
 					console.log('exampleConfigToggler: pre-callback: preventing shift to:', state)
 					// we can prevent a state change by returning false...
 					// XXX should we be able to return a different state here???
-					return false
-				}
+					return false }
 
-				console.log('exampleConfigToggler: pre-callback: shifting state to:', state)
-			},
+				console.log('exampleConfigToggler: pre-callback: shifting state to:', state) },
 			// post-callback...
 			function(state){
-				console.log('exampleConfigToggler: post-callback: shifting state to:', state)
-			})],
+				console.log('exampleConfigToggler: post-callback: shifting state to:', state) })],
 
 	// XXX event and event use...
 	
@@ -308,8 +290,7 @@ module.Example = core.ImageGridFeatures.Feature({
 			function(){
 				console.log('PRE')
 				return function(){
-					console.log('POST') } 
-			}],
+					console.log('POST') } }],
 	],
 })
 
@@ -348,8 +329,7 @@ var ExampleUIActions = actions.Actions({
 					.append($('<h1>')
 						.text(h || 'Drawer example...'))
 					.append($('<p>')
-						.text(txt || 'With some text.'))
-			},
+						.text(txt || 'With some text.')) },
 			// pass custom configuration to container...
 			{
 				background: 'white',
@@ -367,8 +347,7 @@ var ExampleUIActions = actions.Actions({
 
 				make('select last') 
 					.on('open', function(){
-						that.select(-1)
-					})
+						that.select(-1) })
 					
 				make('do nothing')
 					.addClass('marked')
@@ -378,16 +357,14 @@ var ExampleUIActions = actions.Actions({
 						shortcut_key: 'n',
 					})
 					.on('open', function(){
-						actions.exampleBrowse()
-					})
+						actions.exampleBrowse() })
 
 				make('---')
 
 
 				make('$close parent')
 					.on('open', function(){
-						that.parent.close()
-					})
+						that.parent.close() })
 
 				make('...')
 
@@ -398,14 +375,11 @@ var ExampleUIActions = actions.Actions({
 				// NOTE: this is not needed here as the dialog is drawn
 				// 		on sync, but for async dialogs this will align
 				// 		the selected field correctly.
-				make.done()
-			})
+				make.done() })
 			// NOTE: this is not a dialog event, it is defined by the 
 			// 		container to notify us that we are closing...
 			.on('close', function(){
-				console.log('Dialog closing...')
-			})
-		})],
+				console.log('Dialog closing...') }) })],
 	// XXX use tag list and current image tags....
 	exampleBrowseCloud: ['Test/Demo $cloud dialog...',
 		widgets.makeUIDialog(function(){
@@ -439,24 +413,20 @@ var ExampleUIActions = actions.Actions({
 								e.css('opacity', 
 									e.css('opacity') == 0.3 ? '' : 0.3)
 							})
-						res.push(e[0])
-					})
+						res.push(e[0]) })
 
 				$(res).parent()
 					.append($('<div>')
 						.sortable()
 						.append($(res)))
 
-				make.done()
-			}, 
+				make.done() }, 
 			// make the dialog a cloud...
 			{ cloudView: true })
 			// NOTE: this is not a dialog event, it is defined by the 
 			// 		container to notify us that we are closing...
 			.on('close', function(){
-				console.log('Dialog closing...')
-			})
-		})],
+				console.log('Dialog closing...') }) })],
 	exampleBrowsrItems: ['Test/-99: Demo browse $items...',
 		widgets.makeUIDialog(function(){
 			var actions = this
@@ -503,13 +473,11 @@ var ExampleUIActions = actions.Actions({
 				// NOTE: this is not needed here as the dialog is drawn
 				// 		on sync, but for async dialogs this will align
 				// 		the selected field correctly.
-				make.done()
-			})
+				make.done() })
 			// NOTE: this is not a dialog event, it is defined by the 
 			// 		container to notify us that we are closing...
 			.on('close', function(){
-			})
-		})],
+			}) })],
 	exampleList: ['Test/-99: Demo $lists editors in dialog...',
 		widgets.makeUIDialog(function(){
 			var actions = this
@@ -547,16 +515,13 @@ var ExampleUIActions = actions.Actions({
 				// NOTE: this is not needed here as the dialog is drawn
 				// 		on sync, but for async dialogs this will align
 				// 		the selected field correctly.
-				make.done()
-			})
+				make.done() })
 			// NOTE: this is not a dialog event, it is defined by the 
 			// 		container to notify us that we are closing...
 			.on('close', function(){
 				console.log(core.doc`Lists:
 				- Numbers: ${numbers.join(', ')}
-				- Letters: ${letters.join(', ')}`)
-			})
-		})],
+				- Letters: ${letters.join(', ')}`) }) })],
 	examplePinnedList: ['Test/-99: Demo $pinned lists in dialog...',
 		widgets.makeUIDialog(function(){
 			var actions = this
@@ -584,23 +549,21 @@ var ExampleUIActions = actions.Actions({
 				// NOTE: this is not needed here as the dialog is drawn
 				// 		on sync, but for async dialogs this will align
 				// 		the selected field correctly.
-				make.done()
-			})
+				make.done() })
 			// NOTE: this is not a dialog event, it is defined by the 
 			// 		container to notify us that we are closing...
 			.on('close', function(){
 				console.log(core.doc`Lists:
 				- Pins: ${pins.join(', ')}
-				- Letters: ${letters.join(', ')}`)
-			})
-		})],
+				- Letters: ${letters.join(', ')}`) }) })],
 
 	exampleProgress: ['Test/Demo $progress bar...',
 		function(text){
+			var that = this
+
 			var done = 0
 			var max = 10
 			var text = text || 'Progress bar demo'
-			var that = this
 
 			this.showProgress(text)
 
@@ -614,11 +577,41 @@ var ExampleUIActions = actions.Actions({
 
 				// NOTE: we add 10 here to compensate for changing max value...
 				done < max+10
-					&& setTimeout(step, 200) 
-			}
+					&& setTimeout(step, 200) }
 
-			setTimeout(step, 1000)
-		}], 
+			setTimeout(step, 1000) }], 
+
+	exampleLoggerProgress: ['Test/Demo logger-based brogress bar...',
+		function(text, logger){
+			var that = this
+
+			var done = 0
+			var max = 10
+			logger = logger 
+				|| this.logger.push(text || 'Logger progress demo')
+
+			logger.emit('add', 'a')
+			logger.emit('add', 'b')
+			logger.emit('add', 'c')
+			logger.emit('add', new Array(7).fill('x'))
+
+			var step = function(){
+				done++
+
+				logger.emit('done', 'a')
+
+				done < 8
+					&& (max += 5)
+					&& logger.emit('add', [1, 2, 3, 4, 5])
+				done < 30
+					&& (max += 3)
+					&& logger.emit('skip', 'y')
+
+				// NOTE: we add 10 here to compensate for changing max value...
+				done < max
+					&& setTimeout(step, 200) }
+
+			setTimeout(step, 1000) }],
 
 	// XXX make this a toggler....
 	partitionByMonth: ['Test/',
@@ -627,8 +620,7 @@ var ExampleUIActions = actions.Actions({
 
 			this.toggleImageSort('?') != 'Date' && this.sortImages('Date')
 
-			this.on('updateImage', function(_, gid){ this.placeMonthPartition(gid) })
-		}],
+			this.on('updateImage', function(_, gid){ this.placeMonthPartition(gid) }) }],
 	// XXX this should be .updateImage(..) in a real feature...
 	placeMonthPartition: ['Test/',
 		function(image){
@@ -648,33 +640,27 @@ var ExampleUIActions = actions.Actions({
 				this.ribbons.getImageMarks(gid).filter('.partition').remove()
 				this.ribbons.getImage(gid)
 					.after(this.ribbons.elemGID($('<div class="mark partition">'), gid)
-						.attr('text', month[next.birthtime.getMonth()]))
-			}
-		}],
+						.attr('text', month[next.birthtime.getMonth()])) } }],
 
 
 	exampleEmbededLister: ['Test/50: Lister example (embeded)/*',
 		function(path, make){
 			make('a/')
 			make('b/')
-			make('c/')
-		}],
+			make('c/') }],
 	exampleFloatingLister: ['Test/50:Lister example (floating)...',
 		function(path){
 			// we got an argument and can exit...
 			if(path){
 				console.log('PATH:', path)
-				return
-			}
+				return }
 
 			// load the UI...
 			var that = this
 			var list = function(path, make){
-				
 				make('a/')
 				make('b/')
-				make('c/')
-			}
+				make('c/') }
 
 			var o = overlay.Overlay(this.dom, 
 				browse.makePathList(null, {
@@ -682,14 +668,13 @@ var ExampleUIActions = actions.Actions({
 					'b/*': list,
 					'c/*': list,
 				})
-					.open(function(evt, path){ 
-						o.close() 
+				.open(function(evt, path){ 
+					o.close() 
 
-						that.exampleFloatingLister(path)
-					}))
+					that.exampleFloatingLister(path)
+				}))
 
-			return o
-		}],
+			return o }],
 
 
 	// XXX BUG: right limit indicator can get covered by the scrollbar...
@@ -724,9 +709,7 @@ var ExampleUIActions = actions.Actions({
 				.on('close', function(){
 					if(that.nested){
 						that.nested.stop()
-						delete that.nested
-					}
-				})
+						delete that.nested } })
 
 
 			var data = this.data.crop(this.data.tagQuery(tag), true)
@@ -760,8 +743,7 @@ var ExampleUIActions = actions.Actions({
 
 							Esc: 'close!',
 						},
-					}
-				})
+					} })
 				// load some testing data...
 				.load({
 					viewer: viewer,
@@ -780,11 +762,9 @@ var ExampleUIActions = actions.Actions({
 
 			// XXX need to focus widget -- use a real trigger event instead of timer...
 			setTimeout(function(){
-				that.nested.dom.focus()
-			}, 200)
+				that.nested.dom.focus() }, 200)
 
-			return this.nested
-		}],
+			return this.nested }],
 	showBookmarkedInDrawer: ['Test/Show bookmarked in drawer',
 		function(){ this.showTaggedInDrawer('bookmark') }],
 	showSelectedInDrawer: ['Test/Show marked in drawer',
@@ -798,13 +778,11 @@ var ExampleUIActions = actions.Actions({
 				gid: gid
 			}
 			if(text){
-				attrs.text = text
-			}
+				attrs.text = text }
 			this.ribbons.getImage(gid)
 				.after($('<span>')
 					.addClass('mark partition')
-					.attr(attrs))
-		}],
+					.attr(attrs)) }],
 
 	// Combined dialog/lister...
 	//
@@ -814,13 +792,11 @@ var ExampleUIActions = actions.Actions({
 			var makeList = function(_, make){
 				make('A')
 				make('B')
-				make('C')
-			}
+				make('C') }
 
 			return make instanceof Function ?
 				makeList(path, make)
-				: browse.makeLister(null, makeList)
-		})],
+				: browse.makeLister(null, makeList) })],
 	exampleDialogListerL: ['Test/Combined dialog & lister (lister mode)/*',
 		'exampleDialogLister: ...'],
 
@@ -829,8 +805,7 @@ var ExampleUIActions = actions.Actions({
 		function(path, make){ return function(){
 			make('A')
 			make('B')
-			make('C')
-		} }],
+			make('C') } }],
 
 
 	// XXX should this use widgets.makeUIDialog(..)
@@ -989,8 +964,7 @@ var ExampleUI2Actions = actions.Actions({
 			make('---')
 			make('X')
 			make('Y')
-			make('Z')
-		} }],
+			make('Z') } }],
 })
 
 var ExampleUI = 

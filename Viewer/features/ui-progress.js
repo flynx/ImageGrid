@@ -22,7 +22,32 @@ var ProgressActions = actions.Actions({
 		'progress-done-delay': 1000,
 
 		'progress-update-min': 200,
+
+		// NOTE: each root key is also is also usable as a keyword.
+		'progress-keywords': {
+			add: [
+				'added',
+				'queued',
+				'found',
+			],
+			done: [
+				'loaded',
+				'written',
+				'index',
+			],
+			skip: [
+				'skipped',
+				'skipping',
+				'removed',
+			],
+			close: [
+				'end',
+			],
+			error: [
+			],
+		},
 	},
+
 
 	// XXX add message to be shown...
 	// XXX should we report errors and stoppages??? (error state??)
@@ -195,47 +220,39 @@ var ProgressActions = actions.Actions({
 				rest[0].length
 				: rest.length
 
-			// XXX should we move these to a more accessible spot???
-			var add = [
-				'added',
-				'queued',
-				'found',
-			]
-			var done = [
-				'loaded',
-				'done',
-				'written',
-				'index',
-			]
-			var skipped = [
-				'skipping',
-				'skipped',
-				'removed',
-			]
-			var close = [
-				'close',
-				'end',
-			]
+			// get keywords...
+			var {add, done, skip, close, error} = 
+				this.config['progress-keywords'] 
+				|| {}
+			// setup defaults...
+			add = new Set([...(add || []), 'added'])
+			done = new Set([...(done || [])])
+			skip = new Set([...(skip || []), 'skipped'])
+			close = new Set([...(close || []), 'closed'])
+			error = new Set([...(error || [])])
 
 			// close...
-			if(close.includes(status)){
+			if(status == 'close' || close.has(status)){
 				this.showProgress(path, 'close', logger)
 
-			// report progress...
-			// XXX HACK -- need meaningful status...
-			} else if(add.includes(status)){
+			// added new item -- increase max...
+			// XXX show msg in the progress bar...
+			} else if(status == 'add' || add.has(status)){
 				this.showProgress(path, '+0', '+'+l, logger)
 
-			} else if(done.includes(status)){
+			// resolved item -- increase done... 
+			} else if(status == 'done' || done.has(status)){
 				this.showProgress(path, '+'+l, logger)
 
-			} else if(skipped.includes(status)){
-				// XXX if everything is skipped the indicator does not 
-				// 		get hidden...
+			// skipped item -- increase done... 
+			// XXX should we instead decrease max here???
+			// 		...if not this is the same as done -- merge...
+			} else if(status == 'skip' || skip.has(status)){
 				this.showProgress(path, '+'+l, logger)
 
+			// error...
 			// XXX STUB...
-			} else if(status == 'error' ){
+			} else if(status == 'error' || error.has(status)){
 				this.showProgress(['Error'].concat(msg), '+0', '+'+l, logger)
 			}
 		}],
