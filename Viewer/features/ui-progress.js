@@ -23,10 +23,46 @@ var ProgressActions = actions.Actions({
 
 		'progress-update-min': 200,
 
+		// Logger keywords / aliases that trigger progress actions...
+		//
+		// The builtin keywords / aliases are:
+		// 	add / added			- add one or more item to progress bar
+		// 	done				- move the progress bar by 1
+		// 	skip / skipped		- move the progress bar by 1
+		// 	close / closed		- close the progress bar
+		// 	error				- report error
+		//
+		// The progress bar will be created on first 'add' call.
+		//
+		// The progress bar will be closed when the number of added items
+		// is less or equal to the number of done or skipped items.
+		//
+		//
+		// For example:
+		//		var log = logger.push('Example')	// - define a logger...
+		// 		log.emit('add', 'some item...')		// - creates a progress bar
+		// 											//   with one item...
+		// 		log.emit('add', [ ... ])			// - adds multiple items to
+		// 											//   progress bar...
+		// 		...
+		//		log.emit('done', 'some item...')	// - close the progress bar
+		//		...
+		//
+		//
+		// Format:
+		// 	{
+		// 		<keyword>: [
+		// 			<alias>,
+		// 			...
+		// 		],
+		// 		...
+		// 	}
+		//
+		//
+		// NOTE: the builtin aliases will work even if this is empty.
 		// NOTE: each root key is also is also usable as a keyword.
-		'progress-keywords': {
+		'progress-logger-keywords': {
 			add: [
-				'added',
 				'queued',
 				'found',
 			],
@@ -36,7 +72,6 @@ var ProgressActions = actions.Actions({
 				'index',
 			],
 			skip: [
-				'skipped',
 				'skipping',
 				'removed',
 			],
@@ -139,11 +174,13 @@ var ProgressActions = actions.Actions({
 
 			// widget...
 			var widget = container.find('.progress-bar[name="'+text+'"]')
+
 			// close action...
 			if(value == 'close'){
 				widget.trigger('progressClose')
 				return }
 
+			// create if not done yet...
 			widget = widget.length == 0 ?
 				$('<div/>')
 					.addClass('progress-bar')
@@ -222,9 +259,9 @@ var ProgressActions = actions.Actions({
 
 			// get keywords...
 			var {add, done, skip, close, error} = 
-				this.config['progress-keywords'] 
+				this.config['progress-logger-keywords'] 
 				|| {}
-			// setup defaults...
+			// setup default aliases...
 			add = new Set([...(add || []), 'added'])
 			done = new Set([...(done || [])])
 			skip = new Set([...(skip || []), 'skipped'])
@@ -234,27 +271,22 @@ var ProgressActions = actions.Actions({
 			// close...
 			if(status == 'close' || close.has(status)){
 				this.showProgress(path, 'close', logger)
-
 			// added new item -- increase max...
 			// XXX show msg in the progress bar...
 			} else if(status == 'add' || add.has(status)){
 				this.showProgress(path, '+0', '+'+l, logger)
-
 			// resolved item -- increase done... 
 			} else if(status == 'done' || done.has(status)){
 				this.showProgress(path, '+'+l, logger)
-
 			// skipped item -- increase done... 
 			// XXX should we instead decrease max here???
 			// 		...if not this is the same as done -- merge...
 			} else if(status == 'skip' || skip.has(status)){
 				this.showProgress(path, '+'+l, logger)
-
 			// error...
 			// XXX STUB...
 			} else if(status == 'error' || error.has(status)){
-				this.showProgress(['Error'].concat(msg), '+0', '+'+l, logger)
-			}
+				this.showProgress(['Error'].concat(msg), '+0', '+'+l, logger) }
 		}],
 })
 

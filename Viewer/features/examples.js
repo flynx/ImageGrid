@@ -604,7 +604,7 @@ var ExampleUIActions = actions.Actions({
 					&& (max += 5)
 					&& logger.emit('add', [1, 2, 3, 4, 5])
 				done < 30
-					&& (max += 3)
+					&& (max -= 1)
 					&& logger.emit('skip', 'y')
 
 				// NOTE: we add 10 here to compensate for changing max value...
