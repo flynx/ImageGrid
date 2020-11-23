@@ -77,6 +77,7 @@ var ProgressActions = actions.Actions({
 			],
 			close: [
 				'end',
+				'abort',
 			],
 			error: [
 			],

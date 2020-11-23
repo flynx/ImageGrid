@@ -606,12 +606,10 @@ var SharpActions = actions.Actions({
 				console.log('### ABORT:\n    ',
 					logger && logger.log.length,
 					reason, res)
-				/*
 				logger 
 					&& logger.emit('close')
 					&& reason == 'aborted'
 						&& logger.emit(res)
-				//*/
 				delete that.__cache_metadata_reading })
 
 			// handle logging and processing list...

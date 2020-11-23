@@ -300,6 +300,8 @@ module.Example = core.ImageGridFeatures.Feature({
 				console.log('PRE')
 				return function(){
 					console.log('POST') } }],
+		['exampleActionFull',
+			'exampleAction: "alias handler!" ... -- some doc...'],
 	],
 })
 

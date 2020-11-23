@@ -441,6 +441,10 @@ var ElectronHostActions = actions.Actions({
 			//*/
 			var that = this
 			var url = this.images.getBestPreview(this.current, size, true).url
+			// compatibility -- windows paths...
+			url = process.platform.startsWith('win') ?
+				url.replace(/\//g, '\\')
+				: url
 			img2canvas({
 				url,
 				...this.images[this.current] 
