@@ -419,7 +419,6 @@ var ElectronHostActions = actions.Actions({
 		}],
 
 	// XXX should this support resizing???
-	// XXX might be good to rotate the image if needed...
 	copy: ['Image|Edit/Copy image',
 		core.doc`Copy image
 
@@ -429,32 +428,22 @@ var ElectronHostActions = actions.Actions({
 			Copy best matching preview of current image...
 			.copy(size)
 
+		NOTE: this will rotate and flip the image according to image metadata...
 		`,
 		function(size){
-			/* XXX this does not rotate the image...
-			var url = this.images.getBestPreview(this.current, size, true).url
-			electron.clipboard.write({
-				title: this.images.getImageFileName(),
-				text: url,
-				image: electron.nativeImage.createFromPath(url),
-			}) 
-			//*/
 			var that = this
 			var url = this.images.getBestPreview(this.current, size, true).url
-			// compatibility -- windows paths...
-			url = process.platform.startsWith('win') ?
-				url.replace(/\//g, '\\')
-				: url
+			// prep image for copy...
 			img2canvas({
+				...this.images[this.current], 
 				url,
-				...this.images[this.current] 
 			}, function(c){
 				electron.clipboard.write({
 					bookmark: that.images.getImageFileName(),
-					text: url,
-					// XXX this seems not to work with images with exif 
-					// 		orientation -- the ig orientation seems to be 
-					// 		ignored...
+					// compatibility -- windows paths...
+					text: process.platform.startsWith('win') ?
+						url.replace(/\//g, '\\')
+						: url,
 					image: electron.nativeImage.createFromDataURL(c.toDataURL('image/png')),
 				}) }) }],
 	paste: ['- Image|Edit/Paste image',
