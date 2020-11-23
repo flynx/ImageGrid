@@ -266,6 +266,15 @@ var ExampleActions = actions.Actions({
 	
 	// XXX inner/outer action...
 
+
+	exampleTask: ['- Test/',
+		core.taskAction('Example task', function(ticket, ...args){
+
+			// XXX
+			console.log('>>>>', ticket, ...args)
+
+			return Promise.cooperative()
+		})],
 })
 
 var Example = 

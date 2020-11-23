@@ -329,7 +329,7 @@ var SharpActions = actions.Actions({
 			return images
 				.mapChunks(CHUNK_SIZE, function(gid){
 					if(abort.isAborted){
-						throw array.StopIteration('aborted') }
+						throw array.STOP('aborted') }
 
 					// skip non-images...
 					if(!['image', null, undefined]
@@ -503,7 +503,7 @@ var SharpActions = actions.Actions({
 			return images
 				.mapChunks(CHUNK_SIZE, function(gid){
 					if(abort.isAborted){
-						throw array.StopIteration('aborted') }
+						throw array.STOP('aborted') }
 
 					var img = that.images[gid]
 					var base = base_path 
@@ -513,7 +513,7 @@ var SharpActions = actions.Actions({
 					return sizes
 						.map(function(size, i){
 							if(abort.isAborted){
-								throw array.StopIteration('aborted') }
+								throw array.STOP('aborted') }
 
 							var name = path = path_tpl
 								.replace(/\$RESOLUTION|\$\{RESOLUTION\}/g, parseInt(size))
@@ -685,7 +685,7 @@ var SharpActions = actions.Actions({
 				.mapChunks(CHUNK_SIZE, function(gid){
 					// abort...
 					if(abort.isAborted){
-						throw array.StopIteration('aborted') }
+						throw array.STOP('aborted') }
 
 					var img = cached_images[gid]
 					var path = img && that.getImagePath(gid)

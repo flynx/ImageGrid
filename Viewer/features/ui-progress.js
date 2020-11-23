@@ -128,7 +128,7 @@ var ProgressActions = actions.Actions({
 			var msg = text instanceof Array ? text.slice(1).join(': ') : null
 			text = text instanceof Array ? text[0] : text
 
-			// make sure we do not update too often...
+			// cache -- make sure we do not update too often...
 			if(value != 'close'){
 				var cache = (this.__progress_cache = this.__progress_cache || {})
 				cache = cache[text] = 
@@ -140,7 +140,8 @@ var ProgressActions = actions.Actions({
 					var v = cache[name] || 0
 					return (cache[name] = 
 						value != null ? 
-							(typeof(value) == typeof('str') && /[+-][0-9]+/.test(value) ? 
+							((typeof(value) == typeof('str') 
+									&& /[+-][0-9]+/.test(value)) ? 
 								v + parseInt(value)
 								: parseInt(value))
 							: v) }
@@ -151,18 +152,17 @@ var ProgressActions = actions.Actions({
 				// update not due yet...
 				if('timeout' in cache){
 					cache.update = true
-					return 
+					return }
 
 				// set next update point and continue...
-				} else {
-					delete cache.update
-					cache.timeout = setTimeout(
-						function(){
-							var cache = that.__progress_cache[text] || {}
-							delete cache.timeout
-							cache.update
-								&& that.showProgress(text) }, 
-						this.config['progress-update-min'] || 200) } }
+				delete cache.update
+				cache.timeout = setTimeout(
+					function(){
+						var cache = that.__progress_cache[text] || {}
+						delete cache.timeout
+						cache.update
+							&& that.showProgress(text) }, 
+					this.config['progress-update-min'] || 200) }
 
 			// container...
 			var container = viewer.find('.progress-container')
@@ -190,7 +190,6 @@ var ProgressActions = actions.Actions({
 					.append($('<span class="close">&times;</span>')
 						.on('click', function(){ 
 							var cache = (that.__progress_cache || {})[text]
-							// XXX do we need both close and done callbacks???
 							cache.onclose
 								&& cache.onclose() 
 							widget.trigger('progressClose') }))
@@ -206,21 +205,19 @@ var ProgressActions = actions.Actions({
 								var cache = (that.__progress_cache || {})[text]
 								cache.timeout 
 									&& clearTimeout(cache.timeout)
-								// XXX do we need both close and done callbacks???
 								cache.ondone
 									&& cache.ondone()
+								// clear cache...
 								delete (that.__progress_cache || {})[text]
-								$(this).remove() }) })
+								$(this).remove() }) 
+						widget = null })
 					.appendTo(container)
 				: widget
 
 			// reset closing timeout...
 			var timeout = widget.attr('close-timeout')
-			timeout && clearTimeout(JSON.parse(timeout))
-
-			// get the widget parts we are updating...
-			var bar = widget.find('progress')
-			var state = widget.find('.progress-details')
+			timeout 
+				&& clearTimeout(JSON.parse(timeout))
 
 			// format the message...
 			msg = msg ? ': '+msg : ''
@@ -230,23 +227,22 @@ var ProgressActions = actions.Actions({
 					: '...')
 
 			// update widget...
-			bar.attr({
-				value: value || '',
-				max: max || '',
-			})
-			state.text(msg)
+			widget.find('progress')
+				.attr({
+					value: value || '',
+					max: max || '',
+				})
+			widget.find('.progress-details')
+				.text(msg)
 
 			// auto-close...
 			if(value && value >= (max || 0)){
 				widget.attr('close-timeout', 
-					// XXX BUG: this appears to get triggered after we close progress...
-					JSON.stringify(setTimeout(function(){ 
-						widget.trigger('progressClose') 
-					}, this.config['progress-done-delay'] || 1000))) }
-
-			// XXX force the browser to render...
-			//bar.hide(0).show(0)
-		}],
+					JSON.stringify(setTimeout(
+						function(){ 
+							widget
+								&& widget.trigger('progressClose') }, 
+						this.config['progress-done-delay'] || 1000))) } }],
 
 	// handle logger progress...
 	// XXX revise...
@@ -256,6 +252,13 @@ var ProgressActions = actions.Actions({
 			var l = (rest.length == 1 && rest[0] instanceof Array) ?
 				rest[0].length
 				: rest.length
+
+			// only pass the relevant stuff...
+			var attrs = {}
+			logger.ondone 
+				&& (attrs.ondone = logger.ondone)
+			logger.onclose 
+				&& (attrs.onclose = logger.onclose)
 
 			// get keywords...
 			var {add, done, skip, close, error} = 
@@ -270,23 +273,23 @@ var ProgressActions = actions.Actions({
 
 			// close...
 			if(status == 'close' || close.has(status)){
-				this.showProgress(path, 'close', logger)
+				this.showProgress(path, 'close', attrs)
 			// added new item -- increase max...
-			// XXX show msg in the progress bar...
+			// XXX show msg in the progress bar???
 			} else if(status == 'add' || add.has(status)){
-				this.showProgress(path, '+0', '+'+l, logger)
+				this.showProgress(path, '+0', '+'+l, attrs)
 			// resolved item -- increase done... 
 			} else if(status == 'done' || done.has(status)){
-				this.showProgress(path, '+'+l, logger)
+				this.showProgress(path, '+'+l, attrs)
 			// skipped item -- increase done... 
 			// XXX should we instead decrease max here???
 			// 		...if not this is the same as done -- merge...
 			} else if(status == 'skip' || skip.has(status)){
-				this.showProgress(path, '+'+l, logger)
+				this.showProgress(path, '+'+l, attrs)
 			// error...
 			// XXX STUB...
 			} else if(status == 'error' || error.has(status)){
-				this.showProgress(['Error'].concat(msg), '+0', '+'+l, logger) }
+				this.showProgress(['Error'].concat(msg), '+0', '+'+l, attrs) }
 		}],
 })
 

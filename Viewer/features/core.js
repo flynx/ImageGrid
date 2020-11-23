@@ -2456,38 +2456,34 @@ module.taskAction =
 function(title, func){
 	var action
 	return (action = Object.assign(
-		task(function(){
+		task(function(...args){
 			var that = this
 
 			// XXX
-			var ticket = {
-				// XXX revise naming...
-				start: eventMethod('start', function(handle, ...args){
-					if(this.state == 'ready'){
-						that.resumeTask(title, action)
-						handle(...args) } }),
-				pause: eventMethod('pause', function(handle, ...args){
-					if(this.state == 'running'){
-						that.pauseTask(title, action)
-						handle(...args) } }),
-				abort: eventMethod('abort', function(handle, ...args){
-					if(!this.state != 'done'){
-						that.abortTask(title, action) 
-						handle(...args) } }),
-
+			var ticket = events.EventMixin({
 				// can be:
 				// 	- ready
 				// 	- running
 				// 	- done
-				get state(){
-				},
-			}
+				state: null,
 
-			return func.call(this, ticket, ...args)
-				.then(function(){
-				})
-				.catch(function(){
-				}) }),
+				start: events.Event('start', function(handle, ...args){
+					if(this.state == 'ready'){
+						that.resumeTask(title, action)
+						handle(...args) } }),
+				pause: events.Event('pause', function(handle, ...args){
+					if(this.state == 'running'){
+						that.pauseTask(title, action)
+						handle(...args) } }),
+				abort: events.Event('abort', function(handle, ...args){
+					if(!this.state != 'done'){
+						that.abortTask(title, action) 
+						handle(...args) } }),
+			})
+
+			// XXX
+
+			return func.call(this, ticket, ...args) }),
 		{
 			toString: function(){
 				return `core.taskAction('${ title }', \n${ func.toString() })` },
