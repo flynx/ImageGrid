@@ -267,14 +267,41 @@ var ExampleActions = actions.Actions({
 	// XXX inner/outer action...
 
 
+	// NOTE: action name and task name should be the same to avoid 
+	// 		confusion...
+	// 		XXX it would be quite complicated to support both and 
+	// 			confusing to support either...
 	exampleTask: ['- Test/',
-		core.taskAction('Example task', function(ticket, ...args){
+		core.taskAction('exampleTask', 
+			function(ticket, ...args){
+				console.log('###', ticket.title+':', 'START:', ...args, 
+					'\n\t\t(supported messages: "stop", "break", "error", ...)')
+				ticket.onmessage(function(msg, ...args){
+					// stop...
+					if(msg == 'stop'){
+						console.log('###', ticket.title+':', 'STOP')
+						ticket.resolve(...args) 
 
-			// XXX
-			console.log('>>>>', ticket, ...args)
+					// break...
+					} else if(msg == 'break'){
+						console.log('###', ticket.title+':', 'BREAK')
+						ticket.reject(...args) 
 
-			return Promise.cooperative()
-		})],
+					// error...
+					} else if(msg == 'error'){
+						console.log('###', ticket.title+':', 'ERROR')
+						throw new Error('Task error')
+
+					// other...
+					} else {
+						console.log('###', ticket.title+':', 'Got message:', msg, ...args) } }) })],
+	exampleSessionTask: ['- Test/',
+		core.sessionTaskAction('exampleSessionTask', 
+			function(ticket, ...args){
+				console.log('###', ticket.title+':', 'START:', ...args)
+				ticket.onmessage('stop', function(){
+					console.log('###', ticket.title+':', 'STOP:', ...args) 
+					ticket.resolve(...args) }) })],
 })
 
 var Example = 

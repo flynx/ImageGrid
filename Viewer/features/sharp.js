@@ -411,7 +411,11 @@ var SharpActions = actions.Actions({
 											.then(function(){
 												logger 
 													&& logger.emit('done', to) 
-												return img }) }) }) }) })],
+												return img }) }) }) })
+			.then(function(res){
+				return res == 'aborted' ?
+					Promise.reject('aborted')
+					: res }) })],
 
 	// XXX this does not update image.base_path -- is this correct???
 	// XXX add support for offloading the processing to a thread/worker...
@@ -544,7 +548,9 @@ var SharpActions = actions.Actions({
 
 									return [gid, size, name] }) }) })
 				.then(function(res){
-					return res.flat() }) })],
+					return res == 'aborted' ?
+						Promise.reject('aborted')
+						: res.flat() }) })],
 
 	// XXX add support for offloading the processing to a thread/worker...
 	// XXX should we use task.Queue()???
@@ -762,7 +768,11 @@ var SharpActions = actions.Actions({
 							that.ribbons
 								&& that.ribbons.updateImage(gid) 
 
-							return done(gid) }) }) })],
+							return done(gid) }) }) 
+				.then(function(res){
+					return res == 'aborted' ?
+						Promise.reject('aborted')
+						: res }) })],
 	cacheAllMetadata: ['- Sharp|Image/',
 		core.doc`Cache all metadata
 		NOTE: this is a shorthand to .cacheMetadata('all', ..)`,

@@ -51,11 +51,14 @@
 // XXX
 var DEBUG = typeof(DEBUG) != 'undefined' ? DEBUG : true
 
+var types = require('lib/types')
+var runner = require('lib/types/runner')
 var util = require('lib/util')
 var object = require('lib/object')
 var actions = require('lib/actions')
 var features = require('lib/features')
 var toggler = require('lib/toggler')
+
 
 
 
@@ -964,9 +967,7 @@ var LifeCycleActions = actions.Actions({
 						evt.indexOf('stopped.pre'), 
 						evt.indexOf('stopped.post')) >= 0 
 					&& this.isStopped()
-					&& func.call(this)
-			}
-		}],
+					&& func.call(this) } }],
 
 	// helpers...
 	restart: ['System/Soft restart',
@@ -2350,8 +2351,8 @@ module.Workspace = ImageGridFeatures.Feature({
 // XXX should this be a separate module???
 //var tasks = require('lib/tasks')
 
-var task =
-module.tast =
+var Task =
+module.Tast =
 function(func){
 	func.__task__ = true
 	return func }
@@ -2393,11 +2394,12 @@ function(func){
 // 			- list/sort/prioritize
 // 			- remote (peer/worker)
 // XXX docs...
+// XXX LEGACY...
 var abortablePromise =
 module.abortablePromise = 
 function(title, func){
 	return Object.assign(
-		task(function(...args){
+		Task(function(...args){
 			var that = this
 
 			var abort = object.mixinFlat(
@@ -2440,96 +2442,33 @@ function(title, func){
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-
-var Task =
-module.Task =
-object.Constructor('Task', {
-})
-
-
-// XXX
-var events = require('lib/types/event')
-
+// Task action action helpers...
+//
+// NOTE: for examples see:
+// 		features/examples.js: 
+// 			ExampleActions.exampleTask(..)
+// 			ExampleActions.exampleSessionTask(..)
 
 var taskAction =
 module.taskAction =
 function(title, func){
 	var action
-	return (action = Object.assign(
-		task(function(...args){
-			var that = this
-
-			// XXX
-			var ticket = events.EventMixin({
-				// can be:
-				// 	- ready
-				// 	- running
-				// 	- done
-				state: null,
-
-				start: events.Event('start', function(handle, ...args){
-					if(this.state == 'ready'){
-						that.resumeTask(title, action)
-						handle(...args) } }),
-				pause: events.Event('pause', function(handle, ...args){
-					if(this.state == 'running'){
-						that.pauseTask(title, action)
-						handle(...args) } }),
-				abort: events.Event('abort', function(handle, ...args){
-					if(!this.state != 'done'){
-						that.abortTask(title, action) 
-						handle(...args) } }),
-			})
-
-			// XXX
-
-			return func.call(this, ticket, ...args) }),
+	return (action = object.mixin(
+		Task(function(...args){
+			return this.tasks.Task(title, func.bind(this), ...args) }),
 		{
+			__task_title__: title,
 			toString: function(){
-				return `core.taskAction('${ title }', \n${ func.toString() })` },
+				return `core.taskAction('${ title }', \n\t${ 
+					object.normalizeIndent('\t'+func.toString()) })` },
 		})) }
 
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-
-var makeTaskAction = 
-function(name, from, to, callback){
-	return function(title, task='all'){
-		title = title == '*' || title == 'all' ?
-				[...(this.__running_tasks || new Map()).keys()]
-			: title instanceof Array ?
-				title
-			: [title]
-		this.__running_tasks
-			&& title
-				.forEach(function(title){
-					[...(this.__running_tasks || new Map()).get(title) || []]
-						.forEach(function(t){ 
-							// filter task...
-							;(task == 'all' 
-									|| task == '*' 
-									|| task === t
-									|| (task instanceof Array 
-										&& task.includes(t)))
-								// filter states...
-								&& (from == '*' 
-									|| from == 'all' 
-									|| t.state == from)
-								// XXX do we retrigger???
-								//&& t.state != to
-								// call handler...
-								&& t[name] 
-								&& t[name]() !== false
-								// state...
-								&& to 
-									&& (t.state = to) }) 
-					callback
-						&& callback.call(this, title, task) }.bind(this)) 
-			// cleanup...
-			this.__running_tasks
-				&& this.__running_tasks.size == 0
-				&& (delete this.__running_tasks) } }
-
+var sessionTaskAction =
+module.sessionTaskAction =
+function(title, func){
+	return object.mixin(
+		taskAction(...arguments),
+		{ __session_task__: true }) }
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -2538,120 +2477,30 @@ var TaskActions = actions.Actions({
 	config: {
 	},
 
-	// Format:
-	// 	Map({
-	// 		title: Set([
-	// 			{
-	// 				state: ...,
-	// 				abort: func,
-	// 				pause: func,
-	// 				resume: func,
-	// 				...
-	// 			},
-	// 			...
-	// 		]),
-	// 		...
-	// 	})
+	// actions that generate tasks...
 	//
-	__running_tasks: null,
+	// XXX cache these???
+	get taskActions(){
+		return this.actions
+			.filter(function(action){
+				return !!this.getActionAttr(action, '__task__') }.bind(this)) },
+	get sessionTaskActions(){
+		return this.actions
+			.filter(function(action){
+				return !!this.getActionAttr(action, '__session_task__') }.bind(this)) },
 
-	// XXX should this .resume(..)???
-	// XXX might be a good idea to make this compatible with tasks.Queue(..)
-	// 		...and return a queue if not task is given??
-	Task: ['- System/',
-		doc`
-		`,
-		function(title, task){
-			// reserved titles...
-			if(title == 'all' || title == '*'){
-				throw new Error('.abortable(..): can not set reserved title: "'+ title +'".') }
-
-			var tasks = this.__running_tasks = this.__running_tasks || new Map()
-			var set = tasks.get(title) || new Set()
-			tasks.set(title, set)
-			set.add(task)
-
-			task.state = 'running'
-
-			return task }],
-
-	getTasks: ['- System/',
-		function(title='all', state='all'){
-			var normArg = function(arg){
-				return !arg ?
-						'all'
-					: arg == 'all' || arg == '*' ? 
-						arg 
-					: arg instanceof Array ?
-						new Set(arg)	
-					: new Set([arg]) }
-
-			title = normArg(title)
-			state = normArg(state)
-
-			return this.__running_tasks ?
-				[...this.__running_tasks.entries()]
-					.reduce(function(res, [t, set]){
-						if(title != 'all' 
-								&& title != '*' 
-								&& !title.has(t)){
-							return res }
-						var l = [...set]
-							.filter(function(t){ 
-								return state == 'all' 
-									|| state == '*' 
-									|| state.has(t.state) })
-						l.length > 0
-							&& (res[t] = l)
-						return res }, {})
-					: {} }],
-	// XXX should this abort the cleared tasks???
-	// 		...if not would be logical to rename this to ._clearTask(..)
-	clearTask: ['- System/',
-		function(title, task='all'){
-			// clear all...
-			if(title == '*' || title == 'all'){
-				delete this.__running_tasks }
-
-			var set = ((this.__running_tasks || new Map()).get(title) || new Set())
-			// clear specific handler...
-			task != '*' 
-				&& task != 'all'
-				&& set.delete(task)
-			// cleanup / clear title...
-			;(set.size == 0 
-					|| task == '*' 
-					|| task == 'all')
-				&& (this.__running_tasks || new Set()).delete(title) 
-			// cleanup...
-			this.__running_tasks
-				&& this.__running_tasks.size == 0
-				&& (delete this.__running_tasks) }],
-
-	// XXX cache???
+	// task manager...
+	//
+	__task_manager__: runner.TaskManager,
+	__tasks: null,
 	get tasks(){
-		return this.actions.filter(function(action){
-			return !!this.getActionAttr(action, '__task__') }.bind(this)) },
+		return (this.__tasks = 
+			this.__tasks 
+				|| this.__task_manager__()) },
+	// session tasks are stopped when the index is cleared...
+	get sessionTasks(){
+		return this.tasks.titled(...this.sessionTaskActions) },
 
-	get tasksActive(){
-		return this.getTasks() },
-	get tasksRunning(){
-		return this.getTasks('all', 'running') },
-	get tasksPaused(){
-		return this.getTasks('all', 'paused') },
-
-	pauseTask: ['- System/',
-		makeTaskAction('pause', 'running', 'paused')],
-	resumeTask: ['- System/',
-		makeTaskAction('resume', 'paused', 'running')],
-	abortTask: ['- System/',
-		makeTaskAction('abort', 'all', null,
-			function(title, task='all'){
-				this.__running_tasks
-					&& (task == 'all' 
-						|| task == '*' 
-						|| this.__running_tasks.get(title).size == 0)
-					&& this.__running_tasks.delete(title) })],
 
 
 	// XXX LEGACY -- remove after migrating sharp.js and abortablePromise(..)
@@ -2748,25 +2597,6 @@ var TaskActions = actions.Actions({
 			this.__abortable
 				&& this.__abortable.size == 0
 				&& (delete this.__abortable) }],
-
-
-	/* XXX LEGACY...
-	get jobs(){
-		return this.__jobs },
-
-	getJob: ['- Jobs/',
-		function(name){
-			name = name || this.data.newGID()
-
-			// get/init task dict...
-			var t = this.__jobs = this.__jobs || {}
-			// get/init task...
-			var job = t[name] = t[name] || tasks.Queue()
-			job.name = name
-
-			return job
-		}],
-	//*/
 })
 
 
@@ -2781,6 +2611,8 @@ module.Tasks = ImageGridFeatures.Feature({
 	actions: TaskActions,
 
 	handlers: [
+		['clear',
+			'sessionTasks.stop'],
 	],
 })
 
