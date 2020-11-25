@@ -267,6 +267,8 @@ var ExampleActions = actions.Actions({
 	// XXX inner/outer action...
 
 
+	// Tasks...
+	//
 	// NOTE: action name and task name should be the same to avoid 
 	// 		confusion...
 	// 		XXX it would be quite complicated to support both and 
@@ -276,22 +278,19 @@ var ExampleActions = actions.Actions({
 			function(ticket, ...args){
 				console.log('###', ticket.title+':', 'START:', ...args, 
 					'\n\t\t(supported messages: "stop", "break", "error", ...)')
-				ticket.onmessage(function(msg, ...args){
+				ticket.onmessage(function(msg){
 					// stop...
 					if(msg == 'stop'){
-						console.log('###', ticket.title+':', 'STOP')
+						console.log('###', ticket.title+':', 'STOP', ...args)
 						ticket.resolve(...args) 
-
 					// break...
 					} else if(msg == 'break'){
-						console.log('###', ticket.title+':', 'BREAK')
+						console.log('###', ticket.title+':', 'BREAK', ...args)
 						ticket.reject(...args) 
-
 					// error...
 					} else if(msg == 'error'){
-						console.log('###', ticket.title+':', 'ERROR')
+						console.log('###', ticket.title+':', 'ERROR', ...args)
 						throw new Error('Task error')
-
 					// other...
 					} else {
 						console.log('###', ticket.title+':', 'Got message:', msg, ...args) } }) })],
