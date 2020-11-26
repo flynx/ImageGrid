@@ -2477,17 +2477,21 @@ var TaskActions = actions.Actions({
 	config: {
 	},
 
-	// actions that generate tasks...
+	// tests...
+	isTask: function(action){
+		return !!this.getActionAttr(action, '__task__') },
+	isSessionTask: function(action){
+		return !!this.getActionAttr(action, '__session_task__') },
+
+	// list actions that generate tasks...
 	//
 	// XXX cache these???
 	get taskActions(){
-		return this.actions
-			.filter(function(action){
-				return !!this.getActionAttr(action, '__task__') }.bind(this)) },
+		var test = this.isTask.bind(this)
+		return this.actions.filter(test) },
 	get sessionTaskActions(){
-		return this.actions
-			.filter(function(action){
-				return !!this.getActionAttr(action, '__session_task__') }.bind(this)) },
+		var test = this.isSessionTask.bind(this)
+		return this.actions.filter(test) },
 
 	// task manager...
 	//
