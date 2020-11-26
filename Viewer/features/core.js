@@ -2358,89 +2358,6 @@ function(func){
 	return func }
 
 
-//
-// 	action: ['Path/To/Action',
-// 		abortablePromise('abort-id', function(abort, ...args){
-//
-// 			abort.cleanup(function(reason, res){
-// 				if(reason == 'done'){
-// 					// ...
-// 				}
-// 				if(reason == 'aborted'){
-// 					// ...
-// 				}
-// 			})
-//
-// 			return new Promise(function(resolve, reject){ 
-// 				// ... 
-//
-// 				if(abort.isAborted){
-//					// handle abort...
-// 				}
-//
-//				// ...
-// 			}) })],
-//
-//
-// NOTE: if the returned promise is not resolved .cleanup(..) will not 
-// 		be called even if the appropriate .abort(..) as called...
-//
-// XXX is the abort api an overkill??
-// 		...can this be solved/integrated with tasks???
-// 		essentially this creates an abortable task, for full blown tasks
-// 		it would be nice to also be able to:
-// 			- pause/resume (abort is done)
-// 			- serialize/restore
-// 			- list/sort/prioritize
-// 			- remote (peer/worker)
-// XXX docs...
-// XXX LEGACY...
-var abortablePromise =
-module.abortablePromise = 
-function(title, func){
-	return Object.assign(
-		Task(function(...args){
-			var that = this
-
-			var abort = object.mixinFlat(
-				this.abortable(title, function(){
-					that.clearAbortable(title, abort) 
-					return abort }), 
-				{
-					get isAborted(){
-						return !((that.__abortable || new Map())
-							.get(title) || new Set())
-								.has(this) },
-
-					__cleanup: null,
-					cleanup: function(func){
-						var args = [...arguments]
-						var reason = this.isAborted ? 
-							'aborted' 
-							: 'done'
-						typeof(func) == 'function' ?
-							// register handler...
-							(this.__cleanup = this.__cleanup 
-								|| new Set()).add(func)
-							// call cleanup handlers...
-							: [...(this.__cleanup || [])]
-								.forEach(function(f){ 
-									f.call(that, reason, ...args) }) 
-						return this },
-				})
-
-			return func.call(this, abort, ...args) 
-				.then(function(res){
-					abort.cleanup(res)()
-					return res })
-				.catch(function(res){
-					abort.cleanup(res)() }) }),
-		{
-			toString: function(){
-				return `core.abortablePromise('${ title }', \n${ func.toString() })` },
-		}) }
-
-
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 // Task action action helpers...
 //
@@ -2473,6 +2390,7 @@ function(title, func){
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
+// XXX add a task manager UI...
 var TaskActions = actions.Actions({
 	config: {
 	},
@@ -2504,103 +2422,6 @@ var TaskActions = actions.Actions({
 	// session tasks are stopped when the index is cleared...
 	get sessionTasks(){
 		return this.tasks.titled(...this.sessionTaskActions) },
-
-
-
-	// XXX LEGACY -- remove after migrating sharp.js and abortablePromise(..)
-	//
-	// Abortable...
-	//
-	// Format:
-	// 	Map({
-	// 		title: Set([ func, ... ]),
-	// 		...
-	// 	})
-	//
-	// XXX rename...
-	// XXX extend to support other task operations...
-	__abortable: null,
-
-	abortable: ['- System/Register abort handler',
-		doc`Register abortable action
-
-			.abortable(title, func)
-				-> func
-
-		`,
-		function(title, callback){
-			// reserved titles...
-			if(title == 'all' || title == '*'){
-				throw new Error('.abortable(..): can not set reserved title: "'+ title +'".') }
-
-			var abortable = this.__abortable = this.__abortable || new Map()
-			var set = abortable.get(title) || new Set()
-			abortable.set(title, set)
-			set.add(callback) 
-
-			return actions.ASIS(callback) }],
-	clearAbortable: ['- System/Clear abort handler(s)',
-		doc`Clear abort handler(s)
-
-			Clear abort handler...
-			.clearAbortable(title, callback)
-
-			Clear all abort handlers for title...
-			.clearAbortable(title)
-			.clearAbortable(title, 'all')
-
-			Clear all abort handlers...
-			.clearAbortable('all')
-
-		`,
-		function(title, callback){
-			callback = callback || '*'
-
-			// clear all...
-			if(title == '*' || title == 'all'){
-				delete this.__abortable }
-
-			var set = ((this.__abortable || new Map()).get(title) || new Set())
-			// clear specific handler...
-			callback != '*' 
-				&& callback != 'all'
-				&& set.delete(callback)
-			// cleanup / clear title...
-			;(set.size == 0 
-					|| callback == '*' 
-					|| callback == 'all')
-				&& (this.__abortable || new Set()).delete(title) 
-			// cleanup...
-			this.__abortable
-				&& this.__abortable.size == 0
-				&& (delete this.__abortable) }],
-	abort: ['- System/Abort task(s)',
-		doc`
-
-			.abort(title)
-			.abort([title, .. ])
-
-			.abort('all')
-
-		`,
-		function(title, task='all'){
-			title = title == '*' || title == 'all' ?
-					[...(this.__abortable || new Map()).keys()]
-				: title instanceof Array ?
-					title
-				: [title]
-
-			this.__abortable
-				&& title
-					.forEach(function(title){
-						[...(this.__abortable || new Map()).get(title) || []]
-							.forEach(function(f){ f() })
-						this.__abortable
-							&& this.__abortable.delete(title) }.bind(this))
-			// cleanup...
-			this.__abortable
-				&& this.__abortable.size == 0
-				&& (delete this.__abortable) }],
 })
 
 

@@ -7,8 +7,6 @@
 (function(require){ var module={} // make module AMD/node compatible...
 /*********************************************************************/
 
-var array = require('lib/types/Array')
-
 var actions = require('lib/actions')
 var features = require('lib/features')
 
@@ -248,21 +246,36 @@ var SharpActions = actions.Actions({
 		NOTE: all options are optional.
 		NOTE: this will not overwrite existing images.
 		`,
-		core.abortablePromise('makeResizedImage', function(abort, images, size, path, options={}){
+		core.taskAction('makeResizedImage', function(ticket, images, size, path, options={}){
 			var that = this
 
 			// sanity check...
-			if(arguments.length < 3){
+			if(arguments.length < 4){
+				ticket.reject()
 				throw new Error('.makeResizedImage(..): '
 					+'need at least images, size and path.') }
 
-			var CHUNK_SIZE = 4
+			// setup runtime interactions...
+			//
+			// NOTE: we will resolve the ticket when we are fully done
+			// 		and not on stop...
+			var STOP = false
+			ticket
+				.onmessage('stop', function(){
+					STOP = true }) 
+				.then(function(){
+					// close progress bar...
+					// NOTE: if we have multiple tasks let the last one 
+					// 		close the progress bar...
+					if(that.tasks.titled(ticket.title).length == 0){
+						logger 
+							&& logger.emit('close') }
+					// cleanup...
+					delete that.__cache_metadata_reading })
+			var abort = function(){
+				that.tasks.stop(ticket.title) }
 
-			abort.cleanup(function(reason, res){
-				logger 
-					&& logger.emit('done')
-					&& reason == 'aborted'
-						&& logger.emit(res) })
+			var CHUNK_SIZE = 4
 
 			// get/normalize images...
 			//images = images || this.current
@@ -316,7 +329,8 @@ var SharpActions = actions.Actions({
 			logger = logger !== false ?
 				(logger || this.logger)
 				: false
-			logger = logger && logger.push('Resize', {onclose: abort})
+			logger = logger 
+				&& logger.push('Resize', {onclose: abort})
 
 			// backup...
 			// XXX make backup name pattern configurable...
@@ -328,8 +342,8 @@ var SharpActions = actions.Actions({
 
 			return images
 				.mapChunks(CHUNK_SIZE, function(gid){
-					if(abort.isAborted){
-						throw array.STOP('aborted') }
+					if(STOP){
+						throw Array.STOP('aborted') }
 
 					// skip non-images...
 					if(!['image', null, undefined]
@@ -413,13 +427,13 @@ var SharpActions = actions.Actions({
 													&& logger.emit('done', to) 
 												return img }) }) }) })
 			.then(function(res){
+				ticket.resolve(res)
 				return res == 'aborted' ?
 					Promise.reject('aborted')
 					: res }) })],
 
 	// XXX this does not update image.base_path -- is this correct???
 	// XXX add support for offloading the processing to a thread/worker...
-	// XXX should we use task.Queue()???
 	makePreviews: ['Sharp|File/Make image $previews',
 		core.doc`Make image previews
 
@@ -447,27 +461,43 @@ var SharpActions = actions.Actions({
 		NOTE: if base_path is given .images will not be updated with new 
 			preview paths...
 		`,
-		core.abortablePromise('makePreviews', function(abort, images, sizes, base_path, logger){
+		core.taskAction('makePreviews', function(ticket, images, sizes, base_path, logger){
 			var that = this
 
-			var CHUNK_SIZE = 4
+			// setup runtime interactions...
+			//
+			// NOTE: we will resolve the ticket when we are fully done
+			// 		and not on stop...
+			var STOP = false
+			ticket
+				.onmessage('stop', function(){
+					STOP = true }) 
+				.then(function(){
+					// close progress bar...
+					// NOTE: if we have multiple tasks let the last one 
+					// 		close the progress bar...
+					if(that.tasks.titled(ticket.title).length == 0){
+						gid_logger
+							&& gid_logger.emit('close')
+						logger 
+							&& logger.emit('close') }
+					// cleanup...
+					delete that.__cache_metadata_reading })
+			var abort = function(){
+				that.tasks.stop(ticket.title) }
 
-			abort.cleanup(function(reason, res){
-				gid_logger
-					&& gid_logger.emit('done')
-					&& reason == 'aborted'
-						&& gid_logger.emit(res)
-				logger 
-					&& logger.emit('done')
-					&& reason == 'aborted'
-						&& logger.emit(res) })
+			var CHUNK_SIZE = 4
 
 			var logger_mode = this.config['preview-progress-mode'] || 'gids'
 			logger = logger !== false ?
 				(logger || this.logger)
 				: false
-			var gid_logger = logger && logger.push('Images', {onclose: abort})
-			logger = logger && logger.push('Previews', {onclose: abort})
+			var gid_logger = logger 
+				&& logger.push('Images', 
+					{onclose: abort})
+			logger = logger 
+				&& logger.push('Previews', 
+					{onclose: abort})
 
 			// get/normalize images...
 			images = images 
@@ -506,8 +536,8 @@ var SharpActions = actions.Actions({
 
 			return images
 				.mapChunks(CHUNK_SIZE, function(gid){
-					if(abort.isAborted){
-						throw array.STOP('aborted') }
+					if(STOP){
+						throw Array.STOP('aborted') }
 
 					var img = that.images[gid]
 					var base = base_path 
@@ -516,8 +546,8 @@ var SharpActions = actions.Actions({
 
 					return sizes
 						.map(function(size, i){
-							if(abort.isAborted){
-								throw array.STOP('aborted') }
+							if(STOP){
+								throw Array.STOP('aborted') }
 
 							var name = path = path_tpl
 								.replace(/\$RESOLUTION|\$\{RESOLUTION\}/g, parseInt(size))
@@ -548,12 +578,12 @@ var SharpActions = actions.Actions({
 
 									return [gid, size, name] }) }) })
 				.then(function(res){
+					ticket.resolve(res)
 					return res == 'aborted' ?
 						Promise.reject('aborted')
 						: res.flat() }) })],
 
 	// XXX add support for offloading the processing to a thread/worker...
-	// XXX should we use task.Queue()???
 	__cache_metadata_reading: null,
 	cacheMetadata: ['- Sharp|Image/',
 		core.doc`Cache metadata
@@ -602,21 +632,38 @@ var SharpActions = actions.Actions({
 		NOTE: this will effectively update metadata format to the new spec...
 		NOTE: for info on full metadata format see: .readMetadata(..)
 		`,
-		core.abortablePromise('cacheMetadata', function(abort, images, logger){
+		core.sessionTaskAction('cacheMetadata', function(ticket, images, logger){
 			var that = this
 
-			var CHUNK_SIZE = 4
+			// setup runtime interactions...
+			//
+			// NOTE: we will resolve the ticket when we are fully done
+			// 		and not on stop...
+			var STOP = false
+			ticket
+				.onmessage('stop', function(){
+					STOP = true }) 
+				.then(function(){
+					// close progress bar...
+					// NOTE: if we have multiple tasks let the last one 
+					// 		close the progress bar...
+					if(that.tasks.titled(ticket.title).length == 0){
+						logger 
+							&& logger.emit('close') }
+					that.off('clear', on_close)
+					// cleanup...
+					delete that.__cache_metadata_reading })
+			// clear the progress bar for the next session...
+			var on_close
+			this.one('clear', on_close = function(){
+				logger && logger.emit('close') })
 
-			// XXX this seems to be called prematurely...
-			abort.cleanup(function(reason, res){
-				console.log('### ABORT:\n    ',
-					logger && logger.log.length,
-					reason, res)
-				logger 
-					&& logger.emit('close')
-					&& reason == 'aborted'
-						&& logger.emit(res)
-				delete that.__cache_metadata_reading })
+			// universal task abort...
+			// NOTE: this will abort all the tasks of this type...
+			var abort = function(){
+				that.tasks.stop(ticket.title) }
+
+			var CHUNK_SIZE = 4
 
 			// handle logging and processing list...
 			// NOTE: these will maintain .__cache_metadata_reading helping 
@@ -688,8 +735,8 @@ var SharpActions = actions.Actions({
 			return images
 				.mapChunks(CHUNK_SIZE, function(gid){
 					// abort...
-					if(abort.isAborted){
-						throw array.STOP('aborted') }
+					if(STOP){
+						throw Array.STOP('aborted') }
 
 					var img = cached_images[gid]
 					var path = img && that.getImagePath(gid)
@@ -770,9 +817,12 @@ var SharpActions = actions.Actions({
 
 							return done(gid) }) }) 
 				.then(function(res){
+					ticket.resolve(res)
+					// XXX do we need this???
 					return res == 'aborted' ?
 						Promise.reject('aborted')
-						: res }) })],
+						: res 
+				}) })],
 	cacheAllMetadata: ['- Sharp|Image/',
 		core.doc`Cache all metadata
 		NOTE: this is a shorthand to .cacheMetadata('all', ..)`,
@@ -781,12 +831,13 @@ var SharpActions = actions.Actions({
 
 	// shorthands...
 	// XXX do we need these???
+	// 		...better have a task manager UI...
 	abortMakeResizedImage: ['- Sharp/',
-		'abort: "makeResizedImage"'],
+		'tasks.stop: "makeResizedImage"'],
 	abortMakePreviews: ['- Sharp/',
-		'abort: "makePreviews"'],
+		'tasks.stop: "makePreviews"'],
 	abortCacheMetadata: ['- Sharp/',
-		'abort: "cacheMetadata"'],
+		'tasks.stop: "cacheMetadata"'],
 })
 
 
@@ -806,15 +857,6 @@ module.Sharp = core.ImageGridFeatures.Feature({
 	isApplicable: function(){ return !!sharp },
 
 	handlers: [
-		// XXX
-		['load.pre',
-			function(){
-				this.abort([
-					'makeResizedImage',
-					'makePreviews',
-					'cacheMetadata',
-				]) }],
-
 		//* XXX this needs to be run in the background...
 		// XXX this is best done in a thread + needs to be abortable (on .load(..))...
 		[['loadImages', 
