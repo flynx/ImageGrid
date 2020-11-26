@@ -2366,13 +2366,35 @@ function(func){
 // 			ExampleActions.exampleTask(..)
 // 			ExampleActions.exampleSessionTask(..)
 
+
+//
+// NOTE: we can pass sync/async to this in two places, in definition:
+// 			var action = taskAction('some title', 'sync', function(..){ .. })
+// 		or
+// 			var action = taskAction('sync', 'some title', function(..){ .. })
+//
+// 		and on call:
+// 			action('sync', ..)
+//
+// 		during the later form 'sync' is passed to .Task(..) in the correct
+// 		position...
+// 		(see ig-types' runner.TaskManager(..) for more info)
 var taskAction =
 module.taskAction =
 function(title, func){
+	var pre_args = [...arguments]
+	func = pre_args.pop()
+	title = pre_args
+		.filter(function(t){ 
+			return t != 'sync' && t != 'async' })
+		.pop()
+
 	var action
 	return (action = object.mixin(
 		Task(function(...args){
-			return this.tasks.Task(title, func.bind(this), ...args) }),
+			if(args[0] == 'sync' || args[0] == 'async'){
+				pre_args = [args.shift(), title] }
+			return this.tasks.Task(...pre_args, func.bind(this), ...args) }),
 		{
 			__task_title__: title,
 			toString: function(){

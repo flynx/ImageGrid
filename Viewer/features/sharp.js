@@ -861,8 +861,7 @@ module.Sharp = core.ImageGridFeatures.Feature({
 		// XXX this is best done in a thread + needs to be abortable (on .load(..))...
 		[['loadImages', 
 				'loadNewImages'],
-			function(){
-				this.cacheMetadata('all') }],
+			'cacheMetadata: "all"'],
 		//*/
 
 		// set orientation if not defined...
@@ -879,8 +878,11 @@ module.Sharp = core.ImageGridFeatures.Feature({
 				var that = this
 				// NOTE: as this directly affects the visible lag, this 
 				// 		must be as fast as possible...
+				// NOTE: running .cacheMetadata(..) in sync mode here forces
+				// 		the image to update before it gets a change to be 
+				// 		drawn...
 				;((this.images[gid] || {}).metadata || {}).ImageGridMetadata
-					|| this.cacheMetadata(gid, false) 
+					|| this.cacheMetadata('sync', gid, false) 
 						.then(function([res]){
 							res 
 								&& that.logger 
