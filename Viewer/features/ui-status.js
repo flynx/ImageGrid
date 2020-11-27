@@ -870,14 +870,12 @@ var StatusLogActions = actions.Actions({
 	clearStatusLog: ['Interface/Clear status log',
 		{mode: 'advancedBrowseModeAction'},
 		function(){
-			delete this.__status_log
-		}],
+			delete this.__status_log }],
 	statusMessage: ['- Interface/',
 		function(){
 			var msg = [...arguments]
 			if(msg.len == 0){
-				return
-			}
+				return }
 			var log = this.__status_log = this.__status_log || []
 			
 			// XXX should we convert here and how???
@@ -886,8 +884,7 @@ var StatusLogActions = actions.Actions({
 			// truncate the log...
 			var s = this.config['ui-status-log-size']
 			if(s != 0 && log.length > (s || 100)){
-				log.splice(0, log.length - (s || 100))
-			}
+				log.splice(0, log.length - (s || 100)) }
 
 			// XXX show the message above the status bar (same style)...
 			// XXX

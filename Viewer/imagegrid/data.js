@@ -861,8 +861,9 @@ var DataPrototype = {
 	// 		target image is not loaded.
 	// 		Use offset to explicitly get the image before/after target.
 	//
-	// XXX most of the complexity here comes from argument DSL parsing,
+	// NOTE: most of the complexity here comes from argument DSL parsing,
 	// 		might be good to revise argument syntax and handling...
+	//
 	// XXX doc needs revision....
 	getImage: function(target, mode, list){
 		// empty data...
