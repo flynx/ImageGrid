@@ -369,11 +369,7 @@ actions.Actions({
 					if(!k.startsWith('_') 
 							&& this[k] != null 
 							&& this[k].json != null){
-						res[k] = this[k].json()
-					}
-				}
-			}
-		}],
+						res[k] = this[k].json() } } } }],
 
 	getImagePath: ['- System/',
 		function(gid, type){
@@ -1389,12 +1385,7 @@ module.CropActions = actions.Actions({
 						return c
 							.json()
 							.run(function(){
-								delete this.tags })
-					})
-				}
-			}
-		}
-	}],
+								delete this.tags }) }) } } } }],
 	// load the crop stack if present...
 	load: [function(state){
 		return function(){

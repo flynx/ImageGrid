@@ -202,8 +202,7 @@ var MetadataReaderActions = actions.Actions({
 
 			this.images 
 				&& this.images.forEach(function(gid){
-					q.enqueue('metadata', read(gid))
-				})
+					q.enqueue('metadata', read(gid)) })
 			
 			return q }],
 

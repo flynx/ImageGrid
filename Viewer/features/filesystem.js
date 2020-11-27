@@ -302,7 +302,6 @@ var FileSystemLoaderActions = actions.Actions({
 					var skipped = new Set()
 					var paths = Object.keys(res)
 					paths
-						.sort()
 						.forEach(function(p){
 							// already removed...
 							if(skipped.has(p) >= 0){
@@ -318,7 +317,7 @@ var FileSystemLoaderActions = actions.Actions({
 									skipped.add(e)
 									delete res[e] }) })
 					// keep only the valid paths...
-					paths = Object.keys(res)
+					paths = Object.keys(res).sort()
 
 					//console.log('SKIPPING NESTED:', skipped.length)
 
@@ -407,9 +406,7 @@ var FileSystemLoaderActions = actions.Actions({
 							force_full_save
 								// XXX remove as soon as merged index save is done...
 								&& loaded.length == 1
-								&& that.markChanged('all') })
-				})
-		}],
+								&& that.markChanged('all') }) }) }],
 
 	// Get image(s) previews...
 	//
