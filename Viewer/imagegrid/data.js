@@ -240,7 +240,6 @@ var DataPrototype = {
 	get order(){
 		return this.__order },
 	set order(value){
-		var that = this
 		delete this.__order_index
 		this.__order = value },
 	get order_index(){
@@ -870,7 +869,7 @@ var DataPrototype = {
 			: target
 
 		// explicit image gid -- get the loaded group gid...
-		if(this.order.includes(target)){
+		if(target in this.order_index){
 			var x = this.getLoadedInGroup(target)
 			target = x != null ? 
 				x 
@@ -967,7 +966,7 @@ var DataPrototype = {
 			i = target
 
 		} else {
-			i = this.order.indexOf(target)
+			i = this.order_index[target]
 
 			// invalid gid...
 			// XXX need a better way to report errors...
@@ -1386,7 +1385,7 @@ var DataPrototype = {
 			var x = this.getLoadedInGroup(target)
 			target = x != null ? x : target
 
-			var i = this.order.indexOf(target)
+			var i = this.order_index[target]
 			if(i == -1){
 				return null
 			}
@@ -1428,7 +1427,7 @@ var DataPrototype = {
 		if(target && current == null && mode == null && list == null){
 			current = this.getImage(target, 'after')
 		}
-		if(this.order.indexOf(current) >= 0){
+		if(this.order_index[current] >= 0){
 			this.__current = current
 		}
 		return this },	
