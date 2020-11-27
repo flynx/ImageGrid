@@ -207,21 +207,38 @@ var StatusBarActions = actions.Actions({
 			// 		into an infinite recursion...
 			var cls = (that.config['status-bar-index'] || {})['mode'] || 'normal'
 
+			// XXX get the cached length...
+			// XXX make this part of the status bar cache...
+			var cache = this.__statusbar_index_length_cache || []
+			cache = cache[0] == cls ?
+				cache[1]
+				: null
+
+			// empty view...
+			if(this.data){
+				var i = -1
+				var l = 0
+
 			// global index...
-			if(cls == 'global'){
-				var i = this.data ? this.data.getImageOrder(gid) : -1
-				var l = this.data ? this.data.length : 0
+			} else if(cls == 'global'){
+				var i = this.data.getImageOrder(gid)
+				var l = cache = 
+					cache || this.data.length
 
 			// loaded/crop index...
 			} else if(cls == 'loaded'){
-				var i = this.data ? this.data.getImageOrder('loaded', gid) : -1
-				var l = this.data ? this.data.getImages('loaded').len : 0
+				var i = this.data.getImageOrder('loaded', gid)
+				var l = cache = 
+					cache || this.data.getImages('loaded').len
 
 			// ribbon index...
 			} else {
-				var i = this.data ? this.data.getImageOrder('ribbon', gid) : -1
-				var l = this.data ? this.data.getImages(gid).len : 0
-			}
+				var i = this.data.getImageOrder('ribbon', gid)
+				var l = cache = 
+					cache || this.data.getImages(gid).len }
+
+			// XXX save cache...
+			this.__statusbar_index_length_cache = [cls, cache]
 
 			// update...
 			item
@@ -652,7 +669,7 @@ var StatusBarActions = actions.Actions({
 			},
 			null)],	
 	updateStatusBar: ['- Interface/Update satus bar',
-		function(){ this.toggleStatusBar('!') }],
+		'toggleStatusBar: "!"'],
 
 	resetStatusBar: ['Interface/Reset status bar',
 		function(){
