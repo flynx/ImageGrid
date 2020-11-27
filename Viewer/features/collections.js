@@ -1779,6 +1779,13 @@ module.Collection = core.ImageGridFeatures.Feature({
 						// XXX
 					})
 			}],
+
+		// invalidate caches...
+		[[
+			'loadCollection',
+			'uncollect',
+		],
+			'clearCache: "view(-.*)?" "*" -- Clear view cache'],
 	],
 })
 

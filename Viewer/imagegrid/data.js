@@ -13,6 +13,7 @@
 
 var sha1 = require('ext-lib/sha1')
 
+var types = require('lib/types')
 var object = require('lib/object')
 
 var tags = require('imagegrid/tags')
@@ -223,6 +224,7 @@ var DataPrototype = {
 	ribbon_order: null,
 	ribbons: null,
 
+	//__current: null,
 	get current(){
 		return this.__current = this.__current 
 			|| this.getImages(this.ribbon_order[0])[0]
@@ -230,6 +232,7 @@ var DataPrototype = {
 	set current(value){
 		this.focusImage(value) },
 
+	//__base: null,
 	get base(){
 		return this.__base || this.ribbon_order[0] },
 	set base(value){
@@ -237,13 +240,18 @@ var DataPrototype = {
 			this.getRibbon(value)
 			: value },
 
+	// NOTE: experiments with wrapping data in Proxy yielded a 
+	// 		significant slowdown on edits...
+	//__order: null,
 	get order(){
 		return this.__order },
 	set order(value){
 		delete this.__order_index
 		this.__order = value },
+	//__order_index: null,
 	get order_index(){
-		return this.__order_index = this.__order_index || this.order.toKeys() },
+		return this.__order_index = 
+			this.__order_index || this.order.toKeys() },
 
 
 
@@ -1027,16 +1035,16 @@ var DataPrototype = {
 	// 		order.
 	getImageOrder: function(context, target, mode, list){
 		if(context == 'loaded' || context == 'global'){
-			return this.getImages('loaded').indexOf(this.getImage(target, mode, list))
+			return this.getImages('loaded').lastIndexOf(this.getImage(target, mode, list))
 
 		} else if(context == 'ribbon'){
 			var gid = this.getImage(target, mode, list)
-			return this.getImages(gid).indexOf(gid)
+			return this.getImages(gid).lastIndexOf(gid)
 
 		} else if(context == 'all'){
-			return this.order.indexOf(this.getImage(target, mode, list)) } 
+			return this.order.lastIndexOf(this.getImage(target, mode, list)) } 
 
-		return this.order.indexOf(this.getImage(context, target, mode)) },	
+		return this.order.lastIndexOf(this.getImage(context, target, mode)) },	
 
 	// Get a list of image gids...
 	//
@@ -1183,7 +1191,6 @@ var DataPrototype = {
 
 		target = this.getImage(target) 
 			|| this.getImage(target, 'after')
-		var i = list.indexOf(target)
 
 		// prepare to slice the list...
 		if(mode == 'around' || mode == 'total'){
@@ -1204,6 +1211,10 @@ var DataPrototype = {
 
 		var res = [target]
 
+		// XXX can we avoid .indexOf(..) here???
+		//var i = list.indexOf(target)
+		//var i = list.index(target)
+		var i = list.lastIndexOf(target)
 		// pre...
 		for(var n = i-1; n >= 0 && pre > 0; n--){
 			// NOTE: list may be sparse so we skip the items that are not
@@ -1227,7 +1238,9 @@ var DataPrototype = {
 		// 		in the post section...
 		if(mode == 'total' && post > 0){
 			var pad = count - res.length
-			var i = list.indexOf(res[0])
+			//var i = list.indexOf(res[0])
+			//var i = list.index(res[0])
+			var i = list.lastIndexOf(res[0])
 
 			res.reverse()
 			for(var n = i-1; n >= 0 && pad > 0; n--){

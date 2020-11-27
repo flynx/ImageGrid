@@ -1806,9 +1806,19 @@ module.Crop = core.ImageGridFeatures.Feature({
 	tag: 'crop',
 	depends: [
 		'base',
+		//'cache',
 	],
 
 	actions: CropActions,
+
+	handlers: [
+		[[
+			'crop',
+			'uncrop',
+			'removeFromCrop',
+		],
+			'clearCache: "view(-.*)?" "*" -- Clear view cache'],
+	],
 })
 
 

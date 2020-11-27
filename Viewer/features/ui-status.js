@@ -25,8 +25,7 @@ var base = require('features/base')
 
 var makeStateIndicator = function(type){
 	return $('<div>')
-		.addClass('state-indicator-container ' + type || '')
-}
+		.addClass('state-indicator-container ' + type || '') }
 
 // XXX do we need this???
 var makeStateIndicatorItem = function(container, type, text){
@@ -35,8 +34,7 @@ var makeStateIndicatorItem = function(container, type, text){
 			.attr('text', text)
 	this.dom.find('.state-indicator-container.'+container)
 		.append(item)
-	return item
-}
+	return item }
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -102,6 +100,13 @@ var StatusBarActions = actions.Actions({
 		},
 	},
 
+
+	get __statusbar_cache(){
+		return this.cache('view-data', 'statusbar', 
+			function(data){ 
+				return data || {}}) },
+
+
 	__statusbar_elements__: {
 		/* item template...
 		item: function(item){
@@ -133,8 +138,7 @@ var StatusBarActions = actions.Actions({
 		index: function(item, gid, img){
 			// cleanup...
 			if(item == null){
-				return 
-			}
+				return }
 
 			var that = this
 			gid = gid || this.current
@@ -162,8 +166,7 @@ var StatusBarActions = actions.Actions({
 							// toggle index state...
 							.click(function(){
 								that.toggleStatusBarIndexMode()
-								that.updateStatusBar()
-							})
+								that.updateStatusBar() })
 						// editable...
 						: $('<span>')
 							.addClass('position editable')
@@ -182,40 +185,35 @@ var StatusBarActions = actions.Actions({
 								//event.stopPropagation()
 
 								(that.config['status-bar-index'] || {})['live-update-on-edit']
-									&& go(parseInt($(this).text()))
-							})
+									&& go(parseInt($(this).text())) })
 							.focus(function(){
-								$(this).selectText()
-							})
+								$(this).selectText() })
 							.blur(function(){
-								that.updateStatusBar()
-							}))
+								that.updateStatusBar() }))
 					.append($('<span>')
 						.addClass('length')
 						.attr('info', 'Image count (click to toggle ribbon/global)')
 						// toggle index state...
 						.click(function(){
 							that.toggleStatusBarIndexMode()
-							that.updateStatusBar()
-						}))
+							that.updateStatusBar() }))
 
 			} else {
-				var type = item.attr('type')
-			}
+				var type = item.attr('type') }
 
 			// NOTE: using .toggleStatusBarIndexMode(..) here will fall
 			// 		into an infinite recursion...
 			var cls = (that.config['status-bar-index'] || {})['mode'] || 'normal'
 
-			// XXX get the cached length...
-			// XXX make this part of the status bar cache...
-			var cache = this.__statusbar_index_length_cache || []
-			cache = cache[0] == cls ?
-				cache[1]
+			// get the cached length...
+			var cache = this.__statusbar_cache.index_total
+			cache = cache ? 
+				(cache[0] == cls 
+					&& cache[1])
 				: null
 
 			// empty view...
-			if(this.data){
+			if(!this.data){
 				var i = -1
 				var l = 0
 
@@ -234,11 +232,16 @@ var StatusBarActions = actions.Actions({
 			// ribbon index...
 			} else {
 				var i = this.data.getImageOrder('ribbon', gid)
-				var l = cache = 
-					cache || this.data.getImages(gid).len }
+				var r = this.current_ribbon
+				var l = cache 
+					&& cache instanceof Array 
+					&& cache[0] == r
+					&& cache[1]
+				l = l || this.data.getImages(gid).len
+				cache = [r, l] }
 
-			// XXX save cache...
-			this.__statusbar_index_length_cache = [cls, cache]
+			// save cache...
+			this.__statusbar_cache.index_total = [cls, cache]
 
 			// update...
 			item
@@ -250,13 +253,11 @@ var StatusBarActions = actions.Actions({
 				.find('.length')
 					.text(l > 0 ? ('/' + l) : '')
 
-			return item
-		},
+			return item },
 		ribbon: function(item, gid, img){
 			// cleanup...
 			if(item == null){
-				return 
-			}
+				return }
 
 			var that = this
 
@@ -294,8 +295,7 @@ var StatusBarActions = actions.Actions({
 						}))
 					.append($('<span>')
 						.addClass('ribbon-count')
-						.attr('info', 'Ribbon count'))
-			}
+						.attr('info', 'Ribbon count')) }
 
 			item
 				.find('.ribbon-number')
@@ -312,22 +312,18 @@ var StatusBarActions = actions.Actions({
 				item[0].setAttribute('base', '')
 
 			} else {
-				item[0].removeAttribute('base')
-			}
+				item[0].removeAttribute('base') }
 
-			return item
-		},
+			return item },
 		changes: function(item, gid, img){
 			// cleanup...
 			if(item == null){
-				return 
-			}
+				return }
 
 			if(typeof(item) == typeof('str')){
 				item = $('<span>')
 					.addClass('changes')
-					.attr('info', 'Unsaved changes')
-			}
+					.attr('info', 'Unsaved changes') }
 
 			//item.html(this.changes !== false ? 
 			//	this.config['status-bar-changes-text'] || '*' 
@@ -337,14 +333,12 @@ var StatusBarActions = actions.Actions({
 				this.config['status-bar-changes-text'] || '*' 
 				: '')
 
-			return item
-		},
+			return item },
 		// XXX handle path correctly...
 		gid: function(item, gid, img){
 			// cleanup...
 			if(item == null){
-				return 
-			}
+				return }
 
 			var that = this
 			gid = gid || this.current
@@ -363,12 +357,10 @@ var StatusBarActions = actions.Actions({
 						// select the text...
 						// XXX should this also copy???
 						.click(function(){
-							$(this).selectText()
-						}))
+							$(this).selectText() }))
 
 			} else {
-				var type = item.attr('type')
-			}
+				var type = item.attr('type') }
 
 			// update...
 			var txt = ''
@@ -386,14 +378,14 @@ var StatusBarActions = actions.Actions({
 				text = (img && img.path && ((img.base_path || '') +'/'+ img.path) || '---')
 					// remove /./
 					.replace(/[\\\/]\.[\\\/]/, '/')
-				txt = img && ((img.name || '') + (img.ext || '')) || text.split(/[\\\/]/).pop()
-			}
+				txt = img 
+					&& ((img.name || '') + (img.ext || '')) 
+					|| text.split(/[\\\/]/).pop() }
 
 			item.find('.shown').text(txt)
 			item.find('.hidden').text(text)
 
-			return item
-		},
+			return item },
 		path: 'gid',
 		'edit-mode': function(item){
 			// cleanup...
@@ -401,21 +393,20 @@ var StatusBarActions = actions.Actions({
 				this.__edit_mode_indicator_update
 					&& this.off('keyPress', this.__edit_mode_indicator_update)
 				delete this.__edit_mode_indicator_update
-				return
-			}
+				return }
 
-			var update = this.__edit_mode_indicator_update = this.__edit_mode_indicator_update 
-				|| (function(){
-					var caps = this.keyboard.capslock
-					caps = typeof(event) != 'undefined' && event.getModifierState ? 
-						event.getModifierState('CapsLock')
-						: caps
-					item
-						.attr('info', 'Edit mode ' 
-							+ (caps ? 'on' : 'off')
-							+ ' (Click to update / Press CapsLock to toggle)')
-						[caps ? 'addClass' : 'removeClass']('on')
-				}).bind(this)
+			var update = this.__edit_mode_indicator_update = 
+				this.__edit_mode_indicator_update 
+					|| (function(){
+						var caps = this.keyboard.capslock
+						caps = typeof(event) != 'undefined' && event.getModifierState ? 
+							event.getModifierState('CapsLock')
+							: caps
+						item
+							.attr('info', 'Edit mode ' 
+								+ (caps ? 'on' : 'off')
+								+ ' (Click to update / Press CapsLock to toggle)')
+							[caps ? 'addClass' : 'removeClass']('on') }).bind(this)
 
 			// cleanup interval handling...
 			this.__edit_mode_indicator_update_interval
@@ -426,8 +417,7 @@ var StatusBarActions = actions.Actions({
 			if(item == null){
 				this.off('keyPress', update)
 				this.dom.off('focus', update)
-				return
-			}
+				return }
 
 			// setup...
 			if(typeof(item) == typeof('str')){
@@ -441,8 +431,7 @@ var StatusBarActions = actions.Actions({
 					.click(update)
 
 				this.on('keyPress', update)
-				this.dom.focus(update)
-			}
+				this.dom.focus(update) }
 
 			// update timer...
 			// NOTE: this is needed so as to reflect changes to settings...
@@ -454,15 +443,13 @@ var StatusBarActions = actions.Actions({
 			// update state...
 			update()
 
-			return item
-		},
+			return item },
 		// XXX show menu in the appropriate corner...
 		// XXX remove the type+ed class...
 		mark: function(item, gid, img){
 			// cleanup...
 			if(item == null){
-				return 
-			}
+				return }
 
 			gid = gid || this.current
 			var that = this
@@ -484,12 +471,10 @@ var StatusBarActions = actions.Actions({
 						evt.preventDefault()
 						evt.stopPropagation()
 
-						that.browseActions('/'+ type.capitalize() +'/')
-					})
+						that.browseActions('/'+ type.capitalize() +'/') })
 
 			} else {
-				var type = item.attr('type')
-			}
+				var type = item.attr('type') }
 
 			// NOTE: we are not using .toggleMark('?') and friends 
 			// 		here to avoid recursion as we might be handling 
@@ -503,8 +488,7 @@ var StatusBarActions = actions.Actions({
 					'removeClass' 
 					: 'addClass']('on')
 
-			return item
-		},
+			return item },
 		bookmark: 'mark', 
 	},
 
@@ -520,8 +504,7 @@ var StatusBarActions = actions.Actions({
 			function(){ 
 				// no viewer yet...
 				if(!this.ribbons || !this.dom){
-					return $()
-				}
+					return $() }
 
 				var bar = this.dom.find('.state-indicator-container.global-info') 
 				if(bar.length == 0){
@@ -543,17 +526,14 @@ var StatusBarActions = actions.Actions({
 						.on('mouseout', function(){
 							bar.find('.info').empty()
 						})
-						.appendTo(this.dom)
-				}
-				return bar
-			}, 
+						.appendTo(this.dom) }
+				return bar }, 
 			function(){ return Object.keys(this.config['status-bars']).concat(['none']) },
 			// XXX check if we will be getting gid reliably...
 			function(state, bar, gid){ 
 				// do not do anything unless the status bar exists...
 				if(bar.length == 0){
-					return
-				}
+					return }
 				var that = this
 				this.config['status-bar'] = state 
 
@@ -564,8 +544,7 @@ var StatusBarActions = actions.Actions({
 					var handler = elems[key] || base_elems[key]
 
 					if(handler == null){
-						return
-					}
+						return }
 
 					// handle aliases...
 					var seen = []
@@ -576,15 +555,13 @@ var StatusBarActions = actions.Actions({
 						if(seen.indexOf(handler) >= 0){
 							console.error('state indicator alias loop detected at:', key)
 							handler = null
-							break
-						}
-					}
+							break } }
 
-					return handler
-				}
+					return handler }
 
 				// clear...
 				if(state == 'none' || !bar.hasClass(state)){
+					this.clearStatusBarCache()
 					// notify items that they are removed...
 					bar.children()
 						.each(function(i, item){
@@ -592,25 +569,21 @@ var StatusBarActions = actions.Actions({
 							var type = item.attr('type') 
 
 							if(type == null){
-								return
-							}
+								return }
 
 							var handler = _getHandler(type)
 
 							if(handler != null){
-								handler.call(that, null) 
-							}
+								handler.call(that, null) }
 						})
-					bar.empty()
-				}
+					bar.empty() }
 
 				if(state == 'none'){
 					!('none' in this.config['status-bars'])
 						// XXX this feels like a hack...
 						&& setTimeout(function(){ this.toggleStatusBar(0) }.bind(this), 0)
 					//return Object.keys(this.config['status-bars'])[0]
-					return
-				}
+					return }
 
 				// build/update...
 				gid = gid || this.current
@@ -642,11 +615,9 @@ var StatusBarActions = actions.Actions({
 							item = (handler ? 
 									handler.call(that, item, gid, img) 
 									: $('<span>'))
-								.attr('type', item)
-						}
+								.attr('type', item) }
 
-						bar.append(item)
-					})
+						bar.append(item) })
 
 				// update...
 				} else {
@@ -656,17 +627,12 @@ var StatusBarActions = actions.Actions({
 							var type = item.attr('type') 
 
 							if(type == null){
-								return
-							}
+								return }
 
 							var handler = _getHandler(type)
 
 							if(handler != null){
-								handler.call(that, item, gid, img) 
-							}
-						})
-				}
-			},
+								handler.call(that, item, gid, img) } }) } },
 			null)],	
 	updateStatusBar: ['- Interface/Update satus bar',
 		'toggleStatusBar: "!"'],
@@ -675,8 +641,10 @@ var StatusBarActions = actions.Actions({
 		function(){
 			var mode = this.toggleStatusBar('?')
 			this.toggleStatusBar('none')
-			this.toggleStatusBar(mode)
-		}],
+			this.toggleStatusBar(mode) }],
+	clearStatusBarCache: ['- Interface/Clear status bar cache',
+		'clearCache: "*" "statusbar"'],
+
 
 	// XXX should this blink the on state only???
 	statusItemBlink: ['- Interface/',
@@ -685,8 +653,7 @@ var StatusBarActions = actions.Actions({
 		NOTE: type is the same as in .__statusbar_elements__`,
 		function(type){
 			if(type == null){
-				return
-			}
+				return }
 
 			var gid = this.current
 			var item = this.dom.find(`.state-indicator-container.global-info [type=${type}]`) 
@@ -695,42 +662,36 @@ var StatusBarActions = actions.Actions({
 			item
 				.removeClass('blink')
 				.addClass('blink')
-				.on('animationend', function(){ item.removeClass('blink') })
-		}],
+				.on('animationend', function(){ item.removeClass('blink') }) }],
 
 	// XXX should these be here???
 	// XXX should this show a dialog???
 	editStatusBarIndex: ['- Interface/Edit image focus position in statusbar',
 		function(){
 			if((this.config['status-bar-index'] || {} )['editable']){
-				this.toggleStatusBar('?') == 'none' && this.toggleStatusBar()
-
+				this.toggleStatusBar('?') == 'none' 
+					&& this.toggleStatusBar()
 				// XXX do this better...
-				this.dom.find('.global-info .index .position').focus().click()
-			}
-		}],
+				this.dom.find('.global-info .index .position').focus().click() } }],
 	editStatusBarRibbon: ['- Interface/Edit ribbon focus position in statusbar',
 		function(){
-			this.toggleStatusBar('?') == 'none' && this.toggleStatusBar()
-
+			this.toggleStatusBar('?') == 'none' 
+				&& this.toggleStatusBar()
 			// XXX do this better...
-			this.dom.find('.global-info .ribbon-number').focus().click()
-		}],
+			this.dom.find('.global-info .ribbon-number').focus().click() }],
 	toggleStatusBarIndexMode: ['Interface/Status bar index mode',
 		toggler.CSSClassToggler(
 			function(){ 
 				return this.dom.find('.global-info .index') },
 			['normal', 'loaded', 'global'],
 			function(state){
-				this.toggleStatusBar('?') == 'none' && this.toggleStatusBar()
-
+				this.toggleStatusBar('?') == 'none' 
+					&& this.toggleStatusBar()
 				// prepare for saving the config...
 				this.config['status-bar-index'] = 
 					JSON.parse(JSON.stringify(this.config['status-bar-index']))
 				this.config['status-bar-index']['mode'] = state
-
-				this.updateStatusBar()
-			})],
+				this.updateStatusBar() })],
 
 	// XXX revise...
 	showStatusBarInfo: ['- Interface/',
@@ -807,12 +768,10 @@ module.StatusBar = core.ImageGridFeatures.Feature({
 	handlers: [
 		['start',
 			function(){
-				this.toggleStatusBar(this.config['status-bar'])
-			}],
+				this.toggleStatusBar(this.config['status-bar']) }],
 		['focusImage clear markChanged refresh',
 			function(){
-				this.updateStatusBar()
-			}],
+				this.updateStatusBar() }],
 		[[
 			'tag',
 			'untag',
@@ -823,14 +782,12 @@ module.StatusBar = core.ImageGridFeatures.Feature({
 						&& (gids.indexOf('current') >= 0 
 							|| gids.indexOf(this.current) >= 0)
 						|| this.data.getImage(gids) == this.current){
-					this.updateStatusBar()
-				}
-			}],
+					this.updateStatusBar() } }],
 
 		['ribbonPanning.post',
 			function(_, gid){
-				gid == this.data.getRibbon() && this.updateStatusBar()
-			}],
+				gid == this.data.getRibbon() 
+					&& this.updateStatusBar() }],
 
 		// blink status mark indicators on toggle...
 		['toggleMark',
@@ -853,13 +810,11 @@ module.StatusBar = core.ImageGridFeatures.Feature({
 		],
 			function(workspace){
 				if(!workspace || workspace in this.workspaces){
-					return
-				}
+					return }
 
 				this.config['status-bar'] = 
 					(this.config['status-bar-workspace-defaults'][workspace] 
-						|| this.config['status-bar'])
-			}],
+						|| this.config['status-bar']) }],
 		['loadWorkspace',
 			core.makeWorkspaceConfigLoader(
 				function(){ 
@@ -871,9 +826,7 @@ module.StatusBar = core.ImageGridFeatures.Feature({
 					} else {
 						'status-bar' in workspace ?
 							this.toggleStatusBar(workspace['status-bar'])
-							: this.toggleStatusBar(this.config['status-bar'])
-					}
-				})],
+							: this.toggleStatusBar(this.config['status-bar']) } })],
 	],
 })
 

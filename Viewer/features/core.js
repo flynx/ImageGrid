@@ -1027,9 +1027,21 @@ module.Serialization = ImageGridFeatures.Feature({
 // Cache...
 	
 // XXX should this be in actions.js???
-// XXX should we invalidate the cache automatically???
-// XXX the cache can also be saved to localStorage and loaded until either
-// 		the version changes or the feature list...
+// XXX revise: cache group naming...
+// 		currently the used groups are:
+// 			Session groups -- cleared on .clear() ('cache')
+// 				session-*
+// 				view-*
+// 			View groups -- cleared by crop/collection ('crop', 'collections')
+// 				view-*
+// 			Changes groups -- cleared when specific changes are made ('changes')
+// 				*-data
+// 				*-images
+// 				...
+// 		This approach seems not flexible enough...
+// 		Ideas:
+// 			- use keywords in group names??
+// XXX should we consider persistent caches -- localStorage???
 var CacheActions = actions.Actions({
 	config: {
 		// Enable/disable caching...
@@ -1062,10 +1074,29 @@ var CacheActions = actions.Actions({
 		// 		action is available...
 		'pre-cache-progress': 3000,
 
+
+		// Groups to be cleared at the longest on session change...
+		//
+		// These include by default:
+		// 	'session'			- will live through the whole session.
+		// 	'view'				- cleared when view changes
+		//
+		'cache-session-groups': [
+			'session',
+			'view',
+		],
+
 		// XXX handler cache..
 	},
 
 	// Cache utility method...
+	//
+	// 	.cache(title, handler)
+	// 		-> value
+	//
+	// 	.cache(group, title, handler)
+	// 		-> value
+	//
 	//
 	// Example use:
 	// 	someAction: [
@@ -1086,18 +1117,106 @@ var CacheActions = actions.Actions({
 	// 					return data
 	// 				}) }],
 	//
-	cache: function(title, lister){
+	// XXX what should the default group be???
+	// XXX should this be an action???
+	__cache: null,
+	cache: function(title, handler){
+		var group = 'global'
+		// caching disabled...
 		if(!(this.config || {}).cache){
-			return lister.call(this)
-		}
+			return handler.call(this) }
+		arguments.length > 2
+			&& ([group, title, handler] = arguments)
 		var cache = this.__cache = this.__cache || {}
+		cache = cache[group] = cache[group] || {}
 		return (cache[title] = 
 			title in cache ? 
-				// pass the cached data for cloning/update to the lister...
-				lister.call(this, cache[title])
-				: lister.call(this))
-	},
+				// pass the cached data for cloning/update to the handler...
+				handler.call(this, cache[title])
+				: handler.call(this)) },
+	clearCache: ['System/Clear cache',
+		doc`
 
+			Clear cache fully...
+			.clearCache()
+			
+			Clear title (global group)...
+			.clearCache(title)
+
+			Clear title from group...
+			.clearCache(group, title)
+
+			Clear out the full group...
+			.clearCache(group, '*')
+
+
+		NOTE: a group can be a string, list or a regexp object.
+		`,
+		function(title){
+			var that = this
+			// full clear...
+			if(arguments.length == 0 
+					|| (arguments[0] == '*' 
+						&& arguments[1] == '*')){
+				delete this.__cache
+			// partial clear...
+			} else {
+				var group = 'global'
+				// both group and title given...
+				arguments.length > 1
+					&& ([group, title] = arguments)
+
+				// regexp...
+				// NOTE: these are only supported in groups...
+				if(group != '*' && group.includes('*')){
+					group = new RegExp('^'+ group +'$', 'i')
+					group = Object.keys(this.__cache || {})
+						.filter(function(g){
+							return group.test(g) }) }
+
+				// clear title from each group...
+				if(group == '*' || group instanceof Array || group instanceof RegExp){
+					;(group instanceof Array ?
+						group
+					: group instanceof RegExp ? 
+						Object.keys(this.__cache || {})
+							.filter(function(g){
+								return group.test(g) })
+					: Object.keys(this.__cache || {}))
+						.forEach(function(group){
+							that.clearCache(group, title) })
+				// clear multiple titles...
+				} else if(title instanceof Array){
+					title.forEach(function(title){
+						delete ((that.__cache || {})[group] || {})[title] })
+				// clear group...
+				} else if(title == '*'){
+					delete (this.__cache || {})[group]
+				// clear title from group...
+				} else {
+					delete ((this.__cache || {})[group] || {})[title] } } }],
+
+	// special caches...
+	//
+	sessionCache: ['- System/',
+		doc`Add to session cache...
+
+			.sessionCache(title, handler)
+				-> value
+
+
+		This is a shorthand to:
+
+			.cache('session', title, handler)
+				-> value
+
+
+		NOTE: also see .cache(..)
+		`,
+		'cache: "session" ...'],
+
+
+	// XXX doc: what are we precaching???
 	preCache: ['System/Run pre-cache',
 		doc`Run pre-cache...
 
@@ -1120,8 +1239,7 @@ var CacheActions = actions.Actions({
 				var done = 0
 				var attrs = []
 				for(var k in this){
-					attrs.push(k)
-				}
+					attrs.push(k) }
 				var l = attrs.length
 
 				var started = Date.now()
@@ -1131,44 +1249,24 @@ var CacheActions = actions.Actions({
 					var a = Date.now()
 					var b = a
 					if(attrs.length == 0){
-						return
-					}
-
+						return }
 					while(b - a < c){
 						this[attrs.pop()]
 						b = Date.now()
 						done += 1
-
 						this.showProgress
 							&& (show === true || (show && b - started > show))
-							&& this.showProgress('Caching', done, l)
-					}
-
+							&& this.showProgress('Caching', done, l) }
 					t === true ?
 						tick()
-						: setTimeout(tick, t)
-				}.bind(this)
+						: setTimeout(tick, t) }.bind(this)
 
-				tick()
-			}
-		}],
-	clearCache: ['System/Clear cache',
-		function(title){
-			if(title){
-				delete (this.__cache|| {})[title]
-
-			} else {
-				delete this.__cache
-			}
-		}],
-
-	// XXX do we need this...
+				tick() } }],
 	reCache: ['System/Re-cache',
 		function(t){
 			this
 				.clearCache()
 				.preCache(t) }],
-
 
 	toggleHandlerCache: ['System/Action handler cache',
 		makeConfigToggler('action-handler-cache', 
@@ -1192,15 +1290,16 @@ module.Cache = ImageGridFeatures.Feature({
 	actions: CacheActions,
 
 	handlers: [
+		// System...
 		['start.pre', 
 			function(){ 
+				this.clearCache()
 				var t = this.config['pre-cache']
 				t === true ?
 					this.preCache('now') 
 				: t >= 0 ?
 					this.preCache() 
-				: false
-			}],
+				: false }],
 		['start',
 			function(){
 				// XXX this breaks loading...
@@ -1208,7 +1307,6 @@ module.Cache = ImageGridFeatures.Feature({
 				// 		there seems to be no problems...
 				//this.toggleHandlerCache(this.config['action-handler-cache'] || 'on')
 			}],
-
 		/*/ XXX clear cache when feature/action topology changes...
 		[[
 			'inlineMixin',
@@ -1222,6 +1320,16 @@ module.Cache = ImageGridFeatures.Feature({
 				this.clearCache()
 			}],
 		//*/
+
+
+		// clear session cache...
+		['clear',
+			//'clearCache: "(session|view)(-.*)?" "*" -- Clear session cache'],
+			function(){
+				this.clearCache(`(${ 
+					(this.config['cache-session-groups'] 
+							|| ['session', 'view'])
+						.join('|') })(-.*)?`) }],
 	],
 })
 
@@ -2148,6 +2256,16 @@ module.Changes = ImageGridFeatures.Feature({
 					this.changes = JSON.parse(JSON.stringify(data.changes))
 				}
 			}],
+
+		// clear caches relating to stuff we just changed...
+		['markChanged',
+			function(_, section){
+				section = (section instanceof Array ?
+						section
+						: [section])
+					.map(function(section){ 
+						return '.*-'+section })
+				this.clearCache(section, '*') }],
 	],
 })
 
