@@ -300,10 +300,10 @@ module.GLOBAL_KEYBOARD = {
 
 		Home: 'firstImage',
 		ctrl_Home: 'firstGlobalImage',
-		shift_Home: 'firstRibbon',
+		alt_Home: 'firstRibbon',
 		End: 'lastImage',
 		ctrl_End: 'lastGlobalImage',
-		shift_End: 'lastRibbon',
+		alt_End: 'lastRibbon',
 		// NOTE: these (vim-like) bindings have been added by request as
 		// 		it would seem that not all keyboards have a convenient 
 		// 		Home/End buttons...
@@ -322,12 +322,14 @@ module.GLOBAL_KEYBOARD = {
 		alt_shift_Up: 'travelImageUp',
 		ctrl_shift_Up: 'shiftImageUpNewRibbon',
 		ctrl_Up: 'shiftMarkedUp',
+		shift_Home: 'shiftImageToTop',
 
 		shift_Down: 'shiftImageDown',
 		caps_Down: 'shiftImageDown',
 		alt_shift_Down: 'travelImageDown',
 		ctrl_shift_Down: 'shiftImageDownNewRibbon',
 		ctrl_Down: 'shiftMarkedDown',
+		shift_End: 'shiftImageToBottom',
 
 		alt_Left: 'shiftImageLeft!',
 		alt_Right: 'shiftImageRight!',

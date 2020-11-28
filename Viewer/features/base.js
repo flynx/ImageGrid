@@ -850,6 +850,17 @@ actions.Actions({
 			return this.current_ribbon == this.base && 'disabled' }},
 		function(target){ this.data.setBase(target) }],
 
+	getNextFocused: ['- Image/',
+		function(target='current', set_direction=true){
+			var direction = this.direction == 'right' ? 'next' : 'prev'
+			var cur = this.data.getImage(target)
+			var next = this.data.getImage(direction)
+				|| this.data.getImage(direction == 'next' ? 'prev' : 'next') 
+			set_direction
+				&& this.config['shifts-affect-direction'] == 'on' 
+				&& (this.direction = this.direction)
+			return next }],
+
 	// NOTE: this does not retain direction information, handle individual
 	// 		actions if that info is needed.
 	// NOTE: to make things clean, this is triggered in action handlers 
@@ -886,25 +897,13 @@ actions.Actions({
 		function(target){ 
 			// by default we need to focus another image in the same ribbon...
 			if(target == null){
-				var direction = this.direction == 'right' ? 'next' : 'prev'
-
-				var cur = this.data.getImage()
-				var next = this.data.getImage(direction)
-				next = next == null 
-					? this.data.getImage(direction == 'next' ? 'prev' : 'next') 
-					: next
-
+				var cur = this.current
+				var next = this.getNextFocused(cur)
 				this.data.shiftImageUp(cur)
 				this.focusImage(next)
-
-				this.config['shifts-affect-direction'] == 'on' 
-					&& (this.direction = this.direction)
-
 			// if a specific target is given, just shift it...
 			} else {
-				this.data.shiftImageUp(target)
-			}
-		}],
+				this.data.shiftImageUp(target) } }],
 	shiftImageDown: ['Edit|Image/Shift image down',
 		core.doc`Shift image down...
 
@@ -916,25 +915,13 @@ actions.Actions({
 		function(target){ 
 			// by default we need to focus another image in the same ribbon...
 			if(target == null){
-				var direction = this.direction == 'right' ? 'next' : 'prev'
-
-				var cur = this.data.getImage()
-				var next = this.data.getImage(direction)
-				next = next == null 
-					? this.data.getImage(direction == 'next' ? 'prev' : 'next') 
-					: next
-
+				var cur = this.current
+				var next = this.getNextFocused(cur)
 				this.data.shiftImageDown(cur)
 				this.focusImage(next)
-
-				this.config['shifts-affect-direction'] == 'on' 
-					&& (this.direction = this.direction)
-
 			// if a specific target is given, just shift it...
 			} else {
-				this.data.shiftImageDown(target)
-			}
-		}],
+				this.data.shiftImageDown(target) } }],
 	// NOTE: we do not need undo here because it will be handled by 
 	// 		corresponding normal shift operations...
 	// XXX .undoLast(..) on these for some reason skips...
@@ -943,34 +930,59 @@ actions.Actions({
 		{journal: true},
 		function(target){
 			this.data.newRibbon(target)
-			this.shiftImageUp(target)
-		}],
+			this.shiftImageUp(target) }],
 	shiftImageDownNewRibbon: ['Edit|Image/Shift image down to a new empty ribbon',
 		{journal: true},
 		function(target){
 			this.data.newRibbon(target, 'below')
-			this.shiftImageDown(target)
-		}],
+			this.shiftImageDown(target) }],
 	shiftImageLeft: ['Edit|Sort|Image/Shift image left', {
 		undo: undoShift('shiftImageRight'),
 		mode: 'prevImage'}, 
 		function(target){ 
 			if(target == null){
-				this.direction = 'left'
-			}
+				this.direction = 'left' }
 			this.data.shiftImageLeft(target) 
-			this.focusImage()
-		}],
+			this.focusImage() }],
 	shiftImageRight: ['Edit|Sort|Image/Shift image right', {
 		undo: undoShift('shiftImageLeft'),
 		mode: 'nextImage'}, 
 		function(target){ 
 			if(target == null){
-				this.direction = 'right'
-			}
+				this.direction = 'right' }
 			this.data.shiftImageRight(target) 
-			this.focusImage()
-		}],
+			this.focusImage() }],
+		// XXX these are effectively identical...
+		// XXX when shifting the first image in ribbon alignment is a bit off...
+		// XXX add undo...
+		shiftImageToTop: ['Edit|Image/Shift image to top ribbon',
+			function(target){
+				console.warn('shiftImageToTop(..)/shiftImageToBottom(..): need proper undo.')
+				if(target == null){
+					var cur = this.current
+					var next = this.getNextFocused(cur)
+					this.data.shiftImage(cur, 0, 'vertical')
+					this.focusImage(next) 
+				} else {
+					this.data.shiftImage(target, 0, 'vertical') } }],
+		shiftImageToBottom: ['Edit|Image/Shift image to bottom ribbon',
+			function(target){
+				console.warn('shiftImageToTop(..)/shiftImageToBottom(..): need proper undo.')
+				if(target == null){
+					var cur = this.current
+					var next = this.getNextFocused(cur)
+					this.data.shiftImage(cur, -1, 'vertical')
+					this.focusImage(next) 
+				} else {
+					this.data.shiftImage(target, 0, 'vertical') } }],
+		/*
+		shiftImageToBase: ['Edit|Image/Shift image to base robbon',
+			function(){}],
+		shiftImageOneOverUp: ['Edit|Image/',
+			function(){}],
+		shiftImageOneOverDown: ['Edit|Image/',
+			function(){}],
+		//*/
 
 	shiftRibbonUp: ['Ribbon|Edit|Sort/Shift ribbon up', {
 		undo: undoShift('shiftRibbonDown'),

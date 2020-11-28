@@ -2463,14 +2463,12 @@ module.Workspace = ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 // Tasks...
-// XXX we need:
-// 		- serialize/restore
-//
-// XXX should this be a separate module???
-//var tasks = require('lib/tasks')
 
+// Task wrapper...
+//
+// This simply makes tasks actions discoverable...
 var Task =
-module.Tast =
+module.Task =
 function(func){
 	func.__task__ = true
 	return func }
@@ -2497,6 +2495,8 @@ function(func){
 // 		during the later form 'sync' is passed to .Task(..) in the correct
 // 		position...
 // 		(see ig-types' runner.TaskManager(..) for more info)
+//
+// XXX might be nice to add metadata like start times and the like...
 var taskAction =
 module.taskAction =
 function(title, func){

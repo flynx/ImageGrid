@@ -25,6 +25,7 @@ if(typeof(process) != 'undefined'){
 
 var util = require('lib/util')
 var toggler = require('lib/toggler')
+// XXX do we need this???
 var tasks = require('lib/tasks')
 var keyboard = require('lib/keyboard')
 
