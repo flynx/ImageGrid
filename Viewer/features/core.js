@@ -1042,6 +1042,9 @@ module.Serialization = ImageGridFeatures.Feature({
 // 		Ideas:
 // 			- use keywords in group names??
 // XXX should we consider persistent caches -- localStorage???
+// XXX would be nice to have a simple cachedAction(name, cache-tag, expire, func) 
+// 		action wrapper that would not require anything from the action and 
+// 		just not call it if already called...
 var CacheActions = actions.Actions({
 	config: {
 		// Enable/disable caching...

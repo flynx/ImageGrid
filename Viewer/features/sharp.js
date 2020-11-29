@@ -98,9 +98,12 @@ module.EXIF_FORMAT = {
 
 	// exposure...
 	'exif.ISO': 'iso',
-	'exif.FNumber': ['fNumber', 
-		function(v){ return 'f/'+v }],
-	'exif.ExposureTime': ['exposureTime',
+	'exif.FNumber': [
+		'fNumber', 
+		function(v){ 
+			return 'f/'+v }],
+	'exif.ExposureTime': [
+		'exposureTime',
 		// NOTE: this is a bit of a brute-fore approach but for shutter 
 		// 		speeds this should not matter...
 		function(v){
@@ -110,10 +113,12 @@ module.EXIF_FORMAT = {
 			return (v * d) +'/'+ d }],
 
 	// dates...
-	'exif.DateTimeOriginal': ['date/timeOriginal',
+	'exif.DateTimeOriginal': [
+		'date/timeOriginal',
 		function(v){
 			return v.toShortDate() }],
-	'image.ModifyDate': ['modifyDate', 
+	'image.ModifyDate': [
+		'modifyDate', 
 		'exif.DateTimeOriginal'],
 
 	// IPCT...
