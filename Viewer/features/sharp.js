@@ -927,5 +927,6 @@ module.Sharp = core.ImageGridFeatures.Feature({
 
 
 
+
 /**********************************************************************
 * vim:set ts=4 sw=4 :                               */ return module })

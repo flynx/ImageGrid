@@ -1027,7 +1027,6 @@ module.Serialization = ImageGridFeatures.Feature({
 //---------------------------------------------------------------------
 // Cache...
 	
-// XXX should this be in actions.js???
 // XXX revise: cache group naming...
 // 		currently the used groups are:
 // 			Session groups -- cleared on .clear() ('cache')
@@ -1106,7 +1105,19 @@ var CacheActions = actions.Actions({
 			.cache(group, title, handler)
 				-> value
 		
+
+		Currently the used groups are:
+			Session groups -- cleared on .clear() (feature: 'cache')
+				session-*
+				view-*
+			View groups -- cleared by crop/collection (feature: 'crop', 'collections')
+				view-*
+			Changes groups -- cleared when specific changes are made (feature: 'changes')
+				*-data
+				*-images
+				...
 		
+
 		Example use:
 			someAction: [
 				function(){
