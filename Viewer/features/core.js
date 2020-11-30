@@ -440,7 +440,8 @@ module.Logger = ImageGridFeatures.Feature({
 // 		right at the string start.
 // 		
 // XXX might be a good idea to move this to a more generic spot like lib/util.js...
-var doc = module.doc = object.doc
+//var doc = module.doc = object.doc
+var doc = module.doc = actions.doc
 var text = module.text = object.text
 
 
@@ -1045,6 +1046,9 @@ module.Serialization = ImageGridFeatures.Feature({
 // XXX would be nice to have a simple cachedAction(name, cache-tag, expire, func) 
 // 		action wrapper that would not require anything from the action and 
 // 		just not call it if already called...
+// 		...to do this we'll need to be able to select a value by args 
+// 		from the cache this will require a diff mattch or something 
+// 		similar...
 var CacheActions = actions.Actions({
 	config: {
 		// Enable/disable caching...
@@ -1092,51 +1096,55 @@ var CacheActions = actions.Actions({
 		// XXX handler cache..
 	},
 
-	// Cache utility method...
-	//
-	// 	.cache(title, handler)
-	// 		-> value
-	//
-	// 	.cache(group, title, handler)
-	// 		-> value
-	//
-	//
-	// Example use:
-	// 	someAction: [
-	// 		function(){
-	// 			return this.cache('someAction', 
-	// 				function(data){
-	// 					if(data){
-	// 						// clone/update the data...
-	// 						// NOTE: this should be faster than the construction
-	// 						//		branch below or this will defeat the purpose 
-	// 						//		of caching...
-	// 						...
-	//
-	// 					} else {
-	// 						// get the data...
-	// 						...
-	// 					}
-	// 					return data
-	// 				}) }],
-	//
-	// XXX what should the default group be???
-	// XXX should this be an action???
 	__cache: null,
-	cache: function(title, handler){
-		var group = 'global'
-		// caching disabled...
-		if(!(this.config || {}).cache){
-			return handler.call(this) }
-		arguments.length > 2
-			&& ([group, title, handler] = arguments)
-		var cache = this.__cache = this.__cache || {}
-		cache = cache[group] = cache[group] || {}
-		return (cache[title] = 
-			title in cache ? 
-				// pass the cached data for cloning/update to the handler...
-				handler.call(this, cache[title])
-				: handler.call(this)) },
+	cache: doc('Get or set cache value',
+		doc`Get or set cache value
+		
+			.cache(title, handler)
+				-> value
+		
+			.cache(group, title, handler)
+				-> value
+		
+		
+		Example use:
+			someAction: [
+				function(){
+					return this.cache('someAction', 
+						function(data){
+							if(data){
+								// clone/update the data...
+								// NOTE: this should be faster than the construction
+								//		branch below or this will defeat the purpose 
+								//		of caching...
+								...
+		
+							} else {
+								// get the data...
+								...
+							}
+							return data
+						}) }],
+		
+		
+		NOTE: since this is here to help speed things up, introducing a 
+			small but not necessary overhead by making this an action is
+			not logical...
+		`,
+		function(title, handler){
+			var group = 'global'
+			// caching disabled...
+			if(!(this.config || {}).cache){
+				return handler.call(this) }
+			arguments.length > 2
+				&& ([group, title, handler] = arguments)
+			var cache = this.__cache = this.__cache || {}
+			cache = cache[group] = cache[group] || {}
+			return (cache[title] = 
+				title in cache ? 
+					// pass the cached data for cloning/update to the handler...
+					handler.call(this, cache[title])
+					: handler.call(this)) }),
 	clearCache: ['System/Clear cache',
 		doc`
 
