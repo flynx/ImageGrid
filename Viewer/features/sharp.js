@@ -376,7 +376,7 @@ var SharpActions = actions.Actions({
 												&& Math.max(m.width, m.height) < size)
 											|| (fit == 'outside'
 												&& Math.min(m.width, m.height) < size)){
-										logger && logger.emit('skipping', gid)
+										//logger && logger.emit('skipping', gid)
 										return }
 									// continue...
 									return img })
@@ -396,7 +396,7 @@ var SharpActions = actions.Actions({
 												fse.removeSync(to)
 											// skip...
 											} else {
-												logger && logger.emit('skipping', gid)
+												//logger && logger.emit('skipping', gid)
 												return } }
 
 										// write...
@@ -588,9 +588,8 @@ var SharpActions = actions.Actions({
 						Promise.reject('aborted')
 						: res.flat() }) })],
 
-	// XXX will this be better off as a queueHandler(..) ???
 	// XXX add support for offloading the processing to a thread/worker...
-	__cache_metadata_reading: null,
+	// XXX revise logging and logger passing...
 	cacheMetadata: ['- Sharp|Image/',
 		core.doc`Cache metadata
 
@@ -638,202 +637,109 @@ var SharpActions = actions.Actions({
 		NOTE: this will effectively update metadata format to the new spec...
 		NOTE: for info on full metadata format see: .readMetadata(..)
 		`,
-		core.sessionTaskAction('cacheMetadata', function(ticket, images, logger){
-			var that = this
+		core.queueHandler('Cache image metadata', 
+			{quiet: true}, 
+			// parse args...
+			function(queue, image, logger){
+				var force = false
+				if(image === true){
+					var [force, image, logger] = arguments }
+				return [
+					image == 'all' ?
+							this.images.keys()
+						: image == 'loaded' ?
+							this.data.getImages('loaded')
+						: (image || 'current'),
+					force, 
+					// XXX
+					logger || this.logger,
+				] },
+			function(image, force, logger){
+				var that = this
 
-			// setup runtime interactions...
-			//
-			// NOTE: we will resolve the ticket when we are fully done
-			// 		and not on stop...
-			var STOP = false
-			ticket
-				.onmessage('stop', function(){
-					STOP = true }) 
-				.then(function(){
-					// close progress bar...
-					// NOTE: if we have multiple tasks let the last one 
-					// 		close the progress bar...
-					if(that.tasks.titled(ticket.title).length == 0){
-						logger 
-							&& logger.emit('close') }
-					that.off('clear', on_close)
-					// cleanup...
-					delete that.__cache_metadata_reading })
-			// clear the progress bar for the next session...
-			var on_close
-			this.one('clear', on_close = function(){
-				logger && logger.emit('close') })
+				// XXX cache the image data???
+				var gid = this.data.getImage(image)
+				var img = this.images[gid]
+				var path = img && that.getImagePath(gid)
 
-			// universal task abort...
-			// NOTE: this will abort all the tasks of this type...
-			var abort = function(){
-				that.tasks.stop(ticket.title) }
+				// XXX
+				//var base_path = that.location.load == 'loadIndex' ?
+				//	null
+				//	: tmp
+				//var base_path = img && img.base_path
+				var base_path
+		
+				// skip...
+				if(!(img && path
+						&& (force
+							// high priority must be preset...
+							|| (img.orientation == null
+								&& img.flipped == null)
+							// update metadata...
+							|| (img.metadata || {}).ImageGridMetadata == null))){
+					return }
 
-			var CHUNK_SIZE = 4
+				// XXX handle/report errors...
+				return sharp(that.getImagePath(gid))
+					.metadata()
+					.then(function(metadata){
+						// no metadata...
+						if(metadata == null){
+							return }
 
-			// handle logging and processing list...
-			// NOTE: these will maintain .__cache_metadata_reading helping 
-			// 		avoid processing an image more than once at the same 
-			// 		time...
-			var done = function(gid, msg){
-				logger && logger.emit(msg || 'done', gid)
-				if(that.__cache_metadata_reading){
-					that.__cache_metadata_reading.delete(gid) }
-				return gid }
-			var skipping = function(gid){
-				return done(gid, 'skipping') }
+						var o = normalizeOrientation(metadata.orientation)
+						;(force || img.orientation == null)
+							// NOTE: we need to set orientation to something
+							// 		or we'll check it again and again...
+							&& (img.orientation = o.orientation || 0)
+						;(force || img.flipped == null)
+							&& (img.flipped = o.flipped)
 
-			var force = false
-			if(images === true){
-				force = true
-				images = null
+						// mark metadata as partially read...
+						// NOTE: this will intentionally overwrite the 
+						// 		previous reader mark/mode...
+						img.metadata =
+							Object.assign(
+								img.metadata || {}, 
+								{ 
+									ImageGridMetadataReader: 'sharp/exif-reader/ImageGrid',
+									// mark metadata as partial read...
+									// NOTE: partial metadata will get reread by 
+									// 		the metadata feature upon request...
+									ImageGridMetadata: 'partial', 
+								})
 
-			} else if(logger === true){
-				force = true
-				logger = arguments[2] }
+						// read the metadata...
+						var exif = metadata.exif 
+							&& exifReader(metadata.exif) 
+						exif
+							&& Object.assign(
+								img.metadata, 
+								exifReader2exiftool(exif, metadata.xmp))
 
-			// NOTE: we are caching this to avoid messing things up when 
-			// 		loading before this was finished...
-			var cached_images = this.images
+						// if image too large, generate preview(s)...
+						// XXX EXPERIMENTAL...
+						var size_threshold = that.config['preview-generate-threshold']
+						if(size_threshold
+								&& img.preview == null
+								&& Math.max(metadata.width, metadata.height) > size_threshold){
+							logger && logger.emit('Image too large', gid)
+							// XXX make this more generic...
+							// 		...if 'loadImages' should create previews in tmp...
+							that.location.load == 'loadIndex'
+								&& that.makePreviews(gid, 
+									that.config['preview-sizes-priority'] || 1080,
+									base_path,
+									logger) }
 
-			// get/normalize images...
-			//images = images || this.current
-			images = images 
-				|| 'current'
-			// keywords...
-			images = 
-				images == 'all' ? 
-					this.data.getImages('all')
-				: images == 'loaded' ?
-					(this.ribbons ?
-						this.ribbons.getImageGIDs()
-						: this.data.getImages('all'))
-				: images == 'current' ? 
-					this.current
-				: images
-			images = (images instanceof Array ? 
-					images 
-					: [images])
-				.filter(function(gid){
-					return !that.__cache_metadata_reading
-						|| !that.__cache_metadata_reading.has(gid) })
+						that.markChanged
+							&& that.markChanged('images', [gid])
+						that.ribbons
+							&& that.ribbons.updateImage(gid) 
 
-			logger = logger !== false ?
-				(logger || this.logger)
-				: false
-			logger = logger 
-				&& logger.push('Caching image metadata', {onclose: abort, quiet: true})
-			logger && logger.emit('queued', images)
-
-			/*/ XXX set this to tmp for .location.load =='loadImages'
-			// XXX add preview cache directory...
-			// 		- user defined path
-			// 		- cleanable 
-			// 			partially (remove orphans) / full...
-			// 		- not sure how to index...
-			var base_path = that.location.load == 'loadIndex' ?
-				null
-				: tmp
-			/*/
-			var base_path
-			//*/
-
-			return images
-				.mapChunks(CHUNK_SIZE, function(gid){
-					// abort...
-					if(STOP){
-						throw Array.STOP('aborted') }
-
-					var img = cached_images[gid]
-					var path = img && that.getImagePath(gid)
-					;(that.__cache_metadata_reading = 
-							that.__cache_metadata_reading || new Set())
-						.add(gid)
-
-					// skip...
-					if(!(img && path
-							&& (force
-								// high priority must be preset...
-								|| (img.orientation == null
-									&& img.flipped == null)
-								// update metadata...
-								|| (img.metadata || {}).ImageGridMetadata == null))){
-						skipping(gid)
-						return }
-
-					return sharp(that.getImagePath(gid))
-						.metadata()
-						.catch(function(){
-							skipping(gid) })
-						.then(function(metadata){
-							// no metadata...
-							if(metadata == null){
-								skipping(gid)
-								return }
-
-							var o = normalizeOrientation(metadata.orientation)
-							;(force || img.orientation == null)
-								// NOTE: we need to set orientation to something
-								// 		or we'll check it again and again...
-								&& (img.orientation = o.orientation || 0)
-							;(force || img.flipped == null)
-								&& (img.flipped = o.flipped)
-
-							// mark metadata as partially read...
-							// NOTE: this will intentionally overwrite the 
-							// 		previous reader mark/mode...
-							img.metadata =
-								Object.assign(
-									img.metadata || {}, 
-									{ 
-										ImageGridMetadataReader: 'sharp/exif-reader/ImageGrid',
-										// mark metadata as partial read...
-										// NOTE: partial metadata will get reread by 
-										// 		the metadata feature upon request...
-										ImageGridMetadata: 'partial', 
-									})
-
-							// read the metadata...
-							var exif = metadata.exif 
-								&& exifReader(metadata.exif) 
-							exif
-								&& Object.assign(
-									img.metadata, 
-									exifReader2exiftool(exif, metadata.xmp))
-
-							// if image too large, generate preview(s)...
-							// XXX EXPERIMENTAL...
-							var size_threshold = that.config['preview-generate-threshold']
-							if(size_threshold
-									&& img.preview == null
-									&& Math.max(metadata.width, metadata.height) > size_threshold){
-								logger && logger.emit('Image too large', gid)
-								// XXX make this more generic...
-								// 		...if 'loadImages' should create previews in tmp...
-								that.location.load == 'loadIndex'
-									&& that.makePreviews(gid, 
-										that.config['preview-sizes-priority'] || 1080,
-										base_path,
-										logger) }
-
-							that.markChanged
-								&& that.markChanged('images', [gid])
-							that.ribbons
-								&& that.ribbons.updateImage(gid) 
-
-							return done(gid) }) }) 
-				.then(function(res){
-					ticket.resolve(res)
-					// XXX do we need this???
-					return res == 'aborted' ?
-						Promise.reject('aborted')
-						: res 
-				}) })],
-	cacheAllMetadata: ['- Sharp|Image/',
-		core.doc`Cache all metadata
-		NOTE: this is a shorthand to .cacheMetadata('all', ..)`,
+						return gid }) })],
+	cacheAllMetadata: ['- Sharp/Image/',
 		'cacheMetadata: "all" ...'],
-
 
 	// shorthands...
 	// XXX do we need these???
@@ -889,10 +795,10 @@ module.Sharp = core.ImageGridFeatures.Feature({
 				// 		drawn...
 				;((this.images[gid] || {}).metadata || {}).ImageGridMetadata
 					|| this.cacheMetadata('sync', gid, false) 
-						.then(function([res]){
+						.then(function(res){
 							res 
 								&& that.logger 
-									&& that.logger.emit('Cached metadata for', gid) }) }],
+								&& that.logger.emit('Cached metadata for', gid) }) }],
 
 		// XXX need to:
 		// 		- if image too large to set the preview to "loading..."

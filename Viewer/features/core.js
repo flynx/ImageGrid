@@ -2520,6 +2520,7 @@ function(func){
 // 		...would also be nice to automate this via a chunk iterator so
 // 		as not to block...
 // XXX handle errors... (???)
+// XXX revise logging and logger passing...
 var queuedAction = 
 module.queuedAction =
 function(name, func){
@@ -2543,25 +2544,69 @@ function(name, func){
 		}) }
 
 
+//
+//
+//	queueHandler(name[, opts][, arg_handler], func)
+//		-> action
+//
+//
+//	arg_handler(...args)
+//		-> [items, ...args]
+//
+//
+//	action(items, ...args)
+//		-> promise
+//
+//	action('sync', items, ...args)
+//		-> promise
+//
+//
+//	func(item, ...args)
+//		-> res
+//
+//
+// XXX should 'sync' set .sync_start or just .runTask(..)
+// XXX check if item is already in queue...
 var queueHandler =
 module.queueHandler =
 function(name, func){
 	var args = [...arguments]
 	func = args.pop()	
+	var arg_handler = 
+		typeof(args.last()) == 'function' 
+			&& args.pop()
 	var [name, opts] = args
 
 	return object.mixin(
 		Queued(function(items, ...args){
 			var that = this
-			return new Promise(function(resolve, reject){
-				var q = that.queue(name,
-						Object.assign(
-							{},
-							opts || {},
-							{ handler: function(item){
+			// sync start...
+			if(arguments[0] == 'sync'){
+				var [sync, items, ...args] = arguments }
+			// prep queue...
+			var q = that.queue(name,
+					Object.assign(
+						{},
+						opts || {},
+						{ handler: function(item){
 								return func.call(that, item, ...args) } }))
-				q.push(...(items instanceof Array ? items : [items]))
-				q.then(resolve, reject) }) }),
+			sync 
+				&& (q.sync_start = true)
+			// pre-process args...
+			arg_handler
+				&& ([items, ...args] = 
+					arg_handler.call(this, q, items, ...args))
+			// fill the queue...
+			q.push(...(items instanceof Array ? items : [items]))
+			// make a promise...
+			var res = new Promise(function(resolve, reject){
+				q.then(resolve, reject) }) 
+			// sync start...
+			// NOTE: we need to explicitly .start() here because the 
+			// 		queue could be waiting for a timeout
+			sync
+				&& q.start()
+			return res }),
    		{
 			toString: function(){
 				return `core.queueHandler('${name}',\n\t${ 
@@ -2653,13 +2698,13 @@ var TaskActions = actions.Actions({
 	get queues(){
 		return (this.__queues = this.__queues || {}) },
 
-	// XXX revise signature...
+	// XXX revise logging and logger passing...
 	// XXX need better error flow...
 	queue: doc('Get or create a queue task',
 		doc`Get or create a queue task...
 
 			.queue(name)
-			.queue(name[, options][, logger])
+			.queue(name, options)
 				-> queue
 
 		If a queue with the given name already exits it will be returned 
@@ -2675,7 +2720,7 @@ var TaskActions = actions.Actions({
 
 		NOTE: for queue-specific options see ig-types/runner's Queue(..)
 		`,
-		function(name, options, logger){
+		function(name, options){
 			var that = this
 
 			var queue = this.queues[name]
@@ -2692,21 +2737,25 @@ var TaskActions = actions.Actions({
 						//	&& logger.emit('close')
 						delete that.queues[name] } }
 
-				var logger = logger || this.logger
+				options = options || {}
+				var logger = options.logger || this.logger
 				//logger = logger && logger.push(name)
 				logger = logger 
 					&& logger.push(name, {onclose: abort, quiet: !!options.quiet})
+				logger 
+					&& (options.logger = logger)
 
 				queue = this.queues[name] = 
 					runner.Queue(options || {})
 
 				// setup logging...
-				if(logger){
-					queue
-						.on('tasksAdded', function(evt, t){ logger.emit('added', t) })
-						.on('taskCompleted', function(evt, t){ logger.emit('done', t) }) 
-						.on('taskFailed', function(evt, t, err){ logger.emit('skipped', t, err) }) 
-					queue.logger = logger }
+				queue
+					.on('tasksAdded', function(evt, t){ 
+						this.logger && this.logger.emit('added', t) })
+					.on('taskCompleted', function(evt, t){ 
+						this.logger && this.logger.emit('done', t) }) 
+					.on('taskFailed', function(evt, t, err){ 
+						this.logger && this.logger.emit('skipped', t, err) }) 
 				// cleanup...
 				queue
 					.then(

@@ -115,69 +115,79 @@ var MetadataReaderActions = actions.Actions({
 
 		NOTE: also see: .cacheMetadata(..)
 		`,
-		core.queueHandler('Read image metadata', function(image, force){
-			var that = this
+		core.queueHandler('Read image metadata', 
+			function(image, force){
+				return [
+					images == 'all' ?
+							this.images.keys()
+						: images == 'loaded' ?
+							this.data.getImages('loaded')
+						: images,
+					force, 
+				] },
+			function(image, force){
+				var that = this
 
-			var gid = this.data.getImage(image)
-			var img = this.images && this.images[gid]
+				var gid = this.data.getImage(image)
+				var img = this.images && this.images[gid]
 
-			if(!image && !img){
-				return false }
+				if(!image && !img){
+					return false }
 
-			//var full_path = path.normalize(img.base_path +'/'+ img.path)
-			var full_path = this.getImagePath(gid)
+				//var full_path = path.normalize(img.base_path +'/'+ img.path)
+				var full_path = this.getImagePath(gid)
 
-			return new Promise(function(resolve, reject){
-				if(!force 
-						&& (img.metadata || {}).ImageGridMetadata == 'full'){
-					return resolve(img.metadata) }
+				return new Promise(function(resolve, reject){
+					if(!force 
+							&& (img.metadata || {}).ImageGridMetadata == 'full'){
+						return resolve(img.metadata) }
 
-				fs.readFile(full_path, function(err, file){
-					if(err){
-						return reject(err) }
-
-					// read stat...
-					if(!that.images[gid].birthtime){
-						var img = that.images[gid]
-						var stat = fs.statSync(full_path)
-						
-						img.atime = stat.atime
-						img.mtime = stat.mtime
-						img.ctime = stat.ctime
-						img.birthtime = stat.birthtime
-
-						img.size = stat.size
-					}
-
-					// read image metadata...
-					exiftool.metadata(file, function(err, data){
+					fs.readFile(full_path, function(err, file){
 						if(err){
-							reject(err)
+							return reject(err) }
 
-						} else if(data.error){
-							reject(data)
+						// read stat...
+						if(!that.images[gid].birthtime){
+							var img = that.images[gid]
+							var stat = fs.statSync(full_path)
+							
+							img.atime = stat.atime
+							img.mtime = stat.mtime
+							img.ctime = stat.ctime
+							img.birthtime = stat.birthtime
 
-						} else {
-							// convert to a real dict...
-							// NOTE: exiftool appears to return an array 
-							// 		object rather than an actual dict/object
-							// 		and that is not JSON compatible....
-							that.images[gid].metadata =
-								Object.assign(
-									// XXX do we need to update or overwrite??
-									that.images[gid].metadata || {},
-									data,
-									{
-										ImageGridMetadataReader: 'exiftool/ImageGrid',
-										// mark metadata as full read...
-										ImageGridMetadata: 'full',
-									})
-							that.markChanged 
-								&& that.markChanged('images', [gid]) }
+							img.size = stat.size
+						}
 
-						resolve(data) }) }) }) })],
+						// read image metadata...
+						exiftool.metadata(file, function(err, data){
+							if(err){
+								reject(err)
+
+							} else if(data.error){
+								reject(data)
+
+							} else {
+								// convert to a real dict...
+								// NOTE: exiftool appears to return an array 
+								// 		object rather than an actual dict/object
+								// 		and that is not JSON compatible....
+								that.images[gid].metadata =
+									Object.assign(
+										// XXX do we need to update or overwrite??
+										that.images[gid].metadata || {},
+										data,
+										{
+											ImageGridMetadataReader: 'exiftool/ImageGrid',
+											// mark metadata as full read...
+											ImageGridMetadata: 'full',
+										})
+								that.markChanged 
+									&& that.markChanged('images', [gid]) }
+
+							resolve(data) }) }) }) })],
 	readAllMetadata: ['File/Read all metadata',
-		'readMetadata: images.gids ...'],
+		'readMetadata: "all" ...'],
 
 	// XXX take image Metadata and write it to target...
 	writeMetadata: ['- Image/Set metadata data',
