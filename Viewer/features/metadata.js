@@ -119,7 +119,7 @@ var MetadataReaderActions = actions.Actions({
 
 		NOTE: also see: .cacheMetadata(..)
 		`,
-		function(image, force){
+		core.queuedAction('readMetadata', function(image, force){
 			var that = this
 
 			var gid = this.data.getImage(image)
@@ -179,33 +179,15 @@ var MetadataReaderActions = actions.Actions({
 							that.markChanged 
 								&& that.markChanged('images', [gid]) }
 
-						resolve(data) }) }) }) }],
+						resolve(data) }) }) }) })],
 
-	// XXX make this abortable...
-	// XXX STUB: add support for this to .readMetadata(..)
 	readAllMetadata: ['File/Read all metadata',
 		function(){
 			var that = this
-			// XXX make this a global API...
-			var q = this.__reader_queue = this.__reader_queue || tasks.Queue()
-
-			var logger = this.logger && this.logger.push('Read metadata')
-
-			// XXX is this the right way to go???
-			q.on('taskQueued', function(t){ logger.emit('queued', t) })
-			q.on('taskDone', function(t){ logger.emit('done', t) })
-			q.on('taskFailed', function(t){ logger.emit('error', t) })
-
-			var read = function(gid){ 
-				return function(){ return that.readMetadata(gid) } }
-
-			q.start()
-
-			this.images 
-				&& this.images.forEach(function(gid){
-					q.enqueue('metadata', read(gid)) })
-			
-			return q }],
+			//var logger = this.logger && this.logger.push('Read metadata')
+			return this.images.keys()
+				.mapChunks(7, function(gid){
+					return that.readMetadata(gid) }) }],
 
 	// XXX take image Metadata and write it to target...
 	writeMetadata: ['- Image/Set metadata data',

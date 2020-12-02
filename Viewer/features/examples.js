@@ -270,7 +270,7 @@ var ExampleActions = actions.Actions({
 	// Tasks...
 	
 	exampleQueuedAction: ['- Test/',
-		core.queuedAction('exampleQueuedAction', function(timeout=500, ...args){
+		core.queuedAction('exampleQueuedAction', {quiet: true}, function(timeout=500, ...args){
 			console.log('Queued action!!', ...args)
 			return new Promise(function(resolve){
 				setTimeout(resolve, timeout) }) })],

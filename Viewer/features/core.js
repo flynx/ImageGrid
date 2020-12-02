@@ -35,7 +35,8 @@
 * 	- workspace
 * 		XXX needs revision...
 * 	- tasks
-* 		XXX not yet used
+* 		tasks -- manage long running actions
+* 		queue -- manage lots of small actions as a single task
 * 	- self-test
 * 		basic framework for running test actions at startup...
 *
@@ -2494,11 +2495,25 @@ function(func){
 	func.__queued__ = true
 	return func }
 
+// 
+//	queuedAction(name, func)
+//	queuedAction(name, options, func)
+//		-> action
+//
+//	func(..)
+//		-> res
+//
+//	action(..)
+//		-> promise(res)
+//
+//
 // NOTE: for examples see:
 // 		features/examples.js: 
 // 			ExampleActions.exampleQueuedAction(..)
 // 			ExampleActions.exampleMultipleQueuedAction(..)
-
+//
+// XXX need to pass a nice log prompt...
+// XXX can we return anything other than a promise here???
 // XXX the general use-case here is to call the queue method multiple 
 // 		times for instance to handle array elements, might be nice to
 // 		automate this...
@@ -2514,9 +2529,13 @@ function(name, func){
 	return object.mixin(
 		Queued(function(...args){
 			var that = this
-			return this.queue(name, opts || {})
-				.push(function(){
-					return func.call(that, ...args) }) }),
+			// XXX handle errors... (???)
+			return new Promise(function(resolve, reject){
+				that.queue(name, opts || {})
+					.push(function(){
+						var res = func.call(that, ...args) 
+						resolve(res)
+						return res }) }) }),
    		{
 			toString: function(){
 				return `core.queuedAction('${name}',\n\t${ 
@@ -2547,10 +2566,8 @@ function(func){
 // 			var action = taskAction('some title', 'sync', function(..){ .. })
 // 		or
 // 			var action = taskAction('sync', 'some title', function(..){ .. })
-//
 // 		and on call:
 // 			action('sync', ..)
-//
 // 		during the later form 'sync' is passed to .Task(..) in the correct
 // 		position...
 // 		(see ig-types' runner.TaskManager(..) for more info)
@@ -2588,6 +2605,7 @@ function(title, func){
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
 // XXX add a task manager UI...
+// XXX do we need to cache the lister props???
 var TaskActions = actions.Actions({
 	config: {
 	},

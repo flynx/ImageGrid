@@ -447,10 +447,9 @@ module.ImagesPrototype = {
 		for(e of this){
 			yield e } },
 
-	// XXX remove version...
 	keys: function(){
 		var keys = Object.keys(this)
-		var i = keys.indexOf('version')
+		var i = keys.lastIndexOf('version')
 		i >= 0
 			&& keys.splice(i, 1)
 		return keys },
@@ -557,6 +556,7 @@ module.ImagesPrototype = {
 			size: preview_size,
 		} },
 
+
 	// Get image filename...
 	//
 	// NOTE: this will default to gid if not filename (.path) is set... (???)
@@ -604,7 +604,9 @@ module.ImagesPrototype = {
 		return this
 	},
 
+
 	// Gid sorters...
+	//
 	// XXX might be a good idea to add caching...
 	// XXX chainCmp(..) is loaded from lib/jli.js
 	sortImages: function(gids, cmp, reverse){
@@ -625,6 +627,7 @@ module.ImagesPrototype = {
 
 		// XXX see ../ui/sort.js
 	},
+
 
 	// Actions...
 
