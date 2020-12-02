@@ -433,7 +433,8 @@ module.ImagesPrototype = {
 			res = func.call(this[key], res, this[key], key, i++, this) }
 		return res },
 
-	iter: function*(){
+	// make images iterable...
+	[Symbol.iterator]: function*(){
 		for(var key in this){
 			// reject non images...
 			// XXX make this cleaner...
@@ -442,6 +443,9 @@ module.ImagesPrototype = {
 					|| this[key] instanceof Function){
 				continue }
 			yield [key, this[key]] } },
+	iter: function*(){
+		for(e of this){
+			yield e } },
 
 	// XXX remove version...
 	keys: function(){
