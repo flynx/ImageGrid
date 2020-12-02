@@ -2486,11 +2486,18 @@ module.Workspace = ImageGridFeatures.Feature({
 //---------------------------------------------------------------------
 // Tasks and Queues...
 
+// Queued wrapper...
+//
 var Queued =
 module.Queued =
 function(func){
 	func.__queued__ = true
 	return func }
+
+// NOTE: for examples see:
+// 		features/examples.js: 
+// 			ExampleActions.exampleQueuedAction(..)
+// 			ExampleActions.exampleMultipleQueuedAction(..)
 
 // XXX the general use-case here is to call the queue method multiple 
 // 		times for instance to handle array elements, might be nice to
@@ -2536,8 +2543,6 @@ function(func){
 // 		features/examples.js: 
 // 			ExampleActions.exampleTask(..)
 // 			ExampleActions.exampleSessionTask(..)
-
-//
 // NOTE: we can pass sync/async to this in two places, in definition:
 // 			var action = taskAction('some title', 'sync', function(..){ .. })
 // 		or
@@ -2549,8 +2554,6 @@ function(func){
 // 		during the later form 'sync' is passed to .Task(..) in the correct
 // 		position...
 // 		(see ig-types' runner.TaskManager(..) for more info)
-//
-// XXX might be nice to add metadata like start times and the like...
 var taskAction =
 module.taskAction =
 function(title, func){
