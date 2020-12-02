@@ -2519,6 +2519,7 @@ function(func){
 // 		automate this...
 // 		...would also be nice to automate this via a chunk iterator so
 // 		as not to block...
+// XXX handle errors... (???)
 var queuedAction = 
 module.queuedAction =
 function(name, func){
@@ -2529,7 +2530,6 @@ function(name, func){
 	return object.mixin(
 		Queued(function(...args){
 			var that = this
-			// XXX handle errors... (???)
 			return new Promise(function(resolve, reject){
 				that.queue(name, opts || {})
 					.push(function(){
@@ -2539,6 +2539,32 @@ function(name, func){
    		{
 			toString: function(){
 				return `core.queuedAction('${name}',\n\t${ 
+					object.normalizeIndent( '\t'+ func.toString() ) })` },
+		}) }
+
+
+var queueHandler =
+module.queueHandler =
+function(name, func){
+	var args = [...arguments]
+	func = args.pop()	
+	var [name, opts] = args
+
+	return object.mixin(
+		Queued(function(items, ...args){
+			var that = this
+			return new Promise(function(resolve, reject){
+				var q = that.queue(name,
+						Object.assign(
+							{},
+							opts || {},
+							{ handler: function(item){
+								return func.call(that, item, ...args) } }))
+				q.push(...(items instanceof Array ? items : [items]))
+				q.then(resolve, reject) }) }),
+   		{
+			toString: function(){
+				return `core.queueHandler('${name}',\n\t${ 
 					object.normalizeIndent( '\t'+ func.toString() ) })` },
 		}) }
 

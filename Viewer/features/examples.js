@@ -279,6 +279,13 @@ var ExampleActions = actions.Actions({
 			for(var i=0; i<count; i++){
 				this.exampleQueuedAction(timeout) } }],
 
+	exampleQueueHandlerAction: ['- Test/',
+		core.queueHandler('exampleQueueHandlerAction', {quiet: true}, 
+			function(item, ...args){
+				console.log('Queue handler action!!', item, ...args)
+				return new Promise(function(resolve){
+					setTimeout(resolve, 100) }) })],
+
 	//
 	// NOTE: action name and task name should be the same to avoid 
 	// 		confusion...

@@ -588,6 +588,7 @@ var SharpActions = actions.Actions({
 						Promise.reject('aborted')
 						: res.flat() }) })],
 
+	// XXX will this be better off as a queueHandler(..) ???
 	// XXX add support for offloading the processing to a thread/worker...
 	__cache_metadata_reading: null,
 	cacheMetadata: ['- Sharp|Image/',

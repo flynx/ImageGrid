@@ -25,8 +25,6 @@ if(typeof(process) != 'undefined'){
 
 var util = require('lib/util')
 var toggler = require('lib/toggler')
-// XXX do we need this???
-var tasks = require('lib/tasks')
 var keyboard = require('lib/keyboard')
 
 var actions = require('lib/actions')
@@ -101,8 +99,6 @@ module.Metadata = core.ImageGridFeatures.Feature({
 var MetadataReaderActions = actions.Actions({
 	// NOTE: this will read both stat and metadata...
 	//
-	// XXX add support to taskqueue...
-	// XXX should this process multiple images???
 	// XXX also check the metadata/ folder (???)
 	// XXX this uses .markChanged(..) form filesystem.FileSystemWriter 
 	// 		feature, but technically does not depend on it...
@@ -119,7 +115,7 @@ var MetadataReaderActions = actions.Actions({
 
 		NOTE: also see: .cacheMetadata(..)
 		`,
-		core.queuedAction('readMetadata', function(image, force){
+		core.queueHandler('Read image metadata', function(image, force){
 			var that = this
 
 			var gid = this.data.getImage(image)
@@ -180,14 +176,8 @@ var MetadataReaderActions = actions.Actions({
 								&& that.markChanged('images', [gid]) }
 
 						resolve(data) }) }) }) })],
-
 	readAllMetadata: ['File/Read all metadata',
-		function(){
-			var that = this
-			//var logger = this.logger && this.logger.push('Read metadata')
-			return this.images.keys()
-				.mapChunks(7, function(gid){
-					return that.readMetadata(gid) }) }],
+		'readMetadata: images.gids ...'],
 
 	// XXX take image Metadata and write it to target...
 	writeMetadata: ['- Image/Set metadata data',

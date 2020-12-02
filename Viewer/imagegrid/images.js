@@ -368,6 +368,9 @@ module.ImagesPrototype = {
 	get length(){
 		return this.keys().length },
 
+	get gids(){
+		return this.keys() },
+
 	// Generic iterators...
 	//
 	// function format:
@@ -376,62 +379,31 @@ module.ImagesPrototype = {
 	// reduce function format:
 	// 		function(value1, value2, key, index, object)
 	//
-	//
-	// this will be set to the value...
-	//
-	// XXX are these slower than doing it manualy via Object.keys(..)
-	// XXX use .keys()
-	forEach: function(func){
-		var i = 0
-		for(var key in this){
-			// reject non images...
-			// XXX make this cleaner...
-			if(key == 'length' 
-					|| key == 'version' 
-					|| this[key] instanceof Function){
-				continue }
-			func.call(this[key], key, this[key], i++, this) }
-		return this },
 	filter: function(func){
+		var that = this
 		var res = new this.constructor()
-		var i = 0
-		for(var key in this){
-			// reject non images...
-			// XXX make this cleaner...
-			if(key == 'length' 
-					|| key == 'version' 
-					|| this[key] instanceof Function){
-				continue }
-			if(func.call(this[key], key, this[key], i++, this)){
-				res[key] = this[key] } }
+		this.forEach(function(key, i){
+			if(func.call(that[key], key, that[key], i++, that)){
+				res[key] = that[key] } })
 		return res },
 	// NOTE: .map(..) and .reduce(..) will not return Images objects...
 	map: function(func){
-		//var res = this.constructor()
-		var res = []
-		var i = 0
-		for(var key in this){
-			// reject non images...
-			// XXX make this cleaner...
-			if(key == 'length' 
-					|| key == 'version' 
-					|| this[key] instanceof Function){
-				continue }
-			//res[key] = func.call(this[key], key, this[key], i++, this)
-			res.push(func.call(this[key], key, this[key], i++, this)) }
-		return res },
+		var that = this
+		return this.gids
+			.map(function(key, i){
+				return that[key] instanceof Function ?
+					[]
+					: [func.call(that[key], key, that[key], i++, that)] })
+			.flat() },
 	reduce: function(func, initial){
+		var that = this
 		var res = initial
-		var i = 0
-		for(var key in this){
-			// reject non images...
-			// XXX make this cleaner...
-			if(key == 'length' 
-					|| key == 'version' 
-					|| this[key] instanceof Function){
-				continue }
-			res = func.call(this[key], res, this[key], key, i++, this) }
+		this.forEach(function(key, i){
+			res = func.call(that[key], res, that[key], key, i++, that) })
 		return res },
+	forEach: function(func){
+		this.map(func)
+		return this },
 
 	// make images iterable...
 	[Symbol.iterator]: function*(){
@@ -440,12 +412,12 @@ module.ImagesPrototype = {
 			// XXX make this cleaner...
 			if(key == 'length' 
 					|| key == 'version' 
+					|| key == 'gids' 
 					|| this[key] instanceof Function){
 				continue }
 			yield [key, this[key]] } },
 	iter: function*(){
-		for(e of this){
-			yield e } },
+		yield* this },
 
 	keys: function(){
 		var keys = Object.keys(this)
