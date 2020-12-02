@@ -1909,7 +1909,15 @@ var UIIntrospectionActions = actions.Actions({
 		makeUIDialog(function(actions){
 			var that = this
 			actions = actions || this.actions.sort()
-			actions = actions instanceof Array ? actions : [actions]
+			actions = 
+				(actions instanceof Array ? 
+					actions 
+					: [actions])
+				// resolve action objects...
+				.map(function(action){
+					return typeof(action) == 'function' ?
+						action.name
+						: action })
 
 			var doc = this.getDoc(actions)
 
@@ -1949,7 +1957,12 @@ var UIIntrospectionActions = actions.Actions({
 	// XXX add specific action doc if available....
 	showCode: ['- Help/Show action code...',
 		makeUIDialog(function(action){
-			action = action instanceof Array ? action[0] : action
+			action = action instanceof Array ? 
+				action[0] 
+				: action
+			action = typeof(action) == 'function' ?
+				action.name
+				: action
 			var features = this.features.FeatureSet.features 
 					|| this.features.features 
 					|| []

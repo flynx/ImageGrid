@@ -268,6 +268,17 @@ var ExampleActions = actions.Actions({
 
 
 	// Tasks...
+	
+	exampleQueuedAction: ['- Test/',
+		core.queuedAction('exampleQueuedAction', function(timeout=500, ...args){
+			console.log('Queued action!!', ...args)
+			return new Promise(function(resolve){
+				setTimeout(resolve, timeout) }) })],
+	exampleMultipleQueuedAction: ['- Test/',
+		function(count=100, timeout=100){
+			for(var i=0; i<count; i++){
+				this.exampleQueuedAction(timeout) } }],
+
 	//
 	// NOTE: action name and task name should be the same to avoid 
 	// 		confusion...

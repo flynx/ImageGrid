@@ -389,12 +389,9 @@ module.ImagesPrototype = {
 			if(key == 'length' 
 					|| key == 'version' 
 					|| this[key] instanceof Function){
-				continue
-			}
-			func.call(this[key], key, this[key], i++, this)
-		}
-		return this
-	},
+				continue }
+			func.call(this[key], key, this[key], i++, this) }
+		return this },
 	filter: function(func){
 		var res = new this.constructor()
 		var i = 0
@@ -404,14 +401,10 @@ module.ImagesPrototype = {
 			if(key == 'length' 
 					|| key == 'version' 
 					|| this[key] instanceof Function){
-				continue
-			}
+				continue }
 			if(func.call(this[key], key, this[key], i++, this)){
-				res[key] = this[key]
-			}
-		}
-		return res
-	},
+				res[key] = this[key] } }
+		return res },
 	// NOTE: .map(..) and .reduce(..) will not return Images objects...
 	map: function(func){
 		//var res = this.constructor()
@@ -423,13 +416,10 @@ module.ImagesPrototype = {
 			if(key == 'length' 
 					|| key == 'version' 
 					|| this[key] instanceof Function){
-				continue
-			}
+				continue }
 			//res[key] = func.call(this[key], key, this[key], i++, this)
-			res.push(func.call(this[key], key, this[key], i++, this))
-		}
-		return res
-	},
+			res.push(func.call(this[key], key, this[key], i++, this)) }
+		return res },
 	reduce: function(func, initial){
 		var res = initial
 		var i = 0
@@ -439,12 +429,19 @@ module.ImagesPrototype = {
 			if(key == 'length' 
 					|| key == 'version' 
 					|| this[key] instanceof Function){
-				continue
-			}
-			res = func.call(this[key], res, this[key], key, i++, this)
-		}
-		return res
-	},
+				continue }
+			res = func.call(this[key], res, this[key], key, i++, this) }
+		return res },
+
+	iter: function*(){
+		for(var key in this){
+			// reject non images...
+			// XXX make this cleaner...
+			if(key == 'length' 
+					|| key == 'version' 
+					|| this[key] instanceof Function){
+				continue }
+			yield [key, this[key]] } },
 
 	// XXX remove version...
 	keys: function(){

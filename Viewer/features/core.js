@@ -2484,7 +2484,41 @@ module.Workspace = ImageGridFeatures.Feature({
 
 
 //---------------------------------------------------------------------
-// Tasks...
+// Tasks and Queues...
+
+var Queued =
+module.Queued =
+function(func){
+	func.__queued__ = true
+	return func }
+
+// XXX the general use-case here is to call the queue method multiple 
+// 		times for instance to handle array elements, might be nice to
+// 		automate this...
+// 		...would also be nice to automate this via a chunk iterator so
+// 		as not to block...
+var queuedAction = 
+module.queuedAction =
+function(name, func){
+	var args = [...arguments]
+	func = args.pop()	
+	var [name, opts] = args
+
+	return object.mixin(
+		Queued(function(...args){
+			var that = this
+			return this.queue(name, opts || {})
+				.push(function(){
+					return func.call(that, ...args) }) }),
+   		{
+			toString: function(){
+				return `core.queuedAction('${name}',\n\t${ 
+					object.normalizeIndent( '\t'+ func.toString() ) })` },
+		}) }
+
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
 // Task wrapper...
 //
@@ -2496,14 +2530,12 @@ function(func){
 	return func }
 
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-// Task action action helpers...
+// Task action helpers...
 //
 // NOTE: for examples see:
 // 		features/examples.js: 
 // 			ExampleActions.exampleTask(..)
 // 			ExampleActions.exampleSessionTask(..)
-
 
 //
 // NOTE: we can pass sync/async to this in two places, in definition:
@@ -2557,14 +2589,97 @@ var TaskActions = actions.Actions({
 	config: {
 	},
 
-	// tests...
+
+	// Queue...
+	//
+	isQueued: function(action){
+		return !!this.getActionAttr(action, '__queued__') },
+	// XXX cache this???
+	get queuedActions(){
+		var test = this.isQueued.bind(this)
+		return this.actions.filter(test) },
+
+	// XXX need a way to reference the queue again...
+	// 		.tasks.titled(name) will return a list...
+	// XXX EXPERIMENTAL...
+	__queues: null,
+	get queues(){
+		return (this.__queues = this.__queues || {}) },
+
+	// XXX revise signature...
+	// XXX need better error flow...
+	queue: doc('Get or create a queue task',
+		doc`Get or create a queue task...
+
+			.queue(name)
+			.queue(name[, options][, logger])
+				-> queue
+
+		If a queue with the given name already exits it will be returned 
+		and options and logger are ignored.
+
+		options format:
+			{
+				nonAbortable: <bool>,
+				quiet: <bool>,
+				...
+			}
+
+
+		NOTE: for queue-specific options see ig-types/runner's Queue(..)
+		`,
+		function(name, options, logger){
+			var that = this
+
+			var queue = this.queues[name]
+
+			// create a new queue...
+			if(queue == null){
+				var abort = function(){
+					options.nonAbortable
+						|| queue.clear() }
+				var cleanup = function(){
+					return function(){
+						// XXX handle error state...
+						//logger
+						//	&& logger.emit('close')
+						delete that.queues[name] } }
+
+				var logger = logger || this.logger
+				//logger = logger && logger.push(name)
+				logger = logger 
+					&& logger.push(name, {onclose: abort, quiet: !!options.quiet})
+
+				queue = this.queues[name] = 
+					runner.Queue(options || {})
+
+				// setup logging...
+				if(logger){
+					queue
+						.on('tasksAdded', function(evt, t){ logger.emit('added', t) })
+						.on('taskCompleted', function(evt, t){ logger.emit('done', t) }) 
+						.on('taskFailed', function(evt, t, err){ logger.emit('skipped', t, err) }) 
+					queue.logger = logger }
+				// cleanup...
+				queue
+					.then(
+						cleanup('done'), 
+						cleanup('error')) }
+
+			// add queue as task...
+			this.tasks.includes(queue)
+				|| this.tasks.Task(name, queue) 
+
+			return queue }),
+
+
+	// Tasks...
+	//
 	isTask: function(action){
 		return !!this.getActionAttr(action, '__task__') },
 	isSessionTask: function(action){
 		return !!this.getActionAttr(action, '__session_task__') },
-
 	// list actions that generate tasks...
-	//
 	// XXX cache these???
 	get taskActions(){
 		var test = this.isTask.bind(this)
