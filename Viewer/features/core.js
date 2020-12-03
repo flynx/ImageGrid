@@ -1373,8 +1373,12 @@ module.Cache = ImageGridFeatures.Feature({
 // 		timeout: number,
 // 		returns: 'cached' | 'dropped',
 // 		callback: function(retriggered, args),
+//
+// 		postcall: true,
 // 	}
 //
+// XXX might be a good ide to move this someplace generic...
+// XXX this is not debouncing pre/post calls, just the base action...
 var debounce =
 module.debounce =
 function(options, func){
@@ -1383,52 +1387,67 @@ function(options, func){
 	func = args.pop()
 	options = args.pop() || {} 
 
-	if(typeof(options) == typeof(123)){
-		options.timeout = options
-	}
+	typeof(options) == typeof(123)
+		&& (options.timeout = options)
 
 	// closure state...
-	var res = undefined
+	var res
+	var last_args
 	var debounced = false
 	var retriggered = 0
 
-	var f = function(...args){
-		if(!debounced){
-			res = func instanceof Function ?
-				func.call(this, ...args)
-				// alias...
-				: this.parseStringAction.callAction(this, func, ...args)
-			res = options.returns != 'cahced' ? res : undefined
+	// call the action...
+	var call = function(context, ...args){
+		return func instanceof Function ?
+			func.call(context, ...args)
+			// alias...
+			: this.parseStringAction.callAction(context, func, ...args) }
 
-			// start the timer...
-			debounced = setTimeout(
-				function(){
-					// callback...
-					options.callback instanceof Function
-						&& options.callback.call(this, retriggered, args)
+	return object.mixin(
+		function(...args){
+			var retrigger
+			// call...
+			if(!debounced){
+				res = call(this, ...args)
+				res = options.returns != 'cahced' ? 
+					res 
+					: undefined
 
-					// cleanup...
-					retriggered = 0
-					res = undefined
-					debounced = false
-				}.bind(this), 
-				options.timeout 
-					|| this.config['debounce-action-timeout'] 
-					|| 200)
+				// start the timer...
+				debounced = setTimeout(
+					function(){
+						var c
+						// callback...
+						options.callback instanceof Function
+							&& (c = options.callback.call(this, retriggered, args))
+						// retrigger...
+						options.postcall
+							&& retriggered > 0
+							&& c !== false
+							// XXX should this be a debounced call or a normal call...
+							// XXX this is not the actual action thus no 
+							// 		handlers will be triggered...
+							&& call(this, ...last_args)
+						// cleanup...
+						retriggered = 0
+						res = undefined
+						debounced = false }.bind(this), 
+					options.timeout 
+						|| this.config['debounce-action-timeout'] 
+						|| 200)
+			// skip...
+			} else {
+				retriggered++
+				last_args = args
+				return res } },
+		{
+			toString: function(){
+				return `// debounced...\n${
+					doc([ func instanceof Function ? 
+						func.toString() 
+						: func ])}` },
+		}) }
 
-		} else {
-			retriggered++
-			return res
-		}
-	}
-
-	f.toString = function(){
-		return `// debounced...\n${
-			doc([ func instanceof Function ? func.toString() : func ])}`
-	}
-
-	return f
-}
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -2590,8 +2609,6 @@ function(name, func){
 						opts || {},
 						{ handler: function(item){
 								return func.call(that, item, ...args) } }))
-			sync 
-				&& (q.sync_start = true)
 			// pre-process args...
 			arg_handler
 				&& ([items, ...args] = 
@@ -2602,10 +2619,9 @@ function(name, func){
 			var res = new Promise(function(resolve, reject){
 				q.then(resolve, reject) }) 
 			// sync start...
-			// NOTE: we need to explicitly .start() here because the 
-			// 		queue could be waiting for a timeout
-			sync
-				&& q.start()
+			// NOTE: we need to explicitly .start(true) here because the 
+			// 		queue could be waiting for a timeout...
+			q.start(sync)
 			return res }),
    		{
 			toString: function(){
@@ -2732,6 +2748,7 @@ var TaskActions = actions.Actions({
 						|| queue.clear() }
 				var cleanup = function(){
 					return function(){
+						queue.stop()
 						// XXX handle error state...
 						//logger
 						//	&& logger.emit('close')

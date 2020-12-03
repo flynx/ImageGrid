@@ -116,13 +116,14 @@ var MetadataReaderActions = actions.Actions({
 		NOTE: also see: .cacheMetadata(..)
 		`,
 		core.queueHandler('Read image metadata', 
-			function(image, force){
+			{quiet: true}, 
+			function(queue, image, force){
 				return [
-					images == 'all' ?
+					image == 'all' ?
 							this.images.keys()
-						: images == 'loaded' ?
+						: image == 'loaded' ?
 							this.data.getImages('loaded')
-						: images,
+						: image,
 					force, 
 				] },
 			function(image, force){

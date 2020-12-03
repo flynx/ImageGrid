@@ -638,7 +638,8 @@ var SharpActions = actions.Actions({
 		NOTE: for info on full metadata format see: .readMetadata(..)
 		`,
 		core.queueHandler('Cache image metadata', 
-			{quiet: true}, 
+			// XXX timeouts still need tweaking...
+			{quiet: true, pool_size: 2, busy_timeout: 400}, 
 			// parse args...
 			function(queue, image, logger){
 				var force = false

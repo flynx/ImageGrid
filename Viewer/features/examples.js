@@ -299,10 +299,10 @@ var ExampleActions = actions.Actions({
 				reverse
 					&& items.reverse()
 				return [items, ...args] },
-			function(item, ...args){
-				console.log('Queue handler action!!', item, ...args)
+			function(item, timeout, ...args){
+				console.log('Queue handler action!!', item, timeout, ...args)
 				return new Promise(function(resolve){
-					setTimeout(resolve, 100) }) })],
+					setTimeout(resolve, timeout || 100) }) })],
 
 	//
 	// NOTE: action name and task name should be the same to avoid 

@@ -635,6 +635,7 @@ var StatusBarActions = actions.Actions({
 								handler.call(that, item, gid, img) } }) } },
 			null)],	
 	updateStatusBar: ['- Interface/Update satus bar',
+		{precall: actions.debounce()},
 		'toggleStatusBar: "!"'],
 
 	resetStatusBar: ['Interface/Reset status bar',
