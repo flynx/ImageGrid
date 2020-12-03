@@ -640,6 +640,7 @@ var SharpActions = actions.Actions({
 		core.queueHandler('Cache image metadata', 
 			// XXX timeouts still need tweaking...
 			{quiet: true, pool_size: 2, busy_timeout: 400}, 
+			//{quiet: true, pool_size: 2, busy_timeout_scale: 10}, 
 			// parse args...
 			function(queue, image, logger){
 				var force = false
