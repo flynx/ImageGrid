@@ -32,7 +32,7 @@
     "ig-argv": "^2.15.0",
     "ig-features": "^3.4.2",
     "ig-object": "^5.4.12",
-    "ig-types": "^5.0.34",
+    "ig-types": "^5.0.37",
     "moment": "^2.29.1",
     "object-run": "^1.0.1",
     "requirejs": "^2.3.6",

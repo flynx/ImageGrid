@@ -637,27 +637,29 @@ var SharpActions = actions.Actions({
 		NOTE: this will effectively update metadata format to the new spec...
 		NOTE: for info on full metadata format see: .readMetadata(..)
 		`,
-		core.queueHandler('Cache image metadata', 
+		core.sessionQueueHandler('Cache image metadata', 
 			// XXX timeouts still need tweaking...
 			{quiet: true, pool_size: 2, busy_timeout: 400}, 
 			//{quiet: true, pool_size: 2, busy_timeout_scale: 10}, 
 			// parse args...
-			function(queue, image, logger){
+			function(queue, image, ...args){
 				var force = false
 				if(image === true){
-					var [force, image, logger] = arguments }
+					var [force, image, ...args] = arguments }
 				return [
+					...(force ? [true] : []),
+					// expand images..
 					image == 'all' ?
 							this.images.keys()
 						: image == 'loaded' ?
 							this.data.getImages('loaded')
 						: (image || 'current'),
-					force, 
-					// XXX
-					logger || this.logger,
+					...args,
 				] },
-			function(image, force, logger){
+			function(image, logger){
 				var that = this
+				if(image === true){
+					var [force, image, logger] = arguments }
 
 				// XXX cache the image data???
 				var gid = this.data.getImage(image)
@@ -772,7 +774,7 @@ module.Sharp = core.ImageGridFeatures.Feature({
 
 	handlers: [
 		//* XXX this needs to be run in the background...
-		// XXX this is best done in a thread + needs to be abortable (on .load(..))...
+		// XXX this is best done in a thread 
 		[['loadImages', 
 				'loadNewImages'],
 			'cacheMetadata: "all"'],
@@ -781,26 +783,16 @@ module.Sharp = core.ImageGridFeatures.Feature({
 		// set orientation if not defined...
 		// NOTE: progress on this is not shown so as to avoid spamming 
 		// 		the UI...
-		// XXX should this be pre or post???
-		// 		...creating a preview would be more logical than trying 
-		// 		to load a gigantic image, maybe even loading a placeholder
-		// 		while doing so...
-		//['updateImage.pre',
-		//	function(gid){
 		['updateImage',
 			function(_, gid){
 				var that = this
 				// NOTE: as this directly affects the visible lag, this 
 				// 		must be as fast as possible...
 				// NOTE: running .cacheMetadata(..) in sync mode here forces
-				// 		the image to update before it gets a change to be 
+				// 		the image to update before it gets a change to get
 				// 		drawn...
 				;((this.images[gid] || {}).metadata || {}).ImageGridMetadata
-					|| this.cacheMetadata('sync', gid, false) 
-						.then(function(res){
-							res 
-								&& that.logger 
-								&& that.logger.emit('Cached metadata for', gid) }) }],
+					|| this.cacheMetadata('sync', gid, false) }],
 
 		// XXX need to:
 		// 		- if image too large to set the preview to "loading..."

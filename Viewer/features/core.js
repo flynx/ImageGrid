@@ -2506,133 +2506,6 @@ module.Workspace = ImageGridFeatures.Feature({
 //---------------------------------------------------------------------
 // Tasks and Queues...
 
-// Queued wrapper...
-//
-var Queued =
-module.Queued =
-function(func){
-	func.__queued__ = true
-	return func }
-
-// 
-//	queuedAction(name, func)
-//	queuedAction(name, options, func)
-//		-> action
-//
-//	func(..)
-//		-> res
-//
-//	action(..)
-//		-> promise(res)
-//
-//
-// NOTE: for examples see:
-// 		features/examples.js: 
-// 			ExampleActions.exampleQueuedAction(..)
-// 			ExampleActions.exampleMultipleQueuedAction(..)
-//
-// XXX need to pass a nice log prompt...
-// XXX can we return anything other than a promise here???
-// XXX the general use-case here is to call the queue method multiple 
-// 		times for instance to handle array elements, might be nice to
-// 		automate this...
-// 		...would also be nice to automate this via a chunk iterator so
-// 		as not to block...
-// XXX handle errors... (???)
-// XXX revise logging and logger passing...
-var queuedAction = 
-module.queuedAction =
-function(name, func){
-	var args = [...arguments]
-	func = args.pop()	
-	var [name, opts] = args
-
-	return object.mixin(
-		Queued(function(...args){
-			var that = this
-			return new Promise(function(resolve, reject){
-				that.queue(name, opts || {})
-					.push(function(){
-						var res = func.call(that, ...args) 
-						resolve(res)
-						return res }) }) }),
-   		{
-			toString: function(){
-				return `core.queuedAction('${name}',\n\t${ 
-					object.normalizeIndent( '\t'+ func.toString() ) })` },
-		}) }
-
-
-//
-//
-//	queueHandler(name[, opts][, arg_handler], func)
-//		-> action
-//
-//
-//	arg_handler(...args)
-//		-> [items, ...args]
-//
-//
-//	action(items, ...args)
-//		-> promise
-//
-//	action('sync', items, ...args)
-//		-> promise
-//
-//
-//	func(item, ...args)
-//		-> res
-//
-//
-// XXX should 'sync' set .sync_start or just .runTask(..)
-// XXX check if item is already in queue...
-var queueHandler =
-module.queueHandler =
-function(name, func){
-	var args = [...arguments]
-	func = args.pop()	
-	var arg_handler = 
-		typeof(args.last()) == 'function' 
-			&& args.pop()
-	var [name, opts] = args
-
-	return object.mixin(
-		Queued(function(items, ...args){
-			var that = this
-			// sync start...
-			if(arguments[0] == 'sync'){
-				var [sync, items, ...args] = arguments }
-			// prep queue...
-			var q = that.queue(name,
-					Object.assign(
-						{},
-						opts || {},
-						{ handler: function(item){
-								return func.call(that, item, ...args) } }))
-			// pre-process args...
-			arg_handler
-				&& ([items, ...args] = 
-					arg_handler.call(this, q, items, ...args))
-			// fill the queue...
-			q.push(...(items instanceof Array ? items : [items]))
-			// make a promise...
-			var res = new Promise(function(resolve, reject){
-				q.then(resolve, reject) }) 
-			// sync start...
-			// NOTE: we need to explicitly .start(true) here because the 
-			// 		queue could be waiting for a timeout...
-			q.start(sync)
-			return res }),
-   		{
-			toString: function(){
-				return `core.queueHandler('${name}',\n\t${ 
-					object.normalizeIndent( '\t'+ func.toString() ) })` },
-		}) }
-
-
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-
 // Task wrapper...
 //
 // This simply makes tasks actions discoverable...
@@ -2690,15 +2563,220 @@ function(title, func){
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+// Queued wrapper...
+//
+var Queued =
+module.Queued =
+function(func){
+	func.__queued__ = true
+	return Task(func) }
+
+// Queued action...
+// 
+//	queuedAction(name, func)
+//	queuedAction(name, options, func)
+//		-> action
+//
+//	func(..)
+//		-> res
+//
+//	action(..)
+//		-> promise(res)
+//
+//
+// The idea here is that each time a queued action is called it is run 
+// in a queue, and while it is running all consecutive calls are queued
+// and run according to the queue policy.
+//
+//
+// NOTE: for examples see:
+// 		features/examples.js: 
+// 			ExampleActions.exampleQueuedAction(..)
+// 			ExampleActions.exampleMultipleQueuedAction(..)
+//
+// XXX handle errors... (???)
+// XXX revise logging and logger passing...
+var queuedAction = 
+module.queuedAction =
+function(name, func){
+	var args = [...arguments]
+	func = args.pop()	
+	var [name, opts] = args
+
+	return object.mixin(
+		Queued(function(...args){
+			var that = this
+			return new Promise(function(resolve, reject){
+				that.queue(name, opts || {})
+					.push(function(){
+						var res = func.call(that, ...args) 
+						resolve(res)
+						return res }) }) }),
+   		{
+			toString: function(){
+				return `core.queuedAction('${name}',\n\t${ 
+					object.normalizeIndent( '\t'+ func.toString() ) })` },
+		}) }
+
+
+// Queue action handler...
+//
+//	queueHandler(name[, opts][, arg_handler], func)
+//		-> action
+//
+//
+//	Prepare args...
+//	arg_handler(queue, items, ...args)
+//		-> [items, ...args]
+//
+//	Prepare args in sync mode...
+//	arg_handler(undefined, items, ...args)
+//		-> [items, ...args]
+//
+//
+//	Call action...
+//	action(items, ...args)
+//		-> promise
+//
+//	Call action in sync mode...
+//	action('sync', items, ...args)
+//		-> promise
+//
+//
+//	Action function...
+//	func(item, ...args)
+//		-> res
+//
+//
+// This is different from queuedAction(..) in that what is queued is not
+// the action itself but rather the first argument to that action and the
+// action itself is used by the queue to handle each item. The rest of 
+// the arguments are passed to each call.
+//
+// In 'sync' mode the action is run outside of queue/task right away, this
+// is done because for a queue we can only control the sync start, i.e. 
+// the first task execution, the rest of depends on queue configuration 
+// thus making the final behaviour unpredictable.
+//
+//
+// NOTE: sync-mode actions do not externally log anything, basic progress 
+// 		logging is handled by the queue/task which is not created in sync
+// 		mode.
+//
+// XXX check if item is already in queue...
+var queueHandler =
+module.queueHandler =
+function(name, func){
+	var args = [...arguments]
+	func = args.pop()	
+	var arg_handler = 
+		typeof(args.last()) == 'function' 
+			&& args.pop()
+	var [name, opts] = args
+
+	return object.mixin(
+		Queued(function(items, ...args){
+			var that = this
+			// sync start...
+			if(arguments[0] == 'sync'){
+				var [sync, items, ...args] = arguments }
+
+			// sync mode -- run action outside of queue...
+			// NOTE: running the queue in sync mode is not practical as
+			// 		the results may depend on queue configuration and 
+			// 		size...
+			if(sync){
+				// pre-process args...
+				arg_handler
+					&& ([items, ...args] = 
+						arg_handler.call(this, undefined, items, ...args))
+				// run...
+				;(items instanceof Array ? 
+						items 
+						: [items])
+					.forEach(function(item){
+						func.call(that, item, ...args) }) 
+				return Promise.resolve()
+
+			// queue mode...
+			} else {
+				// prep queue...
+				var q = that.queue(name,
+						Object.assign(
+							{},
+							opts || {},
+							{ 
+								auto_stop: true,
+								handler: function([item, args]){
+									return func.call(that, item, ...(args || [])) }, 
+							}))
+				// pre-process args...
+				arg_handler
+					&& ([items, ...args] = 
+						arg_handler.call(this, q, items, ...args))
+				// fill the queue...
+				// NOTE: we are also adding a ref to args here to keep things consistent...
+				args.length > 0
+					&& (args = [args])
+				q.push(...(items instanceof Array ? 
+					items.map(function(e){ 
+							return [e, ...args] }) 
+					: [items, ...args]))
+				// make a promise...
+				var res = new Promise(function(resolve, reject){
+					q.then(resolve, reject) }) 
+				return res } }),
+   		{
+			toString: function(){
+				return `core.queueHandler('${name}',\n\t${ 
+					object.normalizeIndent( '\t'+ func.toString() ) })` },
+		}) }
+
+
+var sessionQueueHandler =
+module.sessionQueueHandler =
+function(name, func){
+	return object.mixin(
+		queueHandler(...arguments),
+		{ __session_task__: true }) }
+
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
 // XXX add a task manager UI...
 // XXX do we need to cache the lister props???
 var TaskActions = actions.Actions({
-	config: {
-	},
+
+	// Tasks...
+	//
+	isTask: function(action){
+		return !!this.getActionAttr(action, '__task__') },
+	isSessionTask: function(action){
+		return !!this.getActionAttr(action, '__session_task__') },
+	// list actions that generate tasks...
+	// XXX cache these???
+	get taskActions(){
+		var test = this.isTask.bind(this)
+		return this.actions.filter(test) },
+	get sessionTaskActions(){
+		var test = this.isSessionTask.bind(this)
+		return this.actions.filter(test) },
+
+	// task manager...
+	//
+	__task_manager__: runner.TaskManager,
+	__tasks: null,
+	get tasks(){
+		return (this.__tasks = 
+			this.__tasks 
+				|| this.__task_manager__()) },
+	// session tasks are stopped when the index is cleared...
+	get sessionTasks(){
+		return this.tasks.titled(...this.sessionTaskActions) },
 
 
-	// Queue...
+	// Queue (task)...
 	//
 	isQueued: function(action){
 		return !!this.getActionAttr(action, '__queued__') },
@@ -2709,7 +2787,6 @@ var TaskActions = actions.Actions({
 
 	// XXX need a way to reference the queue again...
 	// 		.tasks.titled(name) will return a list...
-	// XXX EXPERIMENTAL...
 	__queues: null,
 	get queues(){
 		return (this.__queues = this.__queues || {}) },
@@ -2734,6 +2811,8 @@ var TaskActions = actions.Actions({
 			}
 
 
+		NOTE: when a task queue is stopped it will clear and cleanup, this is 
+			different to how normal queue behaves.
 		NOTE: for queue-specific options see ig-types/runner's Queue(..)
 		`,
 		function(name, options){
@@ -2773,10 +2852,14 @@ var TaskActions = actions.Actions({
 						this.logger && this.logger.emit('done', t) }) 
 					.on('taskFailed', function(evt, t, err){ 
 						this.logger && this.logger.emit('skipped', t, err) }) 
+					.on('stop', function(){
+						// XXX not sure about this...
+						this.logger && this.logger.emit('skipped', [...this]) 
+						this.clear() })
 				// cleanup...
 				queue
 					.then(
-						cleanup('done'), 
+					cleanup('done'), 
 						cleanup('error')) }
 
 			// add queue as task...
@@ -2784,34 +2867,6 @@ var TaskActions = actions.Actions({
 				|| this.tasks.Task(name, queue) 
 
 			return queue }),
-
-
-	// Tasks...
-	//
-	isTask: function(action){
-		return !!this.getActionAttr(action, '__task__') },
-	isSessionTask: function(action){
-		return !!this.getActionAttr(action, '__session_task__') },
-	// list actions that generate tasks...
-	// XXX cache these???
-	get taskActions(){
-		var test = this.isTask.bind(this)
-		return this.actions.filter(test) },
-	get sessionTaskActions(){
-		var test = this.isSessionTask.bind(this)
-		return this.actions.filter(test) },
-
-	// task manager...
-	//
-	__task_manager__: runner.TaskManager,
-	__tasks: null,
-	get tasks(){
-		return (this.__tasks = 
-			this.__tasks 
-				|| this.__task_manager__()) },
-	// session tasks are stopped when the index is cleared...
-	get sessionTasks(){
-		return this.tasks.titled(...this.sessionTaskActions) },
 })
 
 
