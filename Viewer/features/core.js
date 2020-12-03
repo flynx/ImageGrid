@@ -2563,13 +2563,14 @@ function(title, func){
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
 // Queued wrapper...
-//
 var Queued =
 module.Queued =
 function(func){
 	func.__queued__ = true
 	return Task(func) }
+
 
 // Queued action...
 // 
@@ -2617,6 +2618,13 @@ function(name, func){
 				return `core.queuedAction('${name}',\n\t${ 
 					object.normalizeIndent( '\t'+ func.toString() ) })` },
 		}) }
+
+var sessionQueueAction =
+module.sessionQueueAction =
+function(name, func){
+	return object.mixin(
+		queuedAction(...arguments),
+		{ __session_task__: true }) }
 
 
 // Queue action handler...
@@ -2732,7 +2740,6 @@ function(name, func){
 					object.normalizeIndent( '\t'+ func.toString() ) })` },
 		}) }
 
-
 var sessionQueueHandler =
 module.sessionQueueHandler =
 function(name, func){
@@ -2744,6 +2751,7 @@ function(name, func){
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
+// XXX revise logging and logger passing...
 // XXX add a task manager UI...
 // XXX do we need to cache the lister props???
 var TaskActions = actions.Actions({
@@ -2869,7 +2877,6 @@ var TaskActions = actions.Actions({
 			return queue }),
 })
 
-
 var Tasks = 
 module.Tasks = ImageGridFeatures.Feature({
 	title: '',
@@ -2881,6 +2888,7 @@ module.Tasks = ImageGridFeatures.Feature({
 	actions: TaskActions,
 
 	handlers: [
+		// stop session tasks...
 		['clear',
 			'sessionTasks.stop'],
 	],
