@@ -2531,6 +2531,8 @@ function(func){
 // 		during the later form 'sync' is passed to .Task(..) in the correct
 // 		position...
 // 		(see ig-types' runner.TaskManager(..) for more info)
+//
+// XXX use action.name to identify the task instead of the title...
 var taskAction =
 module.taskAction =
 function(title, func){
@@ -2542,8 +2544,8 @@ function(title, func){
 		.pop()
 
 	var action
-	return (action = object.mixin(
-		Task(function(...args){
+	return (object.mixin(
+		action = Task(function(...args){
 			if(args[0] == 'sync' || args[0] == 'async'){
 				pre_args = [args.shift(), title] }
 			return this.tasks.Task(...pre_args, func.bind(this), ...args) }),
@@ -2604,15 +2606,18 @@ function(name, func){
 	func = args.pop()	
 	var [name, opts] = args
 
+	var action
 	return object.mixin(
-		Queued(function(...args){
+		action = Queued(function(...args){
 			var that = this
 			return new Promise(function(resolve, reject){
-				that.queue(name, opts || {})
-					.push(function(){
-						var res = func.call(that, ...args) 
-						resolve(res)
-						return res }) }) }),
+				Object.assign(
+					that.queue(name, opts || {})
+						.push(function(){
+							var res = func.call(that, ...args) 
+							resolve(res)
+							return res }),
+			   		{ title: action.name }) }) }),
    		{
 			toString: function(){
 				return `core.queuedAction('${name}',\n\t${ 
@@ -2683,8 +2688,9 @@ function(name, func){
 			&& args.pop()
 	var [name, opts] = args
 
+	var action
 	return object.mixin(
-		Queued(function(items, ...args){
+		action = Queued(function(items, ...args){
 			var that = this
 			// sync start...
 			if(arguments[0] == 'sync'){
@@ -2715,10 +2721,12 @@ function(name, func){
 							{},
 							opts || {},
 							{ 
-								auto_stop: true,
+								// XXX not sure about this...
+								//auto_stop: true,
 								handler: function([item, args]){
 									return func.call(that, item, ...(args || [])) }, 
 							}))
+				q.title = action.name
 				// pre-process args...
 				arg_handler
 					&& ([items, ...args] = 
@@ -2780,6 +2788,7 @@ var TaskActions = actions.Actions({
 			this.__tasks 
 				|| this.__task_manager__()) },
 	// session tasks are stopped when the index is cleared...
+	// XXX need to get running tasks by action name...
 	get sessionTasks(){
 		return this.tasks.titled(...this.sessionTaskActions) },
 
@@ -2789,6 +2798,7 @@ var TaskActions = actions.Actions({
 	isQueued: function(action){
 		return !!this.getActionAttr(action, '__queued__') },
 	// XXX cache this???
+	// XXX need to get running tasks by action name...
 	get queuedActions(){
 		var test = this.isQueued.bind(this)
 		return this.actions.filter(test) },
@@ -2867,7 +2877,7 @@ var TaskActions = actions.Actions({
 				// cleanup...
 				queue
 					.then(
-					cleanup('done'), 
+						cleanup('done'), 
 						cleanup('error')) }
 
 			// add queue as task...

@@ -280,14 +280,14 @@ var ExampleActions = actions.Actions({
 				this.exampleQueuedAction(timeout) } }],
 
 	exampleQueueHandlerAction: ['- Test/',
-		core.queueHandler('exampleQueueHandlerAction', 
+		core.queueHandler('Example queue handler action', 
 			{quiet: true}, 
 			function(item, ...args){
 				console.log('Queue handler action!!', item, ...args)
 				return new Promise(function(resolve){
 					setTimeout(resolve, 100) }) })],
 	exampleQueueHandlerActionWArgs: ['- Test/',
-		core.queueHandler('exampleQueueHandlerActionWArgs', 
+		core.queueHandler('Example queue handler with arguments', 
 			{quiet: true}, 
 			function(queue, from=0, to=100, ...args){
 				var items = []
