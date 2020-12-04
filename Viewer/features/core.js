@@ -2548,11 +2548,12 @@ function(title, func){
 		action = Task(function(...args){
 			if(args[0] == 'sync' || args[0] == 'async'){
 				pre_args = [args.shift(), title] }
+			// XXX should we set the task name to action.name??
 			return this.tasks.Task(...pre_args, func.bind(this), ...args) }),
 		{
-			__task_title__: title,
+			title,
 			toString: function(){
-				return `core.taskAction('${ title }', \n\t${ 
+				return `core.taskAction('${ action.name }', \n\t${ 
 					object.normalizeIndent('\t'+func.toString()) })` },
 		})) }
 
@@ -2576,8 +2577,8 @@ function(func){
 
 // Queued action...
 // 
-//	queuedAction(name, func)
-//	queuedAction(name, options, func)
+//	queuedAction(title, func)
+//	queuedAction(title, options, func)
 //		-> action
 //
 //	func(..)
@@ -2601,10 +2602,10 @@ function(func){
 // XXX revise logging and logger passing...
 var queuedAction = 
 module.queuedAction =
-function(name, func){
+function(title, func){
 	var args = [...arguments]
 	func = args.pop()	
-	var [name, opts] = args
+	var [title, opts] = args
 
 	var action
 	return object.mixin(
@@ -2612,21 +2613,22 @@ function(name, func){
 			var that = this
 			return new Promise(function(resolve, reject){
 				Object.assign(
-					that.queue(name, opts || {})
+					that.queue(title, opts || {})
 						.push(function(){
 							var res = func.call(that, ...args) 
 							resolve(res)
 							return res }),
 			   		{ title: action.name }) }) }),
    		{
+			title,
 			toString: function(){
-				return `core.queuedAction('${name}',\n\t${ 
+				return `core.queuedAction('${action.name}',\n\t${ 
 					object.normalizeIndent( '\t'+ func.toString() ) })` },
 		}) }
 
 var sessionQueueAction =
 module.sessionQueueAction =
-function(name, func){
+function(title, func){
 	return object.mixin(
 		queuedAction(...arguments),
 		{ __session_task__: true }) }
@@ -2634,7 +2636,7 @@ function(name, func){
 
 // Queue action handler...
 //
-//	queueHandler(name[, opts][, arg_handler], func)
+//	queueHandler(title[, opts][, arg_handler], func)
 //		-> action
 //
 //
@@ -2680,13 +2682,13 @@ function(name, func){
 // XXX check if item is already in queue...
 var queueHandler =
 module.queueHandler =
-function(name, func){
+function(title, func){
 	var args = [...arguments]
 	func = args.pop()	
 	var arg_handler = 
 		typeof(args.last()) == 'function' 
 			&& args.pop()
-	var [name, opts] = args
+	var [title, opts] = args
 
 	var action
 	return object.mixin(
@@ -2716,7 +2718,7 @@ function(name, func){
 			// queue mode...
 			} else {
 				// prep queue...
-				var q = that.queue(name,
+				var q = that.queue(title,
 						Object.assign(
 							{},
 							opts || {},
@@ -2744,14 +2746,15 @@ function(name, func){
 					q.then(resolve, reject) }) 
 				return res } }),
    		{
+			title,
 			toString: function(){
-				return `core.queueHandler('${name}',\n\t${ 
+				return `core.queueHandler('${action.name}',\n\t${ 
 					object.normalizeIndent( '\t'+ func.toString() ) })` },
 		}) }
 
 var sessionQueueHandler =
 module.sessionQueueHandler =
-function(name, func){
+function(title, func){
 	return object.mixin(
 		queueHandler(...arguments),
 		{ __session_task__: true }) }
@@ -2871,7 +2874,6 @@ var TaskActions = actions.Actions({
 					.on('taskFailed', function(evt, t, err){ 
 						this.logger && this.logger.emit('skipped', t, err) }) 
 					.on('stop', function(){
-						//this.logger && this.logger.emit('skipped', [...this]) 
 						this.logger && this.logger.emit('reset') 
 						this.clear() })
 				// cleanup...
