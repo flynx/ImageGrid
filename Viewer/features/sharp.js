@@ -437,6 +437,7 @@ var SharpActions = actions.Actions({
 					Promise.reject('aborted')
 					: res }) })],
 
+	// XXX move to core.queue...
 	// XXX this does not update image.base_path -- is this correct???
 	// XXX add support for offloading the processing to a thread/worker...
 	makePreviews: ['Sharp|File/Make image $previews',

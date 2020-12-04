@@ -2670,6 +2670,7 @@ function(name, func){
 // NOTE: sync-mode actions do not externally log anything, basic progress 
 // 		logging is handled by the queue/task which is not created in sync
 // 		mode.
+// NOTE: since the sync-mode can block it must be used very carefully.
 //
 // XXX check if item is already in queue...
 var queueHandler =
@@ -2746,7 +2747,6 @@ function(name, func){
 	return object.mixin(
 		queueHandler(...arguments),
 		{ __session_task__: true }) }
-
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
