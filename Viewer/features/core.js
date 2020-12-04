@@ -2871,8 +2871,8 @@ var TaskActions = actions.Actions({
 					.on('taskFailed', function(evt, t, err){ 
 						this.logger && this.logger.emit('skipped', t, err) }) 
 					.on('stop', function(){
-						// XXX not sure about this...
-						this.logger && this.logger.emit('skipped', [...this]) 
+						//this.logger && this.logger.emit('skipped', [...this]) 
+						this.logger && this.logger.emit('reset') 
 						this.clear() })
 				// cleanup...
 				queue

@@ -75,6 +75,9 @@ var ProgressActions = actions.Actions({
 				'skipping',
 				'removed',
 			],
+			reset: [
+				'clear',
+			],
 			close: [
 				'end',
 				'abort',
@@ -107,7 +110,7 @@ var ProgressActions = actions.Actions({
 		
 			Close progress bar...
 			.showProgress('text', 'close')
-		
+
 			Relative progress modification...
 			.showProgress('text', '+1')
 			.showProgress('text', '+0', '+1')
@@ -238,7 +241,7 @@ var ProgressActions = actions.Actions({
 				.text(msg)
 
 			// auto-close...
-			if(value && value >= (max || 0)){
+			if(value != null && value >= (max || 0)){
 				widget.attr('close-timeout', 
 					JSON.stringify(setTimeout(
 						function(){ 
@@ -263,19 +266,23 @@ var ProgressActions = actions.Actions({
 				&& (attrs.onclose = logger.onclose)
 
 			// get keywords...
-			var {add, done, skip, close, error} = 
+			var {add, done, skip, reset, close, error} = 
 				this.config['progress-logger-keywords'] 
 				|| {}
 			// setup default aliases...
 			add = new Set([...(add || []), 'added'])
 			done = new Set([...(done || [])])
 			skip = new Set([...(skip || []), 'skipped'])
+			reset = new Set([...(reset || [])])
 			close = new Set([...(close || []), 'closed'])
 			error = new Set([...(error || [])])
 
 			// close...
 			if(status == 'close' || close.has(status)){
 				this.showProgress(path, 'close', attrs)
+			// reset...
+			} else if(status == 'reset' || reset.has(status)){
+				this.showProgress(path, 0, 0, attrs)
 			// added new item -- increase max...
 			// XXX show msg in the progress bar???
 			} else if(status == 'add' || add.has(status)){
