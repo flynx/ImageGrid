@@ -62,9 +62,10 @@ var features = require('lib/features')
 var toggler = require('lib/toggler')
 
 
+// code/text normalization...
+var doc = module.doc = actions.doc
+var text = module.text = object.text
 
-
-/*********************************************************************/
 
 
 /*********************************************************************/
@@ -251,30 +252,6 @@ module.Util = ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 // Introspection...
-
-// Normalize doc strings...
-// 
-// This will remove indent padding from all lines in a doc string.
-// 
-// This is useful for documenting actions using ES6 template/multi-line
-// strings and keep them sane in terms of indent...
-// 
-// 	Example:
-// 		someAction: ['Test/Some action title',
-// 			core.doc`This is an example...
-// 			mult-iline...
-// 			...doc string that will be normalized and look the same but`
-// 			without the indent...`,
-// 			function(){ ... }]
-// 			
-// NOTE: this will ignore the first line's indent so it can be started 
-// 		right at the string start.
-// 		
-// XXX might be a good idea to move this to a more generic spot like lib/util.js...
-//var doc = module.doc = object.doc
-var doc = module.doc = actions.doc
-var text = module.text = object.text
-
 
 // Indicate that an action is not intended for direct use...
 //
