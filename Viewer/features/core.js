@@ -2531,8 +2531,6 @@ function(func){
 // 		during the later form 'sync' is passed to .Task(..) in the correct
 // 		position...
 // 		(see ig-types' runner.TaskManager(..) for more info)
-//
-// XXX use action.name to identify the task instead of the title...
 var taskAction =
 module.taskAction =
 function(title, func){
@@ -2548,8 +2546,10 @@ function(title, func){
 		action = Task(function(...args){
 			if(args[0] == 'sync' || args[0] == 'async'){
 				pre_args = [args.shift(), title] }
-			// XXX should we set the task name to action.name??
-			return this.tasks.Task(...pre_args, func.bind(this), ...args) }),
+			return Object.assign(
+				this.tasks.Task(...pre_args, func.bind(this), ...args), 
+				// make this searchable by .tasks.named(..)...
+				{ name: action.name }) }),
 		{
 			title,
 			toString: function(){

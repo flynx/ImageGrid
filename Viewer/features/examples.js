@@ -269,8 +269,45 @@ var ExampleActions = actions.Actions({
 
 	// Tasks...
 	
+	//
+	// NOTE: action name and task name should be the same to avoid 
+	// 		confusion...
+	// 		XXX it would be quite complicated to support both and 
+	// 			confusing to support either...
+	exampleTask: ['- Test/',
+		core.taskAction('Example task', 
+			function(ticket, ...args){
+				console.log('###', ticket.title+':', 'START:', ...args, 
+					'\n\t\t(supported messages: "stop", "break", "error", ...)')
+				ticket.onmessage(function(msg){
+					// stop...
+					if(msg == 'stop'){
+						console.log('###', ticket.title+':', 'STOP', ...args)
+						ticket.resolve(...args) 
+					// break...
+					} else if(msg == 'break'){
+						console.log('###', ticket.title+':', 'BREAK', ...args)
+						ticket.reject(...args) 
+					// error...
+					} else if(msg == 'error'){
+						console.log('###', ticket.title+':', 'ERROR', ...args)
+						throw new Error('Task error')
+					// other...
+					} else {
+						console.log('###', ticket.title+':', 'Got message:', msg, ...args) } }) })],
+	exampleSessionTask: ['- Test/',
+		core.sessionTaskAction('Example session task', 
+			function(ticket, ...args){
+				console.log('###', ticket.title+':', 'START:', ...args)
+				ticket.onmessage('stop', function(){
+					console.log('###', ticket.title+':', 'STOP:', ...args) 
+					ticket.resolve(...args) }) })],
+
+	// Queued tasks...
+	//
+	// queued actions...
 	exampleQueuedAction: ['- Test/',
-		core.queuedAction('exampleQueuedAction', {quiet: true}, function(timeout=500, ...args){
+		core.queuedAction('Example queued action', {quiet: true}, function(timeout=500, ...args){
 			console.log('Queued action!!', ...args)
 			return new Promise(function(resolve){
 				setTimeout(resolve, timeout) }) })],
@@ -278,7 +315,7 @@ var ExampleActions = actions.Actions({
 		function(count=100, timeout=100){
 			for(var i=0; i<count; i++){
 				this.exampleQueuedAction(timeout) } }],
-
+	// handler actions...
 	exampleQueueHandlerAction: ['- Test/',
 		core.queueHandler('Example queue handler action', 
 			{quiet: true}, 
@@ -304,39 +341,6 @@ var ExampleActions = actions.Actions({
 				return new Promise(function(resolve){
 					setTimeout(resolve, timeout || 100) }) })],
 
-	//
-	// NOTE: action name and task name should be the same to avoid 
-	// 		confusion...
-	// 		XXX it would be quite complicated to support both and 
-	// 			confusing to support either...
-	exampleTask: ['- Test/',
-		core.taskAction('exampleTask', 
-			function(ticket, ...args){
-				console.log('###', ticket.title+':', 'START:', ...args, 
-					'\n\t\t(supported messages: "stop", "break", "error", ...)')
-				ticket.onmessage(function(msg){
-					// stop...
-					if(msg == 'stop'){
-						console.log('###', ticket.title+':', 'STOP', ...args)
-						ticket.resolve(...args) 
-					// break...
-					} else if(msg == 'break'){
-						console.log('###', ticket.title+':', 'BREAK', ...args)
-						ticket.reject(...args) 
-					// error...
-					} else if(msg == 'error'){
-						console.log('###', ticket.title+':', 'ERROR', ...args)
-						throw new Error('Task error')
-					// other...
-					} else {
-						console.log('###', ticket.title+':', 'Got message:', msg, ...args) } }) })],
-	exampleSessionTask: ['- Test/',
-		core.sessionTaskAction('exampleSessionTask', 
-			function(ticket, ...args){
-				console.log('###', ticket.title+':', 'START:', ...args)
-				ticket.onmessage('stop', function(){
-					console.log('###', ticket.title+':', 'STOP:', ...args) 
-					ticket.resolve(...args) }) })],
 })
 
 var Example = 
