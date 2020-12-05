@@ -14,8 +14,9 @@
 *
 *
 * Features:
-* 	- logger
+* 	- util
 * 	- introspection
+* 	- logger
 * 	- lifecycle
 * 		base life-cycle events (start/stop/..)
 * 		base abort api
@@ -26,7 +27,6 @@
 *	- timers
 *		wrapper around setInterval(..), setTimeout(..) and friends, 
 *		provides persistent timer triggers and introspection...
-* 	- util
 * 	- journal
 * 		action journaling and undo/redo functionality
 * 		XXX needs revision...
@@ -43,6 +43,7 @@
 *
 * XXX some actions use the .clone(..) action/protocol, should this be 
 * 	defined here???
+* XXX should this be split into a generic app building lib?
 *
 **********************************************************************/
 ((typeof define)[0]=='u'?function(f){module.exports=f(require)}:define)
@@ -65,49 +66,8 @@ var toggler = require('lib/toggler')
 
 /*********************************************************************/
 
-// NOTE: if no toggler state is set this assumes that the first state 
-// 		is the default...
-// NOTE: default states is [false, true]
-var makeConfigToggler = 
-module.makeConfigToggler = 
-function(attr, states, a, b){
-
-	states = states || [false, true]
-	var pre = a
-	// XXX is this a good default???
-	//var post = b || function(action){ action != null && this.focusImage() }
-	var post = b
-
-	return toggler.Toggler(null,
-		function(_, action){
-			var lst = states instanceof Array ? states 
-				: states instanceof Function ? states.call(this)
-				: states
-
-			// get attr path...
-			var a = attr.split(/\./g)
-			var cfg = a.slice(0, -1) 
-				.reduce(function(res, cur){
-					return res[cur] }, this.config)
-
-			if(action == null){
-				var val = cfg[a.pop()]
-				return val == null ? 
-					(lst[lst.indexOf('none')] || lst[0])
-					: val 
-
-			} else {
-				cfg[a[a.length-1]] = action
-				this.config[a[0]] = this.config[a[0]]
-			}
-		},
-		states, pre, post)
-}
-
-
 
 /*********************************************************************/
-
 // Root ImageGrid.viewer object constructor...
 //
 // This adds:
@@ -166,7 +126,8 @@ ImageGridFeatures.__actions__ =
 
 //---------------------------------------------------------------------
 // Setup runtime info...
-// XXX add chrome-app...
+//
+// XXX add PWA / chrome-app...
 // XXX add cordova...
 // XXX add mobile...
 // XXX add widget...
@@ -220,6 +181,251 @@ if(typeof(window) != 'undefined'){
 
 
 /*********************************************************************/
+// Util...
+
+// Toggle value in .config...
+//
+// NOTE: if no toggler state is set this assumes that the first state 
+// 		is the default...
+// NOTE: default states is [false, true]
+var makeConfigToggler = 
+module.makeConfigToggler = 
+function(attr, states, a, b){
+
+	states = states || [false, true]
+	var pre = a
+	// XXX is this a good default???
+	//var post = b || function(action){ action != null && this.focusImage() }
+	var post = b
+
+	return toggler.Toggler(null,
+		function(_, action){
+			var lst = states instanceof Array ? states 
+				: states instanceof Function ? states.call(this)
+				: states
+
+			// get attr path...
+			var a = attr.split(/\./g)
+			var cfg = a.slice(0, -1) 
+				.reduce(function(res, cur){
+					return res[cur] }, this.config)
+
+			if(action == null){
+				var val = cfg[a.pop()]
+				return val == null ? 
+					(lst[lst.indexOf('none')] || lst[0])
+					: val 
+
+			} else {
+				cfg[a[a.length-1]] = action
+				this.config[a[0]] = this.config[a[0]]
+			}
+		},
+		states, pre, post)
+}
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+var UtilActions = actions.Actions({
+	mergeConfig: ['- System/', 
+		doc`Merge a config object into .config
+		`,
+		function(config){
+			config = config instanceof Function ? config.call(this)
+				: typeof(config) == typeof('str') ? this.config[config]
+				: config
+			Object.assign(this.config, config) }],
+})
+
+var Util = 
+module.Util = ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'util',
+
+	actions: UtilActions,
+})
+
+
+
+//---------------------------------------------------------------------
+// Introspection...
+
+// Normalize doc strings...
+// 
+// This will remove indent padding from all lines in a doc string.
+// 
+// This is useful for documenting actions using ES6 template/multi-line
+// strings and keep them sane in terms of indent...
+// 
+// 	Example:
+// 		someAction: ['Test/Some action title',
+// 			core.doc`This is an example...
+// 			mult-iline...
+// 			...doc string that will be normalized and look the same but`
+// 			without the indent...`,
+// 			function(){ ... }]
+// 			
+// NOTE: this will ignore the first line's indent so it can be started 
+// 		right at the string start.
+// 		
+// XXX might be a good idea to move this to a more generic spot like lib/util.js...
+//var doc = module.doc = object.doc
+var doc = module.doc = actions.doc
+var text = module.text = object.text
+
+
+// Indicate that an action is not intended for direct use...
+//
+// NOTE: this will not do anything but mark the action.
+var notUserCallable =
+module.notUserCallable = 
+function(func){
+	func.__not_user_callable__ = true
+	return func }
+
+// NOTE: this is the same as event but user-callable...
+var UserEvent =
+module.UserEvent = 
+function(func){
+	func.__event__ = true
+	return func }
+
+// XXX rename???
+var Event =
+module.Event = 
+function(func){
+	func.__event__ = true
+	return notUserCallable(func) }
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+var IntrospectionActions = actions.Actions({
+	get useractions(){
+		return this.cache('useractions', function(d){
+			return d instanceof Array ? 
+				d.slice() 
+				: this.actions.filter(this.isUserCallable.bind(this)) }) },
+	get events(){
+		return this.cache('events', function(d){
+			return d instanceof Array ? 
+				d.slice() 
+				: this.actions.filter(this.isEvent.bind(this)) }) },
+
+	isUserCallable:
+		// XXX should this check only the root action or the whole set???
+		// 		...in other words: can we make an action non-user-callable
+		// 		anywhere other than the root action?
+		// 		IMO no...
+		//function(action){ 
+		//	return this.getActionAttr(action, '__not_user_callable__') != true }],
+		actions.doWithRootAction(function(action){
+			return action.__not_user_callable__ != true }),
+	isEvent: 
+		actions.doWithRootAction(function(action){
+			return !!action.__event__ }),
+
+	// XXX revise... 
+	getActionMode: ['- Interface/',
+		doc`Get action browse mode...
+
+		Get and action's .mode(..) method and return its result.
+
+		Action .mode can be:
+			<function>			- action method.
+			<action-name>		- alias, name of action to get the
+									method from.
+
+		The action .mode(..) method is called in the context of actions.
+
+		Basic example:
+			someAction: ['Path/To/Some action',
+				{mode: function(){ ... }},
+				function(){
+					...
+				}],
+			someOtherAction: ['Path/To/Some action',
+				// alias
+				{mode: 'someAction'},
+				function(){
+					...
+				}],
+
+
+		Usage pattern:
+			// for cases where we need to define an explicit mode...
+			actionModeX: ['- System/',
+				{mode: function(){
+					return this.actionModeX() }},
+				core.notUserCallable(function(){
+					return ...
+				})],
+			someAction: [
+				// use the mode...
+				{mode: 'actionModeX'},
+				function(){
+					...
+				}],
+		`,
+		function(action, mode_cache){
+			var m = action
+			var visited = [m]
+			var last
+
+			// check cache...
+			if(m in (mode_cache || {})){
+				return mode_cache[m] }
+
+			// handle aliases...
+			do {
+				last = m
+				m = this.getActionAttr(m, 'mode')
+
+				// check cache...
+				if(m in (mode_cache || {})){
+					return mode_cache[m] }
+
+				// check for loops...
+				if(m && visited[m] != null){
+					m = null
+					break
+				}
+				visited.push(m)
+			} while(typeof(m) == typeof('str'))
+
+			//return m ? m.call(this) : undefined
+			return m ? 
+				// no cache...
+				(mode_cache == null ?
+						m.call(this)
+					// cache hit...
+					: last in mode_cache ? 
+						mode_cache[last] 
+					// call check and populate cache...
+					: (mode_cache[action] = 
+						mode_cache[last] = 
+							m.call(this)))
+				: actions.UNDEFINED }],
+})
+
+
+var Introspection = 
+module.Introspection = ImageGridFeatures.Feature({
+	title: '',
+
+	tag: 'introspection',
+	depends: [
+		'cache'
+	],
+
+	actions: IntrospectionActions,
+})
+
+
+
+//---------------------------------------------------------------------
 // Logger...
 
 var LoggerActions = actions.Actions({
@@ -415,185 +621,6 @@ module.Logger = ImageGridFeatures.Feature({
 	depends: [],
 
 	actions: LoggerActions,
-})
-
-
-
-//---------------------------------------------------------------------
-// Introspection...
-
-// Normalize doc strings...
-// 
-// This will remove indent padding from all lines in a doc string.
-// 
-// This is useful for documenting actions using ES6 template/multi-line
-// strings and keep them sane in terms of indent...
-// 
-// 	Example:
-// 		someAction: ['Test/Some action title',
-// 			core.doc`This is an example...
-// 			mult-iline...
-// 			...doc string that will be normalized and look the same but`
-// 			without the indent...`,
-// 			function(){ ... }]
-// 			
-// NOTE: this will ignore the first line's indent so it can be started 
-// 		right at the string start.
-// 		
-// XXX might be a good idea to move this to a more generic spot like lib/util.js...
-//var doc = module.doc = object.doc
-var doc = module.doc = actions.doc
-var text = module.text = object.text
-
-
-// Indicate that an action is not intended for direct use...
-//
-// NOTE: this will not do anything but mark the action.
-var notUserCallable =
-module.notUserCallable = 
-function(func){
-	func.__not_user_callable__ = true
-	return func
-}
-
-// NOTE: this is the same as event but user-callable...
-var UserEvent =
-module.UserEvent = 
-function(func){
-	func.__event__ = true
-	return func
-}
-
-// XXX rename???
-var Event =
-module.Event = 
-function(func){
-	func.__event__ = true
-	return notUserCallable(func)
-}
-
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-
-var IntrospectionActions = actions.Actions({
-	get useractions(){
-		return this.cache('useractions', function(d){
-			return d instanceof Array ? 
-				d.slice() 
-				: this.actions.filter(this.isUserCallable.bind(this)) }) },
-	get events(){
-		return this.cache('events', function(d){
-			return d instanceof Array ? 
-				d.slice() 
-				: this.actions.filter(this.isEvent.bind(this)) }) },
-
-	isUserCallable:
-		// XXX should this check only the root action or the whole set???
-		// 		...in other words: can we make an action non-user-callable
-		// 		anywhere other than the root action?
-		// 		IMO no...
-		//function(action){ 
-		//	return this.getActionAttr(action, '__not_user_callable__') != true }],
-		actions.doWithRootAction(function(action){
-			return action.__not_user_callable__ != true }),
-	isEvent: 
-		actions.doWithRootAction(function(action){
-			return !!action.__event__ }),
-
-	// XXX revise... 
-	getActionMode: ['- Interface/',
-		doc`Get action browse mode...
-
-		Get and action's .mode(..) method and return its result.
-
-		Action .mode can be:
-			<function>			- action method.
-			<action-name>		- alias, name of action to get the
-									method from.
-
-		The action .mode(..) method is called in the context of actions.
-
-		Basic example:
-			someAction: ['Path/To/Some action',
-				{mode: function(){ ... }},
-				function(){
-					...
-				}],
-			someOtherAction: ['Path/To/Some action',
-				// alias
-				{mode: 'someAction'},
-				function(){
-					...
-				}],
-
-
-		Usage pattern:
-			// for cases where we need to define an explicit mode...
-			actionModeX: ['- System/',
-				{mode: function(){
-					return this.actionModeX() }},
-				core.notUserCallable(function(){
-					return ...
-				})],
-			someAction: [
-				// use the mode...
-				{mode: 'actionModeX'},
-				function(){
-					...
-				}],
-		`,
-		function(action, mode_cache){
-			var m = action
-			var visited = [m]
-			var last
-
-			// check cache...
-			if(m in (mode_cache || {})){
-				return mode_cache[m] }
-
-			// handle aliases...
-			do {
-				last = m
-				m = this.getActionAttr(m, 'mode')
-
-				// check cache...
-				if(m in (mode_cache || {})){
-					return mode_cache[m] }
-
-				// check for loops...
-				if(m && visited[m] != null){
-					m = null
-					break
-				}
-				visited.push(m)
-			} while(typeof(m) == typeof('str'))
-
-			//return m ? m.call(this) : undefined
-			return m ? 
-				// no cache...
-				(mode_cache == null ?
-						m.call(this)
-					// cache hit...
-					: last in mode_cache ? 
-						mode_cache[last] 
-					// call check and populate cache...
-					: (mode_cache[action] = 
-						mode_cache[last] = 
-							m.call(this)))
-				: actions.UNDEFINED }],
-})
-
-
-var Introspection = 
-module.Introspection = ImageGridFeatures.Feature({
-	title: '',
-
-	tag: 'introspection',
-	depends: [
-		'cache'
-	],
-
-	actions: IntrospectionActions,
 })
 
 
@@ -1001,6 +1028,7 @@ module.LifeCycle = ImageGridFeatures.Feature({
 })
 
 
+
 //---------------------------------------------------------------------
 // Serialization...
 
@@ -1023,6 +1051,7 @@ module.Serialization = ImageGridFeatures.Feature({
 
 	actions: SerializationActions,
 })
+
 
 
 //---------------------------------------------------------------------
@@ -1839,31 +1868,6 @@ module.Timers = ImageGridFeatures.Feature({
 })
 
 
-//---------------------------------------------------------------------
-// Util...
-
-var UtilActions = actions.Actions({
-	mergeConfig: ['- System/', 
-		doc`Merge a config object into .config
-		`,
-		function(config){
-			config = config instanceof Function ? config.call(this)
-				: typeof(config) == typeof('str') ? this.config[config]
-				: config
-			Object.assign(this.config, config)
-		}],
-})
-
-var Util = 
-module.Util = ImageGridFeatures.Feature({
-	title: '',
-	doc: '',
-
-	tag: 'util',
-
-	actions: UtilActions,
-})
-
 
 //---------------------------------------------------------------------
 // Journal...
@@ -2148,7 +2152,7 @@ module.Journal = ImageGridFeatures.Feature({
 
 
 //---------------------------------------------------------------------
-// Changes API... 
+// Changes... 
 
 var ChangesActions = actions.Actions({
 	// This can be:
@@ -2679,6 +2683,8 @@ function(title, func){
 // 		mode.
 // NOTE: since the sync-mode can block it must be used very carefully.
 //
+// XXX might be a good idea to split this into a generic and domain parts 
+// 		and move the generic part into types/runner...
 // XXX check if item is already in queue...
 var queueHandler =
 module.queueHandler =
