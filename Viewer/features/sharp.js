@@ -185,18 +185,9 @@ var SharpActions = actions.Actions({
 		// 		from filesystem.IndexFormat...
 	},
 
-	// XXX need to distinguish if something was written in the promise chain...
-	// 		...return false???
-	// 		......should the return value be a bit more informative???
-	// 		something like:
-	// 			{
-	// 				gid: ..
-	// 				path: ..
-	// 				status: ..
-	// 				...
-	// 			}
+	// XXX revise return values...
 	// XXX make backup name pattern configurable...
-	// XXX add crop support...
+	// XXX CROP ready for crop support...
 	makeResizedImage: ['- Image/',
 		core.doc`Make resized image(s)...
 
@@ -213,15 +204,16 @@ var SharpActions = actions.Actions({
 
 		options format:
 			{
-				// output image name...
+				// output image name / name pattern...
 				//
-				// Used if processing a single image, ignored otherwise.
+				// NOTE: for multiple images this should be a pattern and not an
+				// 		explicit name...
+				// NOTE: if not given this defaults to: "%n"
 				name: null | <str>,
 
-				// image name pattern and data...
+				// image name pattern data...
 				//
 				// NOTE: for more info on pattern see: .formatImageName(..)
-				pattern: null | <str>,
 				data: null | { .. },
 
 				// if true and image is smaller than size enlarge it...
@@ -251,193 +243,151 @@ var SharpActions = actions.Actions({
 		NOTE: all options are optional.
 		NOTE: this will not overwrite existing images.
 		`,
-		core.taskAction('makeResizedImage', function(ticket, images, size, path, options={}){
-			var that = this
-
-			// sanity check...
-			if(arguments.length < 4){
-				ticket.reject()
-				throw new Error('.makeResizedImage(..): '
-					+'need at least images, size and path.') }
-
-			// setup runtime interactions...
-			//
-			// NOTE: we will resolve the ticket when we are fully done
-			// 		and not on stop...
-			var STOP = false
-			ticket
-				.onmessage('stop', function(){
-					STOP = true }) 
-				.then(function(){
-					// close progress bar...
-					// NOTE: if we have multiple tasks let the last one 
-					// 		close the progress bar...
-					if(that.tasks.titled(ticket.title).length == 0){
-						logger 
-							&& logger.emit('close') }
-					// cleanup...
-					delete that.__cache_metadata_reading })
-			var abort = function(){
-				that.tasks.stop(ticket.title) }
-
-			var CHUNK_SIZE = 4
-
+		core.queueHandler('Make resized image', 
 			// get/normalize images...
-			//images = images || this.current
-			images = images 
-				|| 'all'
-			// keywords...
-			images = images == 'all' ? 
-					this.data.getImages('all')
-				: images == 'current' ? 
-					this.current
-				: images
-			images = images instanceof Array ? 
-				images 
-				: [images]
-			// sizing...
-			var fit = 
-				typeof(size) == typeof('str') ?
-					(size.endsWith('px') ?
-						'inside'
-					: size.endsWith('p') ?
-						'outside'
-					: 'inside')
-				: 'inside'
-			size = parseInt(size)
-			// options...
-			var {
-				// naming...
-				name, 
-				pattern, 
-				data, 
+			function(queue, images, size, path, options){
+				// sanity check...
+				if(arguments.length < 4){
+					throw new Error('.makeResizedImage(..): '
+						+'need at least: images, size and path.') }
+				return [
+					(!images || images == 'all') ? 
+							this.data.getImages('all')
+						: images == 'current' ? 
+							[this.current]
+						: images instanceof Array ? 
+							images 
+						: [images],
+					...[...arguments].slice(2),
+				]},
+			function(image, size, path, options={}){
+				var that = this
 
-				// file handling...
-				enlarge,
-				skipSmaller,
-				overwrite,
+				// sizing...
+				var fit = 
+					typeof(size) == typeof('str') ?
+						(size.endsWith('px') ?
+							'inside'
+						: size.endsWith('p') ?
+							'outside'
+						: 'inside')
+					: 'inside'
+				size = parseInt(size)
+				// options...
+				var {
+					// naming...
+					name, 
+					data, 
 
-				// transformations...
-				transform, 
-				// XXX not implemented...
-				crop, 
+					// file handling...
+					enlarge,
+					skipSmaller,
+					overwrite,
 
-				timestamp,
-				logger, 
-			} = options
-			// defaults...
-			pattern = pattern || '%n'
-			transform = transform === undefined ? 
-				true 
-				: transform
-			timestamp = timestamp || Date.timeStamp()
-			logger = logger !== false ?
-				(logger || this.logger)
-				: false
-			logger = logger 
-				&& logger.push('Resize', {onclose: abort})
+					// transformations...
+					transform, 
+					// XXX CROP not implemented...
+					//crop, 
 
-			// backup...
-			// XXX make backup name pattern configurable...
-			var backupName = function(to){
-				var i = 0
-				while(fse.existsSync(`${to}.${timestamp}.bak`+ (i || ''))){
-					i++ }
-				return `${to}.${timestamp}.bak`+ (i || '') }
+					timestamp,
+					//logger, 
+				} = options
+				// defaults...
+				name = name || '%n'
+				transform = transform === undefined ? 
+					true 
+					: transform
+				timestamp = timestamp || Date.timeStamp()
 
-			return images
-				.mapChunks(CHUNK_SIZE, function(gid){
-					if(STOP){
-						throw Array.STOP('aborted') }
+				// backup...
+				// XXX make backup name pattern configurable...
+				var backupName = function(to){
+					var i = 0
+					while(fse.existsSync(`${to}.${timestamp}.bak`+ (i || ''))){
+						i++ }
+					return `${to}.${timestamp}.bak`+ (i || '') }
 
-					// skip non-images...
-					if(!['image', null, undefined]
-							.includes(that.images[gid].type)){
-						return false }
+				// skip non-images...
+				if(!['image', null, undefined]
+						.includes(this.images[image].type)){
+					// XXX what should we return???
+					return Promise.resolve() }
 
-					// paths...
-					var source = that.getImagePath(gid)
-					var to = pathlib.join(
+				// paths...
+				var source = this.getImagePath(image)
+				var to = pathlib.resolve(
+					this.location.path,
+					pathlib.join(
 						path, 
-						(images.length == 1 && name) ?
-							name
-							: that.formatImageName(pattern, gid, data || {}))
+						this.formatImageName(name, image, data || {})))
 
-					logger && logger.emit('queued', to)
+				var img = sharp(source)
+				return (skipSmaller ?
+						// skip if smaller than size...
+						img
+							.metadata()
+							.then(function(m){
+								// skip...
+								if((fit == 'inside'
+											&& Math.max(m.width, m.height) < size)
+										|| (fit == 'outside'
+											&& Math.min(m.width, m.height) < size)){
+									return }
+								// continue...
+								return img })
+						: Promise.resolve(img))
+					// prepare to write...
+					.then(function(img){
+						return img 
+							&& ensureDir(pathlib.dirname(to))
+								.then(function(){
+									// handle existing image...
+									if(fse.existsSync(to)){
+										// rename...
+										if(overwrite == 'backup'){
+											fse.renameSync(to, backupName(to))
+										// remove...
+										} else if(overwrite){
+											fse.removeSync(to)
+										// skip...
+										} else {
+											return Promise.reject('target exists') } }
 
-					var img = sharp(source)
-					return (skipSmaller ?
-							// skip if smaller than size...
-							img
-								.metadata()
-								.then(function(m){
-									// skip...
-									if((fit == 'inside'
-												&& Math.max(m.width, m.height) < size)
-											|| (fit == 'outside'
-												&& Math.min(m.width, m.height) < size)){
-										//logger && logger.emit('skipping', gid)
-										return }
-									// continue...
-									return img })
-							: Promise.resolve(img))
-						// prepare to write...
-						.then(function(img){
-							return img 
-								&& ensureDir(pathlib.dirname(to))
-									.then(function(){
-										// handle existing image...
-										if(fse.existsSync(to)){
-											// rename...
-											if(overwrite == 'backup'){
-												fse.renameSync(to, backupName(to))
-											// remove...
-											} else if(overwrite){
-												fse.removeSync(to)
-											// skip...
-											} else {
-												//logger && logger.emit('skipping', gid)
-												return } }
-
-										// write...
-										return img
-											.clone()
-											// handle transform (.orientation / .flip) and .crop...
-											.run(function(){
-												var img_data = that.images[gid]
-												if(transform && (img_data.orientation || img_data.flipped)){
-													img_data.orientation
-														&& this.rotate(img_data.orientation)
-													img_data.flipped
-														&& img_data.flipped.includes('horizontal')
-														&& this.flip() }
-													img_data.flipped
-														&& img_data.flipped.includes('vertical')
-														&& this.flop() 
-												// XXX
-												if(crop){
-													// XXX
-												}
-											})
-											.resize({
-												width: size,
-												height: size,
-												fit: fit,
-												withoutEnlargement: !enlarge,
-											})
-											.withMetadata()
-											.toFile(to) 
-											.then(function(){
-												logger 
-													&& logger.emit('done', to) 
-												return img }) }) }) })
-			.then(function(res){
-				ticket.resolve(res)
-				return res == 'aborted' ?
-					Promise.reject('aborted')
-					: res }) })],
+									// write...
+									return img
+										.clone()
+										// handle transform (.orientation / .flip) and .crop...
+										.run(function(){
+											var img_data = that.images[image]
+											if(transform && (img_data.orientation || img_data.flipped)){
+												img_data.orientation
+													&& this.rotate(img_data.orientation)
+												img_data.flipped
+													&& img_data.flipped.includes('horizontal')
+													&& this.flip() }
+												img_data.flipped
+													&& img_data.flipped.includes('vertical')
+													&& this.flop() 
+											// XXX CROP
+											//if(crop){
+											//	// XXX
+											//}
+										})
+										.resize({
+											width: size,
+											height: size,
+											fit: fit,
+											withoutEnlargement: !enlarge,
+										})
+										.withMetadata()
+										.toFile(to) 
+										.then(function(){
+											// XXX what should we return???
+											return to }) }) }) })],
 
 	// XXX move to core.queue...
+	// XXX should this use .makeResizedImage(..) in sync mode???
+	// 		...would be interesting to try a nested queue...
 	// XXX this does not update image.base_path -- is this correct???
 	// XXX add support for offloading the processing to a thread/worker...
 	makePreviews: ['Sharp|File/Make image $previews',
@@ -559,7 +509,8 @@ var SharpActions = actions.Actions({
 								.replace(/\$RESOLUTION|\$\{RESOLUTION\}/g, parseInt(size))
 								.replace(/\$GID|\$\{GID\}/g, gid) 
 								.replace(/\$NAME|\$\{NAME\}/g, img.name)
-							return that.makeResizedImage(gid, size, base, { 
+							// XXX do we need this to be sync???
+							return that.makeResizedImage('sync', gid, size, base, { 
 									name, 
 									skipSmaller: true,
 									transform: false,
@@ -567,7 +518,8 @@ var SharpActions = actions.Actions({
 										false 
 										: logger,
 								})
-								.then(function([res]){
+								// XXX handle errors -- rejected because image exists...
+								.then(function(res){
 									i == sizes.length-1
 										&& gid_logger && gid_logger.emit('done', gid)
 

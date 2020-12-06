@@ -2694,8 +2694,9 @@ function(title, func){
 				;(items instanceof Array ? 
 						items 
 						: [items])
-					.forEach(function(item){
-						func.call(that, item, ...args) }) 
+					.map(function(item){
+						return func.call(that, item, ...args) })
+				// XXX should we return anything in sync mode???
 				return Promise.resolve()
 
 			// queue mode...
@@ -2725,14 +2726,17 @@ function(title, func){
 							return [e, ...args] }) 
 					: [items, ...args]))
 				// make a promise...
-				var res = new Promise(function(resolve, reject){
-					q.then(resolve, reject) }) 
-				return res } }),
+				return new Promise(function(resolve, reject){
+					q.then(resolve, reject) }) } }),
    		{
 			title,
 			toString: function(){
+				// XXX add opts of given...
 				return `core.queueHandler('${action.name}',\n\t${ 
-					object.normalizeIndent( '\t'+ func.toString() ) })` },
+					(arg_handler ?
+						object.normalizeIndent( '\t'+ arg_handler.toString() ) + ',\n\t'
+						: '')
+					+ object.normalizeIndent( '\t'+ func.toString() ) })` },
 		}) }
 
 var sessionQueueHandler =
