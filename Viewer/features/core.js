@@ -2799,6 +2799,7 @@ var TaskActions = actions.Actions({
 	get queues(){
 		return (this.__queues = this.__queues || {}) },
 
+	// XXX test hidden progress...
 	// XXX revise logging and logger passing...
 	// XXX need better error flow...
 	queue: doc('Get or create a queue task',
@@ -2815,6 +2816,7 @@ var TaskActions = actions.Actions({
 			{
 				nonAbortable: <bool>,
 				quiet: <bool>,
+				hideProgress: <bool>,
 				...
 			}
 
@@ -2853,15 +2855,20 @@ var TaskActions = actions.Actions({
 					runner.Queue(options || {})
 
 				// setup logging...
+				var suffix = (options || {}).hideProgress ? 
+					' (hidden)' 
+					: ''
 				queue
 					.on('tasksAdded', function(evt, t){ 
-						this.logger && this.logger.emit('added', t) })
+						this.logger && this.logger.emit('added'+suffix, t) })
 					.on('taskCompleted', function(evt, t){ 
-						this.logger && this.logger.emit('done', t) }) 
+						this.logger && this.logger.emit('done'+suffix, t) }) 
 					.on('taskFailed', function(evt, t, err){ 
-						this.logger && this.logger.emit('skipped', t, err) }) 
+						this.logger && this.logger.emit('skipped'+suffix, t, err) }) 
 					.on('stop', function(){
-						this.logger && this.logger.emit('reset') 
+						this.logger 
+							&& suffix != ''
+							&& this.logger.emit('reset') 
 						this.clear() })
 				// cleanup...
 				queue
