@@ -18,8 +18,9 @@ var core = require('features/core')
 
 var ProgressActions = actions.Actions({
 	config: {
-		'progress-fade-duration': 200,
+		'progress-pre-delay': 1000,
 		'progress-done-delay': 1000,
+		'progress-fade-duration': 200,
 
 		'progress-update-min': 200,
 
@@ -117,7 +118,11 @@ var ProgressActions = actions.Actions({
 		
 			.showProgress(logger)
 	
-	
+
+		The progress bar is going to be shown to the user if:
+			- max is greater than 1, or
+			- it did not close before .config['progress-pre-delay'] ms of start
+		This is done to avoid spamming the user with single point progress bars.
 		`,
 		function(text, value, max, attrs){
 			var that = this
@@ -189,6 +194,9 @@ var ProgressActions = actions.Actions({
 			widget = widget.length == 0 ?
 				$('<div/>')
 					.addClass('progress-bar')
+					.css({
+						display: 'none',
+					})
 					.attr('name', text)
 					.text(text)
 					// close button...
@@ -205,19 +213,33 @@ var ProgressActions = actions.Actions({
 					.append($('<progress/>'))
 					// events...
 					.on('progressClose', function(){ 
-						$(this)
-							.fadeOut(that.config['progress-fade-duration'] || 200, function(){
-								var cache = (that.__progress_cache || {})[text]
-								cache.timeout 
-									&& clearTimeout(cache.timeout)
-								cache.ondone
-									&& cache.ondone()
-								// clear cache...
-								delete (that.__progress_cache || {})[text]
-								$(this).remove() }) 
+						var elem = $(this)
+
+						var clear = function(){
+							var cache = (that.__progress_cache || {})[text]
+							cache.timeout 
+								&& clearTimeout(cache.timeout)
+							cache.ondone
+								&& cache.ondone()
+							// clear cache...
+							delete (that.__progress_cache || {})[text]
+							elem.remove() }
+
+						// widget was not shown...
+						if(elem.attr('closing') == null
+								|| elem.css('display') == 'none'){
+							clear()
+						// fade...
+						} else {
+							elem[0].setAttribute('closing', '') 
+							elem	
+								.fadeOut(
+									that.config['progress-fade-duration'] || 200, 
+									clear) }
 						widget = null })
 					.appendTo(container)
 				: widget
+					.removeAttr('closing')
 
 			// reset closing timeout...
 			var timeout = widget.attr('close-timeout')
@@ -240,13 +262,25 @@ var ProgressActions = actions.Actions({
 			widget.find('.progress-details')
 				.text(msg)
 
+			// auto-show...
+			if(max > 1 
+					|| !this.config['progress-pre-delay']){
+				widget.css({display: ''}) 
+			} else {
+				setTimeout(
+					function(){ 
+						widget
+							&& widget.attr('closing') == undefined
+							&& widget.css({display: ''}) }, 
+					this.config['progress-pre-delay'] || 1000) }
+
 			// auto-close...
 			if(value != null && value >= (max || 0)){
 				widget.attr('close-timeout', 
 					JSON.stringify(setTimeout(
 						function(){ 
-							widget
-								&& widget.trigger('progressClose') }, 
+							if(widget){
+								widget.trigger('progressClose') } }, 
 						this.config['progress-done-delay'] || 1000))) } }],
 
 	// handle logger progress...
