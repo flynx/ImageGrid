@@ -185,6 +185,8 @@ var SharpActions = actions.Actions({
 		// 		from filesystem.IndexFormat...
 	},
 
+	// XXX either make this a session task or make this survive loading 
+	// 		a new index...
 	// XXX revise return values...
 	// XXX make backup name pattern configurable...
 	// XXX CROP ready for crop support...
@@ -251,7 +253,7 @@ var SharpActions = actions.Actions({
 					throw new Error('.makeResizedImage(..): '
 						+'need at least: images, size and path.') }
 				return [
-					(!images || images == 'all') ? 
+					(images == null || images == 'all') ? 
 							this.data.getImages('all')
 						: images == 'current' ? 
 							[this.current]
@@ -319,7 +321,10 @@ var SharpActions = actions.Actions({
 					this.location.path,
 					pathlib.join(
 						path, 
-						this.formatImageName(name, image, data || {})))
+						// if name is not a pattern do not re-format it...
+						name.includes('%') ?
+							this.formatImageName(name, image, data || {})
+							: name))
 
 				var img = sharp(source)
 				return (skipSmaller ?
@@ -385,7 +390,8 @@ var SharpActions = actions.Actions({
 											// XXX what should we return???
 											return to }) }) }) })],
 
-	// XXX move to core.queue...
+	// XXX either make this a session task or make this survive loading 
+	// 		a new index...
 	// XXX should this use .makeResizedImage(..) in sync mode???
 	// 		...would be interesting to try a nested queue...
 	// XXX this does not update image.base_path -- is this correct???
@@ -417,129 +423,79 @@ var SharpActions = actions.Actions({
 		NOTE: if base_path is given .images will not be updated with new 
 			preview paths...
 		`,
-		core.taskAction('makePreviews', function(ticket, images, sizes, base_path, logger){
-			var that = this
+		core.queueHandler('Make image previews', 
+			function(queue, images, ...args){
+				// get/normalize images...
+				return [
+					(images == null || images == 'all') ? 
+							this.data.getImages('all')
+						: images == 'current' ? 
+							[this.current]
+						: images instanceof Array ? 
+							images 
+						: [images],
+					...args,
+				] },
+			function(gid, sizes, base_path, logger){
+				var that = this
 
-			// setup runtime interactions...
-			//
-			// NOTE: we will resolve the ticket when we are fully done
-			// 		and not on stop...
-			var STOP = false
-			ticket
-				.onmessage('stop', function(){
-					STOP = true }) 
-				.then(function(){
-					// close progress bar...
-					// NOTE: if we have multiple tasks let the last one 
-					// 		close the progress bar...
-					if(that.tasks.titled(ticket.title).length == 0){
-						gid_logger
-							&& gid_logger.emit('close')
-						logger 
-							&& logger.emit('close') }
-					// cleanup...
-					delete that.__cache_metadata_reading })
-			var abort = function(){
-				that.tasks.stop(ticket.title) }
+				var logger_mode = this.config['preview-progress-mode'] || 'gids'
 
-			var CHUNK_SIZE = 4
+				// get/normalize sizes....
+				var cfg_sizes = this.config['preview-sizes'].slice() || []
+				cfg_sizes
+					.sort()
+					.reverse()
+				// XXX revise...
+				if(sizes){
+					sizes = sizes instanceof Array ? sizes : [sizes]
+					// normalize to preview size...
+					sizes = (this.config['preview-normalized'] ? 
+						sizes
+							.map(function(s){ 
+								return cfg_sizes.filter(function(c){ return c >= s }).pop() || s })
+						: sizes)
+							.unique()
+				} else {
+					sizes = cfg_sizes }
 
-			var logger_mode = this.config['preview-progress-mode'] || 'gids'
-			logger = logger !== false ?
-				(logger || this.logger)
-				: false
-			var gid_logger = logger 
-				&& logger.push('Images', 
-					{onclose: abort})
-			logger = logger 
-				&& logger.push('Previews', 
-					{onclose: abort})
+				var path_tpl = that.config['preview-path-template']
+					.replace(/\$INDEX|\$\{INDEX\}/g, this.config['index-dir'] || '.ImageGrid')
 
-			// get/normalize images...
-			images = images 
-				|| 'all'
-			// keywords...
-			images = images == 'all' ? 
-					this.data.getImages('all')
-				: images == 'current' ? 
-					this.current
-				: images
-			images = images instanceof Array ? 
-				images 
-				: [images]
-			// get/normalize sizes....
-			var cfg_sizes = this.config['preview-sizes'].slice() || []
-			cfg_sizes
-				.sort()
-				.reverse()
-			// XXX revise...
-			if(sizes){
-				sizes = sizes instanceof Array ? sizes : [sizes]
-				// normalize to preview size...
-				sizes = (this.config['preview-normalized'] ? 
-					sizes
-						.map(function(s){ 
-							return cfg_sizes.filter(function(c){ return c >= s }).pop() || s })
-					: sizes)
-						.unique()
-			} else {
-				sizes = cfg_sizes }
+				var img = this.images[gid]
+				var base = base_path 
+					|| img.base_path 
+					|| this.location.path
 
-			var path_tpl = that.config['preview-path-template']
-				.replace(/\$INDEX|\$\{INDEX\}/g, that.config['index-dir'] || '.ImageGrid')
+				return sizes
+					.map(function(size, i){
+						var name = path = path_tpl
+							.replace(/\$RESOLUTION|\$\{RESOLUTION\}/g, parseInt(size))
+							.replace(/\$GID|\$\{GID\}/g, gid) 
+							.replace(/\$NAME|\$\{NAME\}/g, img.name)
+						// XXX do we need this to be sync???
+						return that.makeResizedImage('sync', gid, size, base, { 
+								name, 
+								skipSmaller: true,
+								transform: false,
+								logger: logger_mode == 'gids' ? 
+									false 
+									: logger,
+							})
+							// XXX handle errors -- rejected because image exists...
+							.then(function(res){
+								// did not create a preview...
+								if(!res){
+									return false }
 
-			gid_logger && gid_logger.emit('queued', images)
+								// update metadata...
+								if(!base_path){
+									var preview = img.preview = img.preview || {} 
+									preview[parseInt(size) + 'px'] = name
+									that.markChanged
+										&& that.markChanged('images', [gid]) }
 
-			return images
-				.mapChunks(CHUNK_SIZE, function(gid){
-					if(STOP){
-						throw Array.STOP('aborted') }
-
-					var img = that.images[gid]
-					var base = base_path 
-						|| img.base_path 
-						|| that.location.path
-
-					return sizes
-						.map(function(size, i){
-							if(STOP){
-								throw Array.STOP('aborted') }
-
-							var name = path = path_tpl
-								.replace(/\$RESOLUTION|\$\{RESOLUTION\}/g, parseInt(size))
-								.replace(/\$GID|\$\{GID\}/g, gid) 
-								.replace(/\$NAME|\$\{NAME\}/g, img.name)
-							// XXX do we need this to be sync???
-							return that.makeResizedImage('sync', gid, size, base, { 
-									name, 
-									skipSmaller: true,
-									transform: false,
-									logger: logger_mode == 'gids' ? 
-										false 
-										: logger,
-								})
-								// XXX handle errors -- rejected because image exists...
-								.then(function(res){
-									i == sizes.length-1
-										&& gid_logger && gid_logger.emit('done', gid)
-
-									// did not create a preview...
-									if(!res){
-										return false }
-
-									// update metadata...
-									if(!base_path){
-										var preview = img.preview = img.preview || {} 
-										preview[parseInt(size) + 'px'] = name
-										that.markChanged
-											&& that.markChanged('images', [gid]) }
-
-									return [gid, size, name] }) }) })
-				.then(function(res){
-					ticket.resolve(res)
-					return res == 'aborted' ?
-						Promise.reject('aborted')
-						: res.flat() }) })],
+								return [gid, size, name] }) }) })],
 
 	// XXX add support for offloading the processing to a thread/worker...
 	// XXX revise logging and logger passing...

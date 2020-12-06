@@ -123,6 +123,9 @@ var ProgressActions = actions.Actions({
 			- max is greater than 1, or
 			- it did not close before .config['progress-pre-delay'] ms of start
 		This is done to avoid spamming the user with single point progress bars.
+
+
+		NOTE: to force show the progress bar set attrs.forceShow to true.
 		`,
 		function(text, value, max, attrs){
 			var that = this
@@ -130,13 +133,22 @@ var ProgressActions = actions.Actions({
 
 			// get attrs...
 			var args = [...arguments]
-			attrs = args.slice(1).last() instanceof Object ?
+			attrs = args.last() instanceof Object ?
 				args.pop()
 				: null
+			var forceShow = !!(attrs || {}).forceShow
 			;[text, value, max] = args
 
 			var msg = text instanceof Array ? text.slice(1).join(': ') : null
 			text = text instanceof Array ? text[0] : text
+
+			// reset -- clear cache and set everything to 0...
+			// NOTE: we will later draw the progress bar full...
+			var reset = value == 'reset'
+			if(reset){
+				delete (this.__progress_cache || {})[text]
+				value = 0
+				max = 0 }
 
 			// cache -- make sure we do not update too often...
 			if(value != 'close'){
@@ -249,21 +261,28 @@ var ProgressActions = actions.Actions({
 			// format the message...
 			msg = msg ? ': '+msg : ''
 			msg = ' '+ msg 
-				+ (value && value >= (max || 0) ? ' (done)' 
-					: max && value != max ? ' ('+ (value || 0) +' of '+ max +')'
+				+ (value && value >= (max || 0) ? 
+						' (done)' 
+					: max && value != max ? 
+						' ('+ (value || 0) +' of '+ max +')'
 					: '...')
 
 			// update widget...
-			widget.find('progress')
-				.attr({
-					value: value || '',
-					max: max || '',
-				})
+			reset ?
+				// NOTE: on reset we show the progress bar full...
+				widget.find('progress')
+					.attr({ value: 1, max: 1 })
+				: widget.find('progress')
+					.attr({
+						value: (value || ''),
+						max: (max || ''),
+					})
 			widget.find('.progress-details')
 				.text(msg)
 
 			// auto-show...
-			if(max > 1 
+			if(forceShow 
+					|| max > 1 
 					|| !this.config['progress-pre-delay']){
 				widget.css({display: ''}) 
 			} else {
@@ -316,7 +335,7 @@ var ProgressActions = actions.Actions({
 				this.showProgress(path, 'close', attrs)
 			// reset...
 			} else if(status == 'reset' || reset.has(status)){
-				this.showProgress(path, 0, 0, attrs)
+				this.showProgress(path, 'reset', attrs)
 			// added new item -- increase max...
 			// XXX show msg in the progress bar???
 			} else if(status == 'add' || add.has(status)){

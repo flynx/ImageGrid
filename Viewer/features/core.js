@@ -2867,7 +2867,6 @@ var TaskActions = actions.Actions({
 						this.logger && this.logger.emit('skipped'+suffix, t, err) }) 
 					.on('stop', function(){
 						this.logger 
-							&& suffix != ''
 							&& this.logger.emit('reset') 
 						this.clear() })
 				// cleanup...
