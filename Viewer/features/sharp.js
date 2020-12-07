@@ -245,8 +245,11 @@ var SharpActions = actions.Actions({
 		NOTE: all options are optional.
 		NOTE: this will not overwrite existing images.
 		`,
-		core.queueHandler('Make resized image', 
+		core.sessionQueueHandler('Make resized image', 
 			// get/normalize images...
+			// XXX if this is to be a global task (i.e. .queueHandler(..)) we'll 
+			// 		need to get all the image data here...
+			// 		...paths and orientation data...
 			function(queue, images, size, path, options){
 				// sanity check...
 				if(arguments.length < 4){
@@ -262,7 +265,7 @@ var SharpActions = actions.Actions({
 						: [images],
 					...[...arguments].slice(2),
 				]},
-			function(image, size, path, options={}){
+			function(gid, size, path, options={}){
 				var that = this
 
 				// sizing...
@@ -311,19 +314,19 @@ var SharpActions = actions.Actions({
 
 				// skip non-images...
 				if(!['image', null, undefined]
-						.includes(this.images[image].type)){
+						.includes(this.images[gid].type)){
 					// XXX what should we return???
 					return Promise.resolve() }
 
 				// paths...
-				var source = this.getImagePath(image)
+				var source = this.getImagePath(gid)
 				var to = pathlib.resolve(
 					this.location.path,
 					pathlib.join(
 						path, 
 						// if name is not a pattern do not re-format it...
 						name.includes('%') ?
-							this.formatImageName(name, image, data || {})
+							this.formatImageName(name, gid, data || {})
 							: name))
 
 				var img = sharp(source)
@@ -363,15 +366,15 @@ var SharpActions = actions.Actions({
 										.clone()
 										// handle transform (.orientation / .flip) and .crop...
 										.run(function(){
-											var img_data = that.images[image]
-											if(transform && (img_data.orientation || img_data.flipped)){
-												img_data.orientation
-													&& this.rotate(img_data.orientation)
-												img_data.flipped
-													&& img_data.flipped.includes('horizontal')
+											var img = that.images[gid]
+											if(transform && (img.orientation || img.flipped)){
+												img.orientation
+													&& this.rotate(img.orientation)
+												img.flipped
+													&& img.flipped.includes('horizontal')
 													&& this.flip() }
-												img_data.flipped
-													&& img_data.flipped.includes('vertical')
+												img.flipped
+													&& img.flipped.includes('vertical')
 													&& this.flop() 
 											// XXX CROP
 											//if(crop){
@@ -390,10 +393,6 @@ var SharpActions = actions.Actions({
 											// XXX what should we return???
 											return to }) }) }) })],
 
-	// XXX either make this a session task or make this survive loading 
-	// 		a new index...
-	// XXX should this use .makeResizedImage(..) in sync mode???
-	// 		...would be interesting to try a nested queue...
 	// XXX this does not update image.base_path -- is this correct???
 	// XXX add support for offloading the processing to a thread/worker...
 	makePreviews: ['Sharp|File/Make image $previews',
@@ -422,8 +421,12 @@ var SharpActions = actions.Actions({
 	
 		NOTE: if base_path is given .images will not be updated with new 
 			preview paths...
+		NOTE: currently this is a core.sessionQueueHandler(..) and not a .queueHandler(..)
+			mainly because we need to add the preview refs back to the index and this
+			would need keeping the index in memory even if we loaded a different index,
+			this is possible but needs more thought.
 		`,
-		core.queueHandler('Make image previews', 
+		core.sessionQueueHandler('Make image previews', 
 			function(queue, images, ...args){
 				// get/normalize images...
 				return [
@@ -473,7 +476,10 @@ var SharpActions = actions.Actions({
 							.replace(/\$RESOLUTION|\$\{RESOLUTION\}/g, parseInt(size))
 							.replace(/\$GID|\$\{GID\}/g, gid) 
 							.replace(/\$NAME|\$\{NAME\}/g, img.name)
-						// XXX do we need this to be sync???
+						// NOTE: we are 'sync' here for several reasons, mainly because
+						// 		this is a small list and in this way we can take 
+						// 		advantage of OS file caching, and removing the queue
+						// 		overhead, though small makes this noticeably faster...
 						return that.makeResizedImage('sync', gid, size, base, { 
 								name, 
 								skipSmaller: true,
@@ -655,14 +661,17 @@ var SharpActions = actions.Actions({
 		'cacheMetadata: "all" ...'],
 
 	// shorthands...
-	// XXX do we need these???
+	/*/ XXX do we need these???
 	// 		...better have a task manager UI...
+	// XXX if these are kept, would be fun to show them only if the respective
+	// 		tasks are running...
 	abortMakeResizedImage: ['- Sharp/',
 		'tasks.stop: "makeResizedImage"'],
 	abortMakePreviews: ['- Sharp/',
 		'tasks.stop: "makePreviews"'],
 	abortCacheMetadata: ['- Sharp/',
 		'tasks.stop: "cacheMetadata"'],
+	//*/
 })
 
 
