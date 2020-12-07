@@ -2678,14 +2678,14 @@ function(title, func){
 		action = Queued(function(items, ...args){
 			var that = this
 			// sync start...
-			if(arguments[0] == 'sync'){
+			if(arguments[0] == 'sync' || arguments[0] == 'async'){
 				var [sync, items, ...args] = arguments }
 
 			// sync mode -- run action outside of queue...
 			// NOTE: running the queue in sync mode is not practical as
 			// 		the results may depend on queue configuration and 
 			// 		size...
-			if(sync){
+			if(sync == 'sync'){
 				// pre-process args...
 				arg_handler
 					&& ([items, ...args] = 

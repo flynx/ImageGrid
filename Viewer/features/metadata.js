@@ -115,7 +115,7 @@ var MetadataReaderActions = actions.Actions({
 
 		NOTE: also see: .cacheMetadata(..)
 		`,
-		core.queueHandler('Read image metadata', 
+		core.sessionQueueHandler('Read image metadata', 
 			{quiet: true}, 
 			function(queue, image, force){
 				return [
