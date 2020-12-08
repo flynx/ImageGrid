@@ -470,38 +470,34 @@ var SharpActions = actions.Actions({
 					|| img.base_path 
 					|| this.location.path
 
-				return sizes
-					.map(function(size, i){
-						var name = path = path_tpl
-							.replace(/\$RESOLUTION|\$\{RESOLUTION\}/g, parseInt(size))
-							.replace(/\$GID|\$\{GID\}/g, gid) 
-							.replace(/\$NAME|\$\{NAME\}/g, img.name)
-						// NOTE: we are 'sync' here for several reasons, mainly because
-						// 		this is a small list and in this way we can take 
-						// 		advantage of OS file caching, and removing the queue
-						// 		overhead, though small makes this noticeably faster...
-						return that.makeResizedImage('sync', gid, size, base, { 
-								name, 
-								skipSmaller: true,
-								transform: false,
-								logger: logger_mode == 'gids' ? 
-									false 
-									: logger,
-							})
-							// XXX handle errors -- rejected because image exists...
-							.then(function(res){
-								// did not create a preview...
-								if(!res){
-									return false }
-
-								// update metadata...
-								if(!base_path){
-									var preview = img.preview = img.preview || {} 
-									preview[parseInt(size) + 'px'] = name
-									that.markChanged
-										&& that.markChanged('images', [gid]) }
-
-								return [gid, size, name] }) }) })],
+				return Promise.all(
+					sizes
+						.map(function(size, i){
+							var name = path = path_tpl
+								.replace(/\$RESOLUTION|\$\{RESOLUTION\}/g, parseInt(size))
+								.replace(/\$GID|\$\{GID\}/g, gid) 
+								.replace(/\$NAME|\$\{NAME\}/g, img.name)
+							// NOTE: we are 'sync' here for several reasons, mainly because
+							// 		this is a small list and in this way we can take 
+							// 		advantage of OS file caching, and removing the queue
+							// 		overhead, though small makes this noticeably faster...
+							return that.makeResizedImage('sync', gid, size, base, { 
+									name, 
+									skipSmaller: true,
+									transform: false,
+									logger: logger_mode == 'gids' ? 
+										false 
+										: logger,
+								})
+								// XXX handle errors -- rejected because image exists...
+								.then(function(res){
+									// update metadata...
+									if(!base_path){
+										var preview = img.preview = img.preview || {} 
+										preview[parseInt(size) + 'px'] = name
+										that.markChanged
+											&& that.markChanged('images', [gid]) }
+									return [gid, size, name] }) })) })],
 
 	// XXX add support for offloading the processing to a thread/worker...
 	// XXX revise logging and logger passing...

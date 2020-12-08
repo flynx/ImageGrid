@@ -2693,13 +2693,12 @@ function(title, func){
 					&& ([items, ...args] = 
 						arg_handler.call(this, undefined, items, ...args))
 				// run...
-				;(items instanceof Array ? 
+				return Promise.all(
+					(items instanceof Array ? 
 						items 
 						: [items])
 					.map(function(item){
-						return func.call(that, item, ...args) })
-				// XXX should we return anything in sync mode???
-				return Promise.resolve()
+						return func.call(that, item, ...args) }))
 
 			// queue mode...
 			} else {
