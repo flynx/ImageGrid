@@ -676,7 +676,8 @@ var LifeCycleActions = actions.Actions({
 		`,
 		function(){
 			var that = this
-			this.logger && this.logger.emit('start')
+			this.logger 
+				&& this.logger.push('System').emit('start')
 
 			// NOTE: jQuery currently provides no way to check if an event
 			// 		is bound so we'll need to keep track manually...
@@ -819,8 +820,8 @@ var LifeCycleActions = actions.Actions({
 			// System ready event...
 			//
 			// Not intended for direct use, use .declareReady() to initiate.
-			this.logger && this.logger.emit('ready')
-		})],
+			this.logger 
+				&& this.logger.push('System').emit('ready') })],
 	// NOTE: this calls .ready() once per session.
 	declareReady: ['- System/Declare system ready', 
 		doc`Declare ready state
@@ -913,7 +914,8 @@ var LifeCycleActions = actions.Actions({
 			delete this.__ready
 			delete this.__stop_handler
 
-			this.logger && this.logger.emit('stop')
+			this.logger 
+				&& this.logger.push('System').emit('stop')
 
 			// trigger the stopped event...
 			this.stopped()

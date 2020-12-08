@@ -20,6 +20,7 @@ var base = require('features/base')
 
 if(typeof(process) != 'undefined'){
 	var pathlib = requirejs('path')
+	var argv = requirejs('lib/argv')
 }
 
 
@@ -53,11 +54,10 @@ if(typeof(process) != 'undefined'){
 
 var CLIActions = actions.Actions({
 
-	get cli_commands(){
+	get cliActions(){
 		return this.actions
 			.filter(function(action){
 				return this.getActionAttr(action, 'cli') }.bind(this)) },
-
 
 	// XXX should this be here???
 	// 		...move this to progress...
@@ -96,37 +96,71 @@ var CLIActions = actions.Actions({
 			state.msg = msg
 		}],
 
+	startREPL: ['- System/Start CLI interpreter',
+		{cli: '@repl'},
+		function(){
+			var repl = nodeRequire('repl')
 
-	makeIndex: ['- System/',
-		{cli: true},
+			this._keep_running = true
+
+			// setup the global ns...
+			global.ig =
+			global.ImageGrid = 
+				this
+
+			require('features/all')
+			global.ImageGridFeatures = core.ImageGridFeatures
+
+			//var ig = core.ImageGridFeatures
+			
+			repl
+				.start({
+					prompt: 'ig> ',
+
+					useGlobal: true,
+
+					input: process.stdin,
+					output: process.stdout,
+
+					//ignoreUndefined: true,
+				})
+				.on('exit', function(){
+					//ig.stop() 
+					process.exit() }) }],
+	startGUI: ['- System/Start viewer GUI',
+		{cli: '@gui'},
+		function(){
+			// XXX
+		}],
+
+	// XXX this is reletively generic, might be useful globally...
+	makeIndex: ['- System/Make index',
+		{cli: {
+			name: '@make',
+			arg: 'PATH',
+			valueRequired: true,
+		}},
 		function(path){
 			var that = this
-
-			// XXX is this correct???
-			path = path || this.location.path
-
 			path = util.normalizePath(path)
 
-			return this.loadImages(path)
+			// XXX is cloning index here the correct way to go???
+			//var index = this.clone()
+			var index = this
+			return index.loadImages(path)
 				// save base index...
 				.then(function(){ 
-					return that.saveIndex(path)
-				})
-				// make the previews...
+					return index.saveIndex() })
+				// sharp stuff...
 				.then(function(){
-					if(that.makePreviews){
-						return that.makePreviews('all')
-					}
-				})
+					if(index.makePreviews){
+						return Promise.all([
+							index.cacheMetadata('all'),
+							index.makePreviews('all') ])} })
 				.then(function(){
-					//that.readAllMetadata()
-
-					return that
+					return index
 						.sortImages()
-						// XXX for some reason this is not running from cli
-						.saveIndex(path)
-				})
-		}],
+						.saveIndex() }) }],
 })
 
 
@@ -150,222 +184,63 @@ module.CLI = core.ImageGridFeatures.Feature({
 	actions: CLIActions,
 
 	handlers: [
-		// XXX should some of the flag handlers be actions???
 		['ready',
 			function(){
 				var that = this
 
-				// get the arguments...
-				if(this.runtime.nw){
-					var argv = nw.App.argv
+				var pkg = nodeRequire('./package.json')
 
-					// XXX appears to have a stray '--help' lodged in 
-					// 		all the time...
-					// 		...need to test this with a packed exec...
-					console.log('>>>>', argv)
+				argv.Parser({
+						// XXX argv.js is not picking these up because 
+						// 		of the require(..) mixup...
+						author: pkg.author,
+						version: pkg.version,
+						license: pkg.license,
 
-				} else if(this.runtime.node){
-					var argv = process.argv
-				}
+						// XXX setup presets...
+						//		...load sets of features and allow user 
+						//		to block/add specific features...
 
+						// XXX feature config...
+						// 		...get/set persistent config values...
 
-				var keep_running = false
+						// build the action command list...
+						...this.cliActions
+							.reduce(function(res, action){
+								var cmd = that.getActionAttr(action, 'cli')
+								if(typeof(cmd) == typeof('str') || cmd === true){
+									var name = cmd
+									var cmd = {name} }
+								var name = name === true ? 
+									action 
+									: cmd.name 
 
-				// XXX this is not portable...
-				//var package = requirejs('fs-extra').readJSONSync('./package.json')
+								res[name] = {
+									doc: (that.getActionAttr(action, 'doc') || '')
+										.split(/[\\\/]/g).pop(),
+									// XXX revise argument passing...
+									// 		...this must be as flexible as possible...
+									handler: function(rest, key, value){
+										return that[action](value) },
+									...cmd,
+								}
 
-				// XXX DEPRECATED...
-				var cli = requirejs('commander')
-				cli
-					// XXX get the version from package.json...
-					.version(that.version)
-
-					//.usage('[command] [options] ..')
-
-					.option('-v, --verbose', 'verbose mode', function(){
-						// XXX use a standard logger...
-						that.logger = { 
-							root: true,
-							push: function(){ 
-								var o = Object.create(this) 
-								o.root = false
-								o.__prefix = (this.__prefix || []).concat([...arguments])
-								return o
-							},
-							pop: function(){
-								return this.root ? this : this.__proto__
-							},
-							emit: function(){ 
-								console.log.apply(console, 
-									(this.__prefix || []).concat([...arguments]))
-							}, 
-						}
+								return res }, {}),
 					})
+					.onNoArgs(function(args){
+						console.log('No args.')
 
-					.option('l, --list-commands', 'list commands', function(){
-						console.log('Commands:\n   ', that.cli_commands.join('\n\t'))
+						// XXX we should either start the GUI here or print help...
+						args.push('--help')
+						//args.push('gui')
 					})
-
-					// list features...
-					// XXX make this a core action... (???)
-					.option('lf, --list-features', 'list loaded features', function(){
-						// excluded...
-						that.features.excluded.length > 0 
-							&& console.warn('Features excluded (%d):\n   ',
-								that.features.excluded.length, 
-								that.features.excluded.join('\n    '))
-
-						// not applicable...
-						that.features.unapplicable.length > 0 
-							&& console.log('Features not applicable (%d):\n   ', 
-								that.features.unapplicable.length, 
-								that.features.unapplicable.join('\n    '))
-
-						// loaded...
-						console.log('Features loaded (%d):\n   ',
-							that.features.features.length, 
-							that.features.features.join('\n    '))
-					})
-					// XXX make this applicable features...
-					.option('laf, --list-available-features', 'list available features', function(){
-						// XXX bug, this hangs....
-						//console.log(core.ImageGridFeatures.buildFeatureList())
-
-						var f = core.ImageGridFeatures.features
-						console.log('Features available (%d):\n   ',
-							f.length, 
-							f.join('\n    '))
-					})
-
-					// list actions...
-					// XXX this is a bit pointless as single actions are
-					// 		meaningless when no state is stored...
-					.option('la, --list-actions', 'list loaded actions', function(){
-						console.log('Actions loaded (%d):\n   ', 
-							that.length, 
-							Object.keys(that.getDoc()).join('\n    '))
-					})
-
-					// XXX experimental....
-					// 		to see this in action use:
-					// 			ig lf sm lf
-					// 		...this will print the list of features before
-					// 		and after setup...
-					.option('sm, --setup-minimal', 'setup minimal features', function(){
-						// load features we might need...
-						var all = require('features/all')
-
-						// extend the current instance to a minimal non-ui
-						// state...
-						core.ImageGridFeatures
-							.setup(that, ['imagegrid-minimal'])
-					})
-
-					.option('repl, --repl', 'start an ImageGrid REPL', function(){
-						var repl = nodeRequire('repl')
-
-						keep_running = true
-
-						// setup the global ns...
-						global.ig =
-						global.ImageGrid = 
-							that
-
-						require('features/all')
-						global.ImageGridFeatures = core.ImageGridFeatures
-
-						//var ig = core.ImageGridFeatures
-						
-						repl
-							.start({
-								prompt: 'ig> ',
-
-								useGlobal: true,
-
-								input: process.stdin,
-								output: process.stdout,
-
-								//ignoreUndefined: true,
-							})
-							.on('exit', function(){
-								ig.stop()
-							})
-					})
-
-					// XXX this needs both a local/linked nwjs installed and an 
-					// 		appropriate nw version under it...
-					// 			npm install -g nwjs
-					// 			npm link nwjs
-					// 			nw install 0.14.5-sdk
-					.option('nw, --nw', 'start ImageGrid.Viewer (nw)', function(){
-						throw new Error('ig: GUI startup not implemented.')
-
-						var path = requirejs('path')
-
-						requirejs('child_process')
-							.spawn(requirejs('nwjs'), [
-								path.dirname(process.argv[1]).replace(/\\/g, '/') + '/'])
-
-						keep_running = true
-					})
-					.option('electron, --electron', 'start ImageGrid.Viewer (electron)', function(){
-						var path = requirejs('path')
-
-						requirejs('child_process')
-							.spawn(requirejs('electron'), [
-									path.join(
-										path.dirname(nodeRequire.main.filename), 
-										'e.js')])
-							// XXX need to stop the process iff nothing 
-							// 		else is running, like repl... 
-							// XXX feels hackish...
-							.on('exit', function(){
-								(!global.ig
-										|| global.ig.isStopped())
-									&& process.exit()
-							})
-
-						keep_running = true
-					})
-
-					/* // XXX the problem with this is that it still tires 
-					// 		to find and run 'ig-index'...
-					.command('index [path]', 'build an index of path')
-					.action(function(path){
-						console.log('!!!!!! INDEX', path)
-
-						//this.makeIndex(path)
-					})
-					//*/
-
-					// XXX might be a good idea to make the action call
-					// 		syntax like this:
-					// 			--<action-name> [args]
-					.arguments('<action> [args]')
-					.action(function(action, args){
+					.then(function(){
 						// XXX
-						//console.log('>>>>', action, args, !!that[action])
-						if(!that[action]){
-							console.error('No such action:', action)
-							return
-						}
-
-						var res = that[action](args)
-
-						if(res instanceof Promise){
-							keep_running = true
-							res.then(function(){
-								process.exit()
-							})
-						}
-					})
-
-					.parse(argv)
-
+					})()
 
 				// XXX is this the right way to trigger state change 
 				// 		from within a state action...
-				!keep_running
+				!this._keep_running
 					&& this.afterAction(function(){ process.exit() })
 			}],
 	],

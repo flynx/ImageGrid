@@ -32,6 +32,7 @@ var requirejs_cfg = {
 		//'lib/keyboard': './node_modules/ig-keyboard/keyboard',
 		'object-run': 'node_modules/object-run/run',
 		
+		'lib/argv': 'node_modules/ig-argv/argv',
 		'lib/walk': 'node_modules/generic-walk/walk',
 	},	
 	map: {
@@ -46,6 +47,7 @@ var requirejs_cfg = {
 
 			//'ig-keyboard': 'lib/keyboard',
 
+			'ig-argv': 'lib/argv',
 			'generic-walk': 'lib/walk',
 		},
 	},

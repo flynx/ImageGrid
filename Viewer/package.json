@@ -29,10 +29,10 @@
     "glob": "^7.1.6",
     "guarantee-events": "^1.0.0",
     "ig-actions": "^3.24.21",
-    "ig-argv": "^2.15.0",
+    "ig-argv": "^2.15.1",
     "ig-features": "^3.4.2",
     "ig-object": "^5.4.12",
-    "ig-types": "^5.0.39",
+    "ig-types": "^5.0.40",
     "moment": "^2.29.1",
     "object-run": "^1.0.1",
     "requirejs": "^2.3.6",
@@ -44,7 +44,6 @@
   },
   "dependencies-disabled": {
     "openseadragon": "^2.4.1",
-    "commander": "^2.20.3",
     "flickrapi": "^0.3.28"
   },
   "optionalDependencies": {
