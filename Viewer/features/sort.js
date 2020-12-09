@@ -161,8 +161,7 @@ module.SortActions = actions.Actions({
 				return actions.ASIS(
 					get(methods) 
 					|| that.getSortMethods(splitMethods(methods))
-					|| null)
-			}
+					|| null) }
 
 			// return multiple methods...
 			var res = {}
@@ -171,8 +170,7 @@ module.SortActions = actions.Actions({
 					res[m] = m == 'reverse' ?
 						(res[m] || []).concat([m])
 						: get(m) })
-			return res
-		}],
+			return res }],
 	// XXX should this count 'reverese' arity???
 	expandSortMethod: ['- Sort/',
 		core.doc`Build list of basic sort methods...
@@ -255,9 +253,7 @@ module.SortActions = actions.Actions({
 		//	'image-modify-date',
 
 		'image-create-date':
-			'metadata.createDate file-date name-sequence',
-		// XXX 
-		//'image-modify-date':
+			'metadata.date/timeOriginal file-date name-sequence',
 		//	'metadata.createDate birthtime ctime name-sequence',
 		
 		'file-create-date':
@@ -388,20 +384,9 @@ module.SortActions = actions.Actions({
 		// XXX legacy: this is added to every sort automatically...
 		// 		...do we still need this here???
 		'keep-position': function(){
-
-			var logger = this.logger 
-				&& this.logger.push('Sort indexing')
-			logger && logger.emit('queued', 'position')
-
-			var order = new Map(
-				this.data.order
-					.map(function(e, i){ 
-						return [e, i] }))
-
-			logger && logger.emit('done', 'position')
-
+			var order = this.data.order_index
 			return function(a, b){
-				return order.get(a) - order.get(b) } },
+				return order[a] - order[b] } },
 	},
 	// XXX would be nice to be able to sort a list of gids or a section
 	// 		of images...
@@ -460,8 +445,7 @@ module.SortActions = actions.Actions({
 
 			if(method == 'reverse'){
 				method = 'update'
-				reverse = true
-			}
+				reverse = true }
 
 			reverse = reverse == null ? false 
 				: reverse == 'reverse' 
@@ -495,7 +479,6 @@ module.SortActions = actions.Actions({
 			// build the compare routine...
 			method = method
 				// remove duplicate methods...
-				// XXX should we keep the last occurrence or the first occurrence???
 				.unique()
 				.concat(['keep-position'])
 				.tailUnique()
@@ -505,33 +488,29 @@ module.SortActions = actions.Actions({
 						// sort by attr path...
 						|| function(){
 							var p = m.split(/\./g)
+							// get attr...
 							var _get = function(obj){
 								if(obj == null){
-									return null
-								}
+									return null }
 								for(var i=0; i<p.length; i++){
 									obj = obj[p[i]]
 									if(obj === undefined){
-										return null
-									}
-								}
-								return obj
-							}
+										return null } }
+								return obj }
 							return function(a, b){
 								a = _get(this.images[a])
 								b = _get(this.images[b])
 
-								// not enough data to compare items, test next...
-								if(a == null || b == null){
+								if(a == b
+										// not enough data to compare items, test next...
+										|| (a == null && b == null)){
 									return 0
-
-								} else if(a == b){
-									return 0
-								} else if(a < b){
+								} else if(a < b 
+										// keep stuff without value at the end...
+										|| a == null){
 									return -1
 								} else {
-									return +1
-								}
+									return +1 }
 							}}).call(that) })
 
 			// prepare the cmp function...
@@ -548,14 +527,14 @@ module.SortActions = actions.Actions({
 
 			// do the sort (in place)...
 			if(method && method.length > 0 && this.images){
-				this.data.order = reverse ? 
-					this.data.order.slice().sort(cmp.bind(this)).reverse()
-					: this.data.order.slice().sort(cmp.bind(this))
+				this.data.order = 
+					reverse ? 
+						this.data.order.slice().sort(cmp.bind(this)).reverse()
+						: this.data.order.slice().sort(cmp.bind(this))
 
 			// just reverse...
 			} else if(method.length <= 0 && reverse) {
-				this.data.order.reverse()
-			}
+				this.data.order.reverse() }
 
 			this.data.updateImagePositions() }],
 
@@ -587,7 +566,7 @@ module.SortActions = actions.Actions({
 					.concat(this.data.sort_method == 'Manual' ? ['Manual'] : [])
 					// list saved sorts...
 					.concat(Object.keys(this.data.sort_order || {}))
-					.unique()},
+					.unique() },
 			// prevent setting 'none' as mode...
 			function(mode){ 
 				return !!this.images 
@@ -611,37 +590,29 @@ module.SortActions = actions.Actions({
 				;(this.data.sort_order 
 						&& mode in this.data.sort_order) ?
 					this.loadOrder(mode, reverse == 'reverse')
-					: this.sortImages(sort)
-			})],
+					: this.sortImages(sort) })],
 
 	// XXX add drop/load actions...
 	saveOrder: ['- Sort/',
 		function(title){
 			title = title || 'Manual'
 			var cache = this.data.sort_order = this.data.sort_order || {}
-			cache[title] = this.data.order.slice()
-		}],
+			cache[title] = this.data.order.slice() }],
 	loadOrder: ['- Sort/',
 		function(title, reverse){
 			var order = (this.data.sort_order || {})[title]
 			if(order){
 				this.data.order = order.slice()
 				this.sortImages('update' + (reverse ? ' reverse' : ''))
-				this.data.sort_method = title
-			}
-		}],
+				this.data.sort_method = title } }],
 
 	// XXX add drop/load actions...
 	cacheOrder: ['- Sort/',
 		function(){
 			var method = this.data.sort_method
-
 			if(method){
 				var cache = this.data.sort_cache = this.data.sort_cache || {}
-
-				cache[method] = this.data.order.slice()
-			}
-		}],
+				cache[method] = this.data.order.slice() } }],
 
 	// Store/load sort data:
 	// 	.data.sort_method		- current sort mode (optional)
@@ -650,34 +621,22 @@ module.SortActions = actions.Actions({
 	load: [function(data){
 		return function(){
 			var that = this
-
 			data.data
 				&& ['sort_method', 'sort_order', 'sort_cache']
 					.forEach(function(attr){
 						if(data.data[attr]){
-							that.data[attr] = data.data[attr]
-						}
-					})
-		}
-	}],
+							that.data[attr] = data.data[attr] } }) } }],
 	json: [function(){
 		return function(res){
 			var that = this
-
 			;['sort_method', 'sort_order', 'sort_cache']
 				.forEach(function(attr){
 					if(that.data[attr]){
-						res.data[attr] = that.data[attr]
-					}
-				})
-
+						res.data[attr] = that.data[attr] } })
 			// special case: unsaved manual order...
 			if(this.toggleImageSort('?') == 'Manual'){
 				res.data.sort_order = res.sort_order || {}
-				res.data.sort_order['Manual'] = this.data.order.slice()
-			}
-		}
-	}],
+				res.data.sort_order['Manual'] = this.data.order.slice() } } }],
 })
 
 var Sort =
@@ -699,8 +658,7 @@ module.Sort = core.ImageGridFeatures.Feature({
 	handlers: [
 		['shiftImageRight shiftImageLeft',
 			function(){
-				this.data.sort_method = 'Manual'
-			}],
+				this.data.sort_method = 'Manual' }],
 
 		// maintain .sort_order and .sort_cache separately from .data in
 		// the store...
@@ -709,14 +667,12 @@ module.Sort = core.ImageGridFeatures.Feature({
 				var c = res.changes
 
 				if(!c){
-					return
-				}
+					return }
 
 				;['sort_order', 'sort_cache']
 					.forEach(function(attr){
 						if(!res.raw.data){
-							return
-						}
+							return }
 						if((c === true || c[attr]) && res.raw.data[attr]){
 							// full save...
 							if(c === true){
@@ -727,23 +683,16 @@ module.Sort = core.ImageGridFeatures.Feature({
 								var diff = {}
 								c[attr].forEach(function(k){ 
 									diff[k] = res.raw.data[attr][k] })
-								res.index[attr +'-diff'] = diff
-							}
+								res.index[attr +'-diff'] = diff }
 
 							// cleanup...
-							delete res.index.data[attr]
-						}
-					})
-			}],
+							delete res.index.data[attr] } }) }],
 		['prepareIndexForLoad',
 			function(res){
 				['sort_order', 'sort_cache']
 					.forEach(function(attr){
 						if(res[attr]){
-							res.data[attr] = res[attr]
-						}
-					})
-			}],
+							res.data[attr] = res[attr] } }) }],
 
 		// manage changes...
 		['sortImages',
@@ -935,8 +884,7 @@ var SortUIActions = actions.Actions({
 					// sort action...
 					} else if(method in that){
 						that.showDoc(method) } }
-				this.keyboard.handler('General', '?', 'showDoc')
-			})
+				this.keyboard.handler('General', '?', 'showDoc') })
 
 			return o })],
 })
