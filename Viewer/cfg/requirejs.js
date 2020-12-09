@@ -12,6 +12,10 @@ var requirejs_cfg = {
 			document.baseURI
 				.replace(/^[a-zA-Z]+:\/\/\/?/, '')
 				.split(/[#&]/)[0].split(/[\\\/]/g).slice(0, -1).join('/')
+		// node...
+		: typeof(process) != 'undefined' ?
+			process.argv[1].split(/[\\\/]/g).slice(0, -1).join('/')
+		// everything else...
 		: './',
 
 	// XXX this does not work on direct filesystem access...

@@ -501,7 +501,7 @@ var SharpActions = actions.Actions({
 										return [gid, size, name] },
 									function(err){
 										// XXX error
-										logger && logger.emit('skipped', gid)
+										//logger && logger.emit('skipped', gid)
 									}) })) })],
 
 	// XXX add support for offloading the processing to a thread/worker...

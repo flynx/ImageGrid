@@ -209,13 +209,18 @@ var CLIActions = actions.Actions({
 		function(){
 			// XXX
 		}],
+	// XXX
+	startWorker: ['- System/Start as worker',
+		{cli: '-worker'},
+		function(){
+			// XXX
+		}],
 
 	// XXX metadata caching and preview creation are not in sync, can 
 	// 		this be a problem???
 	// 		...if not, add a note...
 	// XXX should we support creating multiple indexes at the same time???
 	// XXX this is reletively generic, might be useful globally...
-	// XXX add support for cwd and relative paths...
 	// XXX should we use a clean index or do this in-place???
 	makeIndex: ['- System/Make index',
 		{cli: {
@@ -225,7 +230,9 @@ var CLIActions = actions.Actions({
 		}},
 		function(path){
 			var that = this
-			path = util.normalizePath(path)
+
+			path = util.normalizePath(
+				 pathlib.resolve(process.cwd(), path))
 
 			// XXX should we use a clean index or do this in-place???
 			//var index = this.constructor(..)
