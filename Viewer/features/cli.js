@@ -21,6 +21,8 @@ var base = require('features/base')
 if(typeof(process) != 'undefined'){
 	var pathlib = requirejs('path')
 	var argv = requirejs('lib/argv')
+	var progress = requirejs('cli-progress')
+	var colors = requirejs('colors')
 }
 
 
@@ -61,6 +63,8 @@ var CLIActions = actions.Actions({
 
 	// XXX should this be here???
 	// 		...move this to progress...
+	// XXX we are missing some beats, is this because we do not let the 
+	// 		bar update before closing???
 	__progress: null,
 	showProgress: ['- System/',
 		function(text, value, max){
@@ -71,37 +75,101 @@ var CLIActions = actions.Actions({
 				text[0] 
 				: text
 
-			var state = this.__progress = this.__progress || {}
-			state = state[text] = state[text] || {}
+			var settings = this.__progress = this.__progress || {}
+			var state = settings[text] = settings[text] || {}
+
+			var l = Math.max(text.length, settings.__text_length || 0)
+			// length changed -> update the bars...
+			l != settings.__text_length
+				&& Object.entries(settings)
+					.forEach(function([key, value]){
+						value instanceof Object 
+							&& 'bar' in value
+							&& value.bar.update({text: key.padEnd(l)}) })
+			settings.__text_length = l
 
 			// normalize max and value...
-			max = state.max = max != null ? 
-					(typeof(max) == typeof('str') && /[+-][0-9]+/.test(max) ? 
-						(state.max || 0) + parseInt(max)
-					: max)
-				: state.max
-			value = state.value = value != null ? 
+			value = state.value = 
+				value != null ? 
 					(typeof(value) == typeof('str') && /[+-][0-9]+/.test(value) ? 
 						(state.value || 0) + parseInt(value)
-					: value)
-				: state.value
+						: value)
+					: state.value
+			max = state.max = 
+				max != null ? 
+					(typeof(max) == typeof('str') && /[+-][0-9]+/.test(max) ? 
+						(state.max || 0) + parseInt(max)
+						: max)
+					: state.max
 
-			// format the message...
-			msg = msg ? ': '+msg : ''
-			msg = ' '+ msg 
-				//+ (value && value >= (max || 0) ? ' ('+value+' done)' 
-				+ (value && value >= (max || 0) ? 
-						' (done)' 
-					: value && max && value != max ? 
-						' ('+ value +' of '+ max +')'
-					: '...')
+			var container = settings.__multi_bar = 
+				settings.__multi_bar 
+					|| new progress.MultiBar({
+						// XXX make this simpler...
+						format: '{text}  {bar} {percentage}% '
+							+'| ETA: {eta_formatted} | {value}/{total}',
+						autopadding: true,
+					},
+					progress.Presets.rect)
+			var bar = state.bar = 
+				state.bar || container.create(0, 0, {text: text.padEnd(l)})
 
-			// XXX do a better printout -- ncurses???
-			msg != state.msg
-				&& console.log(text + msg)
-
-			state.msg = msg
+			bar.setTotal(Math.max(max, value))
+			bar.update(value)
 		}],
+
+	// handle logger progress...
+	// XXX this is a copy from ui-progress -- need to reuse...
+	handleLogItem: ['- System/',
+		function(logger, path, status, ...rest){
+			var msg = path.join(': ')
+			var l = (rest.length == 1 && rest[0] instanceof Array) ?
+				rest[0].length
+				: rest.length
+
+			// only pass the relevant stuff...
+			var attrs = {}
+			logger.ondone 
+				&& (attrs.ondone = logger.ondone)
+			logger.onclose 
+				&& (attrs.onclose = logger.onclose)
+
+			// get keywords...
+			var {add, done, skip, reset, close, error} = 
+				this.config['progress-logger-keywords'] 
+				|| {}
+			// setup default aliases...
+			add = new Set([...(add || []), 'added'])
+			done = new Set([...(done || [])])
+			skip = new Set([...(skip || []), 'skipped'])
+			reset = new Set([...(reset || [])])
+			close = new Set([...(close || []), 'closed'])
+			error = new Set([...(error || [])])
+
+			// close...
+			if(status == 'close' || close.has(status)){
+				//this.showProgress(path, 'close')
+			// reset...
+			} else if(status == 'reset' || reset.has(status)){
+				//this.showProgress(path, 'reset')
+			// added new item -- increase max...
+			// XXX show msg in the progress bar???
+			} else if(status == 'add' || add.has(status)){
+				this.showProgress(path, '+0', '+'+l)
+			// resolved item -- increase done... 
+			} else if(status == 'done' || done.has(status)){
+				this.showProgress(path, '+'+l)
+			// skipped item -- increase done... 
+			// XXX should we instead decrease max here???
+			// 		...if not this is the same as done -- merge...
+			} else if(status == 'skip' || skip.has(status)){
+				this.showProgress(path, '+'+l)
+			// error...
+			// XXX STUB...
+			} else if(status == 'error' || error.has(status)){
+				this.showProgress(['Error'].concat(msg), '+0', '+'+l) }
+		}],
+
 
 
 	startREPL: ['- System/Start CLI interpreter',
@@ -142,6 +210,10 @@ var CLIActions = actions.Actions({
 			// XXX
 		}],
 
+	// XXX metadata caching and preview creation are not in sync, can 
+	// 		this be a problem???
+	// 		...if not, add a note...
+	// XXX should we support creating multiple indexes at the same time???
 	// XXX this is reletively generic, might be useful globally...
 	// XXX add support for cwd and relative paths...
 	// XXX should we use a clean index or do this in-place???
@@ -156,7 +228,7 @@ var CLIActions = actions.Actions({
 			path = util.normalizePath(path)
 
 			// XXX should we use a clean index or do this in-place???
-			//var index = this.constructor()
+			//var index = this.constructor(..)
 			var index = this
 			return index.loadImages(path)
 				// save base index...
@@ -166,7 +238,8 @@ var CLIActions = actions.Actions({
 				.then(function(){
 					if(index.makePreviews){
 						return Promise.all([
-							index.cacheMetadata('all'),
+							// NOTE: this is already running after .loadImages(..)
+							//index.cacheMetadata('all'),
 							index.makePreviews('all') ])} })
 				.then(function(){
 					return index
@@ -216,7 +289,7 @@ module.CLI = core.ImageGridFeatures.Feature({
 						license: pkg.license,
 
 						'-verbose': {
-							doc: 'Enable verbose output',
+							doc: 'Enable verbose (very) output',
 							handler: function(){
 								that.logger 
 									&& (that.logger.quiet = false) } },

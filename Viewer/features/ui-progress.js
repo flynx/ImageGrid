@@ -303,7 +303,6 @@ var ProgressActions = actions.Actions({
 						this.config['progress-done-delay'] || 1000))) } }],
 
 	// handle logger progress...
-	// XXX show progress after a timeout if still not finished...
 	handleLogItem: ['- System/',
 		function(logger, path, status, ...rest){
 			var msg = path.join(': ')

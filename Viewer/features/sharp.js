@@ -490,14 +490,19 @@ var SharpActions = actions.Actions({
 										: logger,
 								})
 								// XXX handle errors -- rejected because image exists...
-								.then(function(res){
-									// update metadata...
-									if(!base_path){
-										var preview = img.preview = img.preview || {} 
-										preview[parseInt(size) + 'px'] = name
-										that.markChanged
-											&& that.markChanged('images', [gid]) }
-									return [gid, size, name] }) })) })],
+								.then(
+									function(res){
+										// update metadata...
+										if(!base_path){
+											var preview = img.preview = img.preview || {} 
+											preview[parseInt(size) + 'px'] = name
+											that.markChanged
+												&& that.markChanged('images', [gid]) }
+										return [gid, size, name] },
+									function(err){
+										// XXX error
+										logger && logger.emit('skipped', gid)
+									}) })) })],
 
 	// XXX add support for offloading the processing to a thread/worker...
 	// XXX revise logging and logger passing...
