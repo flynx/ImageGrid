@@ -68,6 +68,10 @@ var CLIActions = actions.Actions({
 	__progress: null,
 	showProgress: ['- System/',
 		function(text, value, max){
+			// progress display is disabled...
+			if(this.__progress === false){
+				return }
+
 			var msg = text instanceof Array ? 
 				text.slice(1).join(': ') 
 				: null
@@ -118,7 +122,7 @@ var CLIActions = actions.Actions({
 							this.on('redraw-pre', function(){
 								// XXX need to clear the line -- need to get term-width....
 								// XXX this requires a full draw (forceRedraw: true)...
-								console.log('moo'.padEnd(process.stdout.columns))
+								//console.log('moo'.padEnd(process.stdout.columns))
 							}) }))
 			var bar = state.bar = 
 				state.bar || container.create(0, 0, {text: text.padEnd(l)})
@@ -285,9 +289,15 @@ var CLIActions = actions.Actions({
 	cliExportImages: ['- System/Export images',
 		{cli: argv.Parser({
 			key: '@export',
-			arg: 'PATH',
+			arg: 'TO',
 
-			// XXX
+			// XXX get the export options -- see export UI...
+			'@from': {
+				doc: 'Source path',
+				arg: 'FROM'},
+			'@to': {
+				doc: 'Destination path',
+				arg: 'TO'},
 
 		})},
 		function(){
@@ -381,6 +391,11 @@ module.CLI = core.ImageGridFeatures.Feature({
 							handler: function(){
 								that.logger 
 									&& (that.logger.quiet = false) } },
+						// XXX merge this with -quiet...
+						'-no-progress': {
+							doc: 'Disable progress bar display',
+							handler: function(){
+								that.__progress = false } },
 
 						// XXX setup presets...
 						//		...load sets of features and allow user 

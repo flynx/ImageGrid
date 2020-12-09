@@ -596,6 +596,7 @@ var LoggerActions = actions.Actions({
 				|| this.Logger(this)) },
 
 	// XXX move this to console-logger???
+	// XXX should this be an action???
 	handleLogItem: ['- System/',
 		function(logger, path, status, ...rest){
 			logger.quiet 
