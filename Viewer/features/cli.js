@@ -64,8 +64,12 @@ var CLIActions = actions.Actions({
 	__progress: null,
 	showProgress: ['- System/',
 		function(text, value, max){
-			var msg = text instanceof Array ? text.slice(1).join(': ') : null
-			text = text instanceof Array ? text[0] : text
+			var msg = text instanceof Array ? 
+				text.slice(1).join(': ') 
+				: null
+			text = text instanceof Array ? 
+				text[0] 
+				: text
 
 			var state = this.__progress = this.__progress || {}
 			state = state[text] = state[text] || {}
@@ -86,15 +90,19 @@ var CLIActions = actions.Actions({
 			msg = msg ? ': '+msg : ''
 			msg = ' '+ msg 
 				//+ (value && value >= (max || 0) ? ' ('+value+' done)' 
-				+ (value && value >= (max || 0) ? ' (done)' 
-					: value && max && value != max ? ' ('+ value +' of '+ max +')'
+				+ (value && value >= (max || 0) ? 
+						' (done)' 
+					: value && max && value != max ? 
+						' ('+ value +' of '+ max +')'
 					: '...')
 
+			// XXX do a better printout -- ncurses???
 			msg != state.msg
-				&& console.log(msg)
+				&& console.log(text + msg)
 
 			state.msg = msg
 		}],
+
 
 	startREPL: ['- System/Start CLI interpreter',
 		{cli: '@repl'},
@@ -127,6 +135,7 @@ var CLIActions = actions.Actions({
 				.on('exit', function(){
 					//ig.stop() 
 					process.exit() }) }],
+	// XXX
 	startGUI: ['- System/Start viewer GUI',
 		{cli: '@gui'},
 		function(){
@@ -134,6 +143,8 @@ var CLIActions = actions.Actions({
 		}],
 
 	// XXX this is reletively generic, might be useful globally...
+	// XXX add support for cwd and relative paths...
+	// XXX should we use a clean index or do this in-place???
 	makeIndex: ['- System/Make index',
 		{cli: {
 			name: '@make',
@@ -144,8 +155,8 @@ var CLIActions = actions.Actions({
 			var that = this
 			path = util.normalizePath(path)
 
-			// XXX is cloning index here the correct way to go???
-			//var index = this.clone()
+			// XXX should we use a clean index or do this in-place???
+			//var index = this.constructor()
 			var index = this
 			return index.loadImages(path)
 				// save base index...
@@ -184,6 +195,13 @@ module.CLI = core.ImageGridFeatures.Feature({
 	actions: CLIActions,
 
 	handlers: [
+		// supress logging by default...
+		['start.pre', 
+			function(){
+				this.logger 
+					&& (this.logger.quiet = true) }],
+
+		// handle args...
 		['ready',
 			function(){
 				var that = this
@@ -196,6 +214,12 @@ module.CLI = core.ImageGridFeatures.Feature({
 						author: pkg.author,
 						version: pkg.version,
 						license: pkg.license,
+
+						'-verbose': {
+							doc: 'Enable verbose output',
+							handler: function(){
+								that.logger 
+									&& (that.logger.quiet = false) } },
 
 						// XXX setup presets...
 						//		...load sets of features and allow user 

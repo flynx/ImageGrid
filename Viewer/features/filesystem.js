@@ -58,7 +58,7 @@ var IndexFormatActions = actions.Actions({
 		// XXX should these be 'p' or 'px' (current)???
 		'preview-sizes': [
 			//75,
-			//200,
+			200,
 			480,
 			//900,
 			1080,
@@ -66,8 +66,8 @@ var IndexFormatActions = actions.Actions({
 			//2160,
 		],
 		'preview-sizes-priority': [
-			75,
-			200,
+			//75,
+			//200,
 			1080,
 		],
 

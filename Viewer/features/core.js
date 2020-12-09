@@ -414,13 +414,30 @@ var LoggerActions = actions.Actions({
 	Logger: object.Constructor('BaseLogger', {
 		doc: `Logger object constructor...`,
 
-		quiet: false,
+		root: null,
+		parent: null,
+
+		// Quiet mode...
+		//
+		// NOTE: if local mode is not defined this will get the mode of 
+		// 		the nearest parent...
+		// XXX need these to be persistent...
+		// XXX add support for log levels...
+		__quiet: null,
+		get quiet(){
+			var cur = this
+			while(cur.__quiet == null && cur.parent){
+				cur = cur.parent }
+			return !!cur.__quiet },
+		set quiet(value){
+			value == null ?
+				(delete this.__quiet)
+				: (this.__quiet = !!value) },
 
 		__context: null,
 		get context(){
 			return this.__context || this.root.__context },
 
-		root: null,
 		get isRoot(){
 			return this === this.root },
 
@@ -520,7 +537,8 @@ var LoggerActions = actions.Actions({
 		// 	.push(str, ..., attrs)
 		//
 		push: function(...msg){
-			attrs = typeof(msg.last()) != typeof('str') ?
+			// settings...
+			var attrs = typeof(msg.last()) != typeof('str') ?
 				msg.pop()
 				: {}
 			return msg.length == 0 ?
@@ -530,6 +548,7 @@ var LoggerActions = actions.Actions({
 					attrs,
 					{
 						root: this.root,
+						parent: this,
 						path: this.path.concat(msg),
 					}) },
 		pop: function(){
@@ -579,7 +598,8 @@ var LoggerActions = actions.Actions({
 	// XXX move this to console-logger???
 	handleLogItem: ['- System/',
 		function(logger, path, status, ...rest){
-			logger.quiet
+			logger.quiet 
+				|| logger.root.quiet
 				|| console.log(
 					path.join(': ') + (path.length > 0 ? ': ' : '')
 						+ status 
