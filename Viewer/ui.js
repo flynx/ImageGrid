@@ -85,6 +85,7 @@ $(function(){
 
 
 	// report stuff...
+	/*
 	console.log('Loaded features:',
 		ig.features.features)
 	console.log('Disabled features:', 
@@ -95,6 +96,7 @@ $(function(){
 	ig.features.excluded.length > 0 
 		&& console.warn('Excluded features:',
 			ig.features.excluded)
+	//*/
 
 	// NOTE: fatal errors will get reported by setup...
 	if(ig.features.error){

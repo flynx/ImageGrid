@@ -104,13 +104,22 @@ var CLIActions = actions.Actions({
 
 			var container = settings.__multi_bar = 
 				settings.__multi_bar 
-					|| new progress.MultiBar({
-						// XXX make this simpler...
-						format: '{text}  {bar} {percentage}% '
-							+'| ETA: {eta_formatted} | {value}/{total}',
-						autopadding: true,
-					},
-					progress.Presets.rect)
+					|| (new progress.MultiBar({
+								// XXX make this simpler...
+								format: '{text}  {bar} {percentage}% '
+									+'| ETA: {eta_formatted} | {value}/{total}',
+								autopadding: true,
+								stopOnComplete: true,
+								forceRedraw: true,
+							},
+							progress.Presets.rect)
+						// prepare for printing stuff...
+						.run(function(){
+							this.on('redraw-pre', function(){
+								// XXX need to clear the line -- need to get term-width....
+								// XXX this requires a full draw (forceRedraw: true)...
+								console.log('moo'.padEnd(process.stdout.columns))
+							}) }))
 			var bar = state.bar = 
 				state.bar || container.create(0, 0, {text: text.padEnd(l)})
 
@@ -172,12 +181,14 @@ var CLIActions = actions.Actions({
 
 
 
+	// Startup commands...
+	//
 	startREPL: ['- System/Start CLI interpreter',
 		{cli: '@repl'},
 		function(){
 			var repl = nodeRequire('repl')
 
-			this._keep_running = true
+			this.__keep_running = true
 
 			// setup the global ns...
 			global.ig =
@@ -203,12 +214,25 @@ var CLIActions = actions.Actions({
 				.on('exit', function(){
 					//ig.stop() 
 					process.exit() }) }],
-	// XXX
+	// XXX this is the wrong strategy...
+	// XXX move this to a feature that requires electron...
+	// 		...and move electron to an optional dependency...
 	startGUI: ['- System/Start viewer GUI',
 		{cli: '@gui'},
 		function(){
-			// XXX
-		}],
+			requirejs('child_process')
+				.spawn(requirejs('electron'), [
+						pathlib.join(
+							pathlib.dirname(nodeRequire.main.filename), 
+							'e.js') ])
+				// XXX need to stop the process iff nothing 
+				// 		else is running, like repl... 
+				// XXX feels hackish...
+				.on('exit', function(){
+					(!global.ig
+							|| global.ig.isStopped())
+						&& process.exit() })
+			this.__keep_running = true }],
 	// XXX
 	startWorker: ['- System/Start as worker',
 		{cli: '-worker'},
@@ -216,6 +240,62 @@ var CLIActions = actions.Actions({
 			// XXX
 		}],
 
+	// Actions...
+	//
+	/*/ XXX
+	cliIndexInit: ['- System/Initialize and create index',
+		{cli: '@init'},
+		function(){
+			// XXX
+		}],
+	// XXX this should be a nested parser...
+	// 		args:
+	// 			from=PATH
+	// 			to=PATH
+	// 			...
+	cliExportIindex: ['- System/Clone index',
+		{cli: {
+			name: '@clone',
+			arg: 'PATH',
+			valueRequired: true,
+		}},
+		function(){
+			// XXX
+		}],
+	cliPullChanges: ['- System/Pull changes',
+		{cli: {
+			name: '@pull',
+			arg: 'PATH',
+			valueRequired: true,
+		}},
+		function(){
+			// XXX
+		}],
+	cliPushChanges: ['- System/Push changes',
+		{cli: {
+			name: '@push',
+			arg: 'PATH',
+			valueRequired: true,
+		}},
+		function(){
+			// XXX
+		}],
+	//*/
+
+	cliExportImages: ['- System/Export images',
+		{cli: argv.Parser({
+			key: '@export',
+			arg: 'PATH',
+
+			// XXX
+
+		})},
+		function(){
+			// XXX
+		}],
+
+	// Utility... (EXPERIMENTAL)
+	//
 	// XXX metadata caching and preview creation are not in sync, can 
 	// 		this be a problem???
 	// 		...if not, add a note...
@@ -282,6 +362,7 @@ module.CLI = core.ImageGridFeatures.Feature({
 					&& (this.logger.quiet = true) }],
 
 		// handle args...
+		// XXX
 		['ready',
 			function(){
 				var that = this
@@ -317,17 +398,23 @@ module.CLI = core.ImageGridFeatures.Feature({
 									var cmd = {name} }
 								var name = name === true ? 
 									action 
-									: cmd.name 
+									: (cmd.key || cmd.name)
 
-								res[name] = {
-									doc: (that.getActionAttr(action, 'doc') || '')
-										.split(/[\\\/]/g).pop(),
-									// XXX revise argument passing...
-									// 		...this must be as flexible as possible...
-									handler: function(rest, key, value){
-										return that[action](value) },
-									...cmd,
-								}
+								res[name] = cmd instanceof argv.Parser ?
+									cmd
+										// XXX need to call the action...
+										.then(function(){
+											// XXX 
+										})
+									: {
+										doc: (that.getActionAttr(action, 'doc') || '')
+											.split(/[\\\/]/g).pop(),
+										// XXX revise argument passing...
+										// 		...this must be as flexible as possible...
+										handler: function(rest, key, value){
+											return that[action](value) },
+										...cmd,
+									}
 
 								return res }, {}),
 					})
@@ -344,8 +431,14 @@ module.CLI = core.ImageGridFeatures.Feature({
 
 				// XXX is this the right way to trigger state change 
 				// 		from within a state action...
-				!this._keep_running
-					&& this.afterAction(function(){ process.exit() })
+				!this.__keep_running
+					&& this.afterAction(function(){ 
+						// NOTE: the timeout is here to let the progress bar
+						// 		catch up drawing...
+						setTimeout(process.exit.bind(process), 100) })
+					// XXX odd, this seems to kill everything BEFORE we 
+					// 		are done while .afterAction(..) works fine...
+					//&& setTimeout(process.exit.bind(process), 200)
 			}],
 	],
 })
