@@ -262,43 +262,35 @@ var FileSystemLoaderActions = actions.Actions({
 	// NOTE: when passed no path this will not do anything...
 	// NOTE: this will add a .from field to .location, this will indicate
 	// 		the date starting from which saves are loaded.
-	//
-	// XXX look inside...
 	loadIndex: ['- File/Load index',
 		function(path, from_date, logger){
 			var that = this
 			var index_dir = util.normalizePath(this.config['index-dir'])
-			// XXX get a logger...
+
 			logger = logger || this.logger
 			logger = logger && logger.push('Load')
 
 			if(path == null){
-				return
-			}
+				logger && logger.emit('error: no path given')
+				return Promise.reject('no path given') }
 			path = util.normalizePath(path)
 
 			if(from_date && from_date.emit != null){
 				logger = from_date
 				from_date = null }
 
-			// XXX make this load incrementally (i.e. and EventEmitter
-			// 		a-la glob)....
-			//file.loadIndex(path, this.config['index-dir'], logger)
 			return file.loadIndex(path, index_dir, from_date, logger)
 				.then(function(res){
 					var force_full_save = false
 
 					// skip nested paths...
-					//
 					// XXX make this optional...
-					// XXX this is best done BEFORE we load all the 
-					// 		indexes, e.g. in .loadIndex(..)
 					var skipped = new Set()
 					var paths = Object.keys(res)
 					// no indexes found...
 					if(paths.length == 0){
-						logger && logger.emit('error: no index at', path)
-						return Promise.reject('no index at: '+ path) }
+						logger && logger.emit('error: no index in', path)
+						return Promise.reject('no index in: '+ path) }
 					paths
 						.forEach(function(p){
 							// already removed...
@@ -364,11 +356,9 @@ var FileSystemLoaderActions = actions.Actions({
 
 							// merge...
 							index.data.join(part.data)
-							index.images.join(part.images)
-						}
+							index.images.join(part.images) }
 
-						loaded.push(k)
-					}
+						loaded.push(k) }
 
 					logger && logger.emit('load index', index)
 
@@ -553,9 +543,7 @@ var FileSystemLoaderActions = actions.Actions({
 							}) }
 
 						// pass on the result...
-						resolve(imgs)
-					})
-			})
+						resolve(imgs) }) })
 			// load previews if they exist...
 			.then(function(imgs){
 				var index_dir = that.config['index-dir']
@@ -997,34 +985,41 @@ module.FileSystemLoader = core.ImageGridFeatures.Feature({
 		['loadImages',
 			function(res){
 				var that = this
-				res.then(function(){ 
-					that.markChanged('all') }) }],
+				res.then(
+					function(){ 
+						that.markChanged('all') },
+					function(){}) }],
 		// add new images to changes...
 		['loadNewImages',
 			function(res){
 				var that = this
-				res.then(function(imgs){
-					imgs 
-						&& imgs.length > 0 
-						&& that
-							.markChanged('data')
-							.markChanged('images', imgs.keys()) })
-			}],
+				res.then(
+					function(imgs){
+						imgs 
+							&& imgs.length > 0 
+							&& that
+								.markChanged('data')
+								.markChanged('images', imgs.keys()) },
+					function(){}) }],
 		['checkIndex',
 			function(res){
 				var that = this
-				res.then(function(gids){
-					gids.length > 0
-						&& that.markChanged('images', gids) }) }],
+				res.then(
+					function(gids){
+						gids.length > 0
+							&& that.markChanged('images', gids) },
+					function(){}) }],
 		['removeMissingImages',
 			function(res){
 				var that = this
-				res.then(function(gids){
-					gids.length > 0
-						&& that
-							.markChanged('data')
-							.markChanged('images') 
-							.reload(true) }) }],
+				res.then(
+					function(gids){
+						gids.length > 0
+							&& that
+								.markChanged('data')
+								.markChanged('images') 
+								.reload(true) },
+					function(){}) }],
 	],
 })
 

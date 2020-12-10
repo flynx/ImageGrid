@@ -280,8 +280,6 @@ var CLIActions = actions.Actions({
 		{cli: argv && argv.Parser({
 			key: '@export',
 
-			//usage: '$SCRIPTNAME to=PATH [OPTIONS]',
-
 			// help...
 			'-help-pattern': {
 				doc: 'Show image filename pattern info and exit',
@@ -296,39 +294,51 @@ var CLIActions = actions.Actions({
 			'@from': {
 				doc: 'Source path',
 				arg: 'PATH | from',
-				default: '.', },
+				default: '.',
+				valueRequired: true, },
 			'@to': {
 				doc: 'Destination path',
 				arg: 'PATH | path',
 				required: true,
 				valueRequired: true, },
 
-			// options...
+			// bool options...
 			// XXX these should get defaults from .config
 			'-include-virtual': {
 				doc: 'Include virtual blocks',
-				arg: 'BOOL | include-virtual',
+				arg: '| include-virtual',
 				type: 'bool',
+				value: true, 
 				default: true, },
 			'-clean-target': {
 				doc: 'Cleanup target before export (backup)',
-				arg: 'BOOL | clean-target',
+				arg: '| clean-target',
 				type: 'bool',
+				value: true,
 				default: true, },
+			'-no-*': {
+				doc: 'Negate boolean option value',
+				handler: function(rest, key, value, ...args){
+					rest.unshift(key.replace(/^-?-no/, '') +'=false') } },
+
+			// options...
 			'-image-name': {
 				doc: 'Image name pattern',
 				arg: 'PATTERN | preview-name-pattern',
-				default: '%(fav)l%n%(-%c)c', },
+				default: '%(fav)l%n%(-%c)c',
+				valueRequired: true, },
 			// XXX get values automatically...
 			'-mode': { 
 				doc: 'Export mode, can be "resize" or "copy best match"', 
 				arg: 'MODE | export-mode',
 				//default: 'copy best match',
-				default: 'resize', },
+				default: 'resize',
+				valueRequired: true, },
 			'-image-size': {
 				doc: 'Output image size',
 				arg: 'SIZE | preview-size',
-				default: 1000, },
+				default: 1000,
+				valueRequired: true, },
 		})},
 		function(path, options={}){
 			var that = this
@@ -343,7 +353,6 @@ var CLIActions = actions.Actions({
 				.then(
 					function(){
 						return that.exportImages(options) },
-					// XXX for some reason we still get an error up the call stack...
 					function(err){
 						console.error('Can\'t find or load index at:', path) }) }],
 
