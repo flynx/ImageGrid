@@ -279,7 +279,6 @@ var CLIActions = actions.Actions({
 	cliExportImages: ['- System/Export images',
 		{cli: argv && argv.Parser({
 			key: '@export',
-
 			// help...
 			'-help-pattern': {
 				doc: 'Show image filename pattern info and exit',
@@ -289,7 +288,6 @@ var CLIActions = actions.Actions({
 					return argv.STOP } },
 			'-version': undefined,
 			'-quiet': undefined,
-
 			// commands...
 			'@from': {
 				doc: 'Source path',
@@ -301,7 +299,6 @@ var CLIActions = actions.Actions({
 				arg: 'PATH | path',
 				required: true,
 				valueRequired: true, },
-
 			// bool options...
 			// XXX these should get defaults from .config
 			'-include-virtual': {
@@ -320,15 +317,14 @@ var CLIActions = actions.Actions({
 				doc: 'Negate boolean option value',
 				handler: function(rest, key, value, ...args){
 					rest.unshift(key.replace(/^-?-no/, '') +'=false') } },
-
 			// options...
 			'-image-name': {
 				doc: 'Image name pattern',
 				arg: 'PATTERN | preview-name-pattern',
 				default: '%(fav)l%n%(-%c)c',
 				valueRequired: true, },
-			// XXX get values automatically...
 			'-mode': { 
+				// XXX get doc values from system...
 				doc: 'Export mode, can be "resize" or "copy best match"', 
 				arg: 'MODE | export-mode',
 				//default: 'copy best match',
