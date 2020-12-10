@@ -56,10 +56,20 @@ if(typeof(process) != 'undefined'){
 
 var CLIActions = actions.Actions({
 
+	help: ['- System/Show action help',
+		function(...actions){
+			Object.entries(this.getDoc(actions))
+				.forEach(function([action, [s, l]]){
+					console.log(l)
+					console.log('')
+				}) }],
+
+
 	get cliActions(){
 		return this.actions
 			.filter(function(action){
 				return this.getActionAttr(action, 'cli') }.bind(this)) },
+
 
 	// XXX should this be here???
 	// 		...move this to progress...
@@ -199,6 +209,9 @@ var CLIActions = actions.Actions({
 			global.ImageGrid = 
 				this
 
+			global.help = function(...actions){
+				global.ig.help(...actions) }
+
 			require('features/all')
 			global.ImageGridFeatures = core.ImageGridFeatures
 
@@ -247,11 +260,6 @@ var CLIActions = actions.Actions({
 	// Actions...
 	//
 	/*/ XXX
-	cliIndexInit: ['- System/Initialize and create index',
-		{cli: '@init'},
-		function(){
-			// XXX
-		}],
 	// XXX this should be a nested parser...
 	// 		args:
 	// 			from=PATH
@@ -289,19 +297,58 @@ var CLIActions = actions.Actions({
 	cliExportImages: ['- System/Export images',
 		{cli: argv.Parser({
 			key: '@export',
-			arg: 'TO',
 
-			// XXX get the export options -- see export UI...
+			'-help-pattern': {
+				doc: 'Show image filename pattern info and exit',
+				priority: 89,
+				handler: function(){
+					this.parent.context.help('formatImageName')
+					return argv.STOP } },
+			'-version': undefined,
+			'-quiet': undefined,
+
 			'@from': {
 				doc: 'Source path',
-				arg: 'FROM'},
+				arg: 'FROM | from',
+				default: '.', },
 			'@to': {
 				doc: 'Destination path',
-				arg: 'TO'},
+				arg: 'TO | path',
+				required: true,
+				valueRequired: true, },
 
+			// XXX these should get defaults from .config
+			'-include-virtual': {
+				doc: 'Include virtual blocks',
+				arg: 'BOOL | include-virtual',
+				type: 'bool',
+				default: true, },
+			'-clean-target': {
+				doc: 'Cleanup target before export (backup)',
+				arg: 'BOOL | clean-target',
+				type: 'bool',
+				default: true, },
+			// XXX add tip to get doc...
+			// 		 .formatImageName(..) -- format docs...
+			'-image-name': {
+				doc: 'Image name pattern',
+				arg: 'PATTERN | preview-name-pattern',
+				default: '%(fav)l%n%(-%c)c', },
+			'-mode': { 
+				doc: 'Export mode', 
+				arg: 'MODE | export-mode',
+				//default: 'copy best match',
+				default: 'resize', },
+			// XXX add help on possible values...
+			'-image-size': {
+				doc: 'Output image size',
+				arg: 'SIZE | preview-size',
+				default: 1000, },
 		})},
 		function(){
-			// XXX
+			console.log('EXPORT', ...arguments)
+			// XXX load from...
+			// XXX export to...
 		}],
 
 	// Utility... (EXPERIMENTAL)
@@ -312,22 +359,53 @@ var CLIActions = actions.Actions({
 	// XXX should we support creating multiple indexes at the same time???
 	// XXX this is reletively generic, might be useful globally...
 	// XXX should we use a clean index or do this in-place???
-	makeIndex: ['- System/Make index',
-		{cli: {
-			name: '@make',
-			arg: 'PATH',
-			valueRequired: true,
-		}},
-		function(path){
-			var that = this
+	// XXX add ability to disable sort...
+	initIndex: ['- System/Make index',
+		core.doc`
 
+			Create index in current directory
+			.initIndex()
+			.initIndex('create')
+				-> promise
+
+			Create index in path...
+			,initIndex(path)
+			.initIndex('create', path)
+				-> promise
+
+
+			Update index in current directory
+			.initIndex('update')
+				-> promise
+
+			Update index in path...
+			.initIndex('update', path)
+				-> promise
+
+		`,
+		{cli: {
+			name: '@init',
+			arg: 'PATH',
+			//valueRequired: true,
+		}},
+		function(path, options){
+			// get mode...
+			if(path == 'create' || path == 'update'){
+				var [mode, path, options] = arguments }
+			mode = mode || 'create'
+			// normalize path...
 			path = util.normalizePath(
-				 pathlib.resolve(process.cwd(), path))
+				path ?
+					pathlib.resolve(process.cwd(), path)
+					: process.cwd())
+			options = options || {}
 
 			// XXX should we use a clean index or do this in-place???
 			//var index = this.constructor(..)
 			var index = this
-			return index.loadImages(path)
+			return (mode == 'create' ?
+					index.loadImages(path)
+					: index.loadNewImages(path))
 				// save base index...
 				.then(function(){ 
 					return index.saveIndex() })
@@ -342,6 +420,16 @@ var CLIActions = actions.Actions({
 					return index
 						.sortImages()
 						.saveIndex() }) }],
+	// XXX does not work yet...
+	updateIndex: ['- System/Update index',
+		{cli: {
+			name: '@update',
+			arg: 'PATH',
+		}},
+		'initIndex: "update" ...'],
+	cleanIndex: ['- System/',
+		{},
+		function(path, options){}],
 })
 
 
@@ -380,6 +468,8 @@ module.CLI = core.ImageGridFeatures.Feature({
 				var pkg = nodeRequire('./package.json')
 
 				argv.Parser({
+						context: this,
+
 						// XXX argv.js is not picking these up because 
 						// 		of the require(..) mixup...
 						author: pkg.author,
@@ -418,9 +508,8 @@ module.CLI = core.ImageGridFeatures.Feature({
 								res[name] = cmd instanceof argv.Parser ?
 									cmd
 										// XXX need to call the action...
-										.then(function(){
-											// XXX 
-										})
+										.then(function(unhandled, value, rest){
+											that[action](value, this) })
 									: {
 										doc: (that.getActionAttr(action, 'doc') || '')
 											.split(/[\\\/]/g).pop(),

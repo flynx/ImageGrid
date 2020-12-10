@@ -1793,7 +1793,7 @@ var FileSystemWriterActions = actions.Actions({
 	// 		...need a better name...
 	// XXX add tags/keywords... 
 	// 		%(tag|...)k - if image is tagged with tag add text
-	formatImageName: ['- File/',
+	formatImageName: ['- File/Format image filename',
 		core.doc`
 
 		Filename patterns:
@@ -2369,6 +2369,10 @@ var FileSystemWriterActions = actions.Actions({
 
 			.exportDirs(path)
 			.exportDirs(settings)
+
+		settings format:
+			{
+			}
 
 		NOTE: see .formatImageName(..) for pattern syntax details.
 		`,
