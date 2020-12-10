@@ -15,7 +15,7 @@
 // 			- browser + requirejs + http*
 var VERSION = '4.0.0a'
 
-console.log(VERSION)
+//console.log(VERSION)
 
 module.version = VERSION
 

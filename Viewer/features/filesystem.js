@@ -1797,29 +1797,29 @@ var FileSystemWriterActions = actions.Actions({
 		core.doc`
 
 		Filename patterns:
-		 	%n		- name without extension
+			%n		- name without extension
 		
-		 	%gid	- full image gid
-		 	%g		- short gid
+			%gid	- full image gid
+			%g		- short gid
 		
-		 	%i		- image index in ribbon
-		 	%I		- global image index
+			%i		- image index in ribbon
+			%I		- global image index
 
 			%r		- ribbon number
 			%R		- ribbon number counting from the bottom
-		
-		 	%t 		- total number of images in ribbon
-		 	%T		- total number of images
-		
-		 	%(...)m	- add text in braces if image marked
-		 	%(...)b	- add text in braces if image is bookmark
-		
-		 	%(...)C	- add text in braces if there are name conflicts.
+
+			%t		- total number of images in ribbon
+			%T		- total number of images
+
+			%(...)m	- add text in braces if image marked
+			%(...)b	- add text in braces if image is bookmark
+
+			%(...)C	- add text in braces if there are name conflicts.
 						NOTE: this will be added to all images.
-		 	%(...)c	- add text in braces if there are name conflicts 
+			%(...)c	- add text in braces if there are name conflicts 
 						present, but only if the current image has a 
 						conflicting name.
-		 	%c		- number in set of conflicting names (default: 0).
+			%c		- number in set of conflicting names (default: 0).
 						NOTE: this is not stable and can change depending
 							on image order.
 
@@ -2060,7 +2060,7 @@ var FileSystemWriterActions = actions.Actions({
 					return index }) }],
 
 	// XXX add name conflict resolution strategies (pattern)...
-	// 		...use the same strategy as for .exportDirs(..)
+	// 		...use the same strategy as for .exportImages(..)
 	// XXX ways to treat a collection:
 	// 		- crop data
 	// 		- independent index
@@ -2355,6 +2355,7 @@ var FileSystemWriterActions = actions.Actions({
 
 			return Promise.all(queue) }],
 
+	// XXX ASAP rename to exportImages(..)
 	// XXX ASAP test settings['export-mode'] = 'copy best match'
 	// XXX might also be good to save/load the export options to .ImageGrid-export.json
 	// XXX resolve env variables in path... (???)
@@ -2364,15 +2365,30 @@ var FileSystemWriterActions = actions.Actions({
 	// XXX use tasks...
 	// XXX check global index ('%I') in crop...
 	// XXX make clean_target more error tolerant...
-	exportDirs: ['- File/Export/Export ribbons as directories',
+	exportImages: ['- File/Export/Export ribbons as directories',
 		core.doc`Export ribbons as directories
 
-			.exportDirs(path)
-			.exportDirs(settings)
+			.exportImages(path)
+			.exportImages(settings)
+
 
 		settings format:
 			{
+				path: <path>,
+
+				'include-virtual': <bool>,
+
+				'clean-target': <bool>,
+
+				// NOTE: file extension is added automatically...
+				// NOTE: see .formatImageName(..) for format docs...
+				'preview-name-pattern': <str>,
+
+				'export-mode': 'copy best match' | 'resize',
+
+				'preview-size': <size>,
 			}
+
 
 		NOTE: see .formatImageName(..) for pattern syntax details.
 		`,
@@ -2610,7 +2626,7 @@ var FileSystemWriterUIActions = actions.Actions({
 			},
 			'Images only': {
 				alias: 'images',
-				action: 'exportDirs',
+				action: 'exportImages',
 				data: [
 					//'name',
 					'pattern',
@@ -3459,7 +3475,7 @@ module.FileSystemWriterUI = core.ImageGridFeatures.Feature({
 		// update export history...
 		[[
 			'exportIndex',
-			'exportDirs',
+			'exportImages',
 		], function(_, settings){
 			this.exportHistoryPush(
 				(!settings || typeof(settings) == typeof('str')) ?

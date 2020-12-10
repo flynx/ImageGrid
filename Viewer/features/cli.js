@@ -7,6 +7,7 @@
 (function(require){ var module={} // make module AMD/node compatible...
 /*********************************************************************/
 
+var object = require('lib/object')
 var util = require('lib/util')
 var actions = require('lib/actions')
 var features = require('lib/features')
@@ -294,10 +295,13 @@ var CLIActions = actions.Actions({
 		}],
 	//*/
 
+	// XXX test...
+	// XXX report that can't find an index...
 	cliExportImages: ['- System/Export images',
-		{cli: argv.Parser({
+		{cli: argv && argv.Parser({
 			key: '@export',
 
+			// help...
 			'-help-pattern': {
 				doc: 'Show image filename pattern info and exit',
 				priority: 89,
@@ -307,16 +311,18 @@ var CLIActions = actions.Actions({
 			'-version': undefined,
 			'-quiet': undefined,
 
+			// commands...
 			'@from': {
 				doc: 'Source path',
-				arg: 'FROM | from',
+				arg: 'PATH | from',
 				default: '.', },
 			'@to': {
 				doc: 'Destination path',
-				arg: 'TO | path',
+				arg: 'PATH | path',
 				required: true,
 				valueRequired: true, },
 
+			// options...
 			// XXX these should get defaults from .config
 			'-include-virtual': {
 				doc: 'Include virtual blocks',
@@ -328,28 +334,26 @@ var CLIActions = actions.Actions({
 				arg: 'BOOL | clean-target',
 				type: 'bool',
 				default: true, },
-			// XXX add tip to get doc...
-			// 		 .formatImageName(..) -- format docs...
 			'-image-name': {
 				doc: 'Image name pattern',
 				arg: 'PATTERN | preview-name-pattern',
 				default: '%(fav)l%n%(-%c)c', },
+			// XXX get values automatically...
 			'-mode': { 
-				doc: 'Export mode', 
+				doc: 'Export mode, can be "resize" or "copy best match"', 
 				arg: 'MODE | export-mode',
 				//default: 'copy best match',
 				default: 'resize', },
-			// XXX add help on possible values...
 			'-image-size': {
 				doc: 'Output image size',
 				arg: 'SIZE | preview-size',
 				default: 1000, },
 		})},
-		function(){
-			console.log('EXPORT', ...arguments)
-			// XXX load from...
-			// XXX export to...
-		}],
+		function(path, options={}){
+			var that = this
+			return this.loadIndex(path || options.path || '.')
+				.then(function(){
+					return that.exportImages(options) }) }],
 
 	// Utility... (EXPERIMENTAL)
 	//
@@ -413,8 +417,8 @@ var CLIActions = actions.Actions({
 				.then(function(){
 					if(index.makePreviews){
 						return Promise.all([
-							// NOTE: this is already running after .loadImages(..)
-							//index.cacheMetadata('all'),
+							// NOTE: no need to call .cacheMetadata(..) as 
+							// 		it is already running after .loadImages(..)
 							index.makePreviews('all') ])} })
 				.then(function(){
 					return index
