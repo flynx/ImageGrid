@@ -811,7 +811,7 @@ module.WindowedAppControl = core.ImageGridFeatures.Feature({
 //---------------------------------------------------------------------
 
 var AppControl = 
-module.AppControl = core.ImageGridFeatures.Feature('ui-app-control', [
+module.AppControl = core.ImageGridFeatures.Feature('app-control', [
 	'ui-windowed-app-control',
 	'ui-portable-app-control',
 ])

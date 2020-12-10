@@ -74,7 +74,7 @@ core.ImageGridFeatures.Feature('imagegrid-ui-minimal', [
 core.ImageGridFeatures.Feature('imagegrid-ui', [
 	'imagegrid-ui-minimal',
 
-	'ui-app-control',
+	'app-control',
 
 	'ui-progress',
 

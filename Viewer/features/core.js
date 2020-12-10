@@ -706,8 +706,7 @@ var LifeCycleActions = actions.Actions({
 				var stop = this.__stop_handler = function(){ that.stop() }
 
 			} else {
-				return
-			}
+				return }
 
 			// set the runtime...
 			var runtime = this.runtime = ImageGridFeatures.runtime
@@ -761,8 +760,7 @@ var LifeCycleActions = actions.Actions({
 			// other...
 			} else {
 				// XXX
-				console.warn('Unknown runtime:', runtime)
-			}
+				console.warn('Unknown runtime:', runtime) }
 
 			// handle ready event...
 			// ...if no one requested to do it.
@@ -773,9 +771,7 @@ var LifeCycleActions = actions.Actions({
 					$(function(){ that.declareReady('start') })
 
 				} else {
-					this.declareReady('start')
-				}
-			}
+					this.declareReady('start') } }
 
 			// ready timeout -> force ready...
 			this.config['declare-ready-timeout'] > 0
@@ -807,8 +803,7 @@ var LifeCycleActions = actions.Actions({
 					}.bind(this), this.config['declare-ready-timeout']))
 
 			// trigger the started event...
-			this.started()
-		}],
+			this.started() }],
 	started: ['- System/System started event',
 		doc`
 		`,
@@ -868,9 +863,7 @@ var LifeCycleActions = actions.Actions({
 					|| this.__ready_announce_requested <= 0){
 				this.__ready = this.__ready 
 					|| !!this.ready() 
-				delete this.__ready_announce_requested
-			}
-		}],
+				delete this.__ready_announce_requested } }],
 	requestReadyAnnounce: ['- System/',
 		doc`Request to announce the .ready() event.
 

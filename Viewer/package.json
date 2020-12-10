@@ -31,7 +31,7 @@
     "glob": "^7.1.6",
     "guarantee-events": "^1.0.0",
     "ig-actions": "^3.24.22",
-    "ig-argv": "^2.15.6",
+    "ig-argv": "^2.15.7",
     "ig-features": "^3.4.2",
     "ig-object": "^5.4.12",
     "ig-types": "^5.0.40",

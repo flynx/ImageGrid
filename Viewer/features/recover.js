@@ -36,13 +36,10 @@ var RecoverActions = actions.Actions({
 					&& this.config['recover-load-errors-to-previous-location']) ? 
 				this.location
 				: false
-
 			return function(){
 
 				// all went well clear the recovery data...
-				delete this.__recover
-			}
-		}],
+				delete this.__recover } }],
 
 	// Load data and recover on error... 
 	//
@@ -87,11 +84,7 @@ var RecoverActions = actions.Actions({
 
 						// fail...
 						//throw err
-						reject(err)
-					}
-				}
-			})
-		}],
+						reject(err) } } }) }],
 
 	// Recover from load error...
 	//
@@ -108,8 +101,7 @@ var RecoverActions = actions.Actions({
 			// nothing to recover...
 			if(!l){
 				delete this.__recover
-				return
-			}
+				return }
 
 			// NOTE: this will prevent us from entering
 			// 		a recover attempt loop...
@@ -118,8 +110,7 @@ var RecoverActions = actions.Actions({
 			this.__recover = false
 
 			// do the loading...
-			this.location = l
-		}],
+			this.location = l }],
 })
 
 module.Recovery = core.ImageGridFeatures.Feature({

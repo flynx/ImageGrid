@@ -56,15 +56,11 @@ module.Comments = core.ImageGridFeatures.Feature({
 		['json',
 			function(res){
 				if(this.comments != null){
-					res.comments = JSON.parse(JSON.stringify(this.comments))
-				}
-			}],
+					res.comments = JSON.parse(JSON.stringify(this.comments)) } }],
 		['load',
 			function(_, data){
 				if(data.comments != null){
-					this.comments = data.comments
-				}
-			}],
+					this.comments = data.comments } }],
 
 		// prepare comments for saving to "comments/<keyword>"...
 		//
@@ -84,10 +80,7 @@ module.Comments = core.ImageGridFeatures.Feature({
 						// skip the raw field...
 						.filter(function(k){ return k != 'raw' })
 						.forEach(function(k){
-							res.index['comments/' + k] = comments[k]
-						})
-				}
-			}],
+							res.index['comments/' + k] = comments[k] }) } }],
 	],
 })
 
@@ -136,8 +129,7 @@ var FileSystemCommentsActions = actions.Actions({
 	loadComments: ['- File/',
 		function(path, date, logger){
 			if(this.location.load != 'loadIndex'){
-				return
-			}
+				return }
 
 			logger = logger || this.logger
 			logger = logger && logger.push('Load comments')
@@ -147,9 +139,7 @@ var FileSystemCommentsActions = actions.Actions({
 
 			// prepare empty comments...
 			// XXX should we reset or just merge???
-			this.comments = {
-				raw: {}
-			}
+			this.comments = { raw: {} }
 
 			return Promise.all(loaded.map(function(path){
 				var comments_dir = that.config['index-dir'] +'/comments'
@@ -160,8 +150,7 @@ var FileSystemCommentsActions = actions.Actions({
 
 						// no comments present...
 						if(c == null){
-							return res
-						}
+							return res }
 
 						// if we have no sub-indexes just load the 
 						// comments as-is...
@@ -171,13 +160,9 @@ var FileSystemCommentsActions = actions.Actions({
 
 						// sub-indexes -> let the client merge their stuff...
 						} else {
-							that.comments.raw[path] = c
-						} 
+							that.comments.raw[path] = c } 
 
-						return res
-					})
-			}))
-		}],
+						return res }) })) }],
 })
 
 
@@ -200,12 +185,13 @@ module.FileSystemComments = core.ImageGridFeatures.Feature({
 				var that = this
 				var delay = that.config['comments-delay-load']
 
-				res.then(function(){
-					delay < 0 ?
-						that.loadComments()
-						: setTimeout(function(){
-							that.loadComments() }, delay || 0) })
-			}],
+				res.then(
+					function(){
+						delay < 0 ?
+							that.loadComments()
+							: setTimeout(function(){
+								that.loadComments() }, delay || 0) },
+					function(){}) }],
 	],
 })
 

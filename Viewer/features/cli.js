@@ -29,33 +29,12 @@ if(typeof(process) != 'undefined'){
 
 
 /*********************************************************************/
-// XXX what we need here is:
-// 		- base introspection
-// 			- list features
-// 			- list actions
-// 			- list action scripts / commands
-// 		- call action
-// 		- call action script (a-la git commands)
-// 		- repl (debug/testing)
-//
-// XXX the main functionality:
-// 		- make previews
-// 		- make index
-// 		- merge
-// 		- clone
-//
-// XXX a different approach to this would be an "external" cli controller
-// 		script that would contain only cli code and load the ImageGrid
-// 		only in the handler...
-// 			+ would be allot faster to load.
-// 			+ more flexible as we can load more than one instance...
-// 		This could still be done via features, just load the cli feature
-// 		alone at first and then either create new instances or setup 
-// 		additional features as needed...
-
-
 
 var CLIActions = actions.Actions({
+	config: {
+		// XXX do we care that something is not "ready" here???
+		'declare-ready-timeout': 0,
+	},
 
 	help: ['- System/Show action help',
 		function(...actions){
@@ -201,6 +180,7 @@ var CLIActions = actions.Actions({
 	startREPL: ['- System/Start CLI interpreter',
 		{cli: '@repl'},
 		function(){
+			var that = this
 			var repl = nodeRequire('repl')
 
 			this.__keep_running = true
@@ -230,8 +210,7 @@ var CLIActions = actions.Actions({
 					//ignoreUndefined: true,
 				})
 				.on('exit', function(){
-					//ig.stop() 
-					process.exit() }) }],
+					that.stop() }) }],
 	// XXX this is the wrong strategy...
 	// XXX move this to a feature that requires electron...
 	// 		...and move electron to an optional dependency...
@@ -295,11 +274,13 @@ var CLIActions = actions.Actions({
 		}],
 	//*/
 
-	// XXX test...
 	// XXX report that can't find an index...
+	// XXX move options to generic object for re-use...
 	cliExportImages: ['- System/Export images',
 		{cli: argv && argv.Parser({
 			key: '@export',
+
+			//usage: '$SCRIPTNAME to=PATH [OPTIONS]',
 
 			// help...
 			'-help-pattern': {
@@ -351,9 +332,20 @@ var CLIActions = actions.Actions({
 		})},
 		function(path, options={}){
 			var that = this
-			return this.loadIndex(path || options.path || '.')
-				.then(function(){
-					return that.exportImages(options) }) }],
+
+			path = path || options.from
+			path = util.normalizePath(
+				path ?
+					pathlib.resolve(process.cwd(), path)
+					: process.cwd())
+
+			return this.loadIndex(path)
+				.then(
+					function(){
+						return that.exportImages(options) },
+					// XXX for some reason we still get an error up the call stack...
+					function(err){
+						console.error('Can\'t find or load index at:', path) }) }],
 
 	// Utility... (EXPERIMENTAL)
 	//
@@ -470,6 +462,7 @@ module.CLI = core.ImageGridFeatures.Feature({
 				var that = this
 
 				var pkg = nodeRequire('./package.json')
+				var wait_for = []
 
 				argv.Parser({
 						context: this,
@@ -495,7 +488,7 @@ module.CLI = core.ImageGridFeatures.Feature({
 						//		...load sets of features and allow user 
 						//		to block/add specific features...
 
-						// XXX feature config...
+						// XXX config editor...
 						// 		...get/set persistent config values...
 
 						// build the action command list...
@@ -510,17 +503,18 @@ module.CLI = core.ImageGridFeatures.Feature({
 									: (cmd.key || cmd.name)
 
 								res[name] = cmd instanceof argv.Parser ?
+									// parser...
 									cmd
-										// XXX need to call the action...
 										.then(function(unhandled, value, rest){
-											that[action](value, this) })
+											wait_for.push(that[action](value, this)) })
+									// single option definition...
 									: {
 										doc: (that.getActionAttr(action, 'doc') || '')
 											.split(/[\\\/]/g).pop(),
-										// XXX revise argument passing...
-										// 		...this must be as flexible as possible...
 										handler: function(rest, key, value){
-											return that[action](value) },
+											var res = that[action](value) 
+											wait_for.push(res)
+											return res },
 										...cmd,
 									}
 
@@ -533,21 +527,19 @@ module.CLI = core.ImageGridFeatures.Feature({
 						args.push('--help')
 						//args.push('gui')
 					})
+					.stop(function(){ process.exit() })
+					.error(function(){ process.exit() })
 					.then(function(){
 						// XXX
 					})()
 
-				// XXX is this the right way to trigger state change 
-				// 		from within a state action...
-				!this.__keep_running
-					&& this.afterAction(function(){ 
-						// NOTE: the timeout is here to let the progress bar
-						// 		catch up drawing...
-						setTimeout(process.exit.bind(process), 100) })
-					// XXX odd, this seems to kill everything BEFORE we 
-					// 		are done while .afterAction(..) works fine...
-					//&& setTimeout(process.exit.bind(process), 200)
-			}],
+
+				// XXX not all promises in the system resolve strictly 
+				// 		after all the work is done, some resolve before that
+				// 		point and this calling process.exit() will interrupt 
+				// 		them...
+				this.__keep_running
+					|| this.afterAction(function(){ this.stop() }) }],
 	],
 })
 

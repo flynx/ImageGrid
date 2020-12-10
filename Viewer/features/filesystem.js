@@ -279,8 +279,7 @@ var FileSystemLoaderActions = actions.Actions({
 
 			if(from_date && from_date.emit != null){
 				logger = from_date
-				from_date = null
-			}
+				from_date = null }
 
 			// XXX make this load incrementally (i.e. and EventEmitter
 			// 		a-la glob)....
@@ -289,11 +288,6 @@ var FileSystemLoaderActions = actions.Actions({
 				.then(function(res){
 					var force_full_save = false
 
-					// XXX if res is empty load raw...
-
-					// XXX use the logger...
-					//console.log('FOUND INDEXES:', Object.keys(res).length)
-
 					// skip nested paths...
 					//
 					// XXX make this optional...
@@ -301,12 +295,15 @@ var FileSystemLoaderActions = actions.Actions({
 					// 		indexes, e.g. in .loadIndex(..)
 					var skipped = new Set()
 					var paths = Object.keys(res)
+					// no indexes found...
+					if(paths.length == 0){
+						logger && logger.emit('error: no index at', path)
+						return Promise.reject('no index at: '+ path) }
 					paths
 						.forEach(function(p){
 							// already removed...
 							if(skipped.has(p) >= 0){
 								return }
-
 							paths
 								// get all paths that fully contain p...
 								.filter(function(o){
@@ -318,8 +315,6 @@ var FileSystemLoaderActions = actions.Actions({
 									delete res[e] }) })
 					// keep only the valid paths...
 					paths = Object.keys(res).sort()
-
-					//console.log('SKIPPING NESTED:', skipped.length)
 
 					var index
 					var base_path
@@ -378,15 +373,6 @@ var FileSystemLoaderActions = actions.Actions({
 					logger && logger.emit('load index', index)
 
 
-					// XXX BUG?: some times we reach this point with index
-					// 		equaling null
-					// 		...we are not fixing this here as the cause of 
-					// 		this issue is likely someplace else and that 
-					// 		needs investigating...
-					// XXX REMOVE WHEN ISSUE FIXED...
-					!index
-						&& console.error('Failed to load index from:', paths)
-
 					// prepare the location data...
 					index.location = 
 						Object.assign(
@@ -401,7 +387,8 @@ var FileSystemLoaderActions = actions.Actions({
 
 					// this is the critical section, after this point we
 					// are doing the actual loading....
-					that.loadOrRecover(index) 
+					//that.loadOrRecover(index) 
+					return that.loadOrRecover(index) 
 						.then(function(){
 							force_full_save
 								// XXX remove as soon as merged index save is done...
@@ -1002,17 +989,16 @@ module.FileSystemLoader = core.ImageGridFeatures.Feature({
 			function(res, path){
 				if(path){
 					var that = this
-					res.then(function(){ 
-						that.markChanged('none') })
-				}
-			}],
+					res.then(
+						function(){ 
+							that.markChanged('none') },
+						function(){}) } }],
 		// mark everything changed when loading images...
 		['loadImages',
 			function(res){
 				var that = this
 				res.then(function(){ 
-					that.markChanged('all') })
-			}],
+					that.markChanged('all') }) }],
 		// add new images to changes...
 		['loadNewImages',
 			function(res){
@@ -1231,14 +1217,9 @@ var FileSystemLoaderUIActions = actions.Actions({
 
 							make(txt)
 								.on('open', function(){
-									that.loadIndex(p)
-								})
-						})
-					})
-			})
+									that.loadIndex(p) }) }) }) })
 			.on('open', function(){
-				o.close()
-			})
+				o.close() })
 
 			return o
 		})],
