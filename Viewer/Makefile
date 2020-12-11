@@ -152,7 +152,7 @@ VERSION_FALLBACK ?= 4.0.0a
 # NOTE: we are not using './ig --version 2> /dev/null' because it will 
 # 	not work before we do 'npm install'...
 VERSION := $(strip $(shell \
-	node version.js \
+	echo 'console.log(require("./version").version)' | node - \
 		|| echo $(VERSION_FALLBACK)))
 DATE := $(strip $(shell date "+%Y%m%d%H%M"))
 COMMIT := $(strip $(shell git rev-parse HEAD))
