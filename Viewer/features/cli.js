@@ -122,7 +122,7 @@ var CLIActions = actions.Actions({
 		}],
 
 	// handle logger progress...
-	// XXX this is a copy from ui-progress -- need to reuse...
+	// XXX this is a copy from ui-progress -- need to reuse if possible...
 	handleLogItem: ['- System/',
 		function(logger, path, status, ...rest){
 			var msg = path.join(': ')
@@ -230,7 +230,7 @@ var CLIActions = actions.Actions({
 							|| global.ig.isStopped())
 						&& process.exit() })
 			this.__keep_running = true }],
-	// XXX
+	/*/ XXX
 	startWorker: ['- System/Start as worker',
 		{cli: '-worker'},
 		function(){
@@ -239,7 +239,7 @@ var CLIActions = actions.Actions({
 
 	// Actions...
 	//
-	/*/ XXX
+	// XXX
 	// XXX this should be a nested parser...
 	// 		args:
 	// 			from=PATH
@@ -305,13 +305,13 @@ var CLIActions = actions.Actions({
 				doc: 'Include virtual blocks',
 				arg: '| include-virtual',
 				type: 'bool',
-				value: true, 
+				//value: true, 
 				default: true, },
 			'-clean-target': {
 				doc: 'Cleanup target before export (backup)',
 				arg: '| clean-target',
 				type: 'bool',
-				value: true,
+				//value: true,
 				default: true, },
 			'-no-*': {
 				doc: 'Negate boolean option value',

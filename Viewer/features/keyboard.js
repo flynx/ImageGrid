@@ -456,8 +456,8 @@ module.GLOBAL_KEYBOARD = {
 		// filters...
 		// NOTE: Esc will also clear the filter (see "Preview filter" mode above)...
 		shift_F: 'browseActions: "/Image/Preview filter/" -- Preview filters...',
-		';': 'togglePreviewFilter: "Show shadows" -- Preview shadows',
-		':': 'togglePreviewFilter: "Show highlights" -- Preview highlights',
+		';': 'togglePreviewFilter: "Show clipping" -- Preview clipping',
+		':': 'togglePreviewFilter: "Show shadows" -- Preview shadows',
 		'caps+:': ':',
 		'"': 'togglePreviewFilter: "Black and white" -- Preview black and white',
 		"'": 'togglePreviewFilter: "Edge detect" -- Show edges',

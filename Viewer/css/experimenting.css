@@ -159,6 +159,12 @@ body {
 	/* XXX this does not work in chrome + local file... */
 	/*filter: url(filters.svg#EdgeDetect);*/
 }
+.image-shadows-and-highlights {
+	filter: url(#ShadowsAndHilights);
+}
+.image-gamma-shadows {
+	filter: url(#GammaShadows);
+}
 
 
 

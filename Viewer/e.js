@@ -4,40 +4,24 @@
 * ImageGrid.Viewer Electron entry point...
 *
 *
+* NOTE: this is kept as simple as possible to speed up initial loading.
+*
 **********************************************************************/
 
 //require('v8-compile-cache')
 
 var electron = require('electron')
-var app = electron.app
-var BrowserWindow = electron.BrowserWindow
 
 var path = require('path')
 var url = require('url')
-//var fs = require('fs')
-
-var argv = require('ig-argv')
 
 var VERSION = require('./version').version
 
 
 //---------------------------------------------------------------------
 
-//require('./cfg/requirejs')
-
-//var _require = require
-//require = requirejs
-
-
-/*********************************************************************/
-
-// XXX process args...
-// 		...might be a good idea to process args in two stages:
-// 		1) process pre-start args:
-// 			splash screen opts
-// 			debug stuff (dev tools etc)
-// 			start mode (ui vs cli ...)
-// 		2) process the rest of the args within the started context...
+var app = electron.app
+var BrowserWindow = electron.BrowserWindow
 
 
 
@@ -45,13 +29,10 @@ var VERSION = require('./version').version
 
 var win
 
-// XXX move this to splash.js (or an electron-specific variant of it) 
-// 		and use both here and in app.js...
-// 		...another way would be to make this module importable...
+// XXX might be nice to show load progress on splash...
 function createSplash(){
 	// NOTE: this is done here as this does not depend on code loading, 
 	// 		thus showing the splash significantly faster...
-	// XXX also show load progress here...
 	var splash = global.splash = new BrowserWindow({
 		// let the window to get ready before we show it to the user...
 		show: false,
@@ -73,8 +54,6 @@ function createSplash(){
 		autoHideMenuBar: true,
 	})
 	splash.loadURL(url.format({
-		// XXX unify this with index.html
-		//pathname: path.join(__dirname, 'index.html'),
 		pathname: path.join(__dirname, 'splash.html'),
 		protocol: 'file:',
 		slashes: true
@@ -93,9 +72,10 @@ function createSplash(){
 				disabled ?
 					splash.destroy()
 					: splash.show() }) })
-	return splash
-}
+	return splash }
 
+// XXX get initial settings from config...
+// XXX unify index.html and electron.html
 function createWindow(){
 	// Create the browser window.
 	win = new BrowserWindow({
@@ -105,13 +85,10 @@ function createWindow(){
 			enableRemoteModule: true,
 		},
 
-		// let the window to get ready before we show it to the user...
+		// let the window get ready before we show it to the user...
 		show: false,
 
-		// XXX get from config... (???)
-		// XXX for some reason this shows as black...
 		backgroundColor: '#333333',
-
 
 		width: 800, 
 		height: 600,
@@ -122,38 +99,23 @@ function createWindow(){
 	})
 	// disable default menu...
 	win.setMenu(null)
-
-	//win.openDevTools()
-
-
-	// and load the index.html of the app.
 	win.loadURL(url.format({
-		// XXX unify this with index.html
-		//pathname: path.join(__dirname, 'index.html'),
-		pathname: path.join(__dirname, 'electron.html'),
+		pathname: path.join(__dirname, 'index.html'),
+		//pathname: path.join(__dirname, 'electron.html'),
 		protocol: 'file:',
 		slashes: true
 	}))
+	// XXX HACK: pass this in a formal way... (???)
+	win.once('ready-to-show', 
+		function(){ global.readyToShow = true })
+	win.on('closed', 
+		function(){ win = null })
 
-	// XXX HACK: pass this in a formal way...
-	win.once('ready-to-show', function(){
-		global.readyToShow = true
-	})
-
-	// Open the DevTools.
+	// devtools for different windows...
 	//win.webContents.openDevTools()
+	//win.openDevTools()
 
-	// Emitted when the window is closed.
-	win.on('closed', () => {
-		// Dereference the window object, usually you would store windows
-		// in an array if your app supports multi windows, this is the time
-		// when you should delete the corresponding element.
-		win = null
-	})
-
-
-	return win
-}
+	return win }
 
 
 
@@ -179,6 +141,7 @@ app.on('window-all-closed', function(){
 app.on('activate', function(){
 	win === null
 		&& createWindow() })
+
 
 
 

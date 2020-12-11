@@ -28,13 +28,9 @@ require('features/ui')
 // XXX
 require('features/ui-blank-render')
 require('features/ui-ribbons')
-//require('features/ui-preact-render')
-//require('features/ui-virtual-dom')
-//require('features/ui-react')
 // XXX
 require('features/ui-partial-ribbons-precache')
 require('features/ui-partial-ribbons-2')
-//require('features/ui-partial-ribbons-vdom')
 require('features/ui-single-image')
 require('features/ui-chrome')
 require('features/ui-progress')

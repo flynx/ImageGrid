@@ -26,7 +26,6 @@ var data = require('imagegrid/data')
 var images = require('imagegrid/images')
 
 var util = require('lib/util')
-var tasks = require('lib/tasks')
 
 
 
@@ -735,8 +734,6 @@ function(base, pattern, previews, index_dir, absolute_path){
 var copyPreviews =
 module.copyPreviews = 
 function(){
-	var q = tasks.Queue.clone()
-
 	// XXX
 }
 

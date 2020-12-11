@@ -25,26 +25,22 @@ global.requirejs =
 
 
 
-//---------------------------------------------------------------------
+/*********************************************************************/
 
-// XXX need to automate this...
 var core = require('features/core')
-var base = require('features/base')
+// XXX for some reason if this is not loaded here things break in CLI...
+// 		...setting priority does not help...
 var cli = require('features/cli')
-
 var meta = require('features/meta')
 
 
 
-/*********************************************************************/
+//---------------------------------------------------------------------
 
 // NOTE: this is here to simplify importing...
 var ImageGridFeatures =
 module.ImageGridFeatures = 
 	core.ImageGridFeatures
-
-
-//---------------------------------------------------------------------
 
 // setup actions and start...
 ImageGridFeatures
@@ -53,6 +49,7 @@ ImageGridFeatures
 		'imagegrid-commandline',
 	])
 	.start()
+
 
 
 
