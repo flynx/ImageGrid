@@ -11,7 +11,6 @@
 //require('v8-compile-cache')
 
 var electron = require('electron')
-
 var path = require('path')
 var url = require('url')
 
@@ -106,9 +105,8 @@ function createWindow(){
 	WIN.setMenu(null)
 	WIN.loadURL(url.format({
 		pathname: path.join(__dirname, 'index.html'),
-		//pathname: path.join(__dirname, 'electron.html'),
 		protocol: 'file:',
-		slashes: true
+		slashes: true,
 	}))
 	// XXX HACK: pass this in a formal way... (???)
 	WIN.once('ready-to-show', 
@@ -164,7 +162,6 @@ var argv1 = process.argv[1]
 ;(process.argv.length > 2
 			|| (argv1 && argv1 != require.main.filename)) ?
 	// got some arguments -- trigger ig.js...
-	// XXX BUG: when running in a built app this will break with a require error...
 	(require('./ig') 
 		&& global.START_GUI 
 		&& start())

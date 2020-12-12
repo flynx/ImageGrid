@@ -474,6 +474,7 @@ module.CLI = core.ImageGridFeatures.Feature({
 
 				argv.Parser({
 						context: this,
+						script: nodeRequire.main.filename,
 
 						// XXX argv.js is not picking these up because 
 						// 		of the require(..) mixup...

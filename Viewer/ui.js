@@ -5,38 +5,14 @@
 **********************************************************************/
 // Pre-setup...
 
-// Add node_modules path outside of the packed nwjs code...
+// nw.js: add node_modules path outside of the packed nwjs code...
 //
 // This keeps the large node module set outside the zip thus speeding
 // up the loading process significantly...
 if((typeof(process) != 'undefined' ? process : {}).__nwjs){
 	var path = require('path')
 	require('app-module-path')
-		.addPath(path.dirname(process.execPath) + '/node_modules/')
-}
-
-
-// Setup requirejs if we are in node/nw...
-//
-// NOTE: no need to do this in browser...
-if(typeof(process) != 'undefined'){
-	//require('v8-compile-cache')
-
-	requirejs = 
-	global.requirejs = 
-	window.requirejs = 
-		// XXX for some reason we can't just use the browser requirejs 
-		// 		even if we pass it nodeRequire, it still can't pass the
-		// 		node stuff to node...
-		require('requirejs')
-
-	nodeRequire =
-	global.nodeRequire = 
-	window.nodeRequire =
-		require
-}
-
-
+		.addPath(path.dirname(process.execPath) + '/node_modules/') }
 
 
 

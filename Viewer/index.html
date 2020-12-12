@@ -79,7 +79,7 @@ if(window.require){
 // NOTE: we need to load the electron way first because the other way 
 //		around requirejs messes things up...
 if(typeof(process) != 'undefined'){
-	require('./cfg/requirejs')
+	require('./cfg/requirejs')(require)
 	requirejs('ui') }
 </script>
 <script src="node_modules/requirejs/require.js"></script>

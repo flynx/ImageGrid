@@ -12,16 +12,9 @@ require('v8-compile-cache')
 // NOTE: this fixes several issues with lib/util conflicting with stuff...
 require('repl')
 
-require('./cfg/requirejs')
-
-nodeRequire =
-global.nodeRequire = 
-	require
-
-require = 
-requirejs = 
-global.requirejs = 
-	require('requirejs')
+// setup module loaders...
+require = require('./cfg/requirejs')(require).requirejs
+require.main = {filename: (nodeRequire.main || {}).filename}
 
 
 

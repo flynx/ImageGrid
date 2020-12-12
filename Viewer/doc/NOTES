@@ -40,18 +40,18 @@ revised.
 Entry points
 ============
 
-The current state of things is far from optimal -- we have "three" 
-"different" entry points:
+We have two entry points here for a reason, e.js is tuned to be as 
+light/fast as possible for the general case, i.e. when run without 
+arguments combining it with ig.js would make things much-much slower...
 
 	- index.html			- Browser
-	- e.js				- electron
-		-> electron.html	- electron-specific html
+	- electron e.js				- electron
+		<-> ig.js		- parse args if given and optionally 
+					  return control back to e.js...
 	- ig.js				- node
 		-> e.js			- node can spawn an electron app
 
 
-The goal is to simplify this by merging the electron/node entry points 
-and merging the html files into one.
 
 
 
