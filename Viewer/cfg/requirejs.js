@@ -5,18 +5,16 @@
 **********************************************************************/
 
 var requirejs_cfg = {
-	baseUrl: 
-		// electron...
-		// NOTE: on electron v7+ the default seems to be '../', a bug?
-		typeof(process) != 'undefined' && 'electron' in process.versions ?
-			document.baseURI
-				.replace(/^[a-zA-Z]+:\/\/\/?/, '')
-				.split(/[#&]/)[0].split(/[\\\/]/g).slice(0, -1).join('/')
-		// node...
-		: typeof(process) != 'undefined' ?
-			process.argv[1].split(/[\\\/]/g).slice(0, -1).join('/')
-		// everything else...
-		: './',
+	// NOTE: this is really odd: running electron as a packed binary breaks
+	// 		requirejs' paths...
+	baseUrl: typeof(process) != 'undefined' 
+				&& process.versions.electron ?
+			(require.main ?
+				require.main.filename.split(/[\\\/]/g).slice(0, -1).join('/')
+				: document.baseURI
+					.replace(/^[a-zA-Z]+:\/\/\/?/, '')
+					.split(/[#&]/)[0].split(/[\\\/]/g).slice(0, -1).join('/'))
+		:  '.',
 
 	// XXX this does not work on direct filesystem access...
 	//urlArgs: 'bust='+Date.now(),
@@ -62,18 +60,17 @@ var requirejs_cfg = {
 
 
 if(typeof(require) != 'undefined'){
-	requirejs_cfg.nodeRequire = require
-	//requirejs_cfg.baseUrl = __dirname
-}
+	requirejs_cfg.nodeRequire = require }
 
 
 // XXX revise...
 if(typeof(require) != 'undefined' && typeof(global) != 'undefined'){
-	global.requirejs = global.requirejs || require('requirejs')
-}
+	global.nodeRequire = require
+	global.requirejs = global.requirejs || require('requirejs') }
 
 
 requirejs.config(requirejs_cfg)
+
 
 
 

@@ -22,7 +22,7 @@
     "async-json": "0.0.2",
     "cli-progress": "^3.8.2",
     "colors": "^1.4.0",
-    "electron": "^9.3.5",
+    "electron": "^9.4.0",
     "exif-reader": "^1.0.3",
     "exiftool": "^0.0.3",
     "fs-extra": "^7.0.1",
@@ -31,7 +31,7 @@
     "glob": "^7.1.6",
     "guarantee-events": "^1.0.0",
     "ig-actions": "^3.24.22",
-    "ig-argv": "^2.16.0",
+    "ig-argv": "^2.16.1",
     "ig-features": "^3.4.2",
     "ig-object": "^5.4.12",
     "ig-types": "^5.0.40",
@@ -55,7 +55,7 @@
   "devDependencies": {
     "asar": "^3.0.1",
     "electron-rebuild": "^1.11.0",
-    "less": "^3.12.2"
+    "less": "^3.13.0"
   },
   "bin": {
     "ig": "ig.js"

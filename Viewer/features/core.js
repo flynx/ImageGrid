@@ -142,7 +142,9 @@ if(typeof(process) != 'undefined'){
 	runtime.node = true
 
 	// Electron...
-	if(process.versions['electron'] != null){
+	if(process.versions['electron'] != null 
+			// node mode...
+			&& typeof(document) != 'undefined'){
 		runtime.electron = true
 		runtime.desktop = true
 

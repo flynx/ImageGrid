@@ -18,6 +18,7 @@ var url = require('url')
 var VERSION = require('./version').version
 
 
+
 //---------------------------------------------------------------------
 
 var app = electron.app
@@ -27,8 +28,9 @@ var BrowserWindow = electron.BrowserWindow
 
 /*********************************************************************/
 
-var win
 
+// Splash window...
+//
 // XXX might be nice to show load progress on splash...
 function createSplash(){
 	// NOTE: this is done here as this does not depend on code loading, 
@@ -74,11 +76,14 @@ function createSplash(){
 					: splash.show() }) })
 	return splash }
 
+
+// Create main window...
+//
 // XXX get initial settings from config...
-// XXX unify index.html and electron.html
+var WIN
 function createWindow(){
 	// Create the browser window.
-	win = new BrowserWindow({
+	WIN = new BrowserWindow({
 		webPreferences: {
 			nodeIntegration: true,
 			contextIsolation: false,
@@ -98,35 +103,46 @@ function createWindow(){
 		//autoHideMenuBar: true,
 	})
 	// disable default menu...
-	win.setMenu(null)
-	win.loadURL(url.format({
+	WIN.setMenu(null)
+	WIN.loadURL(url.format({
 		pathname: path.join(__dirname, 'index.html'),
 		//pathname: path.join(__dirname, 'electron.html'),
 		protocol: 'file:',
 		slashes: true
 	}))
 	// XXX HACK: pass this in a formal way... (???)
-	win.once('ready-to-show', 
+	WIN.once('ready-to-show', 
 		function(){ global.readyToShow = true })
-	win.on('closed', 
-		function(){ win = null })
+	WIN.on('closed', 
+		function(){ WIN = null })
 
 	// devtools for different windows...
-	//win.webContents.openDevTools()
-	//win.openDevTools()
+	//WIN.webContents.openDevTools()
+	//WIN.openDevTools()
 
-	return win }
+	return WIN }
+
+
+// Start the app...
+//
+function start(){
+	var _start = function(){
+		createSplash()
+		createWindow() }
+	// NOTE: by this time (arg parsing and stuff) the app may already be ready...
+	app.isReady() ?
+		_start()
+		: app.on('ready', _start) }
 
 
 
 //---------------------------------------------------------------------
 
-// This will be called when Electron has finished initialization and is 
-// ready to create browser windows.
-// Some APIs can only be used after this event occurs.
-app.on('ready', function(){
-	createSplash()
-	createWindow() })
+// On macOS it's common to re-create a window in the app when the
+// dock icon is clicked and there are no other windows open.
+app.on('activate', function(){
+	WIN === null
+		&& createWindow() }) 
 
 // Quit when all windows are closed.
 // On macOS it is common for applications and their menu bar
@@ -135,12 +151,25 @@ app.on('window-all-closed', function(){
 	process.platform !== 'darwin'
 		&& app.quit() })
 
-// On macOS it's common to re-create a window in the app when the
-// dock icon is clicked and there are no other windows open.
-// XXX needs testing...
-app.on('activate', function(){
-	win === null
-		&& createWindow() })
+
+
+//---------------------------------------------------------------------
+// start things up...
+
+global.START_GUI = false
+
+var argv1 = process.argv[1] 
+	&& path.resolve(process.cwd(), process.argv[1])
+
+;(process.argv.length > 2
+			|| (argv1 && argv1 != require.main.filename)) ?
+	// got some arguments -- trigger ig.js...
+	// XXX BUG: when running in a built app this will break with a require error...
+	(require('./ig') 
+		&& global.START_GUI 
+		&& start())
+	// start the viewer...
+	: start()
 
 
 

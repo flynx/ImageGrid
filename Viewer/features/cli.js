@@ -211,25 +211,28 @@ var CLIActions = actions.Actions({
 				})
 				.on('exit', function(){
 					that.stop() }) }],
-	// XXX this is the wrong strategy...
 	// XXX move this to a feature that requires electron...
 	// 		...and move electron to an optional dependency...
+	// XXX should we require electron or npx electron???
 	startGUI: ['- System/Start viewer GUI',
+		core.doc`
+
+		NOTE: this will not wait for the viewer to exit.`,
 		{cli: '@gui'},
 		function(){
-			requirejs('child_process')
-				.spawn(requirejs('electron'), [
-						pathlib.join(
+			// already in electron...
+			if(process.versions.electron){
+				// XXX this feels hackish... 
+				global.START_GUI = true
+
+			// launch gui...
+			} else {
+				requirejs('child_process')
+					.spawn(requirejs('electron'),
+						[ pathlib.join(
 							pathlib.dirname(nodeRequire.main.filename), 
-							'e.js') ])
-				// XXX need to stop the process iff nothing 
-				// 		else is running, like repl... 
-				// XXX feels hackish...
-				.on('exit', function(){
-					(!global.ig
-							|| global.ig.isStopped())
-						&& process.exit() })
-			this.__keep_running = true }],
+							'e.js') ],
+						{ detached: true, }) } }],
 	/*/ XXX
 	startWorker: ['- System/Start as worker',
 		{cli: '-worker'},
@@ -537,7 +540,6 @@ module.CLI = core.ImageGridFeatures.Feature({
 					.then(function(){
 						// XXX
 					})()
-
 
 				// XXX not all promises in the system resolve strictly 
 				// 		after all the work is done, some resolve before that
