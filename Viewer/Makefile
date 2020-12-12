@@ -305,7 +305,9 @@ JS_FILES := $(ROOT_JS_FILES) \
 	$(wildcard $(EXT_LIB_DIR)/*.js)
 DOC_FILES := doc/MAKE
 
-INCLUDE_NODE_MODULES = ig-object ig-actions ig-features
+INCLUDE_NODE_MODULES = \
+	ig-object ig-actions ig-features ig-types ig-argv object-run \
+	requirejs requirejs-plugins
 
 INCLUDE_NW_NODE_MODULES = app-module-path
 
