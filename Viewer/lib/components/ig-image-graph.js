@@ -22,8 +22,7 @@ module.Filters = {
 		var c = document.createElement('canvas')
 		c.width = w
 		c.height = h
-		return c
-	},
+		return c },
 
 	// as input takes an HTML Image object...
 	getPixels: function(img, w, h){
@@ -36,16 +35,13 @@ module.Filters = {
 			context.fillStyle = "black"
 			context.fill()
 		} else {
-			context.drawImage(img, 0, 0, w, h)
-		}
-		return context.getImageData(0, 0, c.width, c.height)
-	},
+			context.drawImage(img, 0, 0, w, h) }
+		return context.getImageData(0, 0, c.width, c.height) },
 	setPixels: function(c, data, w, h){
 		w = c.width = w || data.width
 		h = c.height = h || data.height
 		var context = c.getContext('2d')
-		context.putImageData(data, 0, 0)
-	},
+		context.putImageData(data, 0, 0) },
 
 	// get image pixels normalized to a square of size s, rotated and flipped...
 	//
@@ -77,19 +73,15 @@ module.Filters = {
 		if(img){
 			context.setTransform(h*1, 0, 0, v*1, s/2, s/2)
 			context.rotate(rotate * Math.PI/180)
-			context.drawImage(img, -s/2, -s/2, s, s)
-		}
+			context.drawImage(img, -s/2, -s/2, s, s) }
 
-		return context.getImageData(0, 0, s, s)
-	}, 
+		return context.getImageData(0, 0, s, s) }, 
 
 	filterImage: function(filter, image, var_args){
 		var args = [this.getPixels(image)]
 		for(var i=2; i<arguments.length; i++){
-			args.push(arguments[i])
-		}
-		return filter.apply(null, args)
-	},
+			args.push(arguments[i]) }
+		return filter.apply(null, args) },
 
 	grayscale: function(pixels, args){
 		var d = pixels.data
@@ -100,10 +92,8 @@ module.Filters = {
 			// CIE luminance for the RGB
 			// The human eye is bad at seeing red and blue, so we de-emphasize them.
 			var v = 0.2126*r + 0.7152*g + 0.0722*b
-			d[i] = d[i+1] = d[i+2] = v
-		}
-		return pixels
-	},
+			d[i] = d[i+1] = d[i+2] = v }
+		return pixels },
 	// XXX need to resize this...
 	histogram: function(pixels, mode, color){
 		color = color || 'fill'
@@ -138,8 +128,7 @@ module.Filters = {
 				if(mode == 'color' || mode == 'G'){
 					count[g*4+1] = (count[g*4+1] || 0) + 1 }
 				if(mode == 'color' || mode == 'B'){
-					count[b*4+2] = (count[b*4+2] || 0) + 1 } }
-		}
+					count[b*4+2] = (count[b*4+2] || 0) + 1 } } }
 
 		var m = size / Math.max(...count.filter(function(){ return true }))
 
@@ -163,8 +152,7 @@ module.Filters = {
 						&& (od[j-1] = od[j-2] = 180) 
 					break } } })
 
-		return out
-	},
+		return out },
 	waveform: function(pixels, mode, color){
 		mode = mode || 'luminance'
 		color = color || 'normalized'
@@ -221,8 +209,7 @@ module.Filters = {
 					y = 2
 					j = pos(i, r)
 					c = count[j] = (count[j] || 0) + m
-					od[j] = c * gain
-				}
+					od[j] = c * gain }
 
 				if(mode == 'color' || mode == 'G'){
 					f = 0.7152
@@ -230,8 +217,7 @@ module.Filters = {
 					y = 1
 					j = pos(i, g) + 1
 					c = count[j] = (count[j] || 0) + m
-					od[j] = c * gain
-				}
+					od[j] = c * gain }
 
 				if(mode == 'color' || mode == 'B'){
 					f = 0.0722
@@ -239,8 +225,7 @@ module.Filters = {
 					y = -1
 					j = pos(i, b) + 2
 					c = count[j] = (count[j] || 0) + m
-					od[j] = c * gain
-				}
+					od[j] = c * gain }
 
 				// normalize...
 				mode != 'color'
@@ -248,12 +233,8 @@ module.Filters = {
 							(od[j+x] = od[j+y] = c * gain)
 						: color == 'normalized' ?
 							(od[j+x] = od[j+y] = c * gain/2 * (1-f))
-						: null)
-			}
-		}
-
-		return out
-	},
+						: null) } }
+		return out },
 }
 
 
@@ -269,8 +250,7 @@ module.waveform =
 function(img, canvas, mode, color, rotate, flip){
 	var d = Filters.getNormalizedPixels(img, WAVEFORM_SIZE, rotate, flip)
 	var w = Filters.waveform(d, mode, color)
-	Filters.setPixels(canvas, w) 
-}
+	Filters.setPixels(canvas, w) }
 
 
 var HISTOGRAM_SIZE =
@@ -479,8 +459,7 @@ object.Constructor('igImageGraph', HTMLElement, {
 							'histogram'
 							: 'waveform'
 						var b = button.parentElement.querySelector('#orientation-button') || {}
-						b.disabled = that.graph != 'waveform'
-					}
+						b.disabled = that.graph != 'waveform' }
 					return button }(),
 				// orientation...
 				//
@@ -527,8 +506,7 @@ object.Constructor('igImageGraph', HTMLElement, {
 						that.__rotated = o == null ?
 							c
 							: null
-						_update()
-					}
+						_update() }
 					return button }(),
 				// modes...
 				// ...generate mode toggles...
@@ -570,8 +548,7 @@ object.Constructor('igImageGraph', HTMLElement, {
 			// current button state...
 			var button = controls.querySelector('button.'+this.mode) 
 			button 
-				&& button.classList.add('current')
-		}
+				&& button.classList.add('current') }
 
 		// XXX configurable...
 		var type = this.graph
@@ -592,8 +569,7 @@ object.Constructor('igImageGraph', HTMLElement, {
 				this.flipped)
 
 		} else if(this.src){
-			this.src = this.src
-		}
+			this.src = this.src }
 
 		return this },
 })

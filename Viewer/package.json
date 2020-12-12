@@ -35,18 +35,19 @@
     "ig-features": "^3.4.2",
     "ig-object": "^5.4.12",
     "ig-types": "^5.0.40",
-    "moment": "^2.29.1",
+    "json5": "^2.1.3",
     "object-run": "^1.0.1",
+    "pouchdb": "^7.2.2",
     "requirejs": "^2.3.6",
     "requirejs-plugins": "^1.0.2",
     "sharp": "^0.25.4",
-    "strip-json-comments": "^2.0.1",
     "v8-compile-cache": "^2.2.0",
     "wildglob": "^0.1.1"
   },
   "dependencies-disabled": {
     "openseadragon": "^2.4.1",
-    "flickrapi": "^0.3.28"
+    "flickrapi": "^0.3.28",
+    "moment": "^2.29.1"
   },
   "optionalDependencies": {
     "pica": "^3.0.6"

@@ -1,0 +1,111 @@
+
+
+Future tasks
+============
+
+- Remove/merge legacy modules
+- move generic stuff to separate libs (npm)
+	- lib/keyboard.js
+	- lib/toggler.js
+
+
+
+npm modules
+===========
+
+All contexts (internal):
+- object-run		- adds Object.prototype.run(..) to run function in
+			  in the context of an object.
+- ig-object		- js object model wrapper
+			  a closer to JS alternative to "classes"
+- ig-actions		- actions object model extension
+			  provides a different way to cooperatively extend
+			  methods
+- ig-types		- JS type extensions and utilities
+- ig-argv		- CLI argv parser
+- ig-features		- organizes and manages sets of actions and data
+- guarantee-events	- simple event cache
+- generic-walk		- legacy???
+
+
+All contexts (external):
+- requirejs
+- requirejs-plugins	- import text/json
+
+
+Electron / node app:
+- electron		- GUI app wrapper
+- sharp			- image processing (previews / basic fast metadata)
+- exif-reader		- metadata parser
+- exiftool		- metadata reader (full metadata reader)
+- app-module-path	- add to node's require search path
+- v8-compile-cache	- v8 require optimization
+- cli-progress		- CLI progress bar
+- colors		- CLI text colors
+- fs-extra		- extend node's fs module (revise)
+- fs-walk
+- glob			- glob implementation
+- wildglob		- glob implementation (is this used?)
+
+- pouchdb		- standalone in-browser CouchDB (not used yet)
+- async-json
+- json5			- extended json (comments, ...) for config read
+
+
+
+Other / static
+==============
+
+Internal (lib):
+- keyboard.js		- keyboard handler library
+- jli.js 		- general dom utilities (index.html/global)
+- util.js		- misc utilities 
+- util-dom.js		- dom/jquery utils, mostly editor related 
+- dialogs.js		- 
+- panels.js
+- scroller.js
+- toggler.js
+- transform.js
+- editor.js		- image "editor" (legacy)
+
+- _module.js		- js module template
+- _template.js		- bare js template
+
+components/		- web components
+	canvas-waveform.html
+	ig-image-graph-worker.js
+	ig-image-graph.js
+
+widget/			- widgets
+	browse-walk.js
+	browse.html
+	browse.js
+	browse2.html
+	browse2.js
+	drawer.html
+	drawer.js
+	overlay.html
+	overlay.js
+	widget.js
+
+
+External (ext-lib):
+- sha1.js		- sha1 implementation, used for GID generation
+			  (imagegrid/data.js)
+- jquery.js
+- jquery-ui.js
+- jquery.ui.touch-punch.min.js
+- hammer.min.js		- touch/mouse guestures
+- jquery.hammer.js
+- velocity.min.js	- animation engine (used??)
+
+- pouchdb.min.js	- standalone in-browser CouchDB (not used yet)
+
+- less.js		- legacy??
+- less-1.3.3.min.js	- legacy??
+- jstorage.js		- legacy?
+- virtual-dom.js	- legacy???
+
+
+
+

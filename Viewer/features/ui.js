@@ -2220,15 +2220,12 @@ module.PreviewFilters = core.ImageGridFeatures.Feature({
 	config: {
 		'preview-filters': {
 			// exposure aids...
-			//'Show shadows': 'image-show-shadows',
-			//'Show highlights': 'image-show-highlights',
 			'Show clipping': 'image-shadows-and-highlights',
 			'Show shadows': 'image-gamma-shadows',
 
 			// sharpness aids...
 			'Black and white': 'image-bw',
 			'Edge detect': 'image-edge-detect',
-
 
 			'No filters': 'none',
 		},

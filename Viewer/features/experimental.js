@@ -57,13 +57,9 @@ var ExperimentActions = actions.Actions({
 							var opts = {}
 							if(that.changes[key] instanceof Array){
 								opts.attrs = {
-									count: that.changes[key].length
-								}
-							}
-
+									count: that.changes[key].length } }
 							// XXX show human-readable info... (???)
-							make(key, opts)
-						})
+							make(key, opts) })
 
 					// save comment...
 					if(that.getSaveComment){
@@ -83,15 +79,12 @@ var ExperimentActions = actions.Actions({
 									$(this)
 										.find('.text')
 										.last()
-										.text())
-							})
+										.text()) })
 							.on('edit-abort', function(){
 								$(this)
 									.find('.text')
 									.last()
-									.text(comment)
-							})
-					}
+									.text(comment) }) }
 
 					make('---')
 					make('Save', {
@@ -99,24 +92,17 @@ var ExperimentActions = actions.Actions({
 							that.setSaveComment 
 								&& that.setSaveComment(comment)
 							that.saveIndexHere 
-								&& that.saveIndexHere()
-						},
+								&& that.saveIndexHere() },
 						close: function(){
-							that.off('markChanged', 'changes-dialog-updater')
-						}
+							that.off('markChanged', 'changes-dialog-updater') },
 					})
 
 					if(!handlers_setup){
 						// XXX need to clean this up in a better way...
 						// XXX this should also track .changes...
 						that.on('markChanged', 'changes-dialog-updater', function(){
-							make.dialog.update()
-						})
-						handlers_setup = true
-					}
-				}
-			})
-		})],
+							make.dialog.update() })
+						handlers_setup = true } } }) })],
 
 	unsavedChanges: ['- Experimental/',
 		function(){

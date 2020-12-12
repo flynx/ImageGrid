@@ -19,8 +19,7 @@ function(elem){
 	range.selectNodeContents(elem)
 	var sel = window.getSelection()
 	sel.removeAllRanges()
-	sel.addRange(range)
-}
+	sel.addRange(range) }
 
 
 // XXX make this global...
@@ -29,14 +28,12 @@ module.getCaretOffset =
 function(elem){
 	var s = window.getSelection()
 	if(s.rangeCount == 0){
-		return -1
-	}
+		return -1 }
 	var r = s.getRangeAt(0)
 	var pre = r.cloneRange()
 	pre.selectNodeContents(elem)
 	pre.setEnd(r.endContainer, r.endOffset)
-	return pre.toString().length || 0
-}
+	return pre.toString().length || 0 }
 
 
 var selectionCollapsed =
@@ -44,10 +41,8 @@ module.selectionCollapsed =
 function(elem){
 		var s = window.getSelection()
 		if(s.rangeCount == 0){
-			return false
-		}
-		return s.getRangeAt(0).cloneRange().collapsed
-}
+			return false }
+		return s.getRangeAt(0).cloneRange().collapsed }
 
 
 
@@ -65,12 +60,10 @@ if(typeof(jQuery) != typeof(undefined)){
 				px = evt.clientX
 				px = evt.clientY
 
-				s = elem.rscale()
-			})
+				s = elem.rscale() })
 			.on('mousemove touchmove', function(evt){
 				if(!dragging){
-					return
-				}
+					return }
 
 				var x = evt.clientX 
 				var dx = px - x
@@ -85,21 +78,17 @@ if(typeof(jQuery) != typeof(undefined)){
 					.velocity({
 						translateX: '-=' + (dx / s),
 						translateY: '-=' + (dy / s),
-					}, 0)
-			})
+					}, 0) })
 			.on('mouseup touchend', function(evt){
 				dragging = false
-				elem.velocity('stop')
-			})
-	}
+				elem.velocity('stop') }) }
 
 
 	jQuery.fn.selectText = function(mode){
 		var range = document.createRange()
 
 		this.each(function(){
-			range.selectNodeContents(this)
-		})
+			range.selectNodeContents(this) })
 
 		var sel = window.getSelection()
 		sel.removeAllRanges()
@@ -107,11 +96,17 @@ if(typeof(jQuery) != typeof(undefined)){
 		mode === null
 			|| sel.addRange(range)
 
-		return this
-	}
-	jQuery.fn.deselectText = function(){ this.selectText(null) }
-	jQuery.fn.caretOffset = function(){ return getCaretOffset(this) }
-	jQuery.fn.selectionCollapsed = function(){ return selectionCollapsed(this) }
+		return this }
+	jQuery.fn.deselectText = 
+		function(){ 
+			this.selectText(null) 
+			return this }
+	jQuery.fn.caretOffset = 
+		function(){ 
+			return getCaretOffset(this) }
+	jQuery.fn.selectionCollapsed = 
+		function(){ 
+			return selectionCollapsed(this) }
 
 
 	var keyboard = require('lib/keyboard')
@@ -207,12 +202,10 @@ if(typeof(jQuery) != typeof(undefined)){
 
 			var events = this.data('editable-field-events')
 			for(var e in events){
-				this.off(e, events[e])
-			}
+				this.off(e, events[e]) }
 			this.removeData('editable-field-events')
 
-			return this
-		}
+			return this }
 
 		options = Object.assign({
 			// defaults...
@@ -240,8 +233,7 @@ if(typeof(jQuery) != typeof(undefined)){
 		var resetOriginal = function(){
 			//that.text(original_text)
 			that[0].innerHTML = ''
-			that[0].appendChild(original_dom.cloneNode(true))
-		}
+			that[0].appendChild(original_dom.cloneNode(true)) }
 
 		this.prop('contenteditable', true)
 
@@ -264,8 +256,7 @@ if(typeof(jQuery) != typeof(undefined)){
 				.keydown(events.keydown = function(in_evt){ 
 					var evt = window.event || in_evt
 					if(!that.prop('contenteditable')){
-						return
-					}
+						return }
 
 					evt.stopPropagation() 
 
@@ -326,19 +317,16 @@ if(typeof(jQuery) != typeof(undefined)){
 					} else if(options.propagate_unhandled_keys){
 						// NOTE: jQuery can't reuse browser events, this 
 						// 		we need to pass a jq event/proxy here...
-						$(this).parent().trigger(in_evt || evt)
-					}
+						$(this).parent().trigger(in_evt || evt) }
 				})
 				.blur(events.blur = function(){
-					window.getSelection().removeAllRanges()
-				})
+					window.getSelection().removeAllRanges() })
 				.on('focus click', events['focus click'] = function(evt){
 					evt.stopPropagation()
 					options.clear_on_edit 
 						&& $(this)
 							.text('')
-							.selectText()
-				})
+							.selectText() })
 				// user triggerable events...
 				.on('edit-abort', events['edit-abort'] = function(evt, text){
 					that.trigger('edit-aborting', text)
@@ -357,8 +345,7 @@ if(typeof(jQuery) != typeof(undefined)){
 						&& that.parents('[tabindex]').first().focus()
 
 					options.reset_on_done
-						&& that.makeEditable(false)
-				})
+						&& that.makeEditable(false) })
 				.on('edit-commit', events['edit-commit'] = function(evt, text){
 					that.trigger('edit-committing', text)
 
@@ -376,14 +363,11 @@ if(typeof(jQuery) != typeof(undefined)){
 						&& that.parents('[tabindex]').first().focus()
 
 					options.reset_on_done
-						&& that.makeEditable(false)
-				})
+						&& that.makeEditable(false) })
 
-			this.data('editable-field-events', events)
-		}
+			this.data('editable-field-events', events) }
 
-		return this
-	}
+		return this }
 
 
 
