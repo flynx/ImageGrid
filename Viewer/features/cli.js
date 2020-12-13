@@ -117,6 +117,7 @@ var CLIActions = actions.Actions({
 			var bar = state.bar = 
 				state.bar || container.create(0, 0, {text: text.padEnd(l)})
 
+			// XXX for some reason this does not work under electron...
 			bar.setTotal(Math.max(max, value))
 			bar.update(value)
 		}],
@@ -178,7 +179,10 @@ var CLIActions = actions.Actions({
 	// Startup commands...
 	//
 	startREPL: ['- System/Start CLI interpreter',
-		{cli: '@repl'},
+		{cli: {
+			name: '@repl',
+			interactive: true,
+		}},
 		function(){
 			var that = this
 			var repl = nodeRequire('repl')
@@ -214,6 +218,7 @@ var CLIActions = actions.Actions({
 	// XXX move this to a feature that requires electron...
 	// 		...and move electron to an optional dependency...
 	// XXX should we require electron or npx electron???
+	// XXX add --dev-tools flag...
 	startGUI: ['- System/Start viewer GUI',
 		core.doc`
 
@@ -469,12 +474,14 @@ module.CLI = core.ImageGridFeatures.Feature({
 			function(){
 				var that = this
 
+				//var pkg = require('package.json')
 				var pkg = nodeRequire('./package.json')
 				var wait_for = []
+				// XXX
+				var interactive = false
 
 				argv.Parser({
 						context: this,
-						script: nodeRequire.main.filename,
 
 						// XXX argv.js is not picking these up because 
 						// 		of the require(..) mixup...
@@ -510,6 +517,11 @@ module.CLI = core.ImageGridFeatures.Feature({
 								var name = name === true ? 
 									action 
 									: (cmd.key || cmd.name)
+
+								// skip interactive commands in non-interactive 
+								// contexts...
+								if(!interactive && cmd.interactive){
+									return res }
 
 								res[name] = cmd instanceof argv.Parser ?
 									// parser...

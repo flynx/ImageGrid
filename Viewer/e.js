@@ -23,6 +23,13 @@ var VERSION = require('./version').version
 var app = electron.app
 var BrowserWindow = electron.BrowserWindow
 
+// 
+global.ELECTRON_PACKAGED = app.isPackaged
+
+// used to let e.js know that the CLI wants to start the GUI..
+global.START_GUI = false
+
+
 
 
 /*********************************************************************/
@@ -154,14 +161,10 @@ app.on('window-all-closed', function(){
 //---------------------------------------------------------------------
 // start things up...
 
-global.START_GUI = false
-
-var argv1 = process.argv[1] 
-	&& path.resolve(process.cwd(), process.argv[1])
-
-;(process.argv.length > 2
-			|| (argv1 && argv1 != require.main.filename)) ?
-	// got some arguments -- trigger ig.js...
+;(ELECTRON_PACKAGED ? 
+		process.argv.length > 1 
+		: process.argv.length > 2) ?
+	// got some arguments -- delegate to ig.js...
 	(require('./ig') 
 		&& global.START_GUI 
 		&& start())
