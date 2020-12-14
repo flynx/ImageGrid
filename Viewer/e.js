@@ -8,6 +8,18 @@
 *
 **********************************************************************/
 
+// Global scope pollution test...
+global.__global = {...global}
+global.scopeDiff = function(cur=global, base=__global){
+	return Object.keys(cur)
+		.filter(function(k){ return base[k] !== cur[k] })
+		.reduce(function(res, k){
+			res[k] = cur[k]
+			return res }, {})}
+
+
+/*********************************************************************/
+
 //require('v8-compile-cache')
 
 var electron = require('electron')

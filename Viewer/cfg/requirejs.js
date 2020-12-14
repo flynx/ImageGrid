@@ -17,10 +17,9 @@
 * 			require('./cfg/requirejs.js')(require)
 *
 *
-**********************************************************************/
+**********************************************************/(function(){
 
 var _requirejs = typeof(requirejs) != 'undefined' && requirejs
-
 
 var setup = function(require){
 	var res = {}
@@ -130,6 +129,5 @@ typeof(process) == 'undefined' ?
 
 
 
-
 /**********************************************************************
-* vim:set ts=4 sw=4 :                                                */
+* vim:set ts=4 sw=4 :                                           */ })()

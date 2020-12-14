@@ -95,8 +95,7 @@ var BaseRibbonsClassPrototype = {
 			: null
 		return ref ? 
 			(px / ref) * 100 
-			: ref
-	},
+			: ref },
 	px2vw: function(px){ return this.px2v(px, 'vw') },
 	px2vh: function(px){ return this.px2v(px, 'vh') },
 	px2vmin: function(px){ return this.px2v(px, 'vmin') },
@@ -120,8 +119,7 @@ var BaseRibbonsClassPrototype = {
 				.attr('gid', 
 					JSON.stringify(gid)
 						// this removes the extra quots...
-						.replace(/^"(.*)"$/g, '$1'))
-	},
+						.replace(/^"(.*)"$/g, '$1')) },
 } 
 
 var BaseRibbonsPrototype = {
@@ -134,8 +132,7 @@ var BaseRibbonsPrototype = {
 	
 	__init__: function(viewer, images){
 		this.viewer = $(viewer)
-		this.images = images
-	},
+		this.images = images },
 
 	// utils...
 	px2v: BaseRibbonsClassPrototype.px2v,
@@ -154,8 +151,7 @@ var BaseRibbonsPrototype = {
 	// NOTE: this will reset locally referenced .images to .parent.images
 	set parent(parent){
 		this.__parent = parent
-		delete this.__images
-	},
+		delete this.__images },
 
 	// maintain images in .parent.images if available...
 	//
@@ -167,11 +163,8 @@ var BaseRibbonsPrototype = {
 		if(this.parent){
 			this.parent.images = images
 			delete this.__images
-
 		} else {
-			this.__images = images
-		}
-	},
+			this.__images = images } },
 
 	// Helpers...
 
@@ -193,8 +186,7 @@ var BaseRibbonsPrototype = {
 		target = target || this.viewer
 		//prevent_nested = prevent_nested || false
 		if(target.length == 0){
-			return this
-		}
+			return this }
 		var t = target[0]
 
 		// handle nesting...
@@ -214,8 +206,7 @@ var BaseRibbonsPrototype = {
 		s.oTransition
 		s.transition
 
-		return this
-	},
+		return this },
 
 	// Restore CSS transitions...
 	//
@@ -250,11 +241,9 @@ var BaseRibbonsPrototype = {
 			now = target
 			target = this.viewer
 		} else {
-			target = target || this.viewer
-		}
+			target = target || this.viewer }
 		if(target.length == 0){
-			return this
-		}
+			return this }
 		var t = target[0]
 
 		// sync...
@@ -263,8 +252,7 @@ var BaseRibbonsPrototype = {
 			var l = t.getAttribute('__prevent_transitions')
 			if(l != null && !force && l != '0'){
 				t.setAttribute('__prevent_transitions', parseInt(l)-1)
-				return this
-			}
+				return this }
 			t.removeAttribute('__prevent_transitions')
 
 			target.removeClass('no-transitions')
@@ -284,8 +272,7 @@ var BaseRibbonsPrototype = {
 				var l = t.getAttribute('__prevent_transitions')
 				if(l != null && !force && l != '0'){
 					t.setAttribute('__prevent_transitions', l-1)
-					return this
-				}
+					return this }
 				t.removeAttribute('__prevent_transitions')
 
 				target.removeClass('no-transitions')
@@ -296,11 +283,9 @@ var BaseRibbonsPrototype = {
 				s.msTransition
 				s.oTransition
 				s.transition
-			}, 0)
-		}
+			}, 0) }
 
-		return this
-	},
+		return this },
 
 	// Shorthand wrappers of the above...
 	//
@@ -309,14 +294,12 @@ var BaseRibbonsPrototype = {
 		this.preventTransitions()
 		func.apply(this, [...arguments].slice(1))
 		this.restoreTransitions(true)
-		return this
-	},
+		return this },
 	noTransitionsDeep: function(func){
 		this.preventTransitions(null, true)
 		func.apply(this, [...arguments].slice(1))
 		this.restoreTransitions(true)
-		return this
-	},
+		return this },
 
 
 	// Scale...
@@ -335,20 +318,17 @@ var BaseRibbonsPrototype = {
 	scale: function(scale){
 		// get...
 		if(arguments.length == 0){
-			return this.getRibbonSet().scale() || 1
-		}
+			return this.getRibbonSet().scale() || 1 }
 
 		// set...
 		var ribbon_set = this.getRibbonSet()  
 
 		if(ribbon_set.length == 0){
-			return this
-		}
+			return this }
 
 		ribbon_set.scale(scale)
 
-		return this
-	},
+		return this },
 
 	// Get visible image tile size...
 	//
@@ -392,8 +372,7 @@ var BaseRibbonsPrototype = {
 						top: '-200%',
 						left: '-200%',
 					})
-					.appendTo(this.viewer)
-			}
+					.appendTo(this.viewer) }
 
 			// account for image rotation...
 			// NOTE: this way we do not need to account for margins...
@@ -425,11 +404,9 @@ var BaseRibbonsPrototype = {
 
 		// remove the tmp image we created...
 		if(tmp != null){
-			tmp.remove()
-		}
+			tmp.remove() }
 
-		return res
-	},
+		return res },
 
 	getScreenWidthImages: function(scale, min){
 		scale = scale || this.scale()
@@ -437,8 +414,7 @@ var BaseRibbonsPrototype = {
 		var W = this.viewer.width()
 		var w = this.getVisibleImageSize(min ? 'min' : 'width', scale)
 
-		return W/w
-	},
+		return W/w },
 	// XXX this does not account for ribbon spacing...
 	getScreenHeightRibbons: function(scale){
 		scale = scale || this.scale()
@@ -446,8 +422,7 @@ var BaseRibbonsPrototype = {
 		var H = this.viewer.height()
 		var h = this.getVisibleImageSize('height', scale)
 
-		return H/h
-	},
+		return H/h },
 
 	// Fit image to view...
 	//
@@ -469,16 +444,14 @@ var BaseRibbonsPrototype = {
 
 		// n images will be higher than the viewer, adjust for height...
 		if(h*scale >= H){
-			scale = H/h 
-		}
+			scale = H/h }
 
 		this
 			.scale(scale)
 			//.centerRibbon(null, null, scale)
 			//.centerImage(null, null, null, scale)
 		
-		return this
-	},
+		return this },
 	// NOTE: if fit_whole_images is true (default) this will fit a discrete
 	// 		number of images in width...
 	// XXX this does not account for ribbon spacing...
@@ -493,8 +466,7 @@ var BaseRibbonsPrototype = {
 
 		// n ribbons will be wider than the viewer...
 		if(w*scale >= W){
-			scale = W/w
-		}
+			scale = W/w }
 
 		// shift the scale to the point where screen width is a whole 
 		// number of images...
@@ -502,13 +474,11 @@ var BaseRibbonsPrototype = {
 			var d = this.getScreenWidthImages(scale)
 			d = d / Math.ceil(d)
 
-			scale *= d
-		}
+			scale *= d }
 
 		this.scale(scale)
 
-		return this
-	},
+		return this },
 
 
 	// Contextual getters...
@@ -530,23 +500,19 @@ var BaseRibbonsPrototype = {
 		if(create && ribbon_set.length == 0){
 			ribbon_set = $('<div/>')
 				.addClass('ribbon-set')
-				.appendTo(this.viewer)
-		}
+				.appendTo(this.viewer) }
 
 		// ribbon locator...
 		var locator = ribbon_set.find('.ribbon-locator')
 		if(create && locator.length == 0){
 			ribbon_set
 				.append($('<div/>')
-					.addClass('ribbon-locator'))
-		}
+					.addClass('ribbon-locator')) }
 
-		return ribbon_set
-	},
+		return ribbon_set },
 	getRibbonLocator: function(create){
 		return this.getRibbonSet(create)
-			.find('.ribbon-locator')
-	},
+			.find('.ribbon-locator') },
 
 	// Get image...
 	//
@@ -585,8 +551,7 @@ var BaseRibbonsPrototype = {
 				|| target == 'prev' 
 				|| typeof(target) == typeof(123)){
 			offset = target
-			target = 'current'
-		}
+			target = 'current' }
 		
 		// get the base image...
 		// current...
@@ -596,13 +561,11 @@ var BaseRibbonsPrototype = {
 		// gid...
 		} else if(typeof(target) == typeof('str')){
 			//return this.viewer.find('.image[gid="'+JSON.stringify(target)+'"]')
-			img = this.viewer.find(IMAGE+'[gid='+JSON.stringify(target)+']')
-		}
+			img = this.viewer.find(IMAGE+'[gid='+JSON.stringify(target)+']') }
 
 		// we got a collection...
 		if(img == null){
-			return $(target).filter(IMAGE)
-		}
+			return $(target).filter(IMAGE) }
 
 		// get the offset...
 		if(offset != null && offset != 0){
@@ -615,11 +578,9 @@ var BaseRibbonsPrototype = {
 			var res = img[list](IMAGE)
 			// handle overflow...
 			res = res.eq(Math.min(offset, res.length-1))
-			img = res.length == 0 ? img : res
-		}
+			img = res.length == 0 ? img : res }
 
-		return img
-	},
+		return img },
 
 	// Get images...
 	//
@@ -662,16 +623,14 @@ var BaseRibbonsPrototype = {
 	// XXX should this be here or in a marks plugin...
 	getImageMarks: function(img, cls){
 		img = img || this.getImage()
-		gid = typeof(img) == typeof('str') ? img : null
+		var gid = typeof(img) == typeof('str') ? img : null
 		gid = gid == null ? this.elemGID(img) : gid
 
 		var marks = this.viewer.find('.mark[gid='+JSON.stringify(gid)+']')
 
 		if(cls != null){
-			return marks.filter('.'+cls)
-		}
-		return marks
-	},
+			return marks.filter('.'+cls) }
+		return marks },
 
 	// Get an image at a relative to viewer position...
 	//
@@ -726,8 +685,7 @@ var BaseRibbonsPrototype = {
 		} else if(typeof(target) != typeof(123)){
 			target = $(target)
 			if(target.length == 0){
-				return $()
-			}
+				return $() }
 			var w = target.hasClass('image') ? 
 				this.getVisibleImageSize('width', null, target) : 
 				target.outerWidth()
@@ -735,8 +693,7 @@ var BaseRibbonsPrototype = {
 			// 		position is either 'current', 'center' or a jQuery 
 			// 		object...
 			delta = delta || w / 10
-			target = target.offset().left + w/2
-		}
+			target = target.offset().left + w/2 }
 
 		var that = this
 		var res = ribbon.find(IMAGE)
@@ -753,8 +710,7 @@ var BaseRibbonsPrototype = {
 				// 		of images at large magnifications when nothing 
 				// 		other than the current image fully fit...
 				if(L > l+w || l > L+W){
-					return
-				}
+					return }
 
 				// distance between centers...
 				if(position == 'center' || position == 'current'){
@@ -766,13 +722,13 @@ var BaseRibbonsPrototype = {
 
 				// distance between right edges...
 				} else {
-					return [target - (l + w), img]
-				}
-			})
+					return [target - (l + w), img] } })
 			// drop images outside the viewer...
-			.filter(function(e){ return e != null })
+			.filter(function(e){ 
+				return e != null })
 			// sort images by distance...
-			.sort(function(a, b){ return Math.abs(a[0]) - Math.abs(b[0]) })
+			.sort(function(a, b){ 
+				return Math.abs(a[0]) - Math.abs(b[0]) })
 
 		var a = res[0] ? res[0][0] : null
 		var b = res[1] ? res[1][0] : null
@@ -789,9 +745,7 @@ var BaseRibbonsPrototype = {
 		// a single hit...
 		} else {
 			// NOTE: if no image is on screen this will get nothing...
-			return res[0] ? res[0][1] : null
-		}
-	},
+			return res[0] ? res[0][1] : null } },
 
 	// Get ribbon...
 	//
@@ -838,8 +792,7 @@ var BaseRibbonsPrototype = {
 		} else if(target == 'base'){
 			var r = this.viewer.find('.base.ribbon').first()
 			if(r.length == 0){
-				return this.viewer.find(RIBBON).first()
-			}
+				return this.viewer.find(RIBBON).first() }
 			return r
 
 		// index...
@@ -855,8 +808,7 @@ var BaseRibbonsPrototype = {
 				? this.getImage(target).parents('.ribbon').first()
 				: r
 		}
-		return $(target).filter(RIBBON)
-	},
+		return $(target).filter(RIBBON) },
 	// Like .getRibbon(..) but returns ribbon index instead of the actual 
 	// ribbon object...
 	getRibbonOrder: function(target){
@@ -918,7 +870,9 @@ var BaseRibbonsPrototype = {
 				return {
 					width: dfl_h ? '' : (this.px2vmin(h) + 'vmin'),
 					height: dfl_w ? '' : (this.px2vmin(w) + 'vmin'),
-					margin: this.px2vmin(-((w - h)/2)) +'vmin '+ this.px2vmin((w - h)/2) + 'vmin',
+					margin: 
+						this.px2vmin(-((w - h)/2)) +'vmin '
+						+ this.px2vmin((w - h)/2) + 'vmin',
 				}
 
 			} else if((o == 0 || o == 180) && image_p != viewer_p){
@@ -926,8 +880,7 @@ var BaseRibbonsPrototype = {
 					width: dfl_h ? '' : (this.px2vmin(h) + 'vmin'),
 					height: dfl_w ? '' : (this.px2vmin(w) + 'vmin'),
 					margin: '',
-				}
-			}
+				} }
 
 		// square image...
 		} else {
@@ -935,9 +888,7 @@ var BaseRibbonsPrototype = {
 				width: '',
 				height: '',
 				margin: '',
-			}
-		}
-	},
+			} } },
 	correctImageProportionsForRotation: function(images, W, H){
 		var that = this
 		W = W || this.viewer.innerWidth()
@@ -949,9 +900,7 @@ var BaseRibbonsPrototype = {
 			var data = that._calcImageProportions(this, W, H)
 
 			data 
-				&& $(this).css(data)
-		})
-	},
+				&& $(this).css(data) }) },
 
 	// center a ribbon vertically...
 	//
@@ -969,8 +918,7 @@ var BaseRibbonsPrototype = {
 		var locator = this.getRibbonLocator() 
 
 		if(locator.length == 0 || ribbon.length == 0){
-			return this
-		}
+			return this }
 
 		// NOTE: we need to use the same unit here as is used to size 
 		// 		the image blocks...
@@ -981,8 +929,7 @@ var BaseRibbonsPrototype = {
 
 		locator.transform({ x: 0, y: this.px2v(-(t + h/2), unit) + unit, z: 0 }) 
 
-		return this
-	},
+		return this },
 
 	// center an image horizontally...
 	// 
@@ -1005,8 +952,7 @@ var BaseRibbonsPrototype = {
 		var ribbon = this.getRibbon(target)
 
 		if(ribbon.length == 0){
-			return this
-		}
+			return this }
 
 		var l = target[0].offsetLeft
 		var w = target[0].offsetWidth
@@ -1017,9 +963,7 @@ var BaseRibbonsPrototype = {
 
 		ribbon.transform({x: -this.px2vmin(l + image_offset) + 'vmin', y: 0, z: 0}) 
 
-		return this
-	},
-
+		return this },
 }
 
 var BaseRibbons = 
@@ -1056,8 +1000,7 @@ var RibbonsClassPrototype = {
 			//	.addClass('ribbon-container')
 			//	.append(that.elemGID($('<div>')
 			//		.addClass('ribbon'), gid))[0]
-		}))
-	},
+		})) },
 	// XXX NOTE: quots removal might render this incompatible with older data formats...
 	createImage: function(gids){
 		gids = gids || []
@@ -1066,14 +1009,11 @@ var RibbonsClassPrototype = {
 		return $(gids.map(function(gid){
 			gid = gid != null ? gid+'' : gid
 			return that.elemGID($('<div>')
-					.addClass('image'), gid)[0]
-		}))
-	},
+					.addClass('image'), gid)[0] })) },
 	createMark: function(cls, gid){
 		gid = gid != null ? gid+'' : gid
 		return this.elemGID($('<div class="mark">')
-			.addClass(cls), gid)
-	},
+			.addClass(cls), gid) },
 }
 RibbonsClassPrototype.__proto__ = BaseRibbonsClassPrototype
 
@@ -1084,13 +1024,10 @@ var RibbonsPrototype = {
 		if(this.viewer){
 			// XXX does this completely detach from the orriginal???
 			// XXX do we need to reattach something???
-			o.viewer = this.viewer.clone()
-		}
+			o.viewer = this.viewer.clone() }
 		if(this.images){
-			o.images = this.images.clone()
-		}
-		return o
-	},
+			o.images = this.images.clone() }
+		return o },
 
 	// Constructors...
 	createViewer: RibbonsClassPrototype.createViewer,
@@ -1119,15 +1056,13 @@ var RibbonsPrototype = {
 	rotate: function(angle){
 		// get...
 		if(arguments.length == 0){
-			return this.getRibbonSet().rotate()
-		}
+			return this.getRibbonSet().rotate() }
 
 		// set...
 		var ribbon_set = this.getRibbonSet()  
 
 		if(ribbon_set.length == 0){
-			return this
-		}
+			return this }
 
 		angle = typeof(angle) == typeof('str')
 			? (/^\+=/.test(angle) ? (ribbon_set.rotate() || 0) + parseFloat(angle.slice(2))
@@ -1137,8 +1072,7 @@ var RibbonsPrototype = {
 
 		ribbon_set.rotate(angle)
 
-		return this
-	},
+		return this },
 	
 	// Make a "shadow" image for use with image oriented animations...
 	//
@@ -1187,8 +1121,7 @@ var RibbonsPrototype = {
 
 		if(img.length == 0){
 			// XXX is this correct???
-			return function(){}
-		}
+			return function(){} }
 
 		var gid = this.elemGID(img)
 		var s = this.scale()
@@ -1244,8 +1177,7 @@ var RibbonsPrototype = {
 				// place in the viewer...
 				// NOTE: placing the shadow in the viewer is a compromise that
 				// 		lets us do simpler positioning 
-				.appendTo(this.viewer)
-		}
+				.appendTo(this.viewer) }
 
 		img.addClass('moving')
 		var that = this
@@ -1271,20 +1203,13 @@ var RibbonsPrototype = {
 						shadow.css({
 							top: io.top - vo.top,
 							left: io.left - vo.left,
-						})
-					}
-				}
+						}) } }
 				setTimeout(function(){
 					// remove only the item with the correct ticket...
 					if(ticket == shadow.attr('ticket')){
 						img.removeClass('moving')
-						shadow.remove()
-					}
-				}, delay)
-			}
-			return img
-		}
-	},
+						shadow.remove() } }, delay) }
+			return img } },
 
 
 	// Basic manipulation...
@@ -1339,8 +1264,7 @@ var RibbonsPrototype = {
 		}
 
 		if(i == position){
-			return ribbon
-		}
+			return ribbon }
 
 		// place the ribbon...
 		if(ribbons.length == 0 || ribbons.length <= position){
@@ -1352,12 +1276,10 @@ var RibbonsPrototype = {
 
 		// for placing after need to account for target ribbon removal...
 		} else if(i < position) {
-			ribbons.eq(position).after(ribbon)
-		}
+			ribbons.eq(position).after(ribbon) }
 
 		// XXX do we need to update the ribbon here???
-		return ribbon
-	},
+		return ribbon },
 
 	// Place an image...
 	//
@@ -1387,8 +1309,7 @@ var RibbonsPrototype = {
 		mode = mode == null ? 'before' : mode
 
 		if(this.getRibbonSet().length == 0){
-			return
-		}
+			return }
 
 		target = target == null || target.constructor !== Array ? [target] : target
 
@@ -1397,8 +1318,7 @@ var RibbonsPrototype = {
 		var img = $($(target)
 			.map(function(_, e){
 				var i = that.getImage(e)
-				return (i.length == 0 ? that.createImage(e) : i)[0]
-			}))
+				return (i.length == 0 ? that.createImage(e) : i)[0] }))
 	
 		var i = this.getImage(to)
 		var r = this.getRibbon(to)
@@ -1407,8 +1327,7 @@ var RibbonsPrototype = {
 		if(typeof(to) == typeof(123)){
 			// moving the image to itself...
 			if(to == 0){
-				return img
-			}
+				return img }
 			var i = to
 			var images = img[i > 0 ? 'last' : 'first']()
 				[i > 0 ? 'nextAll' : 'prevAll'](IMAGE)
@@ -1421,8 +1340,7 @@ var RibbonsPrototype = {
 			if(mode == 'before'){
 				r.append(img)
 			} else {
-				r.prepend(img)
-			}
+				r.prepend(img) }
 			return this.updateImage(img)
 
 		// relative to image...
@@ -1431,10 +1349,8 @@ var RibbonsPrototype = {
 			to = this.getImage(to)
 			// moving the image to itself...
 			if(to[0] == img[0]){
-				return img
-			}
-			var images = to[mode](IMAGE)
-		}
+				return img }
+			var images = to[mode](IMAGE) }
 
 		// place the image...
 		if(images.length <= i){
@@ -1450,14 +1366,12 @@ var RibbonsPrototype = {
 		// before...
 		} else {
 			to
-				.before(img)
-		}
+				.before(img) }
 
 		// cleanup source ribbons...
 		this.clearEmptyRibbons()
 
-		return this.updateImage(img)
-	},
+		return this.updateImage(img) },
 
 
 	// Loading and updating...
@@ -1471,8 +1385,7 @@ var RibbonsPrototype = {
 		img && img.length > 0 
 			&& this.elemGID(img, to)
 
-		return this
-	},
+		return this },
 
 	// XXX is .__image_updaters the right way to go???
 	callImageUpdaters: function(gid, image, options){
@@ -1485,9 +1398,7 @@ var RibbonsPrototype = {
 		;(this.__image_updaters || [])
 			.forEach(function(update){
 				update(gid, image, options) })
-
-		return image
-	},
+		return image },
 
 	_loadImagePreviewURL: function(image, url, other, callback){
 		url = util.path2url(url)
@@ -1513,8 +1424,7 @@ var RibbonsPrototype = {
 				&& callback() 
 			callback = null }
 		img.src = url
-		return img
-	},
+		return img },
 
 	// Update image(s)...
 	//
@@ -1635,14 +1545,12 @@ var RibbonsPrototype = {
 						// this removes the extra quots...
 						.replace(/^"(.*)"$/g, '$1'),
 				}
-				reset_preview = true
-			}
+				reset_preview = true }
 			data.gid = gid
 
 			// if no images data defined drop out...
 			if(that.images == null){
-				return 
-			}
+				return }
 
 			// image data...
 			var img_data = that.images[gid] || images.IMAGE_DATA
@@ -1654,11 +1562,9 @@ var RibbonsPrototype = {
 				if(seen.indexOf(img_data.id) >= 0){
 					img_data = images.IMAGE_DATA
 					console.error('Recursive group:', gid)
-					break
-				}
+					break }
 				seen.push(img_data.id)
-				img_data = that.images[img_data.cover]
-			}
+				img_data = that.images[img_data.cover] }
 
 			// image state...
 			data.attrs.orientation = img_data.orientation == null ? '' : img_data.orientation*1
@@ -1710,10 +1616,7 @@ var RibbonsPrototype = {
 							image, 
 							image.data().loading, 
 							alt_url, 
-							error_update_callback) }, 0)
-				}
-			}
-		})
+							error_update_callback) }, 0) } } })
 
 		var W = this.viewer.innerWidth()
 		var H = this.viewer.innerHeight()
@@ -1734,9 +1637,7 @@ var RibbonsPrototype = {
 				&& pre_updaters_callback.call(that, image, data)
 			that.callImageUpdaters(data.gid, img, options)
 
-			return _img
-		}))
-	},
+			return _img })) },
 
 	// Update ribbon content...
 	//
@@ -1778,8 +1679,7 @@ var RibbonsPrototype = {
 			// no such ribbon exists, then create and append it in the end...
 			// NOTE: this effectively makes the update offline and pushes
 			// 		the new ribbon on the dom in one go...
-			r = this.createRibbon(ribbon)
-		}
+			r = this.createRibbon(ribbon) }
 
 		var loaded = r.find(IMAGE)
 
@@ -1799,10 +1699,7 @@ var RibbonsPrototype = {
 
 				if(dl != 0){
 					var x = parseFloat((r.transform('translate3d') || [0])[0]) + w * dl
-					r.transform({x: x + 'vmin', y: 0, z: 0})
-				}
-			}
-		}
+					r.transform({x: x + 'vmin', y: 0, z: 0}) } } }
 
 		// remove all images that we do not need...
 		var unloaded = []
@@ -1811,12 +1708,10 @@ var RibbonsPrototype = {
 			.filter(function(i, img){ 
 				var g = that.elemGID(img)
 				if(gids.indexOf(g) >= 0){
-					return true
-				}
+					return true }
 				unloaded.push(img)
 				unload_marks = unload_marks.concat(that.getImageMarks(g).toArray())
-				return false
-			})
+				return false })
 
 		// detach/remove everything in one go...
 		$(unloaded)
@@ -1832,8 +1727,7 @@ var RibbonsPrototype = {
 		$(gids).each(function(i, gid){
 			// support for sparse ribbons...
 			if(gid == null){
-				return 
-			}
+				return }
 			// get/create image...
 			// NOTE: as this will get a loaded image if it's loaded in 
 			// 		a different ribbon this WILL affect that ribbon...
@@ -1843,8 +1737,7 @@ var RibbonsPrototype = {
 					// reuse an image we just detached...
 					? that.elemGID(unloaded.pop(), gid) 
 					// create a new image...
-					: that.createImage(gid)
-			}
+					: that.createImage(gid) }
 
 			// see of we are loaded in the right position...
 			// NOTE: loaded is maintained current later, thus it always 
@@ -1867,22 +1760,17 @@ var RibbonsPrototype = {
 					if(l >= 0){
 						loaded.splice(l, 1)
 					}
-					loaded.splice(i, 0, img)
-				}
-			}
+					loaded.splice(i, 0, img) } }
 
-			images.push(img[0])
-		})
+			images.push(img[0]) })
 
 		// XXX this appears to be the bottleneck on large numbers of images...
 		this.updateImage($(images))
 
 		if(place){
-			this.placeRibbon(r, this.viewer.find(RIBBON).length)
-		}
+			this.placeRibbon(r, this.viewer.find(RIBBON).length) }
 
-		return this
-	},
+		return this },
 
 	// NOTE: reference must be both present in the loaded ribbon and in
 	// 		the given gids...
@@ -1908,10 +1796,7 @@ var RibbonsPrototype = {
 
 				if(dl != 0){
 					var x = parseFloat((r.transform('translate3d') || [0])[0]) + w * dl
-					r.transform({x: x + 'vmin', y: 0, z: 0})
-				}
-			}
-		}
+					r.transform({x: x + 'vmin', y: 0, z: 0}) } } }
 
 		// update gids...
 		var unload_marks = []
@@ -1930,15 +1815,13 @@ var RibbonsPrototype = {
 
 					// XXX for some reason this is smoother than:
 					// 		gid && that.updateImage(img, gid)
-					gid && that.updateImage(that.elemGID(img, gid))
-				}
+					gid && that.updateImage(that.elemGID(img, gid)) }
 		//	})
 		}
 		$(unload_marks)
 			.remove()
 
-		return this
-	},
+		return this },
 
 	// Resize ribbon...
 	//
@@ -1976,8 +1859,7 @@ var RibbonsPrototype = {
 				// remove marks...
 				.each(function(_, img){
 					marks = marks.concat(
-						that.getImageMarks(that.elemGID(img)).toArray())
-				})
+						that.getImageMarks(that.elemGID(img)).toArray()) })
 				
 			// clear stuff...
 			$(marks)
@@ -1987,8 +1869,7 @@ var RibbonsPrototype = {
 				.removeClass('moving current')
 				// blank out images to prevent wrong image flashing 
 				// when reusing...
-				.css('background-image', 'none')
-		} 
+				.css('background-image', 'none') } 
 
 		// trim left...
 		// NOTE: this affects ribbon placement, thus we'll need to compensate...
@@ -2001,8 +1882,7 @@ var RibbonsPrototype = {
 				// remove marks...
 				.each(function(_, img){
 					marks = marks.concat(
-						that.getImageMarks(that.elemGID(img)).toArray())
-				})
+						that.getImageMarks(that.elemGID(img)).toArray()) })
 
 			// calculate the compensation...
 			// XXX this assumes that all widths are equal...
@@ -2033,9 +1913,7 @@ var RibbonsPrototype = {
 
 				ribbon.transform({x: x + 'vmin', y: 0, z: 0})
 
-				transitions || that.restoreTransitions(ribbon, true)
-			})
-		}
+				transitions || that.restoreTransitions(ribbon, true) }) }
 
 		// grow right...
 		if(right.length > 0 || right > 0){
@@ -2044,25 +1922,21 @@ var RibbonsPrototype = {
 			// build set of empty images...
 			var loading = unloaded.slice(0, c)
 			while(loading.length < c){
-				loading.push(that.createImage([''])[0])
-			}
+				loading.push(that.createImage([''])[0]) }
 
 			// update images...
 			right instanceof Array && right.forEach(function(gid, i){
 				var img = loading.eq(i)
 				that.elemGID(img, gid) 
 				// XXX for some reason this does not add indicators...
-				that.updateImage(img)
-			})
+				that.updateImage(img) })
 
 			ribbon.append(loading)
 
 			// XXX this is here to update the indicators...
 			// 		...indicators seem to not be attached above...
 			loading.each(function(_, img){
-				that.updateImage(img)
-			})
-		}
+				that.updateImage(img) }) }
 
 		// grow left...
 		// NOTE: this affects ribbon placement, thus we'll need to compensate...
@@ -2072,16 +1946,14 @@ var RibbonsPrototype = {
 			// build set of empty images...
 			var loading = unloaded.slice(0, c)
 			while(loading.length < c){
-				loading.push(that.createImage([''])[0])
-			}
+				loading.push(that.createImage([''])[0]) }
 
 			// update images...
 			left instanceof Array && left.forEach(function(gid, i){
 				var img = loading.eq(i)
 				that.elemGID(img, gid) 
 				// XXX for some reason this does not add indicators...
-				that.updateImage(img)
-			})
+				that.updateImage(img) })
 
 			// calculate the compensation...
 			// XXX this assumes that all widths are equal...
@@ -2100,8 +1972,7 @@ var RibbonsPrototype = {
 				// XXX this is here to update the indicators...
 				// 		...indicators seem to not be attached above...
 				loading.each(function(_, img){
-					that.updateImage(img)
-				})
+					that.updateImage(img) })
 
 				// compensate for the offset...
 				// XXX is this the correct reference item -- can it be deleted above???
@@ -2111,12 +1982,9 @@ var RibbonsPrototype = {
 
 				ribbon.transform({x: x + 'vmin', y: 0, z: 0})
 
-				transitions || that.restoreTransitions(ribbon, true)
-			})
-		}
+				transitions || that.restoreTransitions(ribbon, true) }) }
 
-		return this
-	},
+		return this },
 
 	// Update the data in ribbons...
 	//
@@ -2174,27 +2042,21 @@ var RibbonsPrototype = {
 			var updateRibbon = settings.updateRibbon || this.updateRibbon.bind(this)
 
 			Object.keys(data.ribbons).forEach(function(gid){
-				updateRibbon(data.ribbons[gid], gid)
-			})
-		}
+				updateRibbon(data.ribbons[gid], gid) }) }
 
 		// place ribbons...
 		if(data.ribbon_order != null){
 			data.ribbon_order.forEach(function(gid, i){
-				that.placeRibbon(gid, i)
-			})
-		}
+				that.placeRibbon(gid, i) }) }
 
 		if(!settings.keep_all){
 			// set base ribbon...
 			if(!settings.keep_base && data.base != null){
-				this.setBaseRibbon(data.base)
-			}
+				this.setBaseRibbon(data.base) }
 
 			// set base ribbon...
 			if(!settings.keep_current && data.current != null){
-				this.focusImage(data.current)
-			}
+				this.focusImage(data.current) }
 
 			// clear the ribbons that did not get updated...
 			if(!settings.keep_ribbons 
@@ -2206,21 +2068,16 @@ var RibbonsPrototype = {
 				that.viewer.find(RIBBON).each(function(){
 					var r = $(this)
 					if(ribbons.indexOf(that.elemGID(r)) < 0){
-						r.remove()
-					}
-				})
-			}
-		}
+						r.remove() } }) } }
 
-		return this
-	},
+		return this },
 
 	clearEmptyRibbons: function(){
-		this.viewer.find(RIBBON).filter(function(_, e){
-			return $(e).children().length == 0 
-		}).remove()
-		return this
-	},
+		this.viewer.find(RIBBON)
+			.filter(function(_, e){
+				return $(e).children().length == 0 })
+			.remove()
+		return this },
 
 	// Clear elements...
 	//
@@ -2256,11 +2113,8 @@ var RibbonsPrototype = {
 			gids = gids.constructor !== Array ? [gids] : gids
 			var that = this
 			gids.forEach(function(g){
-				that.viewer.find('[gid='+JSON.stringify(g)+']').detach()
-			})
-		}
-		return this
-	},
+				that.viewer.find('[gid='+JSON.stringify(g)+']').detach() }) }
+		return this },
 
 
 	// Focus image...
@@ -2287,8 +2141,7 @@ var RibbonsPrototype = {
 		var next = this.getImage(target)
 
 		cur.removeClass('current')
-		return next.addClass('current')
-	},
+		return next.addClass('current') },
 
 	// Set base ribbon...
 	//
@@ -2296,8 +2149,7 @@ var RibbonsPrototype = {
 	// XXX should this support keywords a-la .focusImage(..)???
 	setBaseRibbon: function(gid){
 		this.viewer.find('.base.ribbon').removeClass('base')
-		return this.getRibbon(gid).addClass('base')
-	},
+		return this.getRibbon(gid).addClass('base') },
 
 
 	// Image manipulation...
@@ -2340,26 +2192,22 @@ var RibbonsPrototype = {
 		if(cls == null || ['toggle', 'on', 'off', '?'].includes(cls)){
 			action = cls
 			cls = image
-			image = null
-		}
+			image = null }
 		image = this.getImage(image) 
 		cls = cls.constructor !== Array ? [cls] : cls
 		action = action == null ? 'toggle' : action
 
 		// no image is loaded...
 		if(image.length == 0){
-			return
-		}
+			return }
 
 		// get marked state...
 		if(action == '?'){
 			var gid = this.elemGID(image)
 			var res = 0
 			cls.forEach(function(cls){
-				res += that.getImageMarks(gid, cls).length != 0 ? 1 : 0
-			})
-			return res == cls.length ? 'on' : 'off'
-		}
+				res += that.getImageMarks(gid, cls).length != 0 ? 1 : 0 })
+			return res == cls.length ? 'on' : 'off' }
 
 		// set the marks...
 		image.each(function(){
@@ -2377,13 +2225,9 @@ var RibbonsPrototype = {
 
 				// clear the mark...
 				} else if(action != 'on') {
-					mark.remove()
-				}
-			})
-		})
+					mark.remove() } }) })
 
-		return image
-	},
+		return image },
 
 	// Rotate an image...
 	//
@@ -2409,8 +2253,7 @@ var RibbonsPrototype = {
 
 		// validate direction...
 		if(images.calcRelativeRotation(direction) == null){
-			return target
-		}
+			return target }
 
 		var that = this
 		$(target).each(function(i, e){
@@ -2421,8 +2264,7 @@ var RibbonsPrototype = {
 			if(o == 0){
 				img.removeAttr('orientation')
 			} else {
-				img.attr('orientation', o)
-			}
+				img.attr('orientation', o) }
 			// account for proportions...
 			that.correctImageProportionsForRotation(img)
 			// XXX this is a bit of an overkill but it will update the 
@@ -2430,8 +2272,7 @@ var RibbonsPrototype = {
 			//that.updateImage(img)
 		})
 
-		return this
-	},
+		return this },
 
 	// Flip an image...
 	//
@@ -2472,8 +2313,7 @@ var RibbonsPrototype = {
 			if(set_state == null){
 				var d = direction
 				if(reference == 'view' && [90, 270].includes(that.getImageRotation(img))){
-					d = direction == 'vertical' ? 'horizontal' : 'vertical'
-				}
+					d = direction == 'vertical' ? 'horizontal' : 'vertical' }
 				var state = img.attr('flipped')
 				state = (state == null ? '' : state)
 					.split(',')
@@ -2484,24 +2324,19 @@ var RibbonsPrototype = {
 				if(i >= 0){
 					state.splice(i, 1)
 				} else {
-					state.push(d)
-				}
+					state.push(d) }
 
 			// set an explicit state...
 			} else {
-				var state = set_state.slice()
-			}
+				var state = set_state.slice() }
 
 			// write the state...
 			if(state.length == 0){
 				img.removeAttr('flipped')
 			} else {
-				img.attr('flipped', state.join(', '))
-			}
-		})
+				img.attr('flipped', state.join(', ')) } })
 
-		return this
-	},
+		return this },
 
 	// shorthands...
 	// XXX should these be here???

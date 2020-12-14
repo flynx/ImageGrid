@@ -29,6 +29,19 @@
 <link rel="stylesheet" href="css/experimenting.css" />
 
 <!-- Scripts -->
+
+<!-- Global scope pollution test -->
+<script> 
+var __window = {...window} 
+function scopeDiff(cur=window, base=__window){
+	return Object.keys(cur)
+		.filter(function(k){ 
+			return base[k] !== cur[k] })
+		.reduce(function(res, k){
+			res[k] = cur[k]
+			return res }, {})}
+</script>
+
 <!-- DevTools fail-safe for electron/nw... -->
 <script>
 if(window.require){
@@ -56,7 +69,7 @@ if(window.require){
 </script>
 
 <!-- Electron fix -->
-<script>if(typeof(module) == 'object'){ window.module = module; module = undefined }</script>
+<script>if(typeof(module) == 'object'){ window.__module = module; module = undefined }</script>
 
 <!-- jQuery -->
 <script src="ext-lib/jquery.js"></script>
@@ -71,7 +84,7 @@ if(window.require){
 <script src="lib/jli.js"></script>
 
 <!-- Electron unfix -->
-<script>if(window.module){ module = window.module }</script>
+<script>if(window.__module){ module = window.__module; delete window.__module }</script>
 
 <!-- RequireJS -->
 <script>
@@ -109,19 +122,52 @@ if(typeof(process) == 'undefined'){
 	</filter>
 
 	<!-- shadows and highlights 
-	 	gradient map: [blue 0-5% black 93-96% white] 
+		gradient map: [blue 0-5% black 93-96% white] 
 		via: https://justcode.today/filters/ -->
+	<!-- NOTE: not sure about the tail end here (white zone) might be a 
+			bit too flat... -->
 	<filter id="ShadowsAndHilights">
 		<fecolormatrix type="saturate" values="0" />
 		<feComponentTransfer color-interpolation-filters="sRGB" result="cutoff">
-			<feFuncR type="table" tableValues="0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.33,0.67,1,1,1,1"/>
-			<feFuncG type="table" tableValues="0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.33,0.67,1,1,1,1"/>
-			<feFuncB type="table" tableValues="1,0.8,0.6,0.4,0.2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.33,0.67,1,1,1,1"/>
+			<feFuncR type="table" tableValues="
+				0 0 0 0 0 0 0 0 0 0 
+				0 0 0 0 0 0 0 0 0 0 
+				0 0 0 0 0 0 0 0 0 0 
+				0 0 0 0 0 0 0 0 0 0 
+				0 0 0 0 0 0 0 0 0 0 
+				0 0 0 0 0 0 0 0 0 0 
+				0 0 0 0 0 0 0 0 0 0 
+				0 0 0 0 0 0 0 0 0 0 
+				0 0 0 0 0 0 0 0 0 0 
+				0 0 0 0 0.33 0.67 1 1 1 1" />
+			<feFuncG type="table" tableValues="
+				0 0 0 0 0 0 0 0 0 0 
+				0 0 0 0 0 0 0 0 0 0 
+				0 0 0 0 0 0 0 0 0 0 
+				0 0 0 0 0 0 0 0 0 0 
+				0 0 0 0 0 0 0 0 0 0 
+				0 0 0 0 0 0 0 0 0 0 
+				0 0 0 0 0 0 0 0 0 0 
+				0 0 0 0 0 0 0 0 0 0 
+				0 0 0 0 0 0 0 0 0 0 
+				0 0 0 0 0.33 0.67 1 1 1 1" />
+			<feFuncB type="table" tableValues="
+				1 0.8 0.6 0.4 0.2 0 0 0 0 0 
+				0 0 0 0 0 0 0 0 0 0 
+				0 0 0 0 0 0 0 0 0 0 
+				0 0 0 0 0 0 0 0 0 0 
+				0 0 0 0 0 0 0 0 0 0 
+				0 0 0 0 0 0 0 0 0 0 
+				0 0 0 0 0 0 0 0 0 0 
+				0 0 0 0 0 0 0 0 0 0 
+				0 0 0 0 0 0 0 0 0 0 
+				0 0 0 0 0.33 0.67 1 1 1 1"/>
 		</feComponentTransfer>
 		<feBlend mode="difference" in="SourceGraphic" in2="cutoff"/>
 	</filter>
 
 	<!-- gamma shadows -->
+	<!-- XXX should this be gamma or a transfer function?? -->
 	<filter id="GammaShadows">
 		<feComponentTransfer color-interpolation-filters="sRGB">
 			<feFuncR type="gamma" exponent="0.3" amplitude="1.0" offset="0"></feFuncR>
@@ -136,6 +182,6 @@ if(typeof(process) == 'undefined'){
 <div class="viewer gray marks-visible" tabindex="0"></div>
 
 
-<!-- vim:set ts=4 sw=4 spell : -->
+<!-- vim:set ts=4 sw=4 spell nowrap : -->
 </body>
 </html>

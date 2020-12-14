@@ -35,7 +35,7 @@ function(path){
 	// skip encoding windows drives...
 	path = path
 		.split(/[\\\/]/g)
-	drive = path[0].endsWith(':') ?
+	var drive = path[0].endsWith(':') ?
 		path.shift() + '/'
 		: ''
 	return drive + (path

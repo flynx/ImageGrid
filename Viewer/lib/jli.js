@@ -62,15 +62,12 @@ function overlayMessage(text){
 function unanimated(obj, func, time){
 	return function(){
 		if(time == null){
-			time = 5
-		}	
+			time = 5 }	
 		obj = $(obj)
 		obj.addClass('unanimated')
 		var res = func.apply(func, arguments)
 		setTimeout(function(){obj.removeClass('unanimated')}, time)
-		return res
-	}
-}
+		return res } }
 
 
 // NOTE: this will only use the first element in a set.
@@ -79,8 +76,7 @@ function makeCSSVendorAttrGetter(attr, dfl, callback){
 	return function(elem){
 		elem = $(elem)
 		if(elem.length == 0){
-			return null
-		}
+			return null }
 		// using the attr...
 		var vendors = ['O', 'Moz', 'ms', 'webkit']
 		var data = elem[0].style[attr]
@@ -90,17 +86,11 @@ function makeCSSVendorAttrGetter(attr, dfl, callback){
 			for(var i in vendors){
 				data = elem[0].style[vendors[i] + attr.capitalize()]
 				if(data && data != 'none'){
-					break
-				}
-			}
-		}
+					break } } }
 		// no data is set...
 		if(!data || data == 'none'){
-			return dfl
-		}
-		return callback(data)
-	}
-}
+			return dfl }
+		return callback(data) } }
 
 
 
@@ -112,8 +102,7 @@ var getElementOrigin = makeCSSVendorAttrGetter(
 			return {
 				left: res[1].slice(-2) == 'px' ? parseFloat(res[1]) : res[1],
 				top: res[3].slice(-2) == 'px' ? parseFloat(res[3]) : res[3],
-			}
-		})
+			} })
 
 
 // Return a scale value for the given element(s).
@@ -122,8 +111,7 @@ var getElementScale = makeCSSVendorAttrGetter(
 		'transform',
 		1,
 		function(data){
-			return parseFloat((/(scale|matrix)\(([^),]*)\)/).exec(data)[2])
-		})
+			return parseFloat((/(scale|matrix)\(([^),]*)\)/).exec(data)[2]) })
 
 
 var getElementOffset = makeCSSVendorAttrGetter(
@@ -134,8 +122,7 @@ var getElementOffset = makeCSSVendorAttrGetter(
 			return {
 				left: parseFloat(res[2]),
 				top: parseFloat(res[3])
-			}
-		})
+			} })
 
 
 var getElementTransitionDuration = makeCSSVendorAttrGetter(
@@ -202,14 +189,12 @@ function getRelativeOffset(container, block, point){
 				+ (h - h*s) / (h / o.top), 
 			left: l*scale 
 				+ (w - w*s) / (w / o.left),
-		}
-	}
+		} }
 
 	return {
 		top: offset.top + (H/2 - offset.top) - o.top,
 		left: offset.left + (W/2 - offset.left) - o.left,
-	}
-}
+	} }
 
 
 // NOTE: at this point this works only on the X axis...
@@ -233,11 +218,9 @@ function setElementTransform(elem, offset, scale, duration){
 		offset = {
 			left: offset[0] ? offset[0] : 0,
 			top: offset[1] ? offset[1] : 0
-		}
-	}
+		} }
 	if(scale == null){
-		var scale = getElementScale(elem)
-	}
+		var scale = getElementScale(elem) }
 	if(USE_TRANSFORM){
 		var transform = translate+'('+ 
 				Math.round(offset.left) +'px, '+
@@ -274,10 +257,8 @@ function setElementTransform(elem, offset, scale, duration){
 			'-moz-transform' : transform, 
 			'-o-transform' : transform, 
 			'transform' : transform, 
-		}, duration)
-	}
-	return elem
-}
+		}, duration) }
+	return elem }
 
 
 // Run a function controllably in an animation frame
@@ -289,18 +270,15 @@ function animationFrameRunner(func){
 	var _nop = function(){ return this }
 	var frame
 
-	if(this === window){
-		self = new animationFrameRunner
-	} else {
-		self = this
-	}
+	self = this === window ?
+		new animationFrameRunner
+		: this
 
 	self.func = func
 
 	var _tick = function(){
 		func(Date.now())
-		frame = getAnimationFrame(next)
-	}
+		frame = getAnimationFrame(next) }
 
 	// main user interface...
 	var start = function(){
@@ -313,24 +291,20 @@ function animationFrameRunner(func){
 		// 		off-frame call to func...
 		frame = getAnimationFrame(next)
 
-		return this
-	}
+		return this }
 	var stop = function(){
 		if(frame != null){
 			cancelAnimationFrame(frame)
-			frame = null
-		}
+			frame = null }
 		next = _nop
 		this.start = start
 		this.stop = _nop 
-		return this
-	}
+		return this }
 
 	// setup the ticker in stopped state...
 	stop.call(self)
 
-	return self
-}
+	return self }
 
 
 // XXX make this a drop-in replacement for setElementTransform...
@@ -353,17 +327,14 @@ function animateElementTo(elem, to, duration, easing, speed, callback, use_trans
 			to = {
 				left: to,
 				top: 0,
-			}
-		}
+			} }
 		if(typeof(speed) == typeof(2)){
 			speed = {
 				x: speed,
 				y: 0,
-			}
-		}
+			} }
 		if(duration == null){
-			duration = getElementTransitionDuration(elem)
-		}
+			duration = getElementTransitionDuration(elem) }
 
 		setTransitionDuration(elem, 0)
 
@@ -387,23 +358,19 @@ function animateElementTo(elem, to, duration, easing, speed, callback, use_trans
 		var s_t = cur.top
 		var s_l = cur.left
 
-
 		function animate(){
 			// prevent running animations till next call of animateElementTo(..)
 			if(elem.next_frame === false){
-				return
-			}
+				return }
 			var t = Date.now()
 			// end of the animation...
 			if(t >= then){
 				setElementTransform(elem, to)
-				return
-			}
+				return }
 			if(!elem.animating){
 				// XXX jittery...
 				setElementTransform(elem, cur)
-				return
-			}
+				return }
 
 			// remember step start position...
 			s_t = cur.top
@@ -423,9 +390,7 @@ function animateElementTo(elem, to, duration, easing, speed, callback, use_trans
 						// calc speed for next step...
 						speed.y = dist.top / (duration - (t - start))
 					} else {
-						cur.top = to.top
-					}
-				}
+						cur.top = to.top } }
 				if(Math.abs(dist.left) >= 1){
 					dx = ((t - start) * speed.x)
 					if(Math.abs(dist.left) > Math.abs(dx)){
@@ -436,9 +401,7 @@ function animateElementTo(elem, to, duration, easing, speed, callback, use_trans
 						// calc speed for next step...
 						speed.x = dist.left / (duration - (t - start))
 					} else {
-						cur.left = to.left
-					}
-				}
+						cur.left = to.left } }
 
 			// liner animate...
 			} else {
@@ -454,33 +417,26 @@ function animateElementTo(elem, to, duration, easing, speed, callback, use_trans
 			})
 
 			// sched next frame...
-			elem.next_frame = getAnimationFrame(animate)
-		}
+			elem.next_frame = getAnimationFrame(animate) }
 
-		animate()
-	}
-}
+		animate() } }
 
 
 function stopAnimation(elem){
 	if(elem.next_frame){
 		cancelAnimationFrame(elem.next_frame)
 		elem.next_frame = false
-		return
-	}
-}
+		return } }
 
 
 // XXX account for other transitions...
 // XXX make a sync version...
 function setElementOffset(elem, l, t, scale){
-	return setElementTransform(elem, [l, t], scale)
-}
+	return setElementTransform(elem, [l, t], scale) }
 
 
 function setElementScale(elem, scale){
-	return setElementTransform(elem, null, scale)
-}
+	return setElementTransform(elem, null, scale) }
 
 
 function setElementOrigin(elem, x, y, z){
@@ -495,8 +451,7 @@ function setElementOrigin(elem, x, y, z){
 		'-ms-transform-origin':  value,
 		'-moz-transform-origin':  value,
 		'-webkit-transform-origin':  value,
-	})
-}
+	}) }
 
 
 // a sync version of setElementOrigin(..), this will not trigger transforms...
@@ -522,8 +477,7 @@ function setElementOriginSync(elem, x, y, z){
 	e.style.display = ''
 	getComputedStyle(e).display
 
-	return $(elem)
-}
+	return $(elem) }
 
 
 // this is like setElementOrigin(..) but will compensate for element 
@@ -540,36 +494,31 @@ function shiftOriginTo(elem, l, t, scale){
 
 	setElementOffset(elem, cl, ct)
 
-	return setElementOriginSync(elem, l+'px', t+'px')
-}
+	return setElementOriginSync(elem, l+'px', t+'px') }
 
 
 function setTransitionEasing(elem, ease){
 	if(typeof(ms) == typeof(0)){
-		ms = ms + 'ms'
-	}
+		ms = ms + 'ms' }
 	return $(elem).css({
 		'transition-timing-function': ease, 
 		'-moz-transition-timing-function': ease,
 		'-o-transition-timing-function': ease,
 		'-ms-transition-timing-function': ease,
 		'-webkit-transition-timing-function': ease
-	})
-}
+	}) }
 
 
 function setTransitionDuration(elem, ms){
 	if(typeof(ms) == typeof(0)){
-		ms = ms + 'ms'
-	}
+		ms = ms + 'ms' }
 	return elem.css({
 		'transition-duration': ms, 
 		'-moz-transition-duration': ms,
 		'-o-transition-duration': ms,
 		'-ms-transition-duration': ms,
 		'-webkit-transition-duration': ms
-	})
-}
+	}) }
 
 
 
@@ -577,17 +526,13 @@ function setTransitionDuration(elem, ms){
 
 jQuery.fn.reverseChildren = function(){
 	return $(this).each(function(_, e){
-		return $(e).append($(e).children().detach().get().reverse())
-	})
-}
+		return $(e).append($(e).children().detach().get().reverse()) }) }
 
 
 
 jQuery.fn.sortChildren = function(func){
 	return $(this).each(function(_, e){
-		return $(e).append($(e).children().detach().get().sort(func))
-	})
-}
+		return $(e).append($(e).children().detach().get().sort(func)) }) }
 
 
 
@@ -770,16 +715,13 @@ function makeDeferredPool(size, paused){
 				// i.e. do not pop another worker and let the "thread" die.
 				if(pool.len > pool_size){
 					// remove self...
-					return
-				}
+					return }
 				// pause the queue -- do not do anything else...
 				if(that._paused == true){
 					// if pool is empty fire the pause event...
 					if(pool.len == 0){
-						Pool._event_handlers.pause.fire()
-					}
-					return
-				}
+						Pool._event_handlers.pause.fire() }
+					return }
 
 				// get the next queued worker...
 				var next = queue.splice(0, 1)[0]
@@ -796,26 +738,19 @@ function makeDeferredPool(size, paused){
 					pool.length = 0
 				
 					if(!that._filling){
-						that._event_handlers.deplete.fire(l)
-					}
-				}
+						that._event_handlers.deplete.fire(l) } }
 
 				// keep the pool full...
-				that._fill()
-			})
+				that._fill() })
 			.fail(function(){
 				Pool._event_handlers.fail.fire(pool.length - pool.len, pool.length + queue.length)
-				deferred.reject.apply(deferred, arguments)
-			})
+				deferred.reject.apply(deferred, arguments) })
 			.progress(function(){
-				deferred.notify.apply(deferred, arguments)
-			})
+				deferred.notify.apply(deferred, arguments) })
 			.done(function(){
-				deferred.resolve.apply(deferred, arguments)
-			})
+				deferred.resolve.apply(deferred, arguments) })
 
-		return worker
-	}
+		return worker }
 
 	// Fill the pool...
 	//
@@ -830,12 +765,9 @@ function makeDeferredPool(size, paused){
 				&& this.queue.length > 0){
 			this.queue.splice(0, pool_size - l)
 				.forEach(function(e){
-					run.apply(that, e)
-				})
-		}
+					run.apply(that, e) }) }
 
-		return this
-	}
+		return this }
 
 
 	// Public methods...
@@ -852,8 +784,7 @@ function makeDeferredPool(size, paused){
 		this._fill()
 
 		//return this
-		return deferred
-	}
+		return deferred }
 
 	// Drop the queued workers...
 	//
@@ -861,8 +792,7 @@ function makeDeferredPool(size, paused){
 	// XXX should this return the pool or the dropped queue???
 	Pool.dropQueue = function(){
 		this.queue.splice(0, this.queue.length)
-		return this
-	}
+		return this }
 
 	// Filling state...
 	//
@@ -873,19 +803,15 @@ function makeDeferredPool(size, paused){
 	// in the case of tasks ending faster than they are added...
 	Pool.filling = function(){
 		this._filling = true
-		return this
-	}
+		return this }
 	Pool.doneFilling = function(){
 		delete this._filling
 		// trigger depleted if we are empty...
 		if(this.pool.len == 0 && this.queue.length == 0){
-			that._event_handlers.deplete.fire(l)
-		}
-		return this
-	}
+			that._event_handlers.deplete.fire(l) }
+		return this }
 	Pool.isFilling = function(){
-		return this._filling == true
-	}
+		return this._filling == true }
 
 	// Paused state...
 	//
@@ -900,10 +826,8 @@ function makeDeferredPool(size, paused){
 		if(func == null){
 			this._paused = true
 		} else {
-			this.on('pause', func)
-		}
-		return this
-	}
+			this.on('pause', func) }
+		return this }
 
 	// XXX test...
 	Pool.resume = function(func){
@@ -912,34 +836,27 @@ function makeDeferredPool(size, paused){
 			this._event_handlers['resume'].forEach(function(f){ f() })
 			this._fill()
 		} else {
-			this.on('resume', func)
-		}
-		return this
-	}
+			this.on('resume', func) }
+		return this }
 
 	Pool.isPaused = function(){
-		return this._paused
-	}
+		return this._paused }
 	Pool.isRunning = function(){
-		return this.pool.len > 0
-	}
+		return this.pool.len > 0 }
 
 
 	// Generic event handlers...
 	Pool.on = function(evt, handler){
 		this._event_handlers[evt].add(handler)
-		return this
-	}
+		return this }
 	// NOTE: if this is not given a handler, it will clear all handlers 
 	// 		from the given event...
 	Pool.off = function(evt, handler){
 		if(handler != null){
 			this._event_handlers[evt].remove(handler)
 		} else {
-			this._event_handlers[evt].empty()
-		}
-		return this
-	}
+			this._event_handlers[evt].empty() }
+		return this }
 
 	// Register a queue depleted handler...
 	//
@@ -954,8 +871,7 @@ function makeDeferredPool(size, paused){
 	// 		finish, as this may get called after last worker is done and
 	// 		the next is queued...
 	Pool.depleted = function(func){
-		return this.on('deplete', func)
-	}
+		return this.on('deplete', func) }
 
 	// Deferred compatibility...
 	//
@@ -973,14 +889,12 @@ function makeDeferredPool(size, paused){
 	// 	- workers done
 	// 	- total workers (done + queued)
 	Pool.progress = function(func){
-		return this.on('progress', func)
-	}
+		return this.on('progress', func) }
 
 	// Register worker fail handler...
 	//
 	Pool.fail = function(func){
-		return this.on('fail', func)
-	}
+		return this.on('fail', func) }
 
 
 	return Pool
@@ -1016,17 +930,14 @@ function getDPI(force){
 		screen.dpi = res
 		return res	
 	} else {
-		return screen.dpi
-	}
-}
+		return screen.dpi } }
 // XXX is this correct???
 $(getDPI)
 
 
 // return 1, -1, or 0 depending on sign of x
 function sign(x){
-	return (x > 0) - (x < 0)
-}
+	return (x > 0) - (x < 0) }
 
 
 var getAnimationFrame = (window.requestAnimationFrame
@@ -1035,8 +946,7 @@ var getAnimationFrame = (window.requestAnimationFrame
 		|| window.oRequestAnimationFrame
 		|| window.msRequestAnimationFrame
 		|| function(callback){ 
-			setTimeout(callback, 1000/60) 
-		})
+			setTimeout(callback, 1000/60) })
 
 
 var cancelAnimationFrame = (window.cancelAnimationFrame 
@@ -1051,11 +961,9 @@ function logCalls(func, logger){
 	var that = this
 	var _func = function(){
 		logger(func, arguments)
-		return func.apply(that, arguments)
-	}
+		return func.apply(that, arguments) }
 	_func.name = func.name
-	return _func
-}
+	return _func }
 
 
 function assyncCall(func){
@@ -1065,16 +973,16 @@ function assyncCall(func){
 		setTimeout(function(){
 			res.resolve(func.apply(that, arguments))
 		}, 0)
-		return res
-	}
+		return res }
 	_func.name = func.name
-	return _func
-}
+	return _func }
+
 
 // Quote a string and convert to RegExp to match self literally.
 function quoteRegExp(str){
-	return str.replace(/([\.\\\/\(\)\[\]\$\*\+\-\{\}\@\^\&\?\<\>])/g, '\\$1')
-}
+	return str.replace(/([\.\\\/\(\)\[\]\$\*\+\-\{\}\@\^\&\?\<\>])/g, '\\$1') }
+
+
 
 
 /**********************************************************************
