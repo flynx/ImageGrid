@@ -104,6 +104,7 @@ function createWindow(){
 	WIN = new BrowserWindow({
 		webPreferences: {
 			nodeIntegration: true,
+			nodeIntegrationInWorker: true,
 			contextIsolation: false,
 			enableRemoteModule: true,
 		},

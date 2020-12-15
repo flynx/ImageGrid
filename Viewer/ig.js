@@ -21,14 +21,13 @@ global.scopeDiff = function(cur=global, base=__global){
 /*********************************************************************/
 
 require('v8-compile-cache')
-// NOTE: this fixes several issues with lib/util conflicting with stuff...
+// NOTE: importing this before require fixes several issues with lib/util 
+// 		conflicting with stuff...
 require('repl')
-
 
 // setup module loaders...
 require = require('./cfg/requirejs')(require).requirejs
 require.main = {filename: (nodeRequire.main || {}).filename}
-
 
 var core = require('features/core')
 // XXX for some reason if this is not loaded here things break in CLI...

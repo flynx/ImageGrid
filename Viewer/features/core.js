@@ -2695,56 +2695,66 @@ function(title, func){
 	return object.mixin(
 		action = Queued(function(items, ...args){
 			var that = this
+
 			// sync start...
 			if(arguments[0] == 'sync' || arguments[0] == 'async'){
 				var [sync, items, ...args] = arguments }
 
+			var q
+			var inputs = [items, ...args]
+
+			// Define the runner and prepare...
+			//
 			// sync mode -- run action outside of queue...
 			// NOTE: running the queue in sync mode is not practical as
 			// 		the results may depend on queue configuration and 
 			// 		size...
 			if(sync == 'sync'){
-				// pre-process args...
-				arg_handler
-					&& ([items, ...args] = 
-						arg_handler.call(this, undefined, items, ...args))
-				// run...
-				return Promise.all(
-					(items instanceof Array ? 
-						items 
-						: [items])
-					.map(function(item){
-						return func.call(that, item, ...args) }))
+				var run = function([items, ...args]){
+					return Promise.all(
+						(items instanceof Array ? 
+							items 
+							: [items])
+						.map(function(item){
+							return func.call(that, item, ...args) })) }
 
 			// queue mode...
 			} else {
 				// prep queue...
-				var q = that.queue(title,
-						Object.assign(
-							{},
-							opts || {},
-							{ 
-								// XXX not sure about this...
-								//auto_stop: true,
-								handler: function([item, args]){
-									return func.call(that, item, ...(args || [])) }, 
-							}))
-				q.title = action.name
-				// pre-process args...
-				arg_handler
-					&& ([items, ...args] = 
-						arg_handler.call(this, q, items, ...args))
-				// fill the queue...
-				// NOTE: we are also adding a ref to args here to keep things consistent...
-				args.length > 0
-					&& (args = [args])
-				q.push(...(items instanceof Array ? 
-					items.map(function(e){ 
-							return [e, ...args] }) 
-					: [items, ...args]))
-				// make a promise...
-				return new Promise(function(resolve, reject){
-					q.then(resolve, reject) }) } }),
+				q = that.queue(title,
+					Object.assign(
+						{},
+						opts || {},
+						{ 
+							// XXX not sure about this...
+							//auto_stop: true,
+							handler: function([item, args]){
+								return func.call(that, item, ...(args || [])) }, 
+						}))
+				q.title = action.name 
+
+				var run = function([items, ...args]){
+					// fill the queue...
+					// NOTE: we are also adding a ref to args here to keep things consistent...
+					args.length > 0
+						&& (args = [args])
+					q.push(...(items instanceof Array ? 
+						items.map(function(e){ 
+								return [e, ...args] }) 
+						: [items, ...args]))
+					// make a promise...
+					return new Promise(function(resolve, reject){
+						q.then(resolve, reject) }) } } 
+
+			// pre-process args...
+			arg_handler
+				&& (inputs = arg_handler.call(this, q, inputs[0], ...inputs.slice(1)))
+			// run...
+			return (inputs instanceof Promise 
+					|| inputs instanceof runner.Queue) ?
+				inputs.then(function(items){
+					return run([items, ...args]) })
+				: run(inputs) }),
    		{
 			title,
 			toString: function(){

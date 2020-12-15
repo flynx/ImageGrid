@@ -341,6 +341,19 @@ var ExampleActions = actions.Actions({
 				return new Promise(function(resolve){
 					setTimeout(resolve, timeout || 100) }) })],
 
+	exampleChainedQueueHandler: ['- Test/',
+		core.queueHandler('Main queue',
+			core.queueHandler('Sub queue',
+				function(outer_queue, inner_queue, items, ...args){
+					console.log('### PRE-PREP', items, ...args)
+					return [items, ...args] },
+				function(item, ...args){
+					console.log('### PREP', item, ...args)
+					return item+1 }),
+			function(item, ...args){
+				console.log('### HANDLE', item, ...args)
+				return item*2 }) ],
+
 })
 
 var Example = 
