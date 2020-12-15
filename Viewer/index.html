@@ -31,7 +31,7 @@
 <!-- Scripts -->
 
 <!-- Global scope pollution test -->
-<script> 
+<!--script> 
 var __window = {...window} 
 function scopeDiff(cur=window, base=__window){
 	return Object.keys(cur)
@@ -40,7 +40,7 @@ function scopeDiff(cur=window, base=__window){
 		.reduce(function(res, k){
 			res[k] = cur[k]
 			return res }, {})}
-</script>
+</script-->
 
 <!-- DevTools fail-safe for electron/nw... -->
 <script>
