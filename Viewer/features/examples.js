@@ -345,9 +345,9 @@ var ExampleActions = actions.Actions({
 		core.queueHandler('Main queue',
 			core.queueHandler('Sub queue',
 				// pre-prepare the inputs (sync)...
-				function(outer_queue, inner_queue, items, ...args){
+				function(queue, next, items, ...args){
 					console.log('### PRE-PREP', items, ...args)
-					return [items, outer_queue, ...args] },
+					return [items, queue, ...args] },
 					//return [items, inner_queue, ...args] },
 				// prepare inputs (async/queue)...
 				function(item, q, ...args){

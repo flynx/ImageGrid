@@ -2549,7 +2549,7 @@ function(title, func){
 				this.tasks.Task(...pre_args, func.bind(this), ...args), 
 				// make this searchable by .tasks.named(..)...
 				{ 
-					__session_task__: action.__session_task__,
+					__session_task__: !!action.__session_task__,
 					name: action.name, 
 				}) }),
 		{
@@ -2621,7 +2621,7 @@ function(title, func){
 							resolve(res)
 							return res }),
 			   		{ 
-						__session_task__: action.__session_task__,
+						__session_task__: !!action.__session_task__,
 						title: action.name, 
 					}) }) }),
    		{
@@ -2738,9 +2738,7 @@ function(title, func){
 						{},
 						opts || {},
 						{ 
-							__session_task__: action.__session_task__,
-							// XXX not sure about this...
-							//auto_stop: true,
+							__session_task__: !!action.__session_task__,
 							handler: function([item, args]){
 								return func.call(that, item, ...(args || [])) }, 
 						}))
@@ -2762,7 +2760,8 @@ function(title, func){
 				&& (inputs = arg_handler.call(this, q, ...inputs))
 
 			// run...
-			return inputs instanceof Promise ?
+			return (inputs instanceof Promise 
+					|| inputs instanceof runner.FinalizableQueue) ?
 				// XXX BUG? .then(resolve) is triggered even if inputs was 
 				// 		stopped (should not resolve) or aborted (should reject)...
 				inputs.then(
@@ -2770,14 +2769,6 @@ function(title, func){
 						return run([items, ...args]) },
 					function(){
 						q && q.abort() })
-				: inputs instanceof runner.Queue ?
-					inputs
-						.on('stop', function(){ 
-							q && q.stop() })
-						.on('abort', function(){ 
-							q && q.abort() })
-						.then(function(items){
-							return run([items, ...args]) })
 				: run(inputs) }),
    		{
 			title,
@@ -2891,9 +2882,7 @@ var TaskActions = actions.Actions({
 				var abort = function(){
 					options.nonAbortable
 						|| queue
-							// XXX abort or stop???
-							.abort()
-							.clear() }
+							.abort() }
 				var cleanup = function(){
 					return function(){
 						queue.stop()
@@ -2911,7 +2900,7 @@ var TaskActions = actions.Actions({
 					&& (options.logger = logger)
 
 				queue = this.queues[name] = 
-					runner.Queue(options || {})
+					runner.FinalizableQueue(options || {})
 
 				// setup logging...
 				var suffix = (options || {}).hideProgress ? 
@@ -2925,11 +2914,9 @@ var TaskActions = actions.Actions({
 					.on('taskFailed', function(evt, t, err){ 
 						this.logger && this.logger.emit('skipped'+suffix, t, err) }) 
 					.on('stop', function(){
-						this.logger && this.logger.emit('reset') 
-						this.clear() })
+						this.logger && this.logger.emit('reset') })
 					.on('abort', function(){
-						this.logger && this.logger.emit('reset') 
-						this.clear() })
+						this.logger && this.logger.emit('reset') })
 				// cleanup...
 				queue
 					.then(
