@@ -344,12 +344,22 @@ var ExampleActions = actions.Actions({
 	exampleChainedQueueHandler: ['- Test/',
 		core.queueHandler('Main queue',
 			core.queueHandler('Sub queue',
+				// pre-prepare the inputs (sync)...
 				function(outer_queue, inner_queue, items, ...args){
 					console.log('### PRE-PREP', items, ...args)
-					return [items, ...args] },
-				function(item, ...args){
-					console.log('### PREP', item, ...args)
+					return [items, outer_queue, ...args] },
+					//return [items, inner_queue, ...args] },
+				// prepare inputs (async/queue)...
+				function(item, q, ...args){
+					console.log('### PREP', q.state, item, ...args)
+					item == 'abort'
+						&& q.abort()
+						&& console.log('### ABORT', q)
+					item == 'stop'
+						&& q.stop()
+						&& console.log('### STOP')
 					return item+1 }),
+			// handle inputs (async/queue)... 
 			function(item, ...args){
 				console.log('### HANDLE', item, ...args)
 				return item*2 }) ],
