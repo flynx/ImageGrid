@@ -7,6 +7,8 @@
 (function(require){ var module={} // make module AMD/node compatible...
 /*********************************************************************/
 
+var runner = require('lib/types/runner')
+
 var toggler = require('lib/toggler')
 var actions = require('lib/actions')
 var features = require('lib/features')
@@ -322,7 +324,7 @@ var ExampleActions = actions.Actions({
 			function(item, ...args){
 				console.log('Queue handler action!!', item, ...args)
 				return new Promise(function(resolve){
-					setTimeout(resolve, 100) }) })],
+					setTimeout(function(){ resolve(item) }, 100) }) })],
 	exampleQueueHandlerActionWArgs: ['- Test/',
 		core.queueHandler('Example queue handler with arguments', 
 			{quiet: true}, 
@@ -339,29 +341,44 @@ var ExampleActions = actions.Actions({
 			function(item, timeout, ...args){
 				console.log('Queue handler action!!', item, timeout, ...args)
 				return new Promise(function(resolve){
-					setTimeout(resolve, timeout || 100) }) })],
+					setTimeout(function(){ resolve(item) }, timeout || 100) }) })],
 
 	exampleChainedQueueHandler: ['- Test/',
 		core.queueHandler('Main queue',
 			core.queueHandler('Sub queue',
 				// pre-prepare the inputs (sync)...
 				function(queue, next, items, ...args){
-					console.log('### PRE-PREP', items, ...args)
+					// NOTE: here we will get both the "Sub queue" queue (queue) 
+					// 		and the "Main queue" queue (next), but when called 
+					// 		'sync' no queues are created and only 'sync' is 
+					// 		passed as first argument...
+					if(queue == 'sync'){
+						var [queue, items, ...args] = arguments }
+
+					console.log('\tPRE-PREP', items, ...args)
+
 					return [items, queue, ...args] },
-					//return [items, inner_queue, ...args] },
 				// prepare inputs (async/queue)...
 				function(item, q, ...args){
-					console.log('### PREP', q.state, item, ...args)
+					console.log('\tPREP', item, ...args)
+
+					// abort/stop queue...
 					item == 'abort'
 						&& q.abort()
-						&& console.log('### ABORT', q)
+						&& console.log('\t\tABORT', q)
 					item == 'stop'
 						&& q.stop()
-						&& console.log('### STOP')
+						&& console.log('\t\tSTOP')
+
+					// skip strings...
+					if(typeof(item) == typeof('str')){
+						console.log('\t\tSKIP', item)
+						return runner.SKIP }
+
 					return item+1 }),
 			// handle inputs (async/queue)... 
 			function(item, ...args){
-				console.log('### HANDLE', item, ...args)
+				console.log('\tHANDLE', item, ...args)
 				return item*2 }) ],
 
 })

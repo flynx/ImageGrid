@@ -190,7 +190,7 @@ var SharpActions = actions.Actions({
 	// XXX revise return values...
 	// XXX make backup name pattern configurable...
 	// XXX CROP ready for crop support...
-	makeResizedImage: ['- Image/',
+	_makeResizedImage: ['- Image/',
 		core.doc`Make resized image(s)...
 
 			.makeResizedImage(gid, size, path[, options])
@@ -393,7 +393,7 @@ var SharpActions = actions.Actions({
 											// XXX what should we return???
 											return to }) }) }) })],
 
-	_makeResizedImage: ['- Image/',
+	_makeResizedImage2: ['- Image/',
 		core.doc`Make resized image(s)...
 
 			.makeResizedImage(gid, size, path[, options])
@@ -619,16 +619,72 @@ var SharpActions = actions.Actions({
 	// 		i.e. call the second queue generator when the first one completes...
 	// 		or in other works chain queues -- essentially this is like 
 	// 		calling .then(..) on a queue but doing it at definition...
-	makeResizedImage2: ['- Image/',
-		core.doc`
+	makeResizedImage: ['- Image/',
+		core.doc`Make resized image(s)...
+
+			.makeResizedImage(gid, size, path[, options])
+			.makeResizedImage(gids, size, path[, options])
+				-> promise
+
+
+		Image size formats:
+			500px		- resize to make image's *largest* dimension 500 pixels (default).
+			500p		- resize to make image's *smallest* dimension 500 pixels.
+			500			- same as 500px
+
+
+		options format:
+			{
+				// output image name / name pattern...
+				//
+				// NOTE: for multiple images this should be a pattern and not an
+				// 		explicit name...
+				// NOTE: if not given this defaults to: "%n"
+				name: null | <str>,
+
+				// image name pattern data...
+				//
+				// NOTE: for more info on pattern see: .formatImageName(..)
+				data: null | { .. },
+
+				// if true and image is smaller than size enlarge it...
+				// 
+				// default: null / false
+				enlarge: null | true,
+
+				// overwrite, backup or skip (default) existing images...
+				//
+				// default: null / false
+				overwrite: null | true | 'backup',
+
+				// if true do not write an image if it's smaller than size...
+				// 
+				// default: null / false
+				skipSmaller: null | true,
+
+				// XXX not implemented...
+				transform: ...,
+				crop: ...,
+
+				timestamp: ...,
+				logger: ...,
+,			}
+
+
+		NOTE: all options are optional.
+		NOTE: this will not overwrite existing images.
 		`,
 		core.queueHandler('Making resized image', 
 			// prepare the data for image resizing (session queue)...
 			core.sessionQueueHandler('Gathering image data for resizing', 
 				// prepare the input index-dependant data in a fast way...
-				function(inner_queue, outer_queue, images, size, path, options){
+				function(queue, _, images, size, path, options){
+					var n = arguments.length - 1
+					if(queue == 'sync'){
+						n--
+						var [queue, images, size, path, options] = arguments }
 					// sanity check...
-					if(arguments.length < 4){
+					if(n < 3){
 						throw new Error('.makeResizedImage(..): '
 							+'need at least: images, size and path.') }
 					return [
@@ -653,7 +709,7 @@ var SharpActions = actions.Actions({
 					// skip non-images...
 					if(!image || !['image', null, undefined]
 							.includes(image.type)){
-						return [] }
+						return runner.SKIP }
 					return [
 						// source...
 						this.getImagePath(gid),
@@ -676,8 +732,9 @@ var SharpActions = actions.Actions({
 					] }),
 			// do the actual resizing (global queue)...
 			function([source, to, image], size, _, options={}){
-				// XXX handle skipped items -- source, to and image are undefined...
-				// XXX
+				// handle skipped items -- source, to and image are undefined...
+				if(source == null){
+					return undefined }
 
 				// sizing...
 				var fit = 

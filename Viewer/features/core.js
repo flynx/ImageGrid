@@ -2650,7 +2650,7 @@ function(title, func){
 //		-> [items, ...args]
 //
 //	Prepare args in sync mode...
-//	arg_handler(undefined, items, ...args)
+//	arg_handler('sync', items, ...args)
 //		-> [items, ...args]
 //
 //
@@ -2670,12 +2670,12 @@ function(title, func){
 //
 // This is different from queuedAction(..) in that what is queued is not
 // the action itself but rather the first argument to that action and the
-// action itself is used by the queue to handle each item. The rest of 
-// the arguments are passed to each call.
+// action is used by the queue to handle each item. The rest of the 
+// arguments are passed to each call.
 //
 // In 'sync' mode the action is run outside of queue/task right away, this
 // is done because for a queue we can only control the sync start, i.e. 
-// the first task execution, the rest of depends on queue configuration 
+// the first task execution, the rest depends on queue configuration 
 // thus making the final behaviour unpredictable.
 //
 //
@@ -2683,6 +2683,12 @@ function(title, func){
 // 		logging is handled by the queue/task which is not created in sync
 // 		mode.
 // NOTE: since the sync-mode can block it must be used very carefully.
+// NOTE: for an example of chaining several queues see features/examples's:
+// 			.exampleChainedQueueHandler(..)
+// NOTE: when chaining queues, in 'sync' mode all queues in the chain will
+// 		be run sync...
+// NOTE: when chaining arg_handler(..) will get one queue per level of 
+// 		chaining, but in 'sync' mode only one 'sync' is passed...
 //
 // XXX might be a good idea to split this into a generic and domain parts 
 // 		and move the generic part into types/runner...
@@ -2722,8 +2728,11 @@ function(title, func){
 							items 
 							: [items])
 						.map(function(item){
-							return func.call(that, item, ...args) })) }
-
+							var res = func.call(that, item, ...args) 
+							return res === runner.SKIP ? 
+								[]
+								: [res] })
+						.flat()) }
 			// queue mode...
 			} else {
 				// prep queue...
@@ -2751,13 +2760,15 @@ function(title, func){
 
 			// pre-process args...
 			arg_handler
-				&& (inputs = arg_handler.call(this, q, ...inputs))
+				&& (inputs = arg_handler.call(this, 
+					sync == 'sync' ? 
+						sync 
+						: q, 
+					...inputs))
 
 			// run...
 			return (inputs instanceof Promise 
 					|| inputs instanceof runner.FinalizableQueue) ?
-				// XXX BUG? .then(resolve) is triggered even if inputs was 
-				// 		stopped (should not resolve) or aborted (should reject)...
 				inputs.then(
 					function(items){
 						return run([items, ...args]) },
@@ -2768,11 +2779,11 @@ function(title, func){
 			title,
 			toString: function(){
 				// XXX add opts of given...
-				return `core.queueHandler('${action.name}',\n\t${ 
+				return `core.queueHandler('${action.name}',\n${ 
 					(arg_handler ?
-						object.normalizeIndent( '\t'+ arg_handler.toString() ) + ',\n\t'
+						object.normalizeIndent('\t'+arg_handler.toString()).indent('\t') + ',\n'
 						: '')
-					+ object.normalizeIndent( '\t'+ func.toString() ) })` },
+					+ object.normalizeIndent('\t'+func.toString()).indent('\t') })` },
 		}) }
 
 var sessionQueueHandler =
@@ -2789,7 +2800,6 @@ function(title, func){
 // XXX add a task manager UI...
 // XXX might be a good idea to confirm session task stops when loading a 
 // 		new index...
-// XXX do we need to cache the lister props???
 var TaskActions = actions.Actions({
 
 	// Tasks...
