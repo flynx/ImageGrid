@@ -248,12 +248,12 @@ var SharpActions = actions.Actions({
 			core.sessionQueueHandler('Gathering image data for resizing', 
 				// prepare the input index-dependant data in a fast way...
 				function(queue, _, images, size, path, options){
-					var n = arguments.length - 1
+					var args = [...arguments].slice(2)
 					if(queue == 'sync'){
-						n--
-						var [queue, images, size, path, options] = arguments }
+						args.unshift(_)
+						var [images, size, path, options] = args }
 					// sanity check...
-					if(n < 3){
+					if(args.length < 3){
 						throw new Error('.makeResizedImage(..): '
 							+'need at least: images, size and path.') }
 					return [
@@ -264,7 +264,7 @@ var SharpActions = actions.Actions({
 							: images instanceof Array ? 
 								images 
 							: [images],
-						...[...arguments].slice(3),
+						...args.slice(1),
 					]},
 				// prepare index independent data, this can be a tad slow...
 				function(gid, size, path, options={}){
@@ -415,6 +415,7 @@ var SharpActions = actions.Actions({
 
 	// XXX this does not update image.base_path -- is this correct???
 	// XXX add support for offloading the processing to a thread/worker...
+	// XXX make index dir hidden...
 	makePreviews: ['Sharp|File/Make image $previews',
 		core.doc`Make image previews
 
@@ -482,8 +483,11 @@ var SharpActions = actions.Actions({
 				} else {
 					sizes = cfg_sizes }
 
+				// partially fill in the template...
+				var index_dir = this.config['index-dir'] || '.ImageGrid'
 				var path_tpl = that.config['preview-path-template']
-					.replace(/\$INDEX|\$\{INDEX\}/g, this.config['index-dir'] || '.ImageGrid')
+					.replace(/\$INDEX|\$\{INDEX\}/g, index_dir)
+				var set_hidden_attrib = true
 
 				var img = this.images[gid]
 				var base = base_path 
@@ -497,6 +501,22 @@ var SharpActions = actions.Actions({
 								.replace(/\$RESOLUTION|\$\{RESOLUTION\}/g, parseInt(size))
 								.replace(/\$GID|\$\{GID\}/g, gid) 
 								.replace(/\$NAME|\$\{NAME\}/g, img.name)
+
+							// set the hidden flag on index dir...
+							// NOTE: this is done once per image...
+							// NOTE: we can't do this once per call as images can
+							// 		have different .base_path's...
+							set_hidden_attrib 
+								&& (process.platform == 'win32' 
+									|| process.platform == 'win64')
+								&& name.includes(index_dir)
+								&& cp.spawn('attrib', ['+h', 
+									pathlib.resolve(
+										base,
+										name.split(index_dir)[0], 
+										index_dir)]) 
+							set_hidden_attrib = false
+
 							// NOTE: we are 'sync' here for several reasons, mainly because
 							// 		this is a small list and in this way we can take 
 							// 		advantage of OS file caching, and removing the queue
@@ -505,6 +525,7 @@ var SharpActions = actions.Actions({
 									name, 
 									skipSmaller: true,
 									transform: false,
+									overwrite: false,
 									logger: logger_mode == 'gids' ? 
 										false 
 										: logger,
@@ -520,8 +541,9 @@ var SharpActions = actions.Actions({
 												&& that.markChanged('images', [gid]) }
 										return [gid, size, name] },
 									function(err){
-										// XXX error
-										//logger && logger.emit('skipped', gid)
+										// XXX erro
+										logger 
+											&& logger.emit('skipped', `${gid} / ${size}`)
 									}) })) })],
 
 	// XXX add support for offloading the processing to a thread/worker...

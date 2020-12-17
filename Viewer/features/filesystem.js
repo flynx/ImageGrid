@@ -1969,7 +1969,6 @@ var FileSystemWriterActions = actions.Actions({
 	//
 	// NOTE: with no arguments this will save index to .location.path
 	//
-	// XXX should this return a promise??? ...a clean promise???
 	// XXX BUG: after .loadImages(..) and without arguments this produces
 	// 		a result that is not loaded....
 	saveIndex: ['- File/',
@@ -2023,8 +2022,7 @@ var FileSystemWriterActions = actions.Actions({
 					logger)
 				// set hidden file attribute on Windows...
 				.then(function(){
-					typeof(process) != 'undefined' 
-						&& (process.platform == 'win32' 
+					;(process.platform == 'win32' 
 							|| process.platform == 'win64')
 						&& child_process
 							.spawn('attrib', ['+h', full_path]) })
