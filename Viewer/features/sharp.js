@@ -7,6 +7,8 @@
 (function(require){ var module={} // make module AMD/node compatible...
 /*********************************************************************/
 
+var runner = require('lib/types/runner')
+
 var actions = require('lib/actions')
 var features = require('lib/features')
 
@@ -267,7 +269,11 @@ var SharpActions = actions.Actions({
 						...args.slice(1),
 					]},
 				// prepare index independent data, this can be a tad slow...
-				function(gid, size, path, options={}){
+				function(gid, _, path, options={}){
+					// special case: we already got the paths...
+					if(gid instanceof Array){
+						return gid }
+
 					var image = this.images[gid]
 					// options...
 					var {
@@ -300,7 +306,7 @@ var SharpActions = actions.Actions({
 						},
 					] }),
 			// do the actual resizing (global queue)...
-			function([source, to, image], size, _, options={}){
+			function([source, to, image={}], size, _, options={}){
 				// handle skipped items -- source, to and image are undefined...
 				if(source == null){
 					return undefined }
@@ -413,6 +419,8 @@ var SharpActions = actions.Actions({
 											// XXX what should we return???
 											return to }) }) }) })],
 
+	// XXX should we split this into a session and global versions 
+	// 		a-la .makeResizedImage(..)???
 	// XXX this does not update image.base_path -- is this correct???
 	// XXX add support for offloading the processing to a thread/worker...
 	// XXX make index dir hidden...
@@ -542,6 +550,147 @@ var SharpActions = actions.Actions({
 										return [gid, size, name] },
 									function(err){
 										// XXX erro
+										logger 
+											&& logger.emit('skipped', `${gid} / ${size}`)
+									}) })) })],
+	// XXX EXPERIMENTAL: need a way to update the index when preview is 
+	// 		created (if we did not navigate away)
+	// 			- we could abort the update if we go away...
+	// 			- we could clone the index and if index.gid does not 
+	// 				match the main index use the clone to save....
+	// XXX change base_path to target path...
+	_makePreviews: ['- Sharp|File/Make image $previews (experimental)',
+		core.queueHandler('Make image previews', 
+			core.sessionQueueHandler('Getting image data for previews', 
+				// prepare the static data...
+				function(queue, _, images, sizes){
+					// sync mode...
+					var args = [...arguments].slice(2)
+					if(queue == 'sync'){
+						args.unshift(_)
+						var [images, sizes, ...args] = args }
+
+					// get/normalize sizes....
+					var cfg_sizes = this.config['preview-sizes'].slice() || []
+					cfg_sizes
+						.sort()
+						.reverse()
+					if(sizes){
+						sizes = sizes instanceof Array ? sizes : [sizes]
+						// normalize to preview size...
+						sizes = 
+							(this.config['preview-normalized'] ? 
+								sizes
+									.map(function(s){ 
+										return cfg_sizes
+											.filter(function(c){ 
+												return c >= s })
+											.pop() || s })
+								: sizes)
+							.unique()
+					} else {
+						sizes = cfg_sizes }
+
+					// XXX we should cache this on a previous stage...
+					var index_dir = this.config['index-dir'] || '.ImageGrid'
+
+					// get/normalize images...
+					return [
+						(images == null || images == 'all') ? 
+								this.data.getImages('all')
+							: images == 'current' ? 
+								[this.current]
+							: images instanceof Array ? 
+								images 
+							: [images],
+						sizes,
+						// name template -- partially filled...
+						this.config['preview-path-template']
+							.replace(/\$INDEX|\$\{INDEX\}/g, index_dir),
+						// NOTE: this is not the most elegant way to go but
+						// 		it's better than getting it once per image...
+						index_dir,
+						...args,
+					] },
+				// generate image paths...
+				function(gid, sizes, path_tpl, index_dir, base_path){
+					var that = this
+					var img = this.images[gid]
+					var base = base_path 
+						|| img.base_path 
+						|| this.location.path
+					return [
+						gid,
+						// source...
+						this.getImagePath(gid), 
+						// targets -- [[size, to], ...]...
+						sizes
+							.map(function(size){
+								var name = path_tpl
+									.replace(/\$RESOLUTION|\$\{RESOLUTION\}/g, parseInt(size))
+									.replace(/\$GID|\$\{GID\}/g, gid) 
+									.replace(/\$NAME|\$\{NAME\}/g, img.name)
+								return [
+									size,
+									pathlib.resolve(
+										that.location.path,
+										pathlib.join(base, name)),
+								] }),
+						index_dir,
+					]}),
+			// generate the previews...
+			// NOTE: this is competely isolated...
+			// XXX args/logger is wrong here...
+			function([gid, source, targets, index_dir], logger){
+				var that = this
+				//var logger_mode = this.config['preview-progress-mode'] || 'gids'
+				
+				// NOTE: if this is false attrib will not be called...
+				var set_hidden_attrib = true
+				return Promise.all(
+					targets
+						.map(function([size, target]){
+							// set the hidden flag on index dir...
+							// NOTE: this is done once per image...
+							// NOTE: we can't do this once per call as images can
+							// 		have different .base_path's...
+							set_hidden_attrib 
+								&& (process.platform == 'win32' 
+									|| process.platform == 'win64')
+								&& target.includes(index_dir)
+								&& cp.spawn('attrib', ['+h', 
+									pathlib.join(target.split(index_dir)[0], index_dir)]) 
+							set_hidden_attrib = false
+
+							// NOTE: we are 'sync' here for several reasons, mainly because
+							// 		this is a small list and in this way we can take 
+							// 		advantage of OS file caching, and removing the queue
+							// 		overhead, though small makes this noticeably faster...
+							return that.makeResizedImage('sync', [[source, target]], size, null, { 
+									name, 
+									skipSmaller: true,
+									transform: false,
+									overwrite: false,
+									//logger: logger_mode == 'gids' ? 
+									//	false 
+									//	: logger,
+								})
+								.then(
+									function(res){
+										// update metadata...
+										// XXX do this only if we are in the same index......
+										// 		...might be fun to create a session 
+										// 		queue for this at the start and if it 
+										// 		survives till this point we use it...
+										/*
+										if(!base_path){
+											var preview = img.preview = img.preview || {} 
+											preview[parseInt(size) + 'px'] = name
+											that.markChanged
+												&& that.markChanged('images', [gid]) }
+										//*/
+										return [gid, size, name] },
+									function(err){
 										logger 
 											&& logger.emit('skipped', `${gid} / ${size}`)
 									}) })) })],
@@ -702,19 +851,6 @@ var SharpActions = actions.Actions({
 						return gid }) })],
 	cacheAllMetadata: ['- Sharp/Image/',
 		'cacheMetadata: "all" ...'],
-
-	// shorthands...
-	/*/ XXX do we need these???
-	// 		...better have a task manager UI...
-	// XXX if these are kept, would be fun to show them only if the respective
-	// 		tasks are running...
-	abortMakeResizedImage: ['- Sharp/',
-		'tasks.stop: "makeResizedImage"'],
-	abortMakePreviews: ['- Sharp/',
-		'tasks.stop: "makePreviews"'],
-	abortCacheMetadata: ['- Sharp/',
-		'tasks.stop: "cacheMetadata"'],
-	//*/
 })
 
 

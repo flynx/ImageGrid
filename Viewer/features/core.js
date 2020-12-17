@@ -2777,6 +2777,9 @@ function(title, func){
 				: run(inputs) }),
    		{
 			title,
+			arg_handler,
+			handler: func,
+
 			toString: function(){
 				// XXX add opts of given...
 				return `core.queueHandler('${action.name}',\n${ 
