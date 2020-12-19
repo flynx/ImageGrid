@@ -170,16 +170,14 @@ if(typeof(process) != 'undefined'){
 		// XXX this will not work directly as we will need to explicitly
 		// 		require jli...
 		//patchDate(global.Date)
-	}
-}
+	} }
 
 // browser...
 // NOTE: we're avoiding detecting browser specifics for as long as possible,
 // 		this will minimize the headaches of supporting several non-standard
 // 		versions of code...
 if(typeof(window) != 'undefined'){
-	runtime.browser = true
-}
+	runtime.browser = true }
 
 
 
@@ -596,6 +594,8 @@ var LoggerActions = actions.Actions({
 		return (this.__logger = 
 			this.__logger 
 				|| this.Logger(this)) },
+	set logger(value){
+		this.__logger = value },
 
 	// XXX move this to console-logger???
 	// XXX should this be an action???
@@ -1029,7 +1029,8 @@ module.LifeCycle = ImageGridFeatures.Feature({
 
 var SerializationActions = actions.Actions({
 	clone: ['- System/',
-		function(full){ return actions.MetaActions.clone.call(this, full) }],
+		function(full){ 
+			return actions.MetaActions.clone.call(this, full) }],
 	json: ['- System/',
 		function(){ return {} }],
 	load: ['- System/',
@@ -2935,6 +2936,51 @@ var TaskActions = actions.Actions({
 				|| this.tasks.Task(name, queue) 
 
 			return queue }),
+
+
+
+	// isolated tasks (XXX EXPERIMENTAL)
+	
+	// XXX would be nice to have an ability to partially clone the instance...
+	// 		...currently we can do a full clone and remove things we do 
+	// 		not want but that still takes time and memory...
+	// XXX sould we also do a fast clone or shallow clone???
+	__clones: null,
+	isolate: ['- System/',
+		function(){
+			var clones = this.__clones = this.__clones || []
+
+			var clone = this.clone(true)
+
+			// reset actions to exclude UI...
+			// XXX this still has all the ui handlers setup...
+			clone.__proto__ = ImageGridFeatures.setup([...this.features.input, '-ui'])
+
+			// link clone in...
+			clone.logger = this.logger.push(['Task', clones.length].join(' '))
+
+			clones.push(clone)
+			return clone }],
+	// Create a new ig instance with the same data...
+	//
+	// This will reflect the data changes while when the main index is 
+	// cleared or reloaded this will retain the old data...
+	__links: null,
+	link: ['- System/',
+		function(){
+			var that = this
+			var links = this.__links = this.__links || []
+			// XXX we need to only link it part of the data, for example 
+			// 		._action_handlers is action-set specific and should 
+			// 		not be overwritten...
+			var link = ImageGridFeatures.setup([...this.features.input, '-ui'])
+			// XXX this is not a clean clone...
+			return Object.assign(
+					link,
+					this)
+				.run(function(){
+					this.logger = that.logger.push(['Task', links.length].join(' '))
+					links.push(this) }) }],
 })
 
 var Tasks = 

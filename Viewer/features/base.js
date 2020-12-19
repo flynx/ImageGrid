@@ -304,12 +304,9 @@ actions.Actions({
 	clone: ['- File/',
 		function(full){ return function(res){
 			if(this.data){
-				res.data = this.data.clone()
-			} 
+				res.data = this.data.clone() } 
 			if(this.images){
-				res.images = this.images.clone()
-			}
-		} }],
+				res.images = this.images.clone() } } }],
 
 	dataFromURLs: ['- File/',
 		function(lst, base){

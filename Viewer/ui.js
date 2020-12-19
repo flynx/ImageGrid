@@ -35,6 +35,7 @@ $(function(){
 		// setup actions...
 		window.ig = 
 		window.ImageGrid = 
+			// XXX should this be core???
 			viewer.ImageGridFeatures
 				.setup([
 					'imagegrid-testing',
