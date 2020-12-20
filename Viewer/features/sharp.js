@@ -856,6 +856,17 @@ var SharpActions = actions.Actions({
 						return gid }) })],
 	cacheAllMetadata: ['- Sharp/Image/',
 		'cacheMetadata: "all" ...'],
+
+
+	// XXX EXPERIMENTAL...
+	makePreviewsAndSave: ['- Sharp|File/',
+		function(){
+			var link = this.link()
+			return link
+				.makePreviews(...arguments)
+				.then(function(){
+					link.saveIndex
+						&& link.saveIndex() }) }],
 })
 
 

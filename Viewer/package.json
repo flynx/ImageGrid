@@ -30,7 +30,7 @@
     "generic-walk": "^1.4.0",
     "glob": "^7.1.6",
     "guarantee-events": "^1.0.0",
-    "ig-actions": "^3.24.28",
+    "ig-actions": "^3.24.29",
     "ig-argv": "^2.16.3",
     "ig-features": "^3.4.5",
     "ig-object": "^5.4.14",

@@ -148,7 +148,8 @@ function start(){
 	var _start = function(){
 		createSplash()
 		createWindow() }
-	// NOTE: by this time (arg parsing and stuff) the app may already be ready...
+	// NOTE: by this time (arg parsing and stuff) the app may already 
+	//		be ready...
 	app.isReady() ?
 		_start()
 		: app.on('ready', _start) }

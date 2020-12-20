@@ -2944,43 +2944,73 @@ var TaskActions = actions.Actions({
 	// XXX would be nice to have an ability to partially clone the instance...
 	// 		...currently we can do a full clone and remove things we do 
 	// 		not want but that still takes time and memory...
-	// XXX sould we also do a fast clone or shallow clone???
-	__clones: null,
+	// XXX this does not copy aliases...
+	// XXX might be a good idea to add a 'IsolatedTask' feature/mixin to
+	// 		handle cleanup (via .done() action)
+	// XXX should this be a prop -- .isolated???
+	__isolated: null,
+	get isolated(){
+		return (this.__isolated = this.__isolated || []) },
 	isolate: ['- System/',
 		function(){
-			var clones = this.__clones = this.__clones || []
+			var clones = this.isolated
 
 			var clone = this.clone(true)
-
 			// reset actions to exclude UI...
-			// XXX this still has all the ui handlers setup...
 			clone.__proto__ = ImageGridFeatures.setup([...this.features.input, '-ui'])
-
+			clone.parent = this
 			// link clone in...
 			clone.logger = this.logger.push(['Task', clones.length].join(' '))
 
 			clones.push(clone)
 			return clone }],
+	// XXX this is the same as LinkedTask(..) make a meta-function...
+	IsolatedTask: ['- System/',
+		function(action, ...args){
+			var that = this
+			var context = this.isolate
+
+			var res = context[action](...args)
+
+			var cleanup = function(){
+				var l = (that.__isolated || [])
+				l.includes(context)
+					&& l.splice(l.indexOf(context), 1) }
+
+			res.then ?
+				res.finally(cleanup)
+				: cleanup()
+
+			return res === context ? 
+				undefined 
+				: res }],
+
 	// Create a new ig instance with the same data...
 	//
 	// This will reflect the data changes while when the main index is 
 	// cleared or reloaded this will retain the old data...
-	__links: null,
+	//
+	// XXX should this be a prop -- .linked???
+	__linked: null,
+	get linked(){
+		return (this.__linked = this.__linked || []) },
 	link: ['- System/',
 		function(){
 			var that = this
-			var links = this.__links = this.__links || []
-			// XXX we need to only link it part of the data, for example 
-			// 		._action_handlers is action-set specific and should 
-			// 		not be overwritten...
+			var links = this.linked
 			var link = ImageGridFeatures.setup([...this.features.input, '-ui'])
-			// XXX this is not a clean clone...
+
 			return Object.assign(
 					link,
-					this)
+					this,
+					{parent: this})
 				.run(function(){
 					this.logger = that.logger.push(['Task', links.length].join(' '))
 					links.push(this) }) }],
+	// XXX this should delete the clone when done...
+	LinkedTask: ['- System/',
+		function(){}],
+
 })
 
 var Tasks = 

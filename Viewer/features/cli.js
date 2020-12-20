@@ -181,7 +181,7 @@ var CLIActions = actions.Actions({
 	startREPL: ['- System/Start CLI interpreter',
 		{cli: {
 			name: '@repl',
-			interactive: true,
+			//interactive: true,
 		}},
 		function(){
 			var that = this
@@ -429,6 +429,16 @@ var CLIActions = actions.Actions({
 					return index
 						.sortImages()
 						.saveIndex() }) }],
+
+	// XXX this is still wrong...
+	_makeIndex: ['- System/',
+		`chain: 
+			"loadImages: $1" 
+			"saveIndex" 
+			"makePreviews: 'all'"
+			"sortImages"
+			"saveIndex"`],
+
 	// XXX does not work yet...
 	updateIndex: ['- System/Update index',
 		{cli: {
