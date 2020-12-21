@@ -2922,8 +2922,11 @@ var TaskActions = actions.Actions({
 				queue
 					.on('tasksAdded', function(evt, t){ 
 						this.logger && this.logger.emit('added'+suffix, t) })
-					.on('taskCompleted', function(evt, t){ 
-						this.logger && this.logger.emit('done'+suffix, t) }) 
+					// NOTE: t can be anything including an array, so to 
+					// 		avoid confusion we wrap it in an array this 
+					// 		one call means one emit...
+					.on('taskCompleted', function(evt, t, r){ 
+						this.logger && this.logger.emit('done'+suffix, [t]) }) 
 					.on('taskFailed', function(evt, t, err){ 
 						this.logger && this.logger.emit('skipped'+suffix, t, err) }) 
 					.on('stop', function(){

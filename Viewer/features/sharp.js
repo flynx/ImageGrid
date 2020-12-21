@@ -700,6 +700,10 @@ var SharpActions = actions.Actions({
 											&& logger.emit('skipped', `${gid} / ${size}`)
 									}) })) })],
 
+	// XXX BUG: .cacheMetadata('all'): runs out of call stack on very 
+	// 		large indexes...
+	// 		...can't yet see/find any recursion...
+	// 		.....at least the fail is fast and quiet =)
 	// XXX add support for offloading the processing to a thread/worker...
 	// XXX revise logging and logger passing...
 	cacheMetadata: ['- Sharp|Image/',
@@ -756,9 +760,7 @@ var SharpActions = actions.Actions({
 			// parse args...
 			function(queue, image, ...args){
 				var that = this
-				var force = false
-				if(image === true){
-					var [force, image, ...args] = arguments }
+				var force = args[0] == 'force'
 
 				// expand images...
 				var images = image == 'all' ?
@@ -783,7 +785,6 @@ var SharpActions = actions.Actions({
 
 				return [
 					images,
-					force,
 					...args,
 				] },
 			function(image, force, logger){
@@ -908,7 +909,7 @@ module.Sharp = core.ImageGridFeatures.Feature({
 		// 		indexes...
 		// XXX this needs to be run in the background...
 		// XXX this is best done in a thread 
-		[['loadIndex'
+		[['loadIndex',
 				'loadImages', 
 				'loadNewImages'],
 			'cacheMetadata: "all"'],
