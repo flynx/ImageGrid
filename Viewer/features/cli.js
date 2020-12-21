@@ -432,12 +432,12 @@ var CLIActions = actions.Actions({
 
 	// XXX this is still wrong...
 	_makeIndex: ['- System/',
-		`chain: 
-			"loadImages: $1" 
-			"saveIndex" 
-			"makePreviews: 'all'"
-			"sortImages"
-			"saveIndex"`],
+		`chain: [
+			"loadImages: $1",
+			"saveIndex",
+			"makePreviews: 'all'",
+			"sortImages",
+			"saveIndex", ]`],
 
 	// XXX does not work yet...
 	updateIndex: ['- System/Update index',

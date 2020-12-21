@@ -755,23 +755,39 @@ var SharpActions = actions.Actions({
 			//{quiet: true, pool_size: 2, busy_timeout_scale: 10}, 
 			// parse args...
 			function(queue, image, ...args){
+				var that = this
 				var force = false
 				if(image === true){
 					var [force, image, ...args] = arguments }
+
+				// expand images...
+				var images = image == 'all' ?
+						this.images.keys()
+					: image == 'loaded' ?
+						this.data.getImages('loaded')
+					: image instanceof Array ?
+						image
+					: [this.data.getImage(image || 'current')]
+				// narrow down the list...
+				images = force ? 
+					images 
+					: images
+						.filter(function(gid){
+							var img = that.images[gid]
+							return img
+								// high priority must be preset...
+								&& ((img.orientation == null
+										&& img.flipped == null)
+									// update metadata...
+									|| (img.metadata || {}).ImageGridMetadata == null) })
+
 				return [
-					...(force ? [true] : []),
-					// expand images..
-					image == 'all' ?
-							this.images.keys()
-						: image == 'loaded' ?
-							this.data.getImages('loaded')
-						: (image || 'current'),
+					images,
+					force,
 					...args,
 				] },
-			function(image, logger){
+			function(image, force, logger){
 				var that = this
-				if(image === true){
-					var [force, image, logger] = arguments }
 
 				// XXX cache the image data???
 				var gid = this.data.getImage(image)
@@ -886,9 +902,14 @@ module.Sharp = core.ImageGridFeatures.Feature({
 	isApplicable: function(){ return !!sharp },
 
 	handlers: [
-		//* XXX this needs to be run in the background...
+		// NOTE: this is about as fast as filtering the images and 
+		// 		calling only on the ones needing caching...
+		// 		...but this is not a no-op, especially on very large 
+		// 		indexes...
+		// XXX this needs to be run in the background...
 		// XXX this is best done in a thread 
-		[['loadImages', 
+		[['loadIndex'
+				'loadImages', 
 				'loadNewImages'],
 			'cacheMetadata: "all"'],
 		//*/
@@ -929,12 +950,7 @@ module.Sharp = core.ImageGridFeatures.Feature({
 										that.ribbons.updateImage(gid)
 
 										// create the rest...
-										that.makePreviews(gid)
-									})
-							}
-						})
-				}
-			}]
+										that.makePreviews(gid) }) } }) } }]
 		//*/
 	],
 })

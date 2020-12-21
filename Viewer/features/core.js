@@ -2716,6 +2716,19 @@ function(title, func){
 			var q
 			var inputs = [items, ...args]
 
+			// pre-process args...
+			arg_handler
+				&& (inputs = arg_handler.call(this, 
+					sync == 'sync' ? 
+						sync 
+						: q, 
+					...inputs))
+			// special-case: empty inputs -- no need to handle anything...
+			if(inputs instanceof Array 
+					&& inputs[0] 
+					&& inputs[0].length == 0){
+				return Promise.resolve(inputs) }
+
 			// Define the runner and prepare...
 			//
 			// sync mode -- run action outside of queue...
@@ -2758,14 +2771,6 @@ function(title, func){
 								return [e, ...args] }) 
 						: [items, ...args]))
 					return q.promise() } } 
-
-			// pre-process args...
-			arg_handler
-				&& (inputs = arg_handler.call(this, 
-					sync == 'sync' ? 
-						sync 
-						: q, 
-					...inputs))
 
 			// run...
 			return (inputs instanceof Promise 
