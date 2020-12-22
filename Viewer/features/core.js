@@ -2769,7 +2769,7 @@ function(title, func){
 					q.add(items instanceof Array ? 
 						items.map(function(e){ 
 								return [e, ...args] }) 
-						: [items, ...args])
+						: [[items, ...args]])
 					return q.promise() } } 
 
 			// run...
