@@ -94,7 +94,9 @@ var ProgressActions = actions.Actions({
 	// XXX multiple containers...
 	// XXX shorten the nested css class names...
 	// XXX revise styles...
-	// XXX make the "X" bigger -- finger usable...
+	// XXX make the "X" finger usable...
+	// XXX add time estimation...
+	// 		....based on last 10 tasks...
 	__progress_cache: null,
 	showProgress: ['- Interface/Show progress bar...',
 		core.doc`Progress bar widget...
@@ -168,8 +170,25 @@ var ProgressActions = actions.Actions({
 								: parseInt(value))
 							: v) }
 
-				value = updateValue('value', value)
+				// XXX REMAINING_TIME
+				var prev = cache.prev || 0
+				value = cache.prev = updateValue('value', value)
 				max = updateValue('max', max)
+
+				// XXX REMAINING_TIME
+				// estimate time to completion...
+				var t0 = cache.timestamp || Date.now()
+				var t = (cache.timestamp = Date.now()) - t0
+				var avg = cache.avg_time = 
+					// rolling average -- feels a bit too smooth...
+					(((cache.avg_time || 0) * prev + t) / value) || 0
+				var remaining = new Date(0)
+				avg > 0
+					&& remaining.setMilliseconds(
+						avg 
+						* (max-value) 
+						// make the estimate a bit pessimistic...
+						* 1.3)
 
 				// update not due yet...
 				if('timeout' in cache){
@@ -258,13 +277,21 @@ var ProgressActions = actions.Actions({
 			timeout 
 				&& clearTimeout(JSON.parse(timeout))
 
+			//* XXX REMAINING_TIME
+			// time remaining...
+			var t = remaining ?
+				` t:-${ 
+					remaining.toISOString()
+						.substr(11, 8)
+						.replace(/^00:/, '') }s`
+				: ''
 			// format the message...
 			msg = msg ? ': '+msg : ''
 			msg = ' '+ msg 
 				+ (value && value >= (max || 0) ? 
 						' (done)' 
 					: max && value != max ? 
-						' ('+ (value || 0) +' of '+ max +')'
+						` (${value || 0} of ${max}${t})`
 					: '...')
 
 			// update widget...

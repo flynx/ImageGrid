@@ -2766,10 +2766,10 @@ function(title, func){
 					// NOTE: we are also adding a ref to args here to keep things consistent...
 					args.length > 0
 						&& (args = [args])
-					q.push(...(items instanceof Array ? 
+					q.add(items instanceof Array ? 
 						items.map(function(e){ 
 								return [e, ...args] }) 
-						: [items, ...args]))
+						: [items, ...args])
 					return q.promise() } } 
 
 			// run...
