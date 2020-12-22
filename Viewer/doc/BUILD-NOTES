@@ -1,3 +1,17 @@
+In general
+----------
+
+The idea is to make the project as simple as possible and the dev cycle 
+as efficient as possible, for this reason only one lib manager is used 
+(npm), only one build system (make) and any translation layers are 
+avoided (less is likely to be phased out).
+
+With this approach for most cases and for testing in the browser after 
+the initial setup only refreshing the page is required to load most of 
+the changes (./css/layout.less being the only exception).
+
+
+
 General environment
 -------------------
 
@@ -75,6 +89,7 @@ For make help to work make requires: bash, sed, grep/fgrep and printf to
 be available in the path, run this to double check:
 
 	$ make check-help
+
 
 To check the full list of dependencies run:
 
