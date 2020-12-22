@@ -2947,7 +2947,20 @@ var TaskActions = actions.Actions({
 
 
 
-	// isolated tasks (XXX EXPERIMENTAL)
+	// contexts (XXX EXPERIMENTAL)
+	//
+	// XXX would be nice to have a context manager:
+	// 		- context id's (index? ...sparse array?)
+	// 		- manager API
+	// 			- create/remove
+	// 		- context api (feature) 
+	// 			.then(..)/.catch(..)/.finally(..)
+	// XXX is peer stuff just a special context???
+	// 		...feels like yes
+	// XXX is context manager a special case of task manager???
+	// XXX move to a separate feature...
+	
+	get contexts(){},
 	
 	// XXX would be nice to have an ability to partially clone the instance...
 	// 		...currently we can do a full clone and remove things we do 
@@ -2970,7 +2983,7 @@ var TaskActions = actions.Actions({
 			// link clone in...
 			clone.logger = this.logger.push(['Task', clones.length].join(' '))
 
-			clones.push(clone)
+			clone.context_id = clones.push(clone)
 			return clone }],
 	// XXX this is the same as LinkedTask(..) make a meta-function...
 	IsolatedTask: ['- System/',
@@ -2999,22 +3012,41 @@ var TaskActions = actions.Actions({
 	// cleared or reloaded this will retain the old data...
 	//
 	// XXX should this be a prop -- .linked???
+	// XXX would be a good idea to store all the links in once place...
 	__linked: null,
 	get linked(){
 		return (this.__linked = this.__linked || []) },
 	link: ['- System/',
-		function(){
+		function(title){
 			var that = this
 			var links = this.linked
-			var link = ImageGridFeatures.setup([...this.features.input, '-ui'])
 
+			// get link already created...
+			var link = this.linked
+				.filter(function(l){ 
+					return title ? 
+						l.title == title
+						: (l.data === that.data 
+							&& l.images === that.images) })
+				.last()
+			if(link){
+				return link }
+
+			// create a link...
+			link = ImageGridFeatures.setup([...this.features.input, '-ui'])
 			return Object.assign(
 					link,
 					this,
-					{parent: this})
+					{
+						// XXX revise...
+						parent: this,
+						title: title,
+						// XXX change this when data/images changes...
+						type: 'link',
+					})
 				.run(function(){
 					this.logger = that.logger.push(['Task', links.length].join(' '))
-					links.push(this) }) }],
+					this.context_id = links.push(this) }) }],
 	// XXX this should delete the clone when done...
 	LinkedTask: ['- System/',
 		function(){}],
