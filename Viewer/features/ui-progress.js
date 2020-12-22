@@ -281,7 +281,7 @@ var ProgressActions = actions.Actions({
 				` / -${ 
 					remaining.toISOString()
 						.substr(11, 8)
-						.replace(/^00:/, '') }s`
+						.replace(/^00:(00:)?/, '') }s`
 				: ''
 			// format the message...
 			msg = msg ? ': '+msg : ''
