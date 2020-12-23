@@ -56,8 +56,7 @@ require('features/examples')
 if(typeof(window) == 'undefined' || window.nodejs != null){
 	require('features/filesystem')
 	require('features/sharp')
-	require('features/cli')
-}
+	require('features/cli') }
 
 
 //---------------------------------------------------------------------

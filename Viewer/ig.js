@@ -26,8 +26,10 @@ require('v8-compile-cache')
 // 		conflicting with stuff...
 require('repl')
 
+var path = require('path')
+
 // setup module loaders...
-require = require('./cfg/requirejs')(require).requirejs
+require = require('./cfg/requirejs')(require, path.resolve(__dirname)).requirejs
 require.main = {filename: (nodeRequire.main || {}).filename}
 
 var core = require('features/core')
@@ -40,6 +42,9 @@ var meta = require('features/meta')
 
 /*********************************************************************/
 
+// XXX SETUP
+//require('features/all')
+
 // NOTE: this is here to simplify importing...
 var ImageGridFeatures =
 module.ImageGridFeatures = 
@@ -48,7 +53,8 @@ module.ImageGridFeatures =
 // setup actions and start...
 ImageGridFeatures
 	.setup([
-		'imagegrid-testing',
+		// XXX SETUP should this do a full setup...
+		//'imagegrid-testing',
 		'imagegrid-commandline',
 	])
 	.start()

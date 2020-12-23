@@ -21,14 +21,16 @@
 
 var _requirejs = typeof(requirejs) != 'undefined' && requirejs
 
-var setup = function(require){
+var setup = function(require, root){
 	var res = {}
 	var requirejs = _requirejs
 
 	var requirejs_cfg = {
 		// NOTE: this is really odd: running electron as a packed binary breaks
 		// 		requirejs' paths...
-		baseUrl: typeof(process) != 'undefined' 
+		baseUrl: root ?
+				root
+			: typeof(process) != 'undefined' 
 					&& process.versions.electron ?
 				(require.main ?
 					require.main.filename.split(/[\\\/]/g).slice(0, -1).join('/')
@@ -78,7 +80,6 @@ var setup = function(require){
 			'lib/types',
 		],
 	}
-
 
 	// node contexts...
 	if(typeof(process) != 'undefined'){

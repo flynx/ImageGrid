@@ -19,12 +19,14 @@ var core = require('features/core')
 var base = require('features/base')
 
 
+//require('features/all')
+
+
 if(typeof(process) != 'undefined'){
 	var pathlib = requirejs('path')
 	var argv = requirejs('lib/argv')
 	var progress = requirejs('cli-progress')
-	var colors = requirejs('colors')
-}
+	var colors = requirejs('colors') }
 
 
 
@@ -175,6 +177,18 @@ var CLIActions = actions.Actions({
 		}],
 
 
+	// XXX SETUP revise default...
+	setupFeatures: ['- System/',
+		function(...tags){
+			var features = this.features.FeatureSet
+			requirejs('features/all')
+			features.setup(this, tags.length == 0 ?
+				[
+					'imagegrid-testing', 
+					...this.features.input,
+				]
+				: tags) }],
+
 
 	// Startup commands...
 	//
@@ -187,6 +201,9 @@ var CLIActions = actions.Actions({
 			var that = this
 			var repl = nodeRequire('repl')
 
+			// XXX SETUP
+			this.setupFeatures()
+
 			this.__keep_running = true
 
 			// setup the global ns...
@@ -197,10 +214,12 @@ var CLIActions = actions.Actions({
 			global.help = function(...actions){
 				global.ig.help(...actions) }
 
-			require('features/all')
-			global.ImageGridFeatures = core.ImageGridFeatures
+			var features = global.ImageGridFeatures = core.ImageGridFeatures
 
 			//var ig = core.ImageGridFeatures
+
+			// print banner...
+			//XXX
 			
 			repl
 				.start({
@@ -292,7 +311,11 @@ var CLIActions = actions.Actions({
 				doc: 'Show image filename pattern info and exit',
 				priority: 89,
 				handler: function(){
-					this.parent.context.help('formatImageName')
+					this.parent.context
+						// XXX SETUP
+						//.setupFeatures('fs', 'commandline')
+						.setupFeatures()
+						.help('formatImageName')
 					return argv.STOP } },
 			'-version': undefined,
 			'-quiet': undefined,
@@ -347,6 +370,9 @@ var CLIActions = actions.Actions({
 		function(path, options={}){
 			var that = this
 
+			// XXX SETUP
+			this.setupFeatures()
+
 			path = path || options.from
 			path = util.normalizePath(
 				path ?
@@ -398,6 +424,9 @@ var CLIActions = actions.Actions({
 			//valueRequired: true,
 		}},
 		function(path, options){
+			// XXX SETUP
+			this.setupFeatures()
+
 			// get mode...
 			if(path == 'create' || path == 'update'){
 				var [mode, path, options] = arguments }
@@ -489,6 +518,9 @@ module.CLI = core.ImageGridFeatures.Feature({
 				var wait_for = []
 				// XXX
 				var interactive = false
+
+				// XXX SETUP need to setup everything that has command-line features...
+				//this.setupFeatures()
 
 				argv.Parser({
 						context: this,

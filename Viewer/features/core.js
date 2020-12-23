@@ -76,6 +76,8 @@ var text = module.text = object.text
 //
 var ImageGridMetaActions =
 module.ImageGridMetaActions = {
+	__proto__: actions.MetaActions,
+
 	// Test if the action is a Toggler...
 	//
 	isToggler: 
@@ -109,19 +111,21 @@ module.ImageGridMetaActions = {
 		}
 	}),
 } 
-ImageGridMetaActions.__proto__ = actions.MetaActions
 
 var ImageGrid = 
 module.ImageGrid = 
 	object.Constructor('ImageGrid', ImageGridMetaActions)
 
+
 // Root ImageGrid feature set....
 var ImageGridFeatures =
-module.ImageGridFeatures = new features.FeatureSet()
+module.ImageGridFeatures = 
+	new features.FeatureSet()
 
 // setup base instance constructor...
 ImageGridFeatures.__actions__ = 
-	function(){ return actions.Actions(ImageGrid()) }
+	function(){ 
+		return actions.Actions(ImageGrid()) }
 
 
 
@@ -994,6 +998,7 @@ var LifeCycleActions = actions.Actions({
 					&& func.call(this) } }],
 
 	// helpers...
+	//
 	restart: ['System/Soft restart',
 		doc`Soft restart
 
@@ -1004,8 +1009,6 @@ var LifeCycleActions = actions.Actions({
 				.stop()
 				.clear()
 				.start() }],
-
-
 })
 
 var LifeCycle = 
