@@ -632,6 +632,10 @@ module.Logger = ImageGridFeatures.Feature({
 //---------------------------------------------------------------------
 // System life-cycle...
 
+// XXX potential pitfall: setting up new features without restarting...
+// 		this can happen for instance in ig.js when starting a minimal
+// 		imagegrid instance and then adding new features -- these new 
+// 		features will not get their .start() (and friends) run...
 // XXX should his have state???
 // 		...if so, should this be a toggler???
 var LifeCycleActions = actions.Actions({
