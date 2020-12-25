@@ -636,6 +636,16 @@ module.Logger = ImageGridFeatures.Feature({
 // 		this can happen for instance in ig.js when starting a minimal
 // 		imagegrid instance and then adding new features -- these new 
 // 		features will not get their .start() (and friends) run...
+// 		There are three stages here:
+// 			- feature setup
+// 				things the feature needs to run -- <feature>.setup(..)
+// 			- app start
+// 				things the app wants to do on start
+// 			- ???
+// 				things feature action needs to run in cli should be 
+// 				documented and not depend on .start(..)
+// 				...or there should be a way to "start" the new features...
+// 		XXX put this in the docs...
 // XXX should his have state???
 // 		...if so, should this be a toggler???
 var LifeCycleActions = actions.Actions({
@@ -694,6 +704,7 @@ var LifeCycleActions = actions.Actions({
 		.requestReadyAnnounce()
 
 		This will trigger .started() event when done.
+
 
 		NOTE: .runtime attribute will not be available on the .pre handler
 			phase.
@@ -3040,6 +3051,7 @@ var TaskActions = actions.Actions({
 				return link }
 
 			// create a link...
+			// NOTE: we intentionally disable ui here and do not trigger .start()...
 			link = ImageGridFeatures.setup([...this.features.input, '-ui'])
 			return Object.assign(
 					link,
