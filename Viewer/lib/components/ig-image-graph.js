@@ -18,17 +18,17 @@ var object = require('lib/object')
 
 var Filters = 
 module.Filters = {
-	makeCanvas: function(w, h){
-		var c = document.createElement('canvas')
+	makeCanvas: function(w, h, canvas){
+		var c = canvas || document.createElement('canvas')
 		c.width = w
 		c.height = h
 		return c },
 
 	// as input takes an HTML Image object...
-	getPixels: function(img, w, h){
-		var w = w || img.width
-		var h = h || img.height
-		var c = this.makeCanvas(w, h)
+	getPixels: function(img, tmp_canvas, w, h){
+		var w = w || img.naturalWidth
+		var h = h || img.naturalHeight
+		var c = this.makeCanvas(w, h, tmp_canvas)
 		var context = c.getContext('2d')
 		if(img == null){
 			context.rect(0, 0, w, h)
@@ -46,8 +46,13 @@ module.Filters = {
 	// get image pixels normalized to a square of size s, rotated and flipped...
 	//
 	// NOTE: flip is applied to the image before it is rotated... (XXX ???)
-	getNormalizedPixels: function(img, s, rotate, flip){
-		s = s || Math.max(img.width, img.height)
+	// XXX BUG: this is still wrong for images with exif orientation...
+	// 		to reproduce:
+	// 			loadImages: "L:/tmp/test/export-test/index-with-exif-rotation"
+	// 			focusImage: 2
+	// 			showMetadata
+	getNormalizedPixels: function(img, tmp_canvas, s, rotate, flip){
+		s = s || Math.max(img.naturalWidth, img.naturalHeight)
 		rotate = rotate || 0
 
 		;(rotate == 90 || rotate == 270)
@@ -64,7 +69,7 @@ module.Filters = {
 				[1, -1]
 			: [1, 1]
 
-		var c = this.makeCanvas(s, s)
+		var c = this.makeCanvas(s, s, tmp_canvas)
 		var context = c.getContext('2d')
 		context.rect(0, 0, s, s)
 		context.fillStyle = 'black'
@@ -104,7 +109,7 @@ module.Filters = {
 		var h = size
 
 		// output buffer...
-		var out = this.getPixels(null, w, h)
+		var out = this.getPixels(null, null, w, h)
 
 		// pixel hit buffer...
 		var count = []
@@ -158,21 +163,23 @@ module.Filters = {
 		color = color || 'normalized'
 
 		var w = pixels.width
+		var h = pixels.height
 
 		// normalize pixel ratio...
-		var m = (1/pixels.height)*255
+		var m = (1/h)*255
 
 		var offsetTop = 0
 		var offsetBottom = 0
 
 		// output buffer...
-		var out = this.getPixels(null, 
+		var out = this.getPixels(null, null,
 			w, 
 			offsetTop + 255 + offsetBottom)
 
 		// pixel hit buffer...
-		// XXX make this an ArrayBuffer(..)
-		var count = []
+		// XXX revise size -- do we need the alpha component??
+		var count = new Int8Array(new ArrayBuffer(w * h * 4))
+		//var count = []
 
 		var od = out.data
 		var d = pixels.data
@@ -182,15 +189,15 @@ module.Filters = {
 		// horizontal position offset...
 		var _hp = w*4
 		// top margin...
-		var _tm = offsetTop*_tm
+		var _tm = offsetTop*_hp
 		var pos = function(i, value){
-			return (_tm,
-				// horixontal position...
+			return (_tm
+				// horizontal position...
 				+ i%(_hp)
 				// value vertical offset...
 				+ (255-Math.round(value))*_hp) }
 
-		var gain = 100
+		var gain = 100 * m
 
 		// CIE luminance for RGB
 		var Rl = 0.2126
@@ -205,42 +212,42 @@ module.Filters = {
 			var c, j, f, x, y
 
 
-			if(mode == 'luminance'){
+			if(mode === 'luminance'){
 				var v = Rl*r + Gl*g + Bl*b
-				c = count[j = pos(i, v)] = (count[j] || 0) + m
+				c = count[j = pos(i, v)] = (count[j] || 0) + 1
 				od[j] = od[j+1] = od[j+2] = c * gain
 
 			} else {
 
-				if(mode == 'color' || mode == 'R'){
+				if(mode === 'color' || mode === 'R'){
 					f = Rl
 					x = 1
 					y = 2
 					j = pos(i, r)
-					c = count[j] = (count[j] || 0) + m
+					c = count[j] = (count[j] || 0) + 1
 					od[j] = c * gain }
 
-				if(mode == 'color' || mode == 'G'){
+				if(mode === 'color' || mode === 'G'){
 					f = Gl
 					x = -1
 					y = 1
 					j = pos(i, g) + 1
-					c = count[j] = (count[j] || 0) + m
+					c = count[j] = (count[j] || 0) + 1
 					od[j] = c * gain }
 
-				if(mode == 'color' || mode == 'B'){
+				if(mode === 'color' || mode === 'B'){
 					f = Bl
 					x = -2
 					y = -1
 					j = pos(i, b) + 2
-					c = count[j] = (count[j] || 0) + m
+					c = count[j] = (count[j] || 0) + 1
 					od[j] = c * gain }
 
 				// normalize...
-				mode != 'color'
-					&& (color == 'white' ?
+				mode !== 'color'
+					&& (color === 'white' ?
 							(od[j+x] = od[j+y] = c * gain)
-						: color == 'normalized' ?
+						: color === 'normalized' ?
 							(od[j+x] = od[j+y] = c * gain/2 * (1-f))
 						: null) } }
 		return out },
@@ -256,8 +263,8 @@ module.WAVEFORM_SIZE = 1000
 
 var waveform = 
 module.waveform = 
-function(img, canvas, mode, color, rotate, flip){
-	var d = Filters.getNormalizedPixels(img, WAVEFORM_SIZE, rotate, flip)
+function(img, canvas, tmp_canvas, mode, color, rotate, flip){
+	var d = Filters.getNormalizedPixels(img, tmp_canvas, WAVEFORM_SIZE, rotate, flip)
 	var w = Filters.waveform(d, mode, color)
 	Filters.setPixels(canvas, w) }
 
@@ -267,8 +274,8 @@ module.HISTOGRAM_SIZE = 1000
 
 var histogram = 
 module.histogram = 
-function(img, canvas, mode, color){
-	var d = Filters.getPixels(img)
+function(img, canvas, tmp_canvas, mode, color){
+	var d = Filters.getPixels(img, tmp_canvas)
 	var w = Filters.histogram(d, mode, color)
 	Filters.setPixels(canvas, w) }
 
@@ -325,9 +332,19 @@ var igImageGraph_template = `
 	:host .controls button:hover:not([disabled]) {
 		opacity: 1;
 	}
+	:host .hidden {
+		position: absolute;
+		width: 0;
+		height: 0;
+		opacity: 0;
+		image-orientation: none;
+	}
 </style>
 <canvas class="graph"></canvas>
 <div class="controls"></div>
+
+<img class="hidden"/>
+<canvas class="hidden"></canvas>
 `
 
 
@@ -356,7 +373,8 @@ object.Constructor('igImageGraph', HTMLElement, {
 		shadow.appendChild(tpl.content.cloneNode(true)) },
 	connectedCallback: function(){
 		this.update_controls()
-		this.update() },
+		this.image 
+			|| this.update() },
 
 	// attributes...
 	get observedAttributes(){
@@ -393,7 +411,9 @@ object.Constructor('igImageGraph', HTMLElement, {
 		// get/create image...
 		var img = this.image = 
 			url ?
-				(this.image || document.createElement('img'))
+				//(this.image || document.createElement('img'))
+				// XXX HACK: image-orientation only works if element is attached to DOM...
+				(this.image || this.__shadow.querySelector('img'))
 				: value
 		img.removeEventListener('load', this.__update_handler)
 		img.addEventListener('load', this.__update_handler)
@@ -559,19 +579,18 @@ object.Constructor('igImageGraph', HTMLElement, {
 			button 
 				&& button.classList.add('current') }
 
-		// XXX configurable...
-		var type = this.graph
-		var graph = this.graphs[type]
-
-		var canvas = this.__shadow.querySelector('canvas')
-
 		if(this.image){
 			var orientation = this.orientation
 			orientation = parseFloat(
 				{top: 180, left: 90, bottom: 0, right: 270}[orientation] 
 				|| orientation)
 
-			graph(this.image, canvas, 
+			var canvas = this.__shadow.querySelector('canvas.graph')
+			var tmp_canvas = this.__shadow.querySelector('canvas.hidden')
+
+			// XXX configurable...
+			this.graphs[this.graph](this.image, 
+				canvas, tmp_canvas, 
 				this.mode, 
 				this.color, 
 				Math.round(orientation),
