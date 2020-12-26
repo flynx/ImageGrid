@@ -603,11 +603,11 @@ $(BUILD_INFO): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 		$(JS_FILES) $(CSS_FILES) $(HTML_FILES)
 	$(MD) "$(@D)"
 	@echo "Build info:"
-	@echo "$(APP_NAME)" | tee $(BUILD_INFO)
-	@echo "version: $(VERSION)" | tee -a $(BUILD_INFO)
-	@echo "date: $(DATE)" | tee -a $(BUILD_INFO)
-	@echo "commit: $(COMMIT)" | tee -a $(BUILD_INFO)
-	@echo "electron: $(ELECTRON_VERSION)" | tee -a $(BUILD_INFO)
+	@echo "$(APP_NAME)" | tee "$@"
+	@echo "version: $(VERSION)" | tee -a "$@"
+	@echo "date: $(DATE)" | tee -a "$@"
+	@echo "commit: $(COMMIT)" | tee -a "$@"
+	@echo "electron: $(ELECTRON_VERSION)" | tee -a "$@"
 
 
 %.css: %.less

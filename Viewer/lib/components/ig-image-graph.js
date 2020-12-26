@@ -171,21 +171,31 @@ module.Filters = {
 			offsetTop + 255 + offsetBottom)
 
 		// pixel hit buffer...
+		// XXX make this an ArrayBuffer(..)
 		var count = []
 
 		var od = out.data
 		var d = pixels.data
 
+		// calculate dot position...
+		//
+		// horizontal position offset...
+		var _hp = w*4
+		// top margin...
+		var _tm = offsetTop*_tm
 		var pos = function(i, value){
-			return (
-				// top margin...
-				offsetTop*w*4 
+			return (_tm,
 				// horixontal position...
-				+ i%(w*4)
+				+ i%(_hp)
 				// value vertical offset...
-				+ (255-Math.round(value))*w*4) }
+				+ (255-Math.round(value))*_hp) }
 
 		var gain = 100
+
+		// CIE luminance for RGB
+		var Rl = 0.2126
+		var Gl = 0.7152
+		var Bl = 0.0722
 
 		for(var i=0; i<d.length; i+=4){
 
@@ -196,15 +206,14 @@ module.Filters = {
 
 
 			if(mode == 'luminance'){
-				// CIE luminance for RGB
-				var v = 0.2126*r + 0.7152*g + 0.0722*b
+				var v = Rl*r + Gl*g + Bl*b
 				c = count[j = pos(i, v)] = (count[j] || 0) + m
 				od[j] = od[j+1] = od[j+2] = c * gain
 
 			} else {
 
 				if(mode == 'color' || mode == 'R'){
-					f = 0.2126
+					f = Rl
 					x = 1
 					y = 2
 					j = pos(i, r)
@@ -212,7 +221,7 @@ module.Filters = {
 					od[j] = c * gain }
 
 				if(mode == 'color' || mode == 'G'){
-					f = 0.7152
+					f = Gl
 					x = -1
 					y = 1
 					j = pos(i, g) + 1
@@ -220,7 +229,7 @@ module.Filters = {
 					od[j] = c * gain }
 
 				if(mode == 'color' || mode == 'B'){
-					f = 0.0722
+					f = Bl
 					x = -2
 					y = -1
 					j = pos(i, b) + 2
