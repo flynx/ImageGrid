@@ -2978,8 +2978,102 @@ var TaskActions = actions.Actions({
 	// XXX is context manager a special case of task manager???
 	// XXX move to a separate feature...
 	
+	__contexts: null,
 	get contexts(){},
 	
+	// Links...
+	//
+	__links: null,
+	get links(){
+		var links = this.__linked = this.__linked || {}
+		// remove 'current' if it does not match the current index...
+		// XXX revise the test...
+		var c = links.current
+		if(c && (c.data !== this.data || c.images !== this.images)){
+			links.previous = c
+			delete links.current }
+		return links },
+	get linked(){
+		return this.link() },
+	link: ['- System/',
+		doc`Get/create links...
+
+			Get/create link to current state...
+			.link()
+			.link('current')
+				-> current-link
+
+			Get link to previous state if present...
+			.link('previous')
+				-> previous-link
+				-> undefined
+
+			Get/create a titled link...
+			.link(title)
+				-> link
+
+		A link is a separate ImageGrid instance that links to the parent's
+		state and explicitly disabled ui features.
+
+		A link will reflect the data changes but when the main index is 
+		cleared or reloaded it will retain the old data.
+		Care must be taken as this is true in both directions and changes 
+		to link state are reflected on the link .parent, this is useful
+		when updating state in the background but can bite the user if not
+		used carefully. 
+
+		This effectively enables us to isolate a context for long running 
+		actions/tasks and make them independent of the main state.
+
+		Example:
+			ig.linked.readAllMetadata()
+
+
+		NOTE: links are relatively cheap as almost no data is copied but
+			they can be a source of a memory "leak" if not cleaned out 
+			as they prevent data from being garbage collected...
+		NOTE: 'current' and 'previous' links are reserved.
+		NOTE: 'previous' are a special case as they can not be created 
+			via .link(..).
+		`,
+		function(title='current'){
+			var that = this
+			var links = this.links
+			// get link already created...
+			// NOTE: 'current' and 'previous' links are handled by the 
+			// 		.links prop...
+			var link = links[title]
+			if(link){
+				return link }
+			// prevent creating previous links...
+			if(title == 'previous'){
+				return actions.UNDEFINED }
+			// create a link...
+			// NOTE: we intentionally disable ui here and do not trigger .start()...
+			return (links[title] = 
+				Object.assign(
+					// XXX add a 'link' feature...
+					ImageGridFeatures.setup([
+						...this.features.input, 
+						'-ui',
+					]),
+					this,
+					{
+						// link metadata...
+						parent: this,
+						title: title,
+						// XXX change this when data/images changes...
+						// 		...a prop in the link feature...
+						type: 'link',
+						// link configuration...
+						logger: that.logger
+							.push(`Linked ${ Object.keys(links).length }`),
+					})) }],
+	// XXX this should delete the clone when done...
+	LinkedTask: ['- System/',
+		function(){}],
+
+
 	// XXX would be nice to have an ability to partially clone the instance...
 	// 		...currently we can do a full clone and remove things we do 
 	// 		not want but that still takes time and memory...
@@ -3023,52 +3117,6 @@ var TaskActions = actions.Actions({
 			return res === context ? 
 				undefined 
 				: res }],
-
-	// Create a new ig instance with the same data...
-	//
-	// This will reflect the data changes while when the main index is 
-	// cleared or reloaded this will retain the old data...
-	//
-	// XXX should this be a prop -- .linked???
-	// XXX would be a good idea to store all the links in once place...
-	__linked: null,
-	get linked(){
-		return (this.__linked = this.__linked || []) },
-	link: ['- System/',
-		function(title){
-			var that = this
-			var links = this.linked
-
-			// get link already created...
-			var link = this.linked
-				.filter(function(l){ 
-					return title ? 
-						l.title == title
-						: (l.data === that.data 
-							&& l.images === that.images) })
-				.last()
-			if(link){
-				return link }
-
-			// create a link...
-			// NOTE: we intentionally disable ui here and do not trigger .start()...
-			link = ImageGridFeatures.setup([...this.features.input, '-ui'])
-			return Object.assign(
-					link,
-					this,
-					{
-						// XXX revise...
-						parent: this,
-						title: title,
-						// XXX change this when data/images changes...
-						type: 'link',
-					})
-				.run(function(){
-					this.logger = that.logger.push(['Task', links.length].join(' '))
-					this.context_id = links.push(this) }) }],
-	// XXX this should delete the clone when done...
-	LinkedTask: ['- System/',
-		function(){}],
 
 })
 

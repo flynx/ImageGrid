@@ -141,8 +141,15 @@ var ProgressActions = actions.Actions({
 			var forceShow = !!(attrs || {}).forceShow
 			;[text, value, max] = args
 
-			var msg = text instanceof Array ? text.slice(1).join(': ') : null
-			text = text instanceof Array ? text[0] : text
+			// XXX revise...
+			var msg = 
+				(text instanceof Array 
+						&& text.length > 1) ? 
+					text.slice(1).join(': ') 
+					: null
+			text = text instanceof Array ? 
+				text[0] 
+				: text
 
 			// reset -- clear cache and set everything to 0...
 			// NOTE: we will later draw the progress bar full...
@@ -157,8 +164,11 @@ var ProgressActions = actions.Actions({
 				var cache = (this.__progress_cache = this.__progress_cache || {})
 				cache = cache[text] = 
 					Object.assign(
-						cache[text] || {},
+						{msg},
+						cache[text] || {msg},
 						attrs || {})
+				// restore cached message if none given...
+				msg = cache.msg = msg || cache.msg
 
 				var updateValue = function(name, value){
 					var v = cache[name] || 0
@@ -284,7 +294,9 @@ var ProgressActions = actions.Actions({
 						.replace(/^00:(00:)?/, '') }s`
 				: ''
 			// format the message...
-			msg = msg ? ': '+msg : ''
+			msg = msg ? 
+				': '+msg 
+				: ''
 			msg = ' '+ msg 
 				+ (value && value >= (max || 0) ? 
 						' (done)' 
