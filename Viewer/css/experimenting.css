@@ -175,6 +175,10 @@ body {
 	width: 10px;
 	height: 10px;
 }
+.browse-widget * {
+	scrollbar-width: thin;
+	scrollbar-color: auto;
+}
 .browse-widget ::-webkit-scrollbar-button {
 	display: none;
 }

@@ -94,6 +94,10 @@
 	width: 5px;
 	height: 5px;
 }
+.browse-widget .path {
+	scrollbar-width: thin;
+	scrollbar-color: auto;
+}
 .browse-widget .path:hover {
 	opacity: 1;
 }

@@ -2977,7 +2977,6 @@ var TaskActions = actions.Actions({
 	// 		...feels like yes
 	// XXX is context manager a special case of task manager???
 	// XXX move to a separate feature...
-	
 	__contexts: null,
 	get contexts(){},
 	
