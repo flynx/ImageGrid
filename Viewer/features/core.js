@@ -2828,6 +2828,11 @@ function(title, func){
 // XXX might be a good idea to confirm session task stops when loading a 
 // 		new index...
 var TaskActions = actions.Actions({
+	config: {
+		'context-exclude-attrs': [
+			'features',
+		],
+	},
 
 	// Tasks...
 	//
@@ -2979,9 +2984,32 @@ var TaskActions = actions.Actions({
 	// XXX move to a separate feature...
 	__contexts: null,
 	get contexts(){},
+
+	// XXX this should delete the clone when done...
+	// XXX need a common context API to make management possible...
+	ContextTask: ['- System/',
+		doc``,
+		function(type, action, ...args){
+			var that = this
+			var context = this[type]
+
+			var res = context[action](...args)
+
+			var cleanup = function(){
+				// XXX
+			}
+
+			res.then ?
+				res.finally(cleanup)
+				: cleanup()
+
+			return res === context ? 
+				undefined 
+				: res }],
 	
 	// Links...
 	//
+	// XXX after this is stabilized, do we need session tasks and its complexities??? 
 	__links: null,
 	get links(){
 		var links = this.__linked = this.__linked || {}
@@ -3055,8 +3083,17 @@ var TaskActions = actions.Actions({
 					ImageGridFeatures.setup([
 						...this.features.input, 
 						'-ui',
+						'link-context',
 					]),
-					this,
+					// NOTE: this can shadow parts of the new base object 
+					// 		so we'll need to exclude some stuff...
+					Object.assign({}, this)
+						.run(function(){
+							// remove excluded attrs...
+							;(that.config['context-exclude-attrs'] 
+									|| [ 'features' ])
+								.forEach(function(key){
+									delete this[key] }.bind(this)) }),
 					{
 						// link metadata...
 						parent: this,
@@ -3068,9 +3105,6 @@ var TaskActions = actions.Actions({
 						logger: that.logger
 							.push(`Linked ${ Object.keys(links).length }`),
 					})) }],
-	// XXX this should delete the clone when done...
-	LinkedTask: ['- System/',
-		function(){}],
 
 
 	// XXX would be nice to have an ability to partially clone the instance...
@@ -3096,26 +3130,6 @@ var TaskActions = actions.Actions({
 
 			clone.context_id = clones.push(clone)
 			return clone }],
-	// XXX this is the same as LinkedTask(..) make a meta-function...
-	IsolatedTask: ['- System/',
-		function(action, ...args){
-			var that = this
-			var context = this.isolate
-
-			var res = context[action](...args)
-
-			var cleanup = function(){
-				var l = (that.__isolated || [])
-				l.includes(context)
-					&& l.splice(l.indexOf(context), 1) }
-
-			res.then ?
-				res.finally(cleanup)
-				: cleanup()
-
-			return res === context ? 
-				undefined 
-				: res }],
 
 })
 
