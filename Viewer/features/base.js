@@ -324,6 +324,7 @@ actions.Actions({
 		{journal: true},
 		function(lst, base){ this.load(this.dataFromURLs(lst, base)) }],
 
+	// XXX not sure about the instanceof check below...
 	json: ['- File/Dump state as JSON object',
 		core.doc`Dump state as JSON object
 
@@ -365,6 +366,8 @@ actions.Actions({
 				for(var k in this){
 					if(!k.startsWith('_') 
 							&& this[k] != null 
+							// XXX HACK? ...this feels a bit too abstract...
+							&& !(this[k] instanceof this.constructor)
 							&& this[k].json != null){
 						res[k] = this[k].json() } } } }],
 
