@@ -2843,11 +2843,13 @@ var TaskActions = actions.Actions({
 	// list actions that generate tasks...
 	// XXX cache these???
 	get taskActions(){
-		var test = this.isTask.bind(this)
-		return this.actions.filter(test) },
+		return this.cache('taskActions', function(data){
+			return data 
+				|| this.actions.filter(this.isTask.bind(this)) }) },
 	get sessionTaskActions(){
-		var test = this.isSessionTask.bind(this)
-		return this.actions.filter(test) },
+		return this.cache('sessionTaskActions', function(data){
+			return data 
+				|| this.actions.filter(this.isSessionTask.bind(this)) }) },
 
 	// task manager...
 	//
@@ -2861,9 +2863,11 @@ var TaskActions = actions.Actions({
 	// XXX need to get running tasks by action name...
 	get sessionTasks(){
 		//return this.tasks.titled(...this.sessionTaskActions) },
-		return this.tasks
-			.filter(function(task){
-				return task.__session_task__ }) },
+		return this.cache('sessionTasks', function(data){
+			return data 
+				|| this.tasks
+					.filter(function(task){
+						return task.__session_task__ }) }) },
 
 
 	// Queue (task)...
@@ -2873,8 +2877,9 @@ var TaskActions = actions.Actions({
 	// XXX cache this???
 	// XXX need to get running tasks by action name...
 	get queuedActions(){
-		var test = this.isQueued.bind(this)
-		return this.actions.filter(test) },
+		return this.cache('queuedActions', function(data){
+			return data 
+				|| this.actions.filter(this.isQueued.bind(this)) }) },
 
 	// XXX need a way to reference the queue again...
 	// 		.tasks.titled(name) will return a list...
