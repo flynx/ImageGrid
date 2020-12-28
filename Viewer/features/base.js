@@ -366,7 +366,7 @@ actions.Actions({
 				for(var k in this){
 					if(!k.startsWith('_') 
 							&& this[k] != null 
-							// XXX HACK? ...this feels a bit too abstract...
+							// XXX HACK? ...this feels wrong...
 							&& !(this[k] instanceof this.constructor)
 							&& this[k].json != null){
 						res[k] = this[k].json() } } } }],
