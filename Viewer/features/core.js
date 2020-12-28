@@ -3004,7 +3004,7 @@ var TaskActions = actions.Actions({
 				// XXX
 			}
 
-			res.then ?
+			res.finally ?
 				res.finally(cleanup)
 				: cleanup()
 
