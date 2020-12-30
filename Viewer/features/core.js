@@ -3170,8 +3170,7 @@ module.Tasks = ImageGridFeatures.Feature({
 var selfTest =
 module.selfTest = function(func){
 	func.__self_test__ = true
-	return func
-}
+	return func }
 
 var SelfTestActions = actions.Actions({
 	config: {
@@ -3188,19 +3187,13 @@ var SelfTestActions = actions.Actions({
 					return action != 'selfTest'
 			   			&& (that[action].func.__self_test__ 
 							|| that.getActionAttr(action, 'self_test'))})
-
 			logger 
 				&& tests.forEach(function(action){ 
 					logger.emit('found', action) })
-
-
 			tests.forEach(function(action){
 				that[action]()
-
 				logger 
-					&& logger.emit('done', action)
-			})
-		})],
+					&& logger.emit('done', action) }) })],
 })
 
 var SelfTest = 
