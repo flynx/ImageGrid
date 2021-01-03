@@ -33,7 +33,7 @@
     "ig-actions": "^3.24.29",
     "ig-argv": "^2.16.3",
     "ig-features": "^3.4.7",
-    "ig-object": "^5.4.14",
+    "ig-object": "^5.4.16",
     "ig-types": "^6.0.7",
     "json5": "^2.1.3",
     "object-run": "^1.0.1",
