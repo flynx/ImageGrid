@@ -2406,7 +2406,6 @@ var FileSystemWriterActions = actions.Actions({
 			size = size 
 				|| settings['preview-size'] 
 				|| 1000
-			// XXX needs testing...
 			var resize = this.makeResizedImage
 				&& settings['export-mode'] != 'copy best match'
 			pattern = pattern 
@@ -2472,8 +2471,9 @@ var FileSystemWriterActions = actions.Actions({
 										&& outputFile(to, img.text || '')
 
 								// normal images (resize)...
-								} else if(that.makeResizedImage){
-									// XXX can we make this batch...
+								} else if(resize){
+									// XXX should this be sync???
+									// XXX BUG: this creates unneeded backups...
 									return that.makeResizedImage(gid, size, img_dir, { name, logger })
 
 								// normal images (copy)...
