@@ -2712,6 +2712,7 @@ function(title, func){
 // XXX might be a good idea to split this into a generic and domain parts 
 // 		and move the generic part into types/runner...
 // XXX check if item is already in queue...
+// XXX BUG!
 var queueHandler =
 module.queueHandler =
 function(title, func){
