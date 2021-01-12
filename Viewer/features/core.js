@@ -2708,23 +2708,21 @@ function(title, func){
 // 		be run sync...
 // NOTE: when chaining arg_handler(..) will get one queue per level of 
 // 		chaining, but in 'sync' mode only one 'sync' is passed...
+// NOTE: when calling this multiple times for the same queue each call 
+// 		will call all the stages but since items are processes async the 
+// 		later calls' later stages may end up with empty input queues, 
+// 		e.g. for:
+// 			[1,2,3].map(e => ig.exampleChainedQueueHandler(e))
+// 		.exampleChainedQueueHandler(..) is called once per input and thus
+// 		the first two stages are called sync and by the time the last 
+// 		stage of the first call is triggered (async) all the inputs are 
+// 		ready thus the first call will process all the inputs and the 
+// 		later calls will get empty inputs (unless any new inputs are while 
+// 		processing added)...
 //
 // XXX might be a good idea to split this into a generic and domain parts 
 // 		and move the generic part into types/runner...
 // XXX check if item is already in queue...
-// XXX BUG when this is called multiple times each thread is called from 
-// 		top to bottom even when consolidating the results into a single 
-// 		pack, e.g. for:
-// 			[1,2,3].map(e => ig.exampleChainedQueueHandler(e))
-// 		the .exampleChainedQueueHandler(..) is called once per input and:
-// 			- pre-prep is called once per input
-// 			- prep is called once per input
-// 			- action is called once per input
-// 				...and since the inputs are already consolidated into a 
-// 				single container this will be called on that container 
-// 				once per input -> each input is processed N times...
-// 		...would either need to "consume" the inputs removing them from 
-// 		the input list or keep track of what we are calling...
 var queueHandler =
 module.queueHandler =
 function(title, func){
@@ -2798,7 +2796,13 @@ function(title, func){
 					args.length > 0
 						&& (args = [args])
 					q.add(items instanceof Array ? 
-						items.map(function(e){ 
+						items
+							// move the inputs out of the input array...
+							// NOTE: this will prevent the items from getting 
+							// 		processed multiple times when the action 
+							// 		is called multiple times...
+							.splice(0, items.length)
+							.map(function(e){ 
 								return [e, ...args] }) 
 						: [[items, ...args]])
 					return q.promise() } } 
