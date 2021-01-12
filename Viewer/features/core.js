@@ -2712,7 +2712,19 @@ function(title, func){
 // XXX might be a good idea to split this into a generic and domain parts 
 // 		and move the generic part into types/runner...
 // XXX check if item is already in queue...
-// XXX BUG!
+// XXX BUG when this is called multiple times each thread is called from 
+// 		top to bottom even when consolidating the results into a single 
+// 		pack, e.g. for:
+// 			[1,2,3].map(e => ig.exampleChainedQueueHandler(e))
+// 		the .exampleChainedQueueHandler(..) is called once per input and:
+// 			- pre-prep is called once per input
+// 			- prep is called once per input
+// 			- action is called once per input
+// 				...and since the inputs are already consolidated into a 
+// 				single container this will be called on that container 
+// 				once per input -> each input is processed N times...
+// 		...would either need to "consume" the inputs removing them from 
+// 		the input list or keep track of what we are calling...
 var queueHandler =
 module.queueHandler =
 function(title, func){
@@ -2806,7 +2818,7 @@ function(title, func){
 			handler: func,
 
 			toString: function(){
-				// XXX add opts of given...
+				// XXX add opts if given...
 				return `core.queueHandler('${action.name}',\n${ 
 					(arg_handler ?
 						object.normalizeIndent('\t'+arg_handler.toString()).indent('\t') + ',\n'
