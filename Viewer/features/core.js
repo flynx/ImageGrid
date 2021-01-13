@@ -2719,6 +2719,9 @@ function(title, func){
 // 		ready thus the first call will process all the inputs and the 
 // 		later calls will get empty inputs (unless any new inputs are while 
 // 		processing added)...
+// 		i.e. within a queue/task async processing model there is no guarantee
+// 		that the item will be processed in the same call tree that it 
+// 		was added in...
 //
 // XXX might be a good idea to split this into a generic and domain parts 
 // 		and move the generic part into types/runner...
