@@ -422,7 +422,6 @@ var SharpActions = actions.Actions({
 	// XXX should we split this into a session and global versions 
 	// 		a-la .makeResizedImage(..)???
 	// XXX this does not update image.base_path -- is this correct???
-	// XXX add support for offloading the processing to a thread/worker...
 	// XXX make index dir hidden...
 	makePreviews: ['Sharp|File/Make image $previews',
 		core.doc`Make image previews
