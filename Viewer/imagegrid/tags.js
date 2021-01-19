@@ -425,32 +425,21 @@ var BaseTagsClassPrototype = {
 
 		var brace = function(code, b){
 			var res = []
-
 			while(code.length > 0){
 				var c = code.shift()
 				if(c == '[' || c == '('){
 					res.push( brace(code, c == '[' ? ']' : ')') )
-
 				} else if(c == b){
 					return res
-
 				} else if(c == ']' || c == ')'){
 					throw new SyntaxError(`.parseQuery(..): Unexpected "${c}".`)
-
 				} else {
-					res.push(c) 
-				}
-			}
-
+					res.push(c) } }
 			if(b != null){
-				throw new SyntaxError(`.parseQuery(..): Expecting "${b}" got end of query.`)
-			}
-
-			return res
-		}
-
-		return brace(query)
-	},
+				throw new SyntaxError(
+					`.parseQuery(..): Expecting "${b}" got end of query.`) }
+			return res }
+		return brace(query) },
 }
 
 
@@ -645,15 +634,13 @@ var BaseTagsPrototype = {
 		a = arguments.length == 0 ? '*' : a
 		if(b instanceof Function){
 			cmp = b
-			b = null
-		}
+			b = null }
 		if(typeof(b) == typeof(true)){
 			no_definitions = b
 			b = null
 		} else if(typeof(cmp) == typeof(true)){
 			no_definitions = cmp
-			cmp = null
-		}
+			cmp = null }
 		b = b instanceof Set ? [...b] : b
 
 		// no given tags or multiple tags -> filter...
@@ -758,9 +745,7 @@ var BaseTagsPrototype = {
 							a.slice(1) 
 							: a
 					}, sa)
-					.length == 0)
-		}
-	},
+					.length == 0) } },
 	// Match tags...
 	//
 	// This is the same as .directMatch(..) but also uses persistent 
@@ -832,8 +817,7 @@ var BaseTagsPrototype = {
 			return paths(tag)
 				.reduce(function(res, path){
 					if(res){
-						return res
-					}
+						return res }
 
 					path = that.splitPath(path)
 					// restrict direction...
@@ -869,8 +853,7 @@ var BaseTagsPrototype = {
 				res
 			// if a is a path then it must exist and search it's tail...
 			: this.directMatch(a).length > 0 
-				&& search(this.splitPath(a).pop(), b)
-	},
+				&& search(this.splitPath(a).pop(), b) },
 	// Search tags...
 	//
 	// 	Search the tags...
@@ -1032,7 +1015,6 @@ var BaseTagsPrototype = {
 	//
 	tags: function(value, ...tags){
 		var that = this
-
 		// check if value is tagged by tags..,
 		if(value && tags.length > 0){
 			tags = normalizeSplit(tags)
@@ -1040,9 +1022,7 @@ var BaseTagsPrototype = {
 			while(tags.length > 0){
 				var t = tags.shift()
 				if(!u.has(t) && this.match(t, u).length == 0){
-					return false
-				}
-			}
+					return false } }
 			return true
 
 		// get tags of specific value...
@@ -1058,9 +1038,7 @@ var BaseTagsPrototype = {
 			return Object.keys(this.__index || {})
 				//.concat([...(this.persistentAll || [])])
 				.concat([...(this.persistent || [])])
-				.unique()
-		}
-	},
+				.unique() } },
 	// Same as .tags(..) but returns a list of single tags...
 	singleTags: function(value, ...tags){
 		return this.subTags(this.tags(...arguments)).unique() },
@@ -1154,9 +1132,7 @@ var BaseTagsPrototype = {
 				index[tag] = tag in index ?
 					index[tag].unite(value) 
 					: new Set(value) })
-
-		return this
-	},
+		return this },
 	// Remove tags...	
 	//
 	//	Remove tags...
@@ -1234,8 +1210,7 @@ var BaseTagsPrototype = {
 					} else {
 						index[tag] = s
 					}
-				}), this)
-	},
+				}), this) },
 	//
 	//	Toggle tag for each values...
 	//	.toggle(tag, value)
@@ -1281,8 +1256,8 @@ var BaseTagsPrototype = {
 
 		// can't set pattern as tag...
 		if(pattern && action == 'on'){
-			throw new TypeError(`.toggle(..): will not toggle on "${tag}": pattern and not a tag.`)
-		}
+			throw new TypeError(
+				`.toggle(..): will not toggle on "${tag}": pattern and not a tag.`) }
 
 		return action == 'on' ?
 				this.tag(tag, values)
@@ -1320,8 +1295,7 @@ var BaseTagsPrototype = {
 					this.untag.length > 0
 						&& that.untag(tag, this.untag)
 
-					return this.res
-				}) },
+					return this.res }) },
 
 	// Replace tags...
 	//
@@ -1382,8 +1356,7 @@ var BaseTagsPrototype = {
 
 		if(tag instanceof Function){
 			to = tag
-			tag = '*'
-		}
+			tag = '*' }
 		to = to instanceof Function ? 
 			to 
 			: this.normalize(to)
@@ -1399,42 +1372,33 @@ var BaseTagsPrototype = {
 
 			// no change to tag...
 			if(tag == target || target == undefined){
-				return [tag]
-			}
+				return [tag] }
 
 			if(!local){
 				// persistent...
 				if(persistent.has(tag)){
 					persistent.delete(tag)
 					target != ''
-						&& persistent.add(target)
-				}
-
+						&& persistent.add(target) }
 				// index...
 				if(tag in index){
 					target != ''
 						&& (index[target] = index[tag].unite(index[target] || []))
-					delete index[tag]
-				}
-				
+					delete index[tag] }
 				// definitions (key)...
 				if(tag in definitions){
 					target != ''
 						&& that.define(target, definitions[tag].join(that.SET_SEPARATOR))
-					delete definitions[tag]
-				}
+					delete definitions[tag] }
 				// definitions (value)...
 				if(def_index.has(tag)){
 					def_index.get(tag)
 						.forEach(function(key){
-							that.define(key, target == '' ? null : target) })
-				}
-			}
+							that.define(key, target == '' ? null : target) }) } }
 
 			return target == '' ? 
 				[] 
-				: [target]
-		}
+				: [target] }
 
 		// do the processing...
 		var res = local ?
@@ -1463,8 +1427,7 @@ var BaseTagsPrototype = {
 
 		return local ? 
 			res 
-			: this
-	},
+			: this },
 	// Rename a tag...
 	//
 	// 	Rename tag...
@@ -1486,7 +1449,8 @@ var BaseTagsPrototype = {
 		// XXX should we be more pedantic here???
 		tag = this.normalize(tag)
 		if(tag == ''){
-			throw new Error(`.rename(..): first argument can not be an empty string.`) }
+			throw new Error(
+				`.rename(..): first argument can not be an empty string.`) }
 		if(/[:\\\/]/.test(tag)){
 			throw new Error(
 				`.rename(..): only support singular tag renaming, got: "${tag}"`) }
@@ -1509,8 +1473,7 @@ var BaseTagsPrototype = {
 
 		return this.replace(tag, 
 			function(from){
-				return from.replace(pattern, target) }, ...tags) 
-	},
+				return from.replace(pattern, target) }, ...tags) },
 	// NOTE: this is a short hand to .rename(tag, '', ..) for extra 
 	// 		docs see that...
 	removeTag: function(tag, ...tags){
@@ -1539,8 +1502,7 @@ var BaseTagsPrototype = {
 		Object.entries(this.__index || {})
 			.forEach(function(e){
 				this.__index[e[0]] = e[1].intersect(values) })
-		return this
-	},
+		return this },
 	// Remove the given values...
 	//
 	// 	.remove(value, ..)
@@ -1552,8 +1514,7 @@ var BaseTagsPrototype = {
 		Object.entries(this.__index || {})
 			.forEach(function(e){
 				this.__index[e[0]] = e[1].subtract(values) })
-		return this
-	},
+		return this },
 
 	// Get/set/remove tag definitions...
 	//
@@ -1614,20 +1575,17 @@ var BaseTagsPrototype = {
 					: Object.entries(tag))
 				.forEach(function(e){
 					that.define(...e) })
-			return this
-		}
+			return this }
 
 		tag = this.normalize(tag)
 		if(/[:\\\/]/.test(tag)){
 			throw new Error(`.alias(..): tag must be a single tag, got: "${tag}`) }
-
 		// get/resolve...
 		if(arguments.length == 1){
 			// NOTE: we expect there to be only one definition...
 			return this.match(tag +PS, [...Object.keys(definitions) || []])
 				.map(function(d){ 
 					return definitions[d].join(SP) })[0]
-
 		// remove...
 		} else if(value == null){
 			// delete empty .definitions
@@ -1637,7 +1595,6 @@ var BaseTagsPrototype = {
 
 			// clear the index...
 			delete (definitions || {})[tag]
-
 		// set...
 		} else {
 			value = this.normalize(value)
@@ -1650,10 +1607,8 @@ var BaseTagsPrototype = {
 
 			// update the index...
 			this.definitions = definitions || {}
-			this.definitions[tag] = this.splitSet(value)
-		}
-		return this
-	},
+			this.definitions[tag] = this.splitSet(value) }
+		return this },
 
 	// Toggle a tag to persistent/non-persistent...
 	//
@@ -1758,8 +1713,7 @@ var BaseTagsPrototype = {
 		Object.keys(index).length > 0 
 			&& this.__index == null
 			&& (this.__index = index)
-		return this
-	},
+		return this },
 
 
 	// Query API...
@@ -2062,46 +2016,36 @@ var BaseTagsPrototype = {
 	//
 	json: function(){
 		var res = {}
-
 		// definitions...
 		this.definitions 
 			&& Object.keys(this.definitions).length > 0
 			&& (res.definitions = Object.assign({}, this.definitions))
-
 		// persistent tags...
 		this.persistent 
 			&& this.persistent.size > 0
 			&& (res.persistent = [...this.persistent])
-
 		// tags...
 		res.tags = {}
 		Object.entries(this.__index || {})
 			.forEach(function(e){
 				// XXX should we serialize the items here???
 				res.tags[e[0]] = [...e[1]] })
-
-		return res
-	},
+		return res },
 	load: function(json){
 		var that = this
-
 		// definitions...
 		json.definitions
 			&& (this.definitions = Object.assign({}, json.definitions))
-
 		// persistent tags...
 		json.persistent
 			&& (this.persistent = new Set(json.persistent))
-
 		// tags...
 		json.tags
 			&& (this.__index = {})
 			&& Object.entries(json.tags)
 				.forEach(function(e){
 					that.__index[e[0]] = new Set(e[1]) })
-
-		return this
-	},
+		return this },
 
 
 	__init__: function(json){
@@ -2244,8 +2188,7 @@ var TagsWithHandlersPrototype = {
 		// XXX can we avoid doing this here???
 		if(tag instanceof Function){
 			to = tag
-			tag = '*'
-		}
+			tag = '*' }
 		return object.parentCall(TagsWithHandlersPrototype.replace, this, 
 			tag,
 			arguments.length <= 2 ?
@@ -2255,8 +2198,7 @@ var TagsWithHandlersPrototype = {
 						var res = to.call(this, ...arguments)
 						typeof(res) == typeof('str')
 							&& this.handleSpecialTag(res, 'replace', tag)
-						return res
-					}
+						return res }
 					: this.handleSpecialTag(to, 'replace', tag))
 				: to,
 			...[...arguments].slice(2)) },
@@ -2352,8 +2294,7 @@ var TagsWithDictPrototype = {
 						.concat([value])
 						.unique()) })
 
-		return res 
-	},
+		return res },
 
 	// Translate normalized tag to the dict form...
 	//
@@ -2382,8 +2323,7 @@ var TagsWithDictPrototype = {
 	// XXX do we want to .match(..) here???
 	removeOrphansFromDict: function(...tags){
 		if(!this.dict){
-			return this 
-		}
+			return this }
 		var that = this
 		var dict = this.dict
 
@@ -2401,21 +2341,18 @@ var TagsWithDictPrototype = {
 			tags = tags
 				.filter(function(tag){
 					return !index.has(tag) })
-
 		// check specific tags...
 		// NOTE: this is geared towards a small number of input tags...
 		} else {
 			tags = tags 
 				.filter(function(tag){
-					return that.match(tag).length == 0 })
-		}
+					return that.match(tag).length == 0 }) }
 
 		tags
 			.forEach(function(tag){
 				delete dict[tag] })
 
-		return this
-	},
+		return this },
 
 
 	// Save/clean dict on prototype methods...
@@ -2432,8 +2369,7 @@ var TagsWithDictPrototype = {
 		// XXX can we avoid doing this here???
 		if(tag instanceof Function){
 			to = tag
-			tag = '*'
-		}
+			tag = '*' }
 		var can_remove = []
 
 		var res = object.parentCall(TagsWithDictPrototype.replace, this, 
@@ -2450,22 +2386,17 @@ var TagsWithDictPrototype = {
 					: this.normalizeSave(to))
 				: to,
 			...[...arguments].slice(2)) 
-
 		typeof(tag) == typeof('str')
 			&& this.removeOrphansFromDict(can_remove)
-		return res
-	},
+		return res },
 	togglePersistent: function(...tags){
 		this.normalizeSave(tags)
-
 		var res = object.parentCall(TagsWithDictPrototype.togglePersistent, this, ...arguments) 
-
 		this.removeOrphansFromDict(res
 			.map(function(r, i){ 
 				return r == 'off' ? tags[i] : [] })
 			.flat())
-		return res
-	},
+		return res },
 	define: function(tag, value){
 		arguments.length > 1 
 			&& value != null
@@ -2475,8 +2406,7 @@ var TagsWithDictPrototype = {
 
 		value == null
 			&& this.removeOrphansFromDict(tag)
-		return res
-	},
+		return res },
 
 	// Serialization...
 	//
@@ -2491,29 +2421,21 @@ var TagsWithDictPrototype = {
 	// 	}
 	json: function(){
 		var res = object.parentCall(TagsWithDictPrototype.json, this, ...arguments)
-
-		// dict...
 		this.dict 
 			&& Object.keys(this.dict).length > 0
 			&& (res.dict = {})
 			&& Object.entries(this.dict)
 				.forEach(function(e){
 					res.dict[e[0]] = e[1].slice() })
-
-		return res
-	},
+		return res },
 	load: function(json){
 		var that = this
-
-		// dict...
 		json.dict
 			&& (this.dict = {})
 			&& Object.entries(json.dict)
 				.forEach(function(e){
 					that.dict[e[0]] = e[1].slice() })
-
-		return object.parentCall(TagsWithDictPrototype.load, this, ...arguments)
-	},
+		return object.parentCall(TagsWithDictPrototype.load, this, ...arguments) },
 }
 
 

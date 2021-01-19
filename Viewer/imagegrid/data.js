@@ -2797,6 +2797,7 @@ module.BaseData =
 var DataWithTagsPrototype = {
 	__proto__: DataPrototype,
 
+	//__tags: null,
 	get tags(){
 		return (this.__tags = this.__tags || new tags.Tags()) },
 	set tags(value){
