@@ -2281,7 +2281,6 @@ var TagsWithDictPrototype = {
 		// 		consistent with tags above...
 		// XXX can we avoid normalizing twice???
 		var names = this.normalize(this.subTags(...tags))
-
 		// populate the dict...
 		;(names instanceof Array ? names : [names])
 			.forEach(function(tag, i){
@@ -2293,7 +2292,6 @@ var TagsWithDictPrototype = {
 					&& (dict[tag] = (dict[tag] || [])
 						.concat([value])
 						.unique()) })
-
 		return res },
 
 	// Translate normalized tag to the dict form...
@@ -2330,7 +2328,6 @@ var TagsWithDictPrototype = {
 		tags = tags.length == 0 ?
 			Object.keys(dict)
 			: this.normalize(this.subTags(normalizeSplit(tags)))
-
 		// check all...
 		// XXX tune the threshold or make it dynamic...
 		// XXX do we need both branches???
@@ -2347,11 +2344,9 @@ var TagsWithDictPrototype = {
 			tags = tags 
 				.filter(function(tag){
 					return that.match(tag).length == 0 }) }
-
 		tags
 			.forEach(function(tag){
 				delete dict[tag] })
-
 		return this },
 
 
@@ -2363,8 +2358,7 @@ var TagsWithDictPrototype = {
 	untag: function(tags, value){
 		var res = object.parentCall(TagsWithDictPrototype.untag, this, ...arguments) 
 		this.removeOrphansFromDict(tags)
-		return res
-	},
+		return res },
 	replace: function(tag, to, ...tags){
 		// XXX can we avoid doing this here???
 		if(tag instanceof Function){
@@ -2453,11 +2447,10 @@ module.TagsWithDict =
 
 var Tags =
 module.Tags = 
-	//TagsWithHandlers
-	//BaseTags
 	object.Constructor('Tags', 
 		BaseTagsClassPrototype,
-		object.mixin(BaseTagsPrototype,
+		object.mixin({},
+			BaseTagsPrototype,
 			TagsWithHandlersPrototype,
 			// XXX not sure if this should be on by default...
 			TagsWithPersistentPathsPrototype,
