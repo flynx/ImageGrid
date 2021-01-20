@@ -2449,6 +2449,10 @@ var Tags =
 module.Tags = 
 	object.Constructor('Tags', 
 		BaseTagsClassPrototype,
+		// XXX BUG: after rearranging these sometimes loading tags breaks
+		// 		to reproduce:
+		// 			- load: 
+		// 				"L:\mnt\hdd17 (photo)\NTFS1\media\img\my\work\- 20170919.001 - Pleshkova, Kirill, Gagarin, Anna, Bezukladnikov, Pavel, lentulov, mdf, metro,\" 
 		object.mixin({},
 			BaseTagsPrototype,
 			TagsWithHandlersPrototype,
