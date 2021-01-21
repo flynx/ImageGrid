@@ -262,6 +262,9 @@ actions.Actions({
 	// basic life-cycle actions...
 	//
 	// XXX do we need to call .syncTags(..) here???
+	// XXX need to .markChanged('all') if data version is changed...
+	// 		...not too clear how to detect this change -- currently 
+	// 		.Data(..) does not report this...
 	load: ['- File|Interface/',
 		core.doc`Load state...
 		
@@ -279,15 +282,11 @@ actions.Actions({
 				if(d.images){
 					this.images = d.images instanceof images.Images ? 
 						d.images 
-						: images.Images(d.images)
-				}
+						: images.Images(d.images) }
 				if(d.data){
 					this.data = d.data instanceof data.Data ? 
 						d.data 
-						: data.Data(d.data)
-				}
-			}
-		}],
+						: data.Data(d.data) } } }],
 	// XXX should this clear or load empty???
 	// XXX should this accept args and clear specific stuff (a-la data.clear(..))???
 	clear: ['File/Clear',
@@ -296,8 +295,7 @@ actions.Actions({
 			//this.data = null
 			//this.images = null
 			this.data = new data.DataWithTags()
-			this.images = new images.Images() 
-		}],
+			this.images = new images.Images() }],
 
 	// NOTE: for complete isolation it is best to completely copy the 
 	// 		.config...
@@ -1404,9 +1402,7 @@ module.CropActions = actions.Actions({
 			var that = this
 
 			if(!('crop_stack' in state)){
-				return
-			}
-
+				return }
 			// load...
 			if(state.crop_stack){
 				this.crop_stack = state.crop_stack
@@ -1414,16 +1410,11 @@ module.CropActions = actions.Actions({
 						return d instanceof data.Data ? 
 							d 
 							: data.Data(d) })
-
 				// merge the tags...
 				this.crop_stack.forEach(function(d){ d.tags = that.data.tags })
-
 			// remove...
 			} else {
-				delete this.crop_stack
-			}
-		}
-	}],
+				delete this.crop_stack } } }],
 
 	// crop...
 	//
