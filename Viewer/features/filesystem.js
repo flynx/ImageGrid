@@ -979,7 +979,11 @@ module.FileSystemLoader = core.ImageGridFeatures.Feature({
 					var that = this
 					res.then(
 						function(){ 
-							that.markChanged('none') },
+							// NOTE: this repeats the functionality in 
+							// 		base.js' 'edit' feature...
+							that.data.version_updated ?
+								that.markChanged('all') 
+								: that.markChanged('none') },
 						function(){}) } }],
 		// mark everything changed when loading images...
 		['loadImages',
@@ -2549,10 +2553,7 @@ module.FileSystemWriter = core.ImageGridFeatures.Feature({
 					//this.markChanged('none')
 					var that = this
 					res.then(function(){
-						that.markChanged('none')
-					})
-				}
-			}],
+						that.markChanged('none') }) } }],
 	],
 })
 

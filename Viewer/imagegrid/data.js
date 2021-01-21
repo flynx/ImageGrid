@@ -2723,7 +2723,14 @@ var DataPrototype = {
 	load: function(data, clean){
 		var that = this
 		data = typeof(data) == typeof('str') ? JSON.parse(data) : data
+		var version = data.version
 		data = formats.updateData(data, DATA_VERSION)
+
+		// report version change...
+		delete this.version_updated
+		if(data.version != version){
+			this.version_updated = true }
+
 		this.order = data.order.slice()
 		this.ribbon_order = data.ribbon_order.slice()
 

@@ -1214,6 +1214,10 @@ core.ImageGridFeatures.Feature({
 			function(){ this.markChanged('all') }],
 
 		// data...
+		['load',
+			function(){
+				this.data.version_updated
+					&& this.markChanged('all') }],
 		[[
 			//'load',
 
