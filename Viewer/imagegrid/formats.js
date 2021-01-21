@@ -22,13 +22,11 @@ function(data){
 	var ribbons = data.ribbons = data.ribbons || {}
 
 	if(Object.keys(ribbons).length == 0){
-		ribbons[that.newGID()] = data.order.slice()
-	}
+		ribbons[that.newGID()] = data.order.slice() }
 
 	data.ribbon_order = data.ribbon_order || Object.keys(ribbons)
 
-	return data
-}
+	return data }
 
 
 
@@ -51,12 +49,11 @@ function(data, cmp){
 			ribbons: [],
 			order: [], 
 		},
-		images: {}
+		images: {},
 	}
 	cmp = cmp == null ?
 			function(a, b){ 
-				return imageDateCmp(a, b, null, res.images) 
-			}
+				return imageDateCmp(a, b, null, res.images) }
 			: cmp
 	var ribbons = res.data.ribbons
 	var order = res.data.order
@@ -73,18 +70,17 @@ function(data, cmp){
 			var image = input_images[id]
 			ribbon.push(id)
 			order.push(id)
-			images[id] = image
-		}
-		cmp && ribbon.sort(cmp)
-	})
+			images[id] = image }
+		cmp 
+			&& ribbon.sort(cmp) })
 
-	cmp && order.sort(cmp)
+	cmp 
+		&& order.sort(cmp)
 
 	// XXX STUB
 	res.data.current = order[0]
 
-	return res
-}
+	return res }
 
 
 // Convert gen3 data to gen4 v3.0+...
@@ -96,7 +92,10 @@ function(data, cmp){
 //
 module.VERSIONS['3.0'] =
 function(data){
-	data = data.version < '2.0' ? module.VERSIONS['2.0'](data) : data
+	data = 
+		data.version < '2.0' ? 
+			module.VERSIONS['2.0'](data) 
+			: data
 
 	// XXX is this the right way to go???
 	var that = require('imagegrid/data').Data()
@@ -107,7 +106,10 @@ function(data){
 	console.log('\t\tUpdating to:', res.version)
 	res.current = data.current
 	res.order = data.order.slice()
-	res.ribbon_order = data.ribbon_order == null ? [] : data.ribbon_order.slice()
+	res.ribbon_order = 
+		data.ribbon_order == null ? 
+			[] 
+			: data.ribbon_order.slice()
 	res.ribbons = {} 
 
 	// generate gids...
@@ -115,25 +117,33 @@ function(data){
 	// 		otherwise new structures will be generated...
 	// NOTE: we need to do this anyway as we also need to deep-copy the 
 	// 		ribbons...
-	var keys = data.ribbon_order != null 
-		? data.ribbon_order 
-		: Object.keys(data.ribbons)
+	var keys = 
+		data.ribbon_order != null ? 
+			data.ribbon_order 
+			: Object.keys(data.ribbons)
 	keys.forEach(function(k){
-		var gid = k*1 == null ? k : that.newGID()
+		var gid = 
+			k*1 == null ? 
+				k 
+				: that.newGID()
 		res.ribbon_order.push(gid)
-		res.ribbons[gid] = data.ribbons[k].slice()
-	})
+		res.ribbons[gid] = data.ribbons[k].slice() })
 
 	// we set the base to the first ribbon...
-	res.base = data.base == null ? res.ribbon_order[0] : res.base
+	res.base = 
+		data.base == null ? 
+			res.ribbon_order[0] 
+			: res.base
 
-	return res
-}
+	return res }
 
 
 module.VERSIONS['3.1'] =
 function(data){
-	var res = data.version < '3.0' ? module.VERSIONS['3.0'](data) : data
+	var res = 
+		data.version < '3.0' ? 
+			module.VERSIONS['3.0'](data) 
+			: data
 
 	res.version = '3.1'
 	// XXX there should be a better way to report this...
@@ -142,14 +152,16 @@ function(data){
 	data.tags
 		&& (res.tags = { tags: data.tags })
 
-	return res
-}
+	return res }
 
 
 /* XXX template...
 module.VERSIONS['3.2'] =
 function(data){
-	var res = data.version < '3.1' ? module.VERSIONS['3.1'](data) : data
+	var res = 
+		data.version < '3.1' ? 
+			module.VERSIONS['3.1'](data) 
+			: data
 
 	res.version = '3.2'
 
@@ -167,8 +179,7 @@ module.getLatestUpdaterVersion = function(){
 		.map(function(v){ return [v, parseFloat(v)] })
 		.sort(function(a, b){ return a[1] - b[1]  })
 		.map(function(e){ return e[0] })
-		.pop()
-}
+		.pop() }
 
 
 
@@ -200,14 +211,11 @@ module.updateData = function(data, version, clean){
 		: completeData(data)
 
 	!clean
-		&& Object.keys(data).forEach(function(k){
-			if(res[k] === undefined){
-				res[k] = data[k]
-			}
-		})
-
-	return res
-}
+		&& Object.keys(data)
+			.forEach(function(k){
+				if(res[k] === undefined){
+					res[k] = data[k] } })
+	return res }
 
 
 
