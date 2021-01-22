@@ -182,8 +182,7 @@ actions.Actions({
 				: direction.length == 1 ?
 					(new Array(steps)).fill(value)
 				// step in the opposite direction...
-				: direction.slice(0, -1)
-	},
+				: direction.slice(0, -1) },
 	// NOTE: these are set-up as props to enable dynamic customization...
 	// XXX not sure this is a good way to go...
 	get direction_change_steps(){
@@ -236,9 +235,7 @@ actions.Actions({
 					if(n.length > 1){
 						conflicts[gid] = n
 						n.forEach(function(g){ conflicts[g] = n })
-						max = Math.max(max, n.length)
-					}
-				})
+						max = Math.max(max, n.length) } })
 
 
 			// list only the conflicting gids...
@@ -248,8 +245,7 @@ actions.Actions({
 					conflicts: conflicts,
 					max_repetitions: max,
 				}
-				: false
-		}],
+				: false }],
 
 
 	// Settings...
@@ -312,8 +308,7 @@ actions.Actions({
 			return {
 				images: imgs,
 				data: data.Data.fromArray(imgs.keys()),
-			}
-		}],
+			} }],
 
 	// XXX should this be here???
 	// XXX should this use .load(..)
@@ -372,28 +367,21 @@ actions.Actions({
 	getImagePath: ['- System/',
 		function(gid, type){
 			gid = this.data.getImage(gid)
-
 			var img = this.images[gid]
-
 			return img == null ?
 				null
-				: this.images.getImagePath(gid, this.location.path)
-		}],
+				: this.images.getImagePath(gid, this.location.path) }],
 	replaceGID: ['- System/Replace image gid',
 		{journal: true},
 		function(from, to){
 			from = this.data.getImage(from)
-
 			// data...
 			var res = this.data.replaceGID(from, to)
-
 			if(res == null){
-				return
-			}
-
+				return }
 			// images...
-			this.images && this.images.replaceGID(from, to)
-		}],
+			this.images 
+				&& this.images.replaceGID(from, to) }],
 
 	
 	// basic navigation...
@@ -480,17 +468,16 @@ actions.Actions({
 		function(target, mode){
 			var data = this.data
 			if(data == null){
-				return
-			}
-
+				return }
 			var r = data.getRibbon(target)
 			if(r == null){
-				return
-			}
+				return }
 			var c = data.getRibbonOrder()
 			var i = data.getRibbonOrder(r)
 
-			mode = mode || this.config['ribbon-focus-mode'] || 'order'
+			mode = mode 
+				|| this.config['ribbon-focus-mode'] 
+				|| 'order'
 
 			// NOTE: we are not changing the direction here based on 
 			// 		this.direction as swap will confuse the user...
@@ -499,22 +486,17 @@ actions.Actions({
 			// closest image in order...
 			if(mode == 'order'){
 				var t = data.getImage(r, direction)
-
 				// if there are no images in the requied direction, try the 
 				// other way...
 				t = t == null ? data.getImage(r, direction == 'before' ? 'after' : 'before') : t
-
 			// first/last image...
 			} else if(mode == 'first' || mode == 'last'){
 				var t = data.getImage(mode, r)
-
 			// unknown mode -- do nothing...
 			} else {
-				return
-			}
+				return }
 
-			this.focusImage(t, r)
-		}],
+			this.focusImage(t, r) }],
 	// shorthands...
 	// XXX do we reset direction on these???
 	firstImage: ['Navigate/First image in current ribbon',
@@ -533,7 +515,11 @@ actions.Actions({
 		`,
 		{mode: function(target){ 
 			return this.data.getImageOrder('ribbon', target) == 0 && 'disabled' }},
-		function(all){ this.focusImage(0, all == null ? 'ribbon' : 'global') }],
+		function(all){ 
+			this.focusImage(0, 
+				all == null ? 
+					'ribbon' 
+					: 'global') }],
 	lastImage: ['Navigate/Last image in current ribbon',
 		core.doc`Focus last image...
 
@@ -546,7 +532,11 @@ actions.Actions({
 		{mode: function(target){ 
 			return this.data.getImageOrder('ribbon', target) 
 				== this.data.getImageOrder('ribbon', -1) && 'disabled' }},
-		function(all){ this.focusImage(-1, all == null ? 'ribbon' : 'global') }],
+		function(all){ 
+			this.focusImage(-1, 
+				all == null ? 
+					'ribbon' 
+					: 'global') }],
 	// XXX these break if image at first/last position are not loaded (crop, group, ...)
 	// XXX do we actually need these???
 	firstGlobalImage: ['Navigate/First image globally',
@@ -582,21 +572,16 @@ actions.Actions({
 		function(a, mode){ 
 			// keep track of traverse direction...
 			this.direction = 'left'
-
 			if(typeof(a) == typeof(123)){
 				// XXX should this force direction change???
 				this.focusImage(this.data.getImage('current', -a)
 						// go to the first image if it's closer than s...
 						|| this.data.getImage('first'))
-
 			} else if(a instanceof Array && mode){
 				mode = mode == 'ribbon' ? 'current' : mode
 				this.focusImage('prev', this.data.getImages(a, mode))
-
 			} else {
-				this.focusImage('prev', a) 
-			}
-		}],
+				this.focusImage('prev', a) } }],
 	nextImage: ['Navigate/Next image',
 		core.doc`Focus next image...
 
@@ -625,21 +610,16 @@ actions.Actions({
 		function(a, mode){ 
 			// keep track of traverse direction...
 			this.direction = 'right'
-
 			if(typeof(a) == typeof(123)){
 				// XXX should this force direction change???
 				this.focusImage(this.data.getImage('current', a)
 						// go to the first image if it's closer than s...
 						|| this.data.getImage('last'))
-
 			} else if(a instanceof Array && mode){
 				mode = mode == 'ribbon' ? 'current' : mode
 				this.focusImage('next', this.data.getImages(a, mode))
-
 			} else {
-				this.focusImage('next', a) 
-			}
-		}],
+				this.focusImage('next', a) } }],
 
 	// XXX skip unloaded images... (groups?)
 	// XXX the next two are almost identical...
@@ -659,11 +639,8 @@ actions.Actions({
 			for(var r in this.data.ribbons){
 				var i = this.data.getImageOrder('prev', r)
 				if(i >= 0){
-					c[i] = r
-				}
-			}
-			this.prevImage(c[Math.max.apply(null, Object.keys(c))])
-		}],
+					c[i] = r } }
+			this.prevImage(c[Math.max.apply(null, Object.keys(c))]) }],
 	nextImageInOrder: ['Navigate/Next image in order',
 		function(){ 
 			// NOTE: this used to be algorithmically substantially slower
@@ -680,11 +657,8 @@ actions.Actions({
 			for(var r in this.data.ribbons){
 				var i = this.data.getImageOrder('next', r)
 				if(i >= 0){
-					c[i] = r
-				}
-			}
-			this.nextImage(c[Math.min.apply(null, Object.keys(c))])
-		}],
+					c[i] = r } }
+			this.nextImage(c[Math.min.apply(null, Object.keys(c))]) }],
 
 	firstRibbon: ['Navigate/First ribbon',
 		{mode: function(target){ 
@@ -734,8 +708,7 @@ core.ImageGridFeatures.Feature({
 				var changes = res.changes
 
 				if(!changes){
-					return
-				}
+					return }
 
 				// basic sections...
 				// NOTE: config is local config...
@@ -753,8 +726,7 @@ core.ImageGridFeatures.Feature({
 					var diff = res.index['images-diff'] = {}
 					changes.images
 						.forEach(function(gid){
-							diff[gid] = res.raw.images[gid] }) }
-			}],
+							diff[gid] = res.raw.images[gid] }) } }],
 		// XXX restore local .config....
 		['prepareIndexForLoad',
 			function(res, json, base_path){
@@ -785,12 +757,10 @@ core.ImageGridFeatures.Feature({
 					// 				+ less to do in real time
 					// 				- more processing on load/save
 					//console.warn('STUB: setting image .base_path in .prepareIndexForLoad(..)')
-					img.forEach(function(_, img){ img.base_path = base_path })
-				}
+					img.forEach(function(_, img){ img.base_path = base_path }) }
 
 				res.data = d
-				res.images = img
-			}],
+				res.images = img }],
 	],
 })
 
@@ -988,16 +958,14 @@ actions.Actions({
 		function(target){ 
 			this.data.shiftRibbonUp(target) 
 			// XXX is this the right way to go/???
-			this.focusImage()
-		}],
+			this.focusImage() }],
 	shiftRibbonDown: ['Ribbon|Edit|Sort/Shift ribbon down', {
 		undo: undoShift('shiftRibbonUp'),
 		mode: 'nextRibbon'}, 
 		function(target){ 
 			this.data.shiftRibbonDown(target)
 			// XXX is this the right way to go/???
-			this.focusImage()
-		}],
+			this.focusImage() }],
 
 	// these operate on the current image...
 	travelImageUp: ['Edit|Image/Travel with the current image up (Shift up and keep focus)',
@@ -1005,15 +973,13 @@ actions.Actions({
 		function(target){
 			target = target || this.current
 			this.shiftImageUp(target)
-			this.focusImage(target)
-		}],
+			this.focusImage(target) }],
 	travelImageDown: ['Edit|Image/Travel with the current image down (Shift down and keep focus)',
 		{undo: undoShift('travelImageUp')},
 		function(target){
 			target = target || this.current
 			this.shiftImageDown(target)
-			this.focusImage(target)
-		}],
+			this.focusImage(target) }],
 
 	
 	reverseImages: ['Edit|Sort/Reverse image order',
@@ -1080,8 +1046,7 @@ actions.Actions({
 			}
 			this.data.ribbon_order = [base]
 
-			this.reload(true)
-		}],
+			this.reload(true) }],
 
 
 	// basic image editing...
@@ -1113,17 +1078,16 @@ actions.Actions({
 		{journal: true},
 		function(target, direction){
 			if(arguments.length == 0){
-				return this.image && this.image.orientation || 0
-			}
+				return this.image 
+					&& this.image.orientation 
+					|| 0 }
 			if(target == 'cw' || target == 'ccw'){
 				direction = target
 				target = this.data.getImage()
 			} else {
-				target = this.data.getImages(target instanceof Array ? target : [target])
-			}
+				target = this.data.getImages(target instanceof Array ? target : [target]) }
 			this.images 
-				&& this.images.rotateImage(target, direction || 'cw')
-		}],
+				&& this.images.rotateImage(target, direction || 'cw') }],
 	flip: ['- Image|Edit/Flip image',
 		core.doc`Flip image...
 		
@@ -1147,11 +1111,9 @@ actions.Actions({
 				direction = target
 				target = this.data.getImage()
 			} else {
-				target = this.data.getImages(target instanceof Array ? target : [target])
-			}
+				target = this.data.getImages(target instanceof Array ? target : [target]) }
 			this.images 
-				&& this.images.flipImage(target, direction || 'horizontal')
-		}],
+				&& this.images.flipImage(target, direction || 'horizontal') }],
 
 	// shorthands...
 	// NOTE: these are here mostly for the menus...
@@ -1246,7 +1208,8 @@ core.ImageGridFeatures.Feature({
 			'flipHorizontal',
 			'flipVertical',
 		], 
-			function(_, target){ this.markChanged('images', [this.data.getImage(target)]) }],
+			function(_, target){ 
+				this.markChanged('images', [this.data.getImage(target)]) }],
 	],
 })
 
@@ -1310,21 +1273,15 @@ module.ImageEditGroupActions = actions.Actions({
 		function(target, direction){
 			target = this.data.getImage(target)
 			var other = this.data.getImage(target, direction == 'next' ? 1 : -1)
-
 			// we are start/end of ribbon...
 			if(other == null){
-				return
-			}
-			
+				return }
 			// add into an existing group...
 			if(this.data.isGroup(other)){
 				this.group(target, other)
-
 			// new group...
 			} else {
-				this.group([target, other])
-			}
-		}],
+				this.group([target, other]) } }],
 	// shorthands to .groupTo(..)
 	groupBack: ['Group|Edit/Group backwards', 
 		{journal: true},
@@ -1491,15 +1448,12 @@ module.CropActions = actions.Actions({
 
 			if(list instanceof data.Data){
 				if(flatten === false){
-					list.tags = this.data.tags
-				}
+					list.tags = this.data.tags }
 
 				this.data = list
 
 			} else {
-				this.data = this.data.crop(list, flatten)
-			}
-		}],
+				this.data = this.data.crop(list, flatten) } }],
 	uncrop: ['Crop/Uncrop',
 		{mode: function(){ return this.cropped || 'disabled' }},
 		function(level, restore_current, keep_crop_order){
@@ -1509,44 +1463,39 @@ module.CropActions = actions.Actions({
 			var order = this.data.order
 
 			if(this.crop_stack == null){
-				return
-			}
+				return }
 
 			// uncrop all...
 			if(level == 'all'){
 				this.data = this.crop_stack[0]
 				this.crop_stack = []
-
 			// get the element at level and drop the tail...
 			} else {
-				this.data = this.crop_stack.splice(-level, this.crop_stack.length)[0]
-			}
+				this.data = this.crop_stack.splice(-level, this.crop_stack.length)[0] }
 
 			// by default set the current from the crop...
-			if(!restore_current){
-				this.data.focusImage(cur)
-			}
+			!restore_current
+				&& this.data.focusImage(cur)
 
 			// restore order from the crop...
 			if(keep_crop_order){
 				this.data.order = order
-				this.data.updateImagePositions()
-			}
+				this.data.updateImagePositions() }
 
 			// purge the stack...
 			if(this.crop_stack.length == 0){
-				delete this.crop_stack
-			}
-		}],
+				delete this.crop_stack } }],
 	uncropAll: ['Crop/Uncrop all',
 		{mode: 'uncrop'},
-		function(restore_current){ this.uncrop('all', restore_current) }],
+		function(restore_current){ 
+			this.uncrop('all', restore_current) }],
 	// XXX see if we need to do this on this level??
 	// 		...might be a good idea to do this in data...
 	uncropAndKeepOrder: ['Crop|Edit/Uncrop keeping image order', {
 		journal: true,
 		mode: 'uncrop'}, 
-		function(level, restore_current){ this.uncrop(level, restore_current, true) }],
+		function(level, restore_current){ 
+			this.uncrop(level, restore_current, true) }],
 	// XXX same as uncrop but will also try and merge changes...
 	// 		- the order is simple and already done above...
 	// 		- I think that levels should be relative to images, the 
@@ -1580,15 +1529,12 @@ module.CropActions = actions.Actions({
 	cropRibbon: ['Crop|Ribbon/Crop $ribbon',
 		function(ribbon, flatten){
 			if(this.data.length == 0){
-				return
-			}
+				return }
 			if(typeof(ribbon) == typeof(true)){
 				flatten = ribbon
-				ribbon = null
-			}
+				ribbon = null }
 			ribbon = ribbon || 'current'
-			this.crop(this.data.getImages(ribbon), flatten)
-		}],
+			this.crop(this.data.getImages(ribbon), flatten) }],
 	cropOutRibbon: ['Crop|Ribbon/Crop ribbon out',
 		function(ribbon, flatten){
 			ribbon = ribbon || this.current_ribbon
@@ -1596,14 +1542,11 @@ module.CropActions = actions.Actions({
 
 			// build the crop...
 			var crop = this.data.crop()
-
 			// ribbon order...
 			crop.ribbon_order = crop.ribbon_order
 				.filter(function(r){ return ribbon.indexOf(r) })
-
 			// ribbons...
 			ribbon.forEach(function(r){ delete crop.ribbons[r] })
-
 			// focus image...
 			var cr = this.current_ribbon
 			if(ribbon.indexOf(cr) >= 0){
@@ -1617,23 +1560,20 @@ module.CropActions = actions.Actions({
 					crop.getImage(this.current, 'after', r)
 						|| crop.getImage(this.current, 'before', r)) }
 
-			this.crop(crop, flatten) 
-		}],
+			this.crop(crop, flatten) }],
 	cropOutRibbonsBelow: ['Crop|Ribbon/Crop out ribbons be$low',
 		function(ribbon, flatten){
 			if(this.data.length == 0){
-				return
-			}
+				return }
 			if(typeof(ribbon) == typeof(true)){
 				flatten = ribbon
-				ribbon = null
-			}
-			ribbon = ribbon || this.data.getRibbon()
+				ribbon = null }
+			ribbon = ribbon 
+				|| this.data.getRibbon()
 
 			var data = this.data
 			if(data == null){
-				return
-			}
+				return }
 
 			var that = this
 			var i = data.ribbon_order.indexOf(ribbon)
@@ -1644,8 +1584,7 @@ module.CropActions = actions.Actions({
 					}, data.getImages(ribbon))
 				.compact()
 
-			this.crop(data.getImages(images), flatten)
-		}],
+			this.crop(data.getImages(images), flatten) }],
 
 	// XXX should this be here???
 	cropTagged: ['- Tag|Crop/Crop tagged images',
@@ -1706,8 +1645,7 @@ module.CropActions = actions.Actions({
 		},
 		function(gids, ribbon, reference, mode){
 			if(!this.cropped){
-				return
-			}
+				return }
 
 			gids = (gids instanceof Array ? gids : [gids])
 				// filter out gids that are already loaded...
@@ -1725,8 +1663,7 @@ module.CropActions = actions.Actions({
 
 			// place...
 			;(ribbon || reference || mode)
-				&& this.data.placeImage(gids, ribbon, reference, mode)
-		}],
+				&& this.data.placeImage(gids, ribbon, reference, mode) }],
 	removeFromCrop: ['Crop|Image/Remove from crop',
 		core.doc`
 		`,
@@ -1742,16 +1679,19 @@ module.CropActions = actions.Actions({
 		function(gids){
 			var that = this
 			if(!this.cropped){
-				return
-			}
+				return }
 
 			var data = this.data
 			var current = this.current
 			var focus = false
 
-			gids = arguments.length > 1 ? [...arguments] : gids
+			gids = arguments.length > 1 ? 
+				[...arguments] 
+				: gids
 			gids = gids || 'current'
-			gids = gids instanceof Array ? gids : [gids] 
+			gids = gids instanceof Array ? 
+				gids 
+				: [gids] 
 
 			// NOTE: we are not using .data.clear(gids) here as we do not 
 			// 		want to remove gids from .data.order, we'll only touch 
@@ -1763,21 +1703,14 @@ module.CropActions = actions.Actions({
 						delete data.ribbons[gid]
 						data.ribbon_order.splice(data.ribbon_order.indexOf(gid), 1)
 						focus = true
-
-						return false
-					}
-					return true
-				})
+						return false }
+					return true })
 				// clear images...
 				.forEach(function(gid){
 					gid = data.getImage(gid)
-
 					delete data.ribbons[data.getRibbon(gid)][data.order.indexOf(gid)]
-
 					if(gid == current){
-						focus = true
-					}
-				})
+						focus = true } })
 
 			// the above may result in empty ribbons -> cleanup...
 			this.data.clear('empty')
@@ -1786,8 +1719,7 @@ module.CropActions = actions.Actions({
 			focus
 				&& this.focusImage(
 					data.getImage(this.direction == 'left' ? 'before' : 'after')
-					|| data.getImage(this.direction == 'left' ? 'after' : 'before'))
-		}],
+					|| data.getImage(this.direction == 'left' ? 'after' : 'before')) }],
 	// NOTE: this is undone by .removeFromCrop(..)
 	removeRibbonFromCrop:['Crop|Ribbon/Remove ribbon from crop',
 		core.doc`
@@ -1800,9 +1732,9 @@ module.CropActions = actions.Actions({
 			gids = gids || this.current_ribbon
 			gids = gids == 'current' ? this.current_ribbon : gids
 			gids = (gids instanceof Array ?  gids : [gids])
-				.filter(function(gid){ return that.data.ribbons[that.data.getRibbon(gid)] }) 
-			return this.removeFromCrop(gids) 
-		}],
+				.filter(function(gid){ 
+					return that.data.ribbons[that.data.getRibbon(gid)] }) 
+			return this.removeFromCrop(gids) }],
 })
 
 
