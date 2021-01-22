@@ -3,6 +3,18 @@ Hacks and fixes
 ===============
 
 
+20210122:
+Marking changes twice on load...
+
+The way .markChanged(..) is handled around .load(..) / .loadOrRecover(..) and 
+in base.js seems a bit hackish -- revise...
+
+See:
+- features/base.js ~@1179 -- 'load' handler... 
+- features/filesystem.js ~@982 -- 'loadIndex' handler...
+
+
+
 20201104:
 Chrome v83 / Electron 9.3.3
 
