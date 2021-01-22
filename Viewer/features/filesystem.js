@@ -981,6 +981,10 @@ module.FileSystemLoader = core.ImageGridFeatures.Feature({
 						function(){ 
 							// NOTE: this repeats the functionality in 
 							// 		base.js' 'edit' feature...
+							// 		this is needed to go around the async
+							// 		loading and .loadOrRecover(..)
+							// 		XXX can we make this cleaner?
+							// 			...a post-load event??
 							that.data.version_updated ?
 								that.markChanged('all') 
 								: that.markChanged('none') },
