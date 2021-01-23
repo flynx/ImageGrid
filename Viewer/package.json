@@ -22,7 +22,7 @@
     "async-json": "0.0.2",
     "cli-progress": "^3.8.2",
     "colors": "^1.4.0",
-    "electron": "^9.4.0",
+    "electron": "^9.4.1",
     "exif-reader": "^1.0.3",
     "exiftool": "^0.0.3",
     "fs-extra": "^7.0.1",
