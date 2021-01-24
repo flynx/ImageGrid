@@ -870,10 +870,10 @@ var SharpActions = actions.Actions({
 		'cacheMetadata: "all" ...'],
 
 	// XXX EXPERIMENTAL...
-	// 	XXX if we are not careful this may result in some data loss due 
+	// XXX if we are not careful this may result in some data loss due 
 	// 		to unlinking or double edits before save... 
 	// 		(REVISE!!!)
-	// 	XXX it is also possible to save the foreground state while the 
+	// XXX it is also possible to save the foreground state while the 
 	// 		task is running... 
 	// 		this should not be destructive unless saving with the exact 
 	// 		same timestamp...
@@ -884,7 +884,7 @@ var SharpActions = actions.Actions({
 	// 		rethink...
 	// 		...can we make .link() work like link-on-demand, i.e. actually 
 	// 		create the link on .clear() but before that use this???
-	// XXX move this to filesystem???
+	// XXX move this to features/filesystem.js???
 	makeIndex: ['- File/',
 		core.doc`
 
@@ -910,26 +910,27 @@ var SharpActions = actions.Actions({
 			saving the changes correctly and allow the user to leave the index...
 		`,
 		function(options={}){
-			var that = options.linked === false ? 
-				this 
-				: this.link()
+			var context = 
+				options.linked === false ? 
+					this 
+					: this.link()
 			return Promise.all([
 				// metadata...
 				options.metadata !== false
 					&& ((options.metadata == 'full' 
-							&& that.readAllMetadata) ?
+							&& context.readAllMetadata) ?
 						// full (slow)...
-						that.readAllMetadata()
+						context.readAllMetadata()
 						// partial (fast)...
-						: (that.cacheAllMetadata
-							&& that.cacheAllMetadata())),
+						: (context.cacheAllMetadata
+							&& context.cacheAllMetadata())),
 				// previews...
 				options.previews !== false
-					&& that.makePreviews
-					&& that.makePreviews(),
+					&& context.makePreviews
+					&& context.makePreviews(),
 			// save...
 			]).then(function(){
-				that.saveIndex() }) }],
+				context.saveIndex() }) }],
 })
 
 
