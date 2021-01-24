@@ -919,10 +919,10 @@ var SharpActions = actions.Actions({
 					&& ((options.metadata == 'full' 
 							&& that.readAllMetadata) ?
 						// full (slow)...
-						that.readAllMetadata())
+						that.readAllMetadata()
 						// partial (fast)...
 						: (that.cacheAllMetadata
-							&& that.cacheAllMetadata() ))
+							&& that.cacheAllMetadata()))
 				// previews...
 				options.previews !== false
 					&& that.makePreviews
