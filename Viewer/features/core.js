@@ -2880,15 +2880,14 @@ var TaskActions = actions.Actions({
 		return (this.__tasks = 
 			this.__tasks 
 				|| this.__task_manager__()) },
-	// session tasks are stopped when the index is cleared...
-	// XXX need to get running tasks by action name...
+	// NOTE: session tasks are stopped when the index is cleared...
+	// XXX do we need to cache this...
+	// 		...if yes then we'll need to also clear/update the cache 
+	// 		every time a task is run/stopped...
 	get sessionTasks(){
-		//return this.tasks.titled(...this.sessionTaskActions) },
-		return this.cache('sessionTasks', function(data){
-			return data 
-				|| this.tasks
-					.filter(function(task){
-						return task.__session_task__ }) }) },
+		return this.tasks
+			.filter(function(task){
+				return task.__session_task__ }) },
 
 
 	// Queue (task)...

@@ -871,6 +871,12 @@ var SharpActions = actions.Actions({
 
 
 	// XXX EXPERIMENTAL...
+	// XXX might be a good idea to rename this to something like:
+	// 			.buildIndex(options)
+	// 		and specify whet to build/not build in options...
+	// XXX should we also cache/load metadata here???
+	// 		i.e. .cacheAllMetadata()
+	// XXX do we need to think about running this while index is loading???
 	makePreviewsAndSave: ['- Sharp|File/',
 		function(){
 			var link = this.link()
@@ -908,7 +914,6 @@ module.Sharp = core.ImageGridFeatures.Feature({
 				'loadImages', 
 				'loadNewImages'],
 			'cacheMetadata: "all"'],
-		//*/
 
 		// set orientation if not defined...
 		// NOTE: progress on this is not shown so as to avoid spamming 
