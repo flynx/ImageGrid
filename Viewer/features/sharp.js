@@ -922,7 +922,7 @@ var SharpActions = actions.Actions({
 						that.readAllMetadata()
 						// partial (fast)...
 						: (that.cacheAllMetadata
-							&& that.cacheAllMetadata()))
+							&& that.cacheAllMetadata())),
 				// previews...
 				options.previews !== false
 					&& that.makePreviews
