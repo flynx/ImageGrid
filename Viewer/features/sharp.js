@@ -869,22 +869,67 @@ var SharpActions = actions.Actions({
 	cacheAllMetadata: ['- Sharp/Image/',
 		'cacheMetadata: "all" ...'],
 
-
 	// XXX EXPERIMENTAL...
-	// XXX might be a good idea to rename this to something like:
-	// 			.buildIndex(options)
-	// 		and specify whet to build/not build in options...
-	// XXX should we also cache/load metadata here???
-	// 		i.e. .cacheAllMetadata()
-	// XXX do we need to think about running this while index is loading???
-	makePreviewsAndSave: ['- Sharp|File/',
-		function(){
-			var link = this.link()
-			return link
-				.makePreviews(...arguments)
-				.then(function(){
-					link.saveIndex
-						&& link.saveIndex() }) }],
+	// 	XXX if we are not careful this may result in some data loss due 
+	// 		to unlinking or double edits before save... 
+	// 		(REVISE!!!)
+	// 	XXX it is also possible to save the foreground state while the 
+	// 		task is running... 
+	// 		this should not be destructive unless saving with the exact 
+	// 		same timestamp...
+	// 		...this however, if some structure is unlinked, can lead to 
+	// 		the later background save shadowing some earlier changes in 
+	// 		the foreground...
+	// XXX the number of places this can go wrong (see above) warrants a 
+	// 		rethink...
+	// 		...can we make .link() work like link-on-demand, i.e. actually 
+	// 		create the link on .clear() but before that use this???
+	// XXX move this to filesystem???
+	makeIndex: ['- File/',
+		core.doc`
+
+			.makeIndex()
+			.makeIndex(options)
+				-> promise
+
+		options format:
+			{
+				// default: true
+				linked: <bool>,
+
+				// default: true
+				metadata: <book> | 'full',
+
+				// default: true
+				previews: <book>,
+			}
+
+		NOTE: this will save the index in the background, this will not affect 
+			foreground .changes but will update the foreground data...
+			this will allow modifying stuff while the tasks are running and then 
+			saving the changes correctly and allow the user to leave the index...
+		`,
+		function(options={}){
+			var that = options.linked === false ? 
+				this 
+				: this.link()
+			return Promise.all([
+				// metadata...
+				options.metadata !== false
+					&& ((options.metadata == 'full' 
+							&& that.readAllMetadata) ?
+						// full (slow)...
+						that.readAllMetadata())
+						// partial (fast)...
+						: (that.cacheAllMetadata
+							&& that.cacheAllMetadata() ))
+				// previews...
+				options.previews !== false
+					&& that.makePreviews
+					&& that.makePreviews(),
+			// save...
+			]).then(function(){
+				that.saveIndex() }) }],
 })
 
 
