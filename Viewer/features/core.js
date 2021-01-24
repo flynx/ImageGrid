@@ -2851,6 +2851,12 @@ function(title, func){
 var TaskActions = actions.Actions({
 	config: {
 		'context-exclude-attrs': [
+			// XXX what else should we isolate from the clone???
+			'__tasks',
+			'__queues',
+			//'__links',
+			//'__isolated',
+
 			'features',
 		],
 	},
@@ -3104,12 +3110,14 @@ var TaskActions = actions.Actions({
 			// NOTE: we intentionally disable ui here and do not trigger .start()...
 			return (links[title] = 
 				Object.assign(
+					// new base object...
 					// XXX add a 'link' feature...
 					ImageGridFeatures.setup([
 						...this.features.input, 
 						'-ui',
 						'link-context',
 					]),
+					// clone data...
 					// NOTE: this can shadow parts of the new base object 
 					// 		so we'll need to exclude some stuff...
 					Object.assign({}, this)
@@ -3119,6 +3127,7 @@ var TaskActions = actions.Actions({
 									|| [ 'features' ])
 								.forEach(function(key){
 									delete this[key] }.bind(this)) }),
+					// context-specific data...
 					{
 						// link metadata...
 						parent: this,
