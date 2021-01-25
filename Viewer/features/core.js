@@ -2854,6 +2854,9 @@ var TaskActions = actions.Actions({
 			// XXX what else should we isolate from the clone???
 			'__tasks',
 			'__queues',
+
+			// NOTE: these are commented out so as to reuse contexts where 
+			// 		possible... (XXX revise)
 			//'__links',
 			//'__isolated',
 
