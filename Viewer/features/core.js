@@ -2851,14 +2851,17 @@ function(title, func){
 var TaskActions = actions.Actions({
 	config: {
 		'context-exclude-attrs': [
-			// XXX what else should we isolate from the clone???
-			'__tasks',
-			'__queues',
-
 			// NOTE: these are commented out so as to reuse contexts where 
 			// 		possible... (XXX revise)
 			//'__links',
 			//'__isolated',
+
+			// keep all the tasks/queues in one pool...
+			//
+			// NOTE: a linked context in here can stop main tasks and vise versa...
+			// XXX what else should we isolate from the clone???
+			'__tasks',
+			'__queues',
 
 			'features',
 		],
