@@ -2852,13 +2852,14 @@ var TaskActions = actions.Actions({
 	config: {
 		'context-exclude-attrs': [
 			// NOTE: these are commented out so as to reuse contexts where 
-			// 		possible... (XXX revise)
+			// 		possible... (XXX)
 			//'__links',
 			//'__isolated',
 
 			// keep all the tasks/queues in one pool...
 			//
-			// NOTE: a linked context in here can stop main tasks and vise versa...
+			// NOTE: a linked context in here can stop main tasks and 
+			// 		vise versa...
 			// XXX what else should we isolate from the clone???
 			'__tasks',
 			'__queues',
