@@ -894,12 +894,18 @@ var SharpActions = actions.Actions({
 
 		options format:
 			{
+				// if false this will run the actions in the current context...
+				//
 				// default: true
 				linked: <bool>,
 
+				// if true read metadata...
+				//
 				// default: true
 				metadata: <book> | 'full',
 
+				// if true create previews...
+				//
 				// default: true
 				previews: <book>,
 			}
