@@ -880,10 +880,6 @@ var SharpActions = actions.Actions({
 	// 		...this however, if some structure is unlinked, can lead to 
 	// 		the later background save shadowing some earlier changes in 
 	// 		the foreground...
-	// XXX the number of places this can go wrong (see above) warrants a 
-	// 		rethink...
-	// 		...can we make .link() work like link-on-demand, i.e. actually 
-	// 		create the link on .clear() but before that use this???
 	// XXX move this to features/filesystem.js???
 	makeIndex: ['- File/',
 		core.doc`
