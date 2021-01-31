@@ -881,6 +881,7 @@ var SharpActions = actions.Actions({
 	// 		the later background save shadowing some earlier changes in 
 	// 		the foreground...
 	// XXX move this to features/filesystem.js???
+	// 		...or a separate high-level module something like scripts...
 	makeIndex: ['- File/',
 		core.doc`
 
