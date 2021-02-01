@@ -2663,6 +2663,10 @@ function(title, func){
 //	queueHandler(title[, opts][, arg_handler], func)
 //		-> action
 //
+//	Chained queue handler...
+//	queueHandler(title[, opts][, queue_handler], func)
+//		-> action
+//
 //
 //	Prepare args...
 //	arg_handler(queue, items, ...args)

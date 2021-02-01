@@ -573,7 +573,6 @@ var SharpActions = actions.Actions({
 					if(queue == 'sync'){
 						args.unshift(_)
 						var [images, sizes, ...args] = args }
-
 					// get/normalize sizes....
 					var cfg_sizes = this.config['preview-sizes'].slice() || []
 					cfg_sizes
