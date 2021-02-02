@@ -2660,11 +2660,12 @@ function(title, func){
 
 // Queue action handler...
 //
-//	queueHandler(title[, opts][, arg_handler], func)
+//	queueHandler(title[, opts], func)
+//	queueHandler(title[, opts], arg_handler, func)
 //		-> action
 //
 //	Chained queue handler...
-//	queueHandler(title[, opts][, queue_handler], func)
+//	queueHandler(title[, opts], queueHandler(..), func)
 //		-> action
 //
 //
