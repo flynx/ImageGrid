@@ -698,7 +698,6 @@ var SharpActions = actions.Actions({
 											&& logger.emit('skipped', `${gid} / ${size}`)
 									}) })) })],
 
-	// XXX add support for offloading the processing to a thread/worker...
 	// XXX revise logging and logger passing...
 	cacheMetadata: ['- Sharp|Image/',
 		core.doc`Cache metadata
