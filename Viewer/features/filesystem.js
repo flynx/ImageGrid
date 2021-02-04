@@ -853,6 +853,42 @@ var FileSystemLoaderActions = actions.Actions({
 				.then(function(res){
 					return res.flat() })
 		}],
+	// XXX EXPERIMENTAL...
+	_checkIndex: ['File/Check index consistency',
+		// XXX technically this can be a non-session queue, but we'll 
+		// 		need to save the check results...
+		// XXX update handlers... 
+		core.sessionQueueHandler('checkIndex',
+			function(queue, ...args){
+				// no index loaded...
+				if(!this.location.loaded){
+					// XXX should this throw or resolve???
+					throw new Error('.checkIndex(): no index to fix.') }
+				// merged index...
+				// XXX can we remove this restriction -- i.e. check each index...
+				if(this.location.loaded.length > 1){
+					throw new Error('.checkIndex(): combined indexes not supported.') }
+				// get the data...
+				return [Object.entries(this.images), ...args] },
+			// XXX test...
+			function([gid, image], ...args){
+				var updated = false
+				// image .previews...
+				var previews = image.preview || {}
+				Object.entries(previews)
+					.forEach(function(p){
+						!fse.existsSync(image.base_path +'/'+ p[1])
+							&& (updated = true)
+							&& (delete previews[p[0]]) })
+				// image .path...
+				!fse.existsSync(image.base_path +'/'+ image.path)
+					&& (updated = true)
+					&& (delete image.path)
+
+				// XXX check return values...
+				return updated ? 
+					gid 
+					: [] })],
 
 	// XXX should this take a path argument???
 	// XXX not yet sure about this...
