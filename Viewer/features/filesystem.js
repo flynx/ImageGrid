@@ -854,6 +854,7 @@ var FileSystemLoaderActions = actions.Actions({
 					return res.flat() })
 		}],
 	// XXX EXPERIMENTAL...
+	// XXX add a context wrapper a-la .makeIndex(..)...
 	_checkIndex: ['File/Check index consistency',
 		// XXX technically this can be a non-session queue, but we'll 
 		// 		need to save the check results...
@@ -863,7 +864,9 @@ var FileSystemLoaderActions = actions.Actions({
 				// no index loaded...
 				if(!this.location.loaded){
 					// XXX should this throw or resolve???
-					throw new Error('.checkIndex(): no index to fix.') }
+					//throw new Error('.checkIndex(): no index to fix.') }
+					// XXX test...
+					return [] }
 				// merged index...
 				// XXX can we remove this restriction -- i.e. check each index...
 				if(this.location.loaded.length > 1){
@@ -880,11 +883,13 @@ var FileSystemLoaderActions = actions.Actions({
 						!fse.existsSync(image.base_path +'/'+ p[1])
 							&& (updated = true)
 							&& (delete previews[p[0]]) })
+				// XXX do we need this???
+				Object.keys(previews).length == 0
+					&& (delete image.preview)
 				// image .path...
 				!fse.existsSync(image.base_path +'/'+ image.path)
 					&& (updated = true)
 					&& (delete image.path)
-
 				// XXX check return values...
 				return updated ? 
 					gid 
