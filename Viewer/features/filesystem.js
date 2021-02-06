@@ -900,7 +900,7 @@ var FileSystemLoaderActions = actions.Actions({
 			// XXX we could mark all the index test/recovery actions and 
 			// 		get them here dynamically...
 			return Promise.all([
-				this.checkIndexPaths(),
+				context.checkIndexPaths(),
 				// XXX more checks???
 			]).then(function(res){
 				// XXX either make res format a protocol requirement or 
