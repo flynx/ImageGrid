@@ -2746,25 +2746,29 @@ function(title, func){
 	return object.mixin(
 		action = Queued(function(items, ...args){
 			var that = this
+			var inputs = [...arguments]
 
 			// sync start...
-			if(arguments[0] == 'sync' || arguments[0] == 'async'){
-				var [sync, items, ...args] = arguments }
+			if(inputs[0] == 'sync' || inputs[0] == 'async'){
+				var [sync, [items, ...args]] = [inputs.shift(), inputs] }
 
+			// XXX see arg_handler(..) note below...
 			var q
-			var inputs = [items, ...args]
 
-			// pre-process args...
+			// pre-process args (sync)...
 			arg_handler
 				&& (inputs = arg_handler.call(this, 
 					sync == 'sync' ? 
 						sync 
+						// XXX should this be a queue???
+						// 		...seems like this is either 'sync' or 
+						// 		undefined but never a queue at this stage...
 						: q, 
 					...inputs))
 			// special-case: empty inputs -- no need to handle anything...
 			if(inputs instanceof Array 
-					&& inputs[0] 
-					&& inputs[0].length == 0){
+					&& (inputs.length == 0
+						|| (inputs[0] || []).length == 0)){
 				return Promise.resolve(inputs) }
 
 			// Define the runner and prepare...
