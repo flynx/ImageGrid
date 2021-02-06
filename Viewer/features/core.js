@@ -2769,7 +2769,7 @@ function(title, func){
 			if(inputs instanceof Array 
 					&& (inputs.length == 0
 						|| (inputs[0] || []).length == 0)){
-				return Promise.resolve(inputs) }
+				return Promise.resolve(inputs[0] || []) }
 
 			// Define the runner and prepare...
 			//
@@ -2818,7 +2818,11 @@ function(title, func){
 							.map(function(e){ 
 								return [e, ...args] }) 
 						: [[items, ...args]])
-					return q.promise() } } 
+					// XXX do we .flat(..) the results???
+					//return q.promise() } } 
+					return q.promise()
+			   			.then(function(res){ 
+							return res && res.flat() }) } } 
 
 			// run...
 			return (inputs instanceof Promise 

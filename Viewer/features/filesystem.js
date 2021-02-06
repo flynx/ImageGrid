@@ -855,22 +855,23 @@ var FileSystemLoaderActions = actions.Actions({
 		}],
 	// XXX EXPERIMENTAL...
 	// XXX add a context wrapper a-la .makeIndex(..)...
-	_checkIndex: ['File/Check index consistency',
-		// XXX technically this can be a non-session queue, but we'll 
-		// 		need to save the check results...
-		// XXX update .handlers to maintain .changes via promise... 
+	// 		...might be a good idea to rename this to .checkIndexPaths(..)
+	// 		and make the .checkIndex(..) a context aggregate actions like
+	// 		.makeIndex(..)
+	// XXX might be a good idea to also search for previews here...
+	// XXX technically this can be a non-session queue, but we'll 
+	// 		need to save the check results...
+	// XXX update .handlers to maintain .changes via promise... 
+	checkIndexPaths: ['- File/',
+		core.doc``,
 		core.sessionQueueHandler('checkIndex',
 			function(queue, ...args){
-				// no index loaded...
-				if(!this.location.loaded){
-					return [] }
-				// merged index...
-				// XXX can we remove this restriction -- i.e. check each index...
-				if(this.location.loaded.length > 1){
-					throw new Error('.checkIndex(): combined indexes not supported.') }
-				// get the data...
-				return [Object.entries(this.images), ...args] },
-			function([gid, image], ...args){
+				// XXX ignore merged index...
+				//if((this.location.loaded || []).length > 1){
+				//	throw new Error('.checkIndex(): combined indexes not supported.') }
+				return [this.images.keys(), ...args] },
+			function(gid, ...args){
+				var image = this.images[gid]
 				var updated = false
 				// image .previews...
 				var previews = image.preview || {}
@@ -879,16 +880,35 @@ var FileSystemLoaderActions = actions.Actions({
 						!fse.existsSync(image.base_path +'/'+ p[1])
 							&& (updated = true)
 							&& (delete previews[p[0]]) })
+				// cleanup...
 				Object.keys(previews).length == 0
 					&& (delete image.preview)
 				// image .path...
 				!fse.existsSync(image.base_path +'/'+ image.path)
 					&& (updated = true)
 					&& (delete image.path)
-				// XXX check return values...
 				return updated ? 
 					gid 
 					: [] })],
+	_checkIndex: ['- File/',
+		core.doc``,
+		function(options={}){
+			var context = 
+				options.linked === false ? 
+					this 
+					: this.link()
+			// XXX we could mark all the index test/recovery actions and 
+			// 		get them here dynamically...
+			return Promise.all([
+				this.checkIndexPaths(),
+				// XXX more checks???
+			]).then(function(res){
+				// XXX either make res format a protocol requirement or 
+				// 		revise this...
+				res.flat().length > 0
+					&& context.saveIndex() 
+				// XXX this is not returned by the action for some reason...
+				return res }) }],
 
 	// XXX should this take a path argument???
 	// XXX not yet sure about this...

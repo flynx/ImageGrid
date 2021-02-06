@@ -775,7 +775,6 @@ var SharpActions = actions.Actions({
 										&& img.flipped == null)
 									// update metadata...
 									|| (img.metadata || {}).ImageGridMetadata == null) })
-
 				return [
 					images,
 					...args,

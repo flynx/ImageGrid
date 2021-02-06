@@ -419,6 +419,7 @@ module.ImagesPrototype = {
 	iter: function*(){
 		yield* this },
 
+	// XXX do we need a .values() / .entries() here too???
 	keys: function(){
 		var keys = Object.keys(this)
 		var i = keys.lastIndexOf('version')
