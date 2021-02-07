@@ -890,7 +890,8 @@ var FileSystemLoaderActions = actions.Actions({
 				return updated ? 
 					gid 
 					: [] })],
-	_checkIndex: ['- File/',
+	//checkIndex: ['File/Check index consistency',
+	_checkIndex: ['File/',
 		core.doc``,
 		function(options={}){
 			var context = 
@@ -1065,6 +1066,8 @@ module.FileSystemLoader = core.ImageGridFeatures.Feature({
 								.markChanged('data')
 								.markChanged('images', imgs.keys()) },
 					function(){}) }],
+		// XXX
+		//['checkIndexPaths',
 		['checkIndex',
 			function(res){
 				var that = this
