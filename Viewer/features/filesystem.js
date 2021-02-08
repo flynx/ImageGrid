@@ -790,22 +790,7 @@ var FileSystemLoaderActions = actions.Actions({
 	// 			// XXX prevent calling too often...
 	// 			// XXX
 	// 			that.checkIndex() }
-	checkIndex: ['File/Check index consistency',
-		core.doc`Check index consistency...
-
-		Check currently loaded index for missing references and fix them
-		if found.
-
-		This will:
-			- remove references to non-existing preview images (image.preview)
-			- remove references to non-existing .path (image.path)
-			- if .path removed, set to largest available preview
-
-
-		NOTE: currently this is disabled for merged indexes, need to load
-			and check individually...
-
-		`,
+	_checkIndex: ['File/Check index consistency',
 		function(logger){
 			var that = this
 			logger = logger || this.logger
@@ -863,7 +848,19 @@ var FileSystemLoaderActions = actions.Actions({
 	// 		need to save the check results...
 	// XXX update .handlers to maintain .changes via promise... 
 	checkIndexPaths: ['- File/',
-		core.doc``,
+		core.doc`Check index image path consistency
+
+		Check currently loaded index for missing references and fix them
+		if found.
+
+		This will:
+			- remove references to non-existing preview images (image.preview)
+			- remove references to non-existing .path (image.path)
+
+
+		NOTE: currently this is disabled for merged indexes, need to load
+			and check individually...
+		`,
 		core.sessionQueueHandler('checkIndex',
 			function(queue, ...args){
 				// XXX ignore merged index...
@@ -890,8 +887,7 @@ var FileSystemLoaderActions = actions.Actions({
 				return updated ? 
 					gid 
 					: [] })],
-	//checkIndex: ['File/Check index consistency',
-	_checkIndex: ['File/',
+	checkIndex: ['File/Check index consistency',
 		core.doc``,
 		function(options={}){
 			var context = 
