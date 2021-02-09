@@ -3131,6 +3131,8 @@ var TaskActions = actions.Actions({
 	
 	// Links...
 	//
+	// NOTE: all links to current state in .links will be detached on .clear()
+	//
 	// XXX after this is stabilized, do we need session tasks and its complexities??? 
 	__links: null,
 	get links(){
@@ -3268,17 +3270,20 @@ module.Tasks = ImageGridFeatures.Feature({
 	handlers: [
 		// stop session tasks...
 		['clear',
-			// XXX BUG: for some reason calling .abort here does not work...
-			//'sessionTasks.stop'],
 			'sessionTasks.abort'],
 
+		// detach links to current state...
 		['clear.pre',
 			function(){
+				var that = this
 				Object.values(this.links || [])
 					.forEach(function(link){
-						// NOTE: we do a partial detach here as .clear(..) will
-						// 		detach the data for us...
-						link.detachLink(false) }) }],
+						// only detach links to current state...
+						link.data === that.data 
+							&& link.images === that.images
+							// NOTE: we do a partial detach here as .clear(..) will
+							// 		detach the data for us...
+							&& link.detachLink(false) }) }],
 	],
 })
 
