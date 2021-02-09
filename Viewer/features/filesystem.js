@@ -779,6 +779,7 @@ var FileSystemLoaderActions = actions.Actions({
 				})
 		}],
 
+	/* XXX cleanup...
 	// XXX update index for removed images...
 	// 		- remove non-existing previews from index
 	// 		- replace non-existing originals with the largest preview (in index)
@@ -838,7 +839,59 @@ var FileSystemLoaderActions = actions.Actions({
 				.then(function(res){
 					return res.flat() })
 		}],
+	//*/
+
 	// XXX EXPERIMENTAL...
+	// XXX move this to base.js???
+	get indexCheckerActions(){
+		var that = this
+		return this.cache('indexCheckerActions', function(cached){
+			return cached instanceof Array ? 
+				cached.slice() 
+				: this.actions
+					.filter(function(action){
+						return that.getActionAttr(action, 'checkIndex') }) }) },
+	// NOTE: this is not implemented as an overloadable action because it
+	// 		would require collection each action's results for post processing
+	// 		which in turn would necessitate a second wrapper action that would
+	// 		call the first as well as requiring the user not to call the 
+	// 		overloaded action, and if each of the individual checks can be run
+	// 		independently it would require a separate wrapper...
+	// 		...this seems quire a bit more convoluted than the current
+	// 		.indexCheckerActions + .checkIndex(..) pair...
+	// XXX since this by default runs in a .linked context this will update 
+	// 		the current context state if it was not reloaded but .changes if 
+	// 		it was set to false will not reflect the changes made by the
+	// 		checker actions...
+	checkIndex: ['File/Check index consistency',
+		core.doc`
+
+
+		Protocol:
+			- this will call all the actions in .indexCheckerActions 
+			- each of the above actions should comply with:
+				.<index-check-action>()
+					-> promise
+			- actions should set .changes appropriately
+			- the returned promise should yield an array of changes -- empty
+				array indicates that no changes were made.
+
+		`,
+		function(options={}){
+			var context = 
+				options.linked === false ? 
+					this 
+					: this.link()
+			return Promise.all(
+					context.indexCheckerActions
+						.map(function(action){
+							return context[action]() }))
+				.then(function(res){
+					res.flat().length > 0
+						&& context.saveIndex() 
+					// XXX BUG?: this is not returned by the action for some reason...
+					return res }) }],
+
 	// XXX add a context wrapper a-la .makeIndex(..)...
 	// 		...might be a good idea to rename this to .checkIndexPaths(..)
 	// 		and make the .checkIndex(..) a context aggregate actions like
@@ -861,6 +914,7 @@ var FileSystemLoaderActions = actions.Actions({
 		NOTE: currently this is disabled for merged indexes, need to load
 			and check individually...
 		`,
+		{checkIndex: true},
 		core.sessionQueueHandler('checkIndex',
 			function(queue, ...args){
 				// XXX ignore merged index...
@@ -887,25 +941,7 @@ var FileSystemLoaderActions = actions.Actions({
 				return updated ? 
 					gid 
 					: [] })],
-	checkIndex: ['File/Check index consistency',
-		core.doc``,
-		function(options={}){
-			var context = 
-				options.linked === false ? 
-					this 
-					: this.link()
-			// XXX we could mark all the index test/recovery actions and 
-			// 		get them here dynamically...
-			return Promise.all([
-				context.checkIndexPaths(),
-				// XXX more checks???
-			]).then(function(res){
-				// XXX either make res format a protocol requirement or 
-				// 		revise this...
-				res.flat().length > 0
-					&& context.saveIndex() 
-				// XXX this is not returned by the action for some reason...
-				return res }) }],
+
 
 	// XXX should this take a path argument???
 	// XXX not yet sure about this...
@@ -1062,9 +1098,7 @@ module.FileSystemLoader = core.ImageGridFeatures.Feature({
 								.markChanged('data')
 								.markChanged('images', imgs.keys()) },
 					function(){}) }],
-		// XXX
-		//['checkIndexPaths',
-		['checkIndex',
+		['checkIndexPaths',
 			function(res){
 				var that = this
 				res.then(

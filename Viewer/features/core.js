@@ -2857,6 +2857,72 @@ function(title, func){
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
+// XXX EXPERIMENTAL...
+var LinkContext = 
+module.LinkContext = ImageGridFeatures.Feature({
+	title: '',
+	tag: 'link-context',
+	depends: [
+		'changes',
+	],
+
+	actions: actions.Actions({
+		title: null,
+		// NOTE: we need .__parent to be able to test if we are fully 
+		// 		detached in .type...
+		// NOTE: this is maintained by .detachLink(..)...
+		__parent: null,
+		parent: null,
+
+		get type(){
+			return this.parent ?
+					'link' 
+				: (this.__parent
+						&& (this.data !== this.__parent.data 
+							|| this.images !== this.__parent.images)) ?
+					'link-detached'
+				: 'link-partial' },
+
+		__changes: null, 
+		get changes(){
+			return this.parent ?
+				this.parent.changes 
+				: this.__changes },
+		set changes(value){
+			this.parent ? 
+				(this.parent.changes = value)
+	   			: (this.__changes = value)},
+
+		// NOTE: .detachLink(false) is not intended for direct use as it
+		// 		will create a partial link...
+		detachLink: ['- System/',
+			doc``,
+			function(full=true){
+				// partial detach...
+				if(this.type == 'link'){
+					// copy over .changes
+					this.__changes = this.changes === undefined ?
+						undefined
+						: JSON.parse(JSON.stringify([this.changes]))[0]
+					this.__parent = this.parent
+					delete this.parent }
+				// full detach...
+				if(this.type != 'link-detached' && full){
+					Object.assign(
+						this,
+						this.clone(true)) 
+					// cleanup...
+					// NOTE: we do not need to cleanup things outside of 
+					// 		the full detach as this will be done in .links
+					this.links.current === this
+						&& (delete this.links.current)
+					this.links.previous === this
+						&& (delete this.links.previous) } }],
+	}), })
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
 // XXX revise logging and logger passing...
 // XXX add a task manager UI...
 // XXX might be a good idea to confirm session task stops when loading a 
@@ -2877,6 +2943,11 @@ var TaskActions = actions.Actions({
 			'__tasks',
 			'__queues',
 
+			// NOTE: we link the changes directly to the parent so no need to 
+			//		copy them...
+			'changes',
+
+			// keep the local features as they are not the same as .parent.features
 			'features',
 		],
 	},
@@ -3063,7 +3134,7 @@ var TaskActions = actions.Actions({
 	// XXX after this is stabilized, do we need session tasks and its complexities??? 
 	__links: null,
 	get links(){
-		var links = this.__linked = this.__linked || {}
+		var links = this.__links = this.__links || {}
 		// remove 'current' if it does not match the current index...
 		// XXX revise the test...
 		var c = links.current
@@ -3152,9 +3223,6 @@ var TaskActions = actions.Actions({
 						// link metadata...
 						parent: this,
 						title: title,
-						// XXX change this when data/images changes...
-						// 		...a prop in the link feature...
-						type: 'link',
 						// link configuration...
 						logger: that.logger
 							.push(`Linked ${ Object.keys(links).length }`),
@@ -3203,6 +3271,14 @@ module.Tasks = ImageGridFeatures.Feature({
 			// XXX BUG: for some reason calling .abort here does not work...
 			//'sessionTasks.stop'],
 			'sessionTasks.abort'],
+
+		['clear.pre',
+			function(){
+				Object.values(this.links || [])
+					.forEach(function(link){
+						// NOTE: we do a partial detach here as .clear(..) will
+						// 		detach the data for us...
+						link.detachLink(false) }) }],
 	],
 })
 
