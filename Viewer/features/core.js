@@ -3103,7 +3103,7 @@ var TaskActions = actions.Actions({
 	// XXX is peer stuff just a special context???
 	// 		...feels like yes
 	// XXX is context manager a special case of task manager???
-	// XXX move to a separate feature...
+	// XXX move to a separate feature... (???)
 	__contexts: null,
 	get contexts(){},
 
@@ -3132,8 +3132,6 @@ var TaskActions = actions.Actions({
 	// Links...
 	//
 	// NOTE: all links to current state in .links will be detached on .clear()
-	//
-	// XXX after this is stabilized, do we need session tasks and its complexities??? 
 	__links: null,
 	get links(){
 		var links = this.__links = this.__links || {}
@@ -3146,6 +3144,9 @@ var TaskActions = actions.Actions({
 		return links },
 	get linked(){
 		return this.link() },
+	// XXX go through ImageGrid instance data and re-check what needs to 
+	// 		be cloned...
+	// XXX should this be a constructor???
 	link: ['- System/',
 		doc`Get/create links...
 
@@ -3228,7 +3229,15 @@ var TaskActions = actions.Actions({
 						// link configuration...
 						logger: that.logger
 							.push(`Linked ${ Object.keys(links).length }`),
-					})) }],
+					})
+				// detach link on parent .clear(..)...
+				.run(function(){
+					var link = this
+					that.one('clear.pre', function(){
+						// NOTE: we are doing a partial detach here as the 
+						// 		parent is overwriting its data and we do not
+						// 		need to clone it...
+						link.detachLink(false) }) })) }],
 
 
 	// XXX would be nice to have an ability to partially clone the instance...
@@ -3241,6 +3250,7 @@ var TaskActions = actions.Actions({
 	__isolated: null,
 	get isolated(){
 		return (this.__isolated = this.__isolated || []) },
+	// XXX should this be a constructor???
 	isolate: ['- System/',
 		function(){
 			var clones = this.isolated
@@ -3271,19 +3281,6 @@ module.Tasks = ImageGridFeatures.Feature({
 		// stop session tasks...
 		['clear',
 			'sessionTasks.abort'],
-
-		// detach links to current state...
-		['clear.pre',
-			function(){
-				var that = this
-				Object.values(this.links || [])
-					.forEach(function(link){
-						// only detach links to current state...
-						link.data === that.data 
-							&& link.images === that.images
-							// NOTE: we do a partial detach here as .clear(..) will
-							// 		detach the data for us...
-							&& link.detachLink(false) }) }],
 	],
 })
 
