@@ -2283,7 +2283,7 @@ var FileSystemWriterActions = actions.Actions({
 					// update previews...
 					// NOTE: this is needed if some of the previews are the 
 					// 		same as .path
-					Object.keys(img.preview)
+					Object.keys(img.preview || {})
 						.forEach(function(s){ 
 							var p = img.preview[s]
 							img.preview[s] = p == from_path ? 
