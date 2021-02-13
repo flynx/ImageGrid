@@ -779,69 +779,9 @@ var FileSystemLoaderActions = actions.Actions({
 				})
 		}],
 
-	/* XXX cleanup...
-	// XXX update index for removed images...
-	// 		- remove non-existing previews from index
-	// 		- replace non-existing originals with the largest preview (in index)
-	// 		...do not touch the fs
-	// XXX this does not give the logger to render... can't seem to make this
-	// 		not block the browser render...
-	// XXX trigger this on .ribbons.imageLoadErrorCallback ...
-	// 		this.ribbos.imageLoadErrorCallback = function(){
-	// 			// XXX prevent calling too often...
-	// 			// XXX
-	// 			that.checkIndex() }
-	_checkIndex: ['File/Check index consistency',
-		function(logger){
-			var that = this
-			logger = logger || this.logger
-			logger = logger && logger.push('Checking index')
 
-			// no index loaded...
-			if(!this.location.loaded){
-				logger.emit('no index to fix.')
-				return Promise.resolve([]) }
-
-			// XXX can we remove this restriction...
-			if(this.location.loaded.length > 1){
-				throw new Error('.fixIndex(): combined indexes not supported.') }
-
-			logger 
-				&& this.images
-					.forEach(function(gid){ 
-						logger.emit('queued', gid)})
-
-			// XXX get this from config...
-			//var chunk_size = 50
-			var chunk_size = '100C'
-
-			return this.images
-				.map(function(gid, image){ 
-					return [gid, image] })
-				.mapChunks(chunk_size, function([gid, image]){
-					var updated = false
-
-					var previews = image.preview || {}
-					Object.entries(previews)
-						.forEach(function(p){
-							!fse.existsSync(image.base_path +'/'+ p[1])
-								&& (updated = true)
-								&& (delete previews[p[0]]) })
-
-					!fse.existsSync(image.base_path +'/'+ image.path)
-						&& (updated = true)
-						&& (delete image.path)
-
-					logger && logger.emit('done', gid)
-
-					return updated ? gid : []
-				})
-				.then(function(res){
-					return res.flat() })
-		}],
-	//*/
-
-	// XXX EXPERIMENTAL...
+	// Index checking...
+	//
 	// XXX move this to base.js???
 	get indexCheckerActions(){
 		var that = this
