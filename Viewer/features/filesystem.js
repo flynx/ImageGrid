@@ -473,8 +473,7 @@ var FileSystemLoaderActions = actions.Actions({
 	getImagesInPath: ['- File/',
 		function(path, read_stat, skip_preview_search, logger){
 			if(path == null){
-				return
-			}
+				return }
 			read_stat = read_stat == null ?
 				this.config['image-file-read-stat']
 				: read_stat
@@ -695,15 +694,16 @@ var FileSystemLoaderActions = actions.Actions({
 			path = path || this.location.path
 
 			if(path == null){
-				return
-			}
+				return }
 
 			logger = logger || this.logger
 			logger = logger && logger.push('Load new images')
 			path = util.normalizePath(path)
 
 			// cache the loaded images...
-			var loaded = new Set(this.images.map(function(gid, img){ return img.path }))
+			var loaded = new Set(this.images
+				.map(function(gid, img){ 
+					return img.path }))
 			//var base_pattern = RegExp('^'+path)
 
 			return this.getImagesInPath(
@@ -736,7 +736,8 @@ var FileSystemLoaderActions = actions.Actions({
 						// XXX is this good enough???
 						// 		...might be a good idea to compare absolute
 						// 		paths...
-						if(loaded.has(img.path)){
+						if(loaded.has(img.path) 
+								|| loaded.has(pathlib.normalize(img.path))){
 							delete imgs[gid] 
 							skipped.push(gid)
 						} else {
@@ -775,9 +776,7 @@ var FileSystemLoaderActions = actions.Actions({
 					// XXX report that we are done...
 					logger && logger.emit('loaded', imgs)
 
-					return imgs
-				})
-		}],
+					return imgs }) }],
 
 
 	// Index checking...
