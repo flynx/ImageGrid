@@ -50,6 +50,7 @@ if(typeof(process) != 'undefined'){
 
 
 /*********************************************************************/
+// Index Format...
 
 var IndexFormatActions = actions.Actions({
 	config: {
@@ -204,7 +205,8 @@ module.IndexFormat = core.ImageGridFeatures.Feature({
 
 
 
-/*********************************************************************/
+//---------------------------------------------------------------------
+// FS Info... (XXX cleanup???)
 
 var FileSystemInfoActions = actions.Actions({
 })
@@ -2578,6 +2580,7 @@ module.FileSystemWriter = core.ImageGridFeatures.Feature({
 						that.markChanged('none') }) } }],
 	],
 })
+
 
 
 //---------------------------------------------------------------------
