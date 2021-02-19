@@ -2011,13 +2011,12 @@ var FileSystemWriterActions = actions.Actions({
 			path = path && path.length == 1 ? path[0] : path 
 			path = util.normalizePath(path)
 
-			// merged index...
-			// XXX
+			// merged index... (XXX)
 			if(path instanceof Array){
 				console.error('saving to merged indexes not yet supported...')
 				return }
 
-			// XXX
+			// no path given -> local save...
 			if(path == null && this.location.load != 'loadIndex'){
 				path = this.location.path }
 
@@ -2056,7 +2055,6 @@ var FileSystemWriterActions = actions.Actions({
 				.then(function(){
 					location.load = 'loadIndex'
 					location.from = index.date
-
 					//return location
 					return index }) }],
 
