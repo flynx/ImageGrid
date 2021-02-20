@@ -1293,8 +1293,9 @@ var FileSystemSaveHistoryActions = actions.Actions({
 		function(save){
 			this.comments == null 
 				&& console.error('Comments do not appear to be loaded yet...')
-
-			return (this.comments.save && this.comments.save[save || 'current']) || '' }],
+			return ((this.comments || {}).save 
+					&& this.comments.save[save || 'current']) 
+				|| '' }],
 
 	// Comment a save...
 	//
