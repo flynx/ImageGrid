@@ -120,8 +120,7 @@ var CollectionActions = actions.Actions({
 		var c = this.collections || {}
 		Object.keys(c)
 			.forEach(function(title){
-				res[c[title].gid || title] = title
-			})
+				res[c[title].gid || title] = title })
 		return res },
 
 	get collection(){
@@ -141,8 +140,7 @@ var CollectionActions = actions.Actions({
 
 		// no collections -> return defaults | []
 		if(this.collections == null){
-			return defaults.slice()
-		}
+			return defaults.slice() }
 
 		var keys = Object.keys(collections)
 		var order = this.__collection_order = this.__collection_order || []
@@ -166,14 +164,14 @@ var CollectionActions = actions.Actions({
 		if(res.length > keys.length){
 			res = res.filter(function(e){ 
 				return e in collections 
-					|| defaults.indexOf(e) >= 0 })
-		}
+					|| defaults.indexOf(e) >= 0 }) }
 
 		this.__collection_order.splice(0, this.__collection_order.length, ...res)
 
 		return this.__collection_order.slice() },
 	set collection_order(value){
-		value && this.sortCollections(value) },
+		value 
+			&& this.sortCollections(value) },
 
 	// NOTE: this accounts only for actual collections and does not counts
 	// 		MAIN_COLLECTION_TITLE that can be contained in .collections,
@@ -202,8 +200,7 @@ var CollectionActions = actions.Actions({
 		return this.cache('collection_handlers', function(handlers){
 			// cached value...
 			if(handlers){
-				return Object.assign({}, handlers)
-			}
+				return Object.assign({}, handlers) }
 
 			var that = this
 			handlers = {}
@@ -214,14 +211,11 @@ var CollectionActions = actions.Actions({
 				handlers[fmt]
 					&& console.warn('Multiple handlers for collection format:', store)
 				if(fmt){
-					handlers[fmt] = action
-				}
-			})
+					handlers[fmt] = action } })
 
 			// cleanup...
 			if(handlers['data'] == null){
-				delete handlers['data']
-			}
+				delete handlers['data'] }
 
 			return handlers }) },
 
@@ -321,7 +315,7 @@ var CollectionActions = actions.Actions({
 				return running[collection] }
 
 			// handle collection...
-			p = running[collection] = new Promise(function(resolve, reject){
+			return (running[collection] = new Promise(function(resolve, reject){
 				// NOTE: we do not need to return this as we'll resolve/reject
 				// 		manually in .then(..) / .catch(..)
 				Promise
@@ -337,9 +331,7 @@ var CollectionActions = actions.Actions({
 						resolve(collection_data) })
 					.catch(function(err){
 						delete running[collection]
-						reject(err) }) })
-
-			return p }],
+						reject(err) }) })) }],
 
 
 	// Collection life-cycle...
@@ -474,8 +466,8 @@ var CollectionActions = actions.Actions({
 								that.load.chainCall(that, 
 									function(){
 										that.collectionUnloaded(
-											prev || MAIN_COLLECTION_TITLE)
-									}, {
+											prev || MAIN_COLLECTION_TITLE) }, 
+									{
 										location: that.location,
 
 										data: data,
@@ -496,15 +488,13 @@ var CollectionActions = actions.Actions({
 									// locations...
 									delete that.collections[MAIN_COLLECTION_TITLE]
 									delete this.location.collection
-
 								} else {
 									that.data.collection = 
 										that.location.collection = 
 										collection
 									// cleanup...
 									if(collection == null){
-										delete this.location.collection } }
-							}, 
+										delete this.location.collection } } }, 
 							collection) }) }],
 	// XXX should this call .loadCollection('!') when saving to current
 	// 		collection???
@@ -584,8 +574,11 @@ var CollectionActions = actions.Actions({
 					&& collection != MAIN_COLLECTION_TITLE
 
 			// save the data...
-			var state = collections[collection] = collections[collection] || {}
-			state.title = state.title || collection
+			var state = collections[collection] = 
+				collections[collection] 
+				|| {}
+			state.title = state.title 
+				|| collection
 			state.gid = state.gid 
 				// maintain the GID of MAIN_COLLECTION_TITLE as MAIN_COLLECTION_GID...
 				|| (collection == MAIN_COLLECTION_TITLE ? 
@@ -596,8 +589,7 @@ var CollectionActions = actions.Actions({
 						do{
 							var gid = that.data.newGID()
 						} while(gids[gid] != null)
-						return gid
-					})())
+						return gid })())
 			// NOTE: we do not need to care about tags here as they 
 			// 		will get overwritten on load...
 			state.data = (mode == 'empty' ? 
@@ -610,8 +602,7 @@ var CollectionActions = actions.Actions({
 				: this.data.clone()
 					.run(function(){
 						var d = this
-						this.collection = collection
-					})
+						this.collection = collection })
 					.clear('unloaded'))
 
 			// crop mode -> handle crop stack...
@@ -649,8 +640,7 @@ var CollectionActions = actions.Actions({
 			just remove it from .collections and do nothing...`,
 		function(collection){
 			if(!this.collections || collection == MAIN_COLLECTION_TITLE){
-				return
-			}
+				return }
 			collection = this.collectionGIDs[collection] || collection
 			if(collection in this.collections){
 				delete this.collections[collection]
@@ -699,21 +689,16 @@ var CollectionActions = actions.Actions({
 		function(cmp){
 			// XXX handle the case when there's no .__collection_order
 			if(!this.__collection_order){
-				return
-			}
-
+				return }
 			// sort via list...
 			if(cmp instanceof Array){
 				this.__collection_order = cmp.slice()
-
 			// cmp...
 			} else if(cmp instanceof Function){
 				this.__collection_order.sort(cmp)
-
 			// basic sort...
 			} else {
-				this.__collection_order.sort()
-			}
+				this.__collection_order.sort() }
 			this.collection_order }],
 	collectionToTop: ['Collections/Bring collection to $top',
 		core.doc`Bring collection to top...
@@ -737,8 +722,7 @@ var CollectionActions = actions.Actions({
 			var o = this.collection_order 
 
 			if(!collection || o.indexOf(collection) < 0){
-				return
-			}
+				return }
 
 			this.collection_order = [collection].concat(o).unique() }],
 	
@@ -1055,7 +1039,9 @@ var CollectionActions = actions.Actions({
 			var that = this
 			gids = gids || 'current'
 			gids = gids instanceof Array ? gids : [gids]
-			gids = gids.map(function(gid){ return that.data.getRibbon(gid) })
+			gids = gids
+				.map(function(gid){ 
+					return that.data.getRibbon(gid) })
 			return this.uncollect(gids, collection) }],
 
 
@@ -1111,8 +1097,7 @@ var CollectionActions = actions.Actions({
 					.forEach(function(key){
 						if(key in state){
 							return }
-						state[key] = c[title][key]
-					}) })
+						state[key] = c[title][key] }) })
 
 		return function(){
 			if(Object.keys(collections).length > 0){
@@ -1177,8 +1162,7 @@ var CollectionActions = actions.Actions({
 				// build the JSON...
 				var s = res.collections[title] = { title: title }
 				if(state.gid){
-					s.gid = state.gid
-				}
+					s.gid = state.gid }
 				var data = ((mode == 'base' && state.crop_stack) ? 
 						(state.crop_stack[0] || state.data)
 						: state.data)
@@ -1193,16 +1177,14 @@ var CollectionActions = actions.Actions({
 				// NOTE: in base mode, crop_stack is ignored...
 				if(mode != 'base' && state.crop_stack){
 					s.crop_stack = state.crop_stack
-						.map(function(d){ return d.json() }) }
-			}) } } }],
+						.map(function(d){ return d.json() }) } }) } } }],
 	clone: [function(full){
 		return function(res){
 			if(this.collections){
 				var cur = this.collections
 
 				if(this.collection){
-					res.location.collection = this.collection
-				}
+					res.location.collection = this.collection }
 
 				collections = res.collections = {}
 				this.collection_order
@@ -1335,9 +1317,7 @@ module.Collection = core.ImageGridFeatures.Feature({
 				return function(){
 					;(this.collection_order || [])
 							.filter(function(e, i){ return e != o[i] }).length > 0
-						&& this.markChanged('collections')
-				}
-			}],
+						&& this.markChanged('collections') } }],
 		// collection title/list...
 		['renameCollection',
 			function(_, from, to){
@@ -1378,9 +1358,7 @@ module.Collection = core.ImageGridFeatures.Feature({
 									&& that.markChanged(
 										'collection: '
 											+JSON.stringify(collection.gid || title),
-										['data'])
-							}) }
-			}],
+										['data']) }) } }],
 		['joinCollect',
 			function(_, align, collection, data){
 				var args = [...arguments]
@@ -1393,16 +1371,14 @@ module.Collection = core.ImageGridFeatures.Feature({
 					&& this.markChanged(
 						'collection: '
 							+JSON.stringify(collection.gid || title),
-						['data'])
-			}],
+						['data']) }],
 		// transfer changes on load/unload collection...
 		['collectionLoading.pre',
 			function(to){
 				var that = this
 				var from = this.collection || MAIN_COLLECTION_TITLE
 				if(from == to || this.changes === undefined || this.changes === true){
-					return
-				}
+					return }
 
 				var change_tags = this.config['collection-transfer-changes'] 
 					|| COLLECTION_TRANSFER_CHANGES
@@ -1413,8 +1389,7 @@ module.Collection = core.ImageGridFeatures.Feature({
 
 				return function(){
 					if(to == from){
-						return
-					}
+						return }
 					var gid = (this.collections[to] || {}).gid || to
 					var changes = this.changes !== false ? 
 						this.changes['collection: '+JSON.stringify(gid)] 
@@ -1426,8 +1401,7 @@ module.Collection = core.ImageGridFeatures.Feature({
 
 					// everything has changed, no need to bother with details...
 					if(changes === true){
-						return
-					}
+						return }
 
 					// save changes to 'from'...
 					from_changes.length > 0
@@ -1439,11 +1413,7 @@ module.Collection = core.ImageGridFeatures.Feature({
 							that.markChanged(item)
 
 						} else if(that.changes && that.changes[item]){
-							delete that.changes[item]
-						}
-					})
-				}
-			}],
+							delete that.changes[item] } }) } }],
 		// update current collection changes...
 		//
 		// This will:
@@ -1457,15 +1427,13 @@ module.Collection = core.ImageGridFeatures.Feature({
 			function(mode){
 				var cur = this.collection || MAIN_COLLECTION_TITLE
 				if(cur == null || cur == MAIN_COLLECTION_TITLE){
-					return
-				}
+					return }
 
 				var changes = this.changes
 
 				// everything/nothing changed -- nothing to do...
 				if(!changes || changes === true || changes[cur] === true){
-					return
-				}
+					return }
 
 				var gid = this.collectionGID
 				var id = 'collection: '+ JSON.stringify(gid)
@@ -1479,8 +1447,7 @@ module.Collection = core.ImageGridFeatures.Feature({
 				if(changed.length > 0 && this.changes[id] !== true){
 					this.changes[id] = (this.changes[id] || [])
 						.concat(changed)
-						.unique() 
-				}
+						.unique() }
 
 				// reset the base change tags to the base data (from collection data)...
 				if(mode == 'base'){
@@ -1496,10 +1463,7 @@ module.Collection = core.ImageGridFeatures.Feature({
 							delete res.changes[tag] })
 						// set...
 						base.forEach(function(tag){
-							res.changes[tag] = true })
-					}
-				}
-			}],
+							res.changes[tag] = true }) } } }],
 
 
 		// Handle collection serialization format...
@@ -1580,8 +1544,7 @@ module.Collection = core.ImageGridFeatures.Feature({
 		['prepareIndexForWrite', 
 			function(res){
 				if(!res.changes){
-					return
-				}
+					return }
 				var that = this
 				var changes = res.changes
 				var collections = this.collections
@@ -1622,15 +1585,11 @@ module.Collection = core.ImageGridFeatures.Feature({
 								var m = index[gid] = { title: title }
 
 								if(res.raw.collections[title].count){
-									m['count'] = res.raw.collections[title].count
-								}
+									m['count'] = res.raw.collections[title].count }
 
 							// empty / default collections (placeholders)...
 							} else {
-								index[title] = false
-							}
-					  	})
-				}
+								index[title] = false } }) }
 
 				// collections...
 				if((full.length > 0 || partial.length > 0)
@@ -1658,15 +1617,14 @@ module.Collection = core.ImageGridFeatures.Feature({
 							var local_changes = partial.indexOf(k) < 0 || {}
 							if(local_changes !== true && res.changes[id] !== true){
 								(res.changes[id] || [])
-									.forEach(function(c){ local_changes[c] = true })
-							}
+									.forEach(function(c){ 
+										local_changes[c] = true }) }
 
 							// collections/<gid>/metadata
 							var metadata = {}
 							if(full.indexOf(k) >= 0 
 									|| res.changes[id].indexOf('metadata') >= 0){
-								res.index[path +'/metadata'] = metadata
-							}
+								res.index[path +'/metadata'] = metadata }
 							Object.keys(raw)
 								.forEach(function(key){ metadata[key] = raw[key] })
 
@@ -1678,16 +1636,11 @@ module.Collection = core.ImageGridFeatures.Feature({
 								.filter(function(key){ return key != 'collections' })
 								.forEach(function(key){
 									res.index[path +'/'+ key] = prepared[key]
-									delete metadata[key]
-								})
+									delete metadata[key] })
 							// cleanup metadata...
 							// XXX do we need this???
 							change_tags.forEach(function(key){
-								delete metadata[key]
-							})
-						})
-				}
-			}],
+								delete metadata[key] }) }) } }],
 		// XXX merge multiple collections...
 		// 		...this can be called multiple times pre single load, once
 		// 		per merged index...
@@ -1705,14 +1658,12 @@ module.Collection = core.ImageGridFeatures.Feature({
 						.map(function(k){ 
 							return index[k] ? index[k].gid || index[k].title || k : k })
 					if(order.length > 0){
-						res.collection_order = order
-					}
+						res.collection_order = order }
 
 					// collection data...
 					Object.keys(index).forEach(function(gid){
 						if(index[gid] === false){
-							return
-						}
+							return }
 
 						//var title = index[gid]
 						var title = index[gid].title || index[gid]
@@ -1727,14 +1678,10 @@ module.Collection = core.ImageGridFeatures.Feature({
 						}
 
 						if(index[gid].count){
-							m.count = index[gid].count
-						}
-					})
-				}
+							m.count = index[gid].count } }) }
 
 				if(Object.keys(collections).length > 0){
-					res.collections = collections
-				}
+					res.collections = collections }
 
 				// group collection data...
 				//
@@ -1764,10 +1711,7 @@ module.Collection = core.ImageGridFeatures.Feature({
 
 							// other stuff -> collection data...
 							} else {
-								data[key] = json[k]
-							}
-						}
-					})
+								data[key] = json[k] } } })
 
 				// XXX prepare collection data for loading...
 				Object.keys(collection_data)
@@ -1959,17 +1903,13 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 
 					;(this.crop_stack || [])
 						.forEach(function(d){ d.tags = tags })
-					this.data.tags = tags
-				}
-			}],
+					this.data.tags = tags } }],
 		// remove tags from unloaded collections...
 		['collectionUnloaded',
 			function(_, title){
 				if(title in this.collections 
 						&& 'data' in this.collections[title]){
-					delete this.collections[title].data.tags
-				}
-			}],
+					delete this.collections[title].data.tags } }],
 		// remove tags when saving...
 		['saveCollection.pre',
 			function(title, mode, force){
@@ -1979,8 +1919,7 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 
 				// do not do anything for main collection unless force is true...
 				if(title == MAIN_COLLECTION_TITLE && !force){
-					return
-				}
+					return }
 
 				// we need this to prevent copy of tags on first save...
 				var new_set = !(title in (this.collections || {}))
@@ -2006,8 +1945,7 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 						})
 
 					// delete the .data.tags of the collections...
-					delete (this.collections[title].data || {}).__tags || {}
-				}
+					delete (this.collections[title].data || {}).__tags || {} }
 			}],
 		// prevent .uncollect(..) from removing global tags...
 		// XXX this seems a bit hacky (???)
@@ -2023,9 +1961,7 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 
 				return function(){
 					// update local tags...
-					tags.untag(local_tag_names, gids)
-				}
-			}],
+					tags.untag(local_tag_names, gids) } }],
 		// save .local_tags to json...
 		// NOTE: we do not need to explicitly load anything as .load() 
 		// 		will load everything we need...
@@ -2052,8 +1988,7 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 						.forEach(function(tag){ rtags[tag] = tags.tags[tag] })
 					// overwrite the local tags for the base...
 					Object.keys(ltags)
-						.forEach(function(tag){ rtags[tag] = ltags[tag] })
-				}
+						.forEach(function(tag){ rtags[tag] = ltags[tag] }) }
 
 				// clear tags for all collections...
 				rc
@@ -2061,8 +1996,7 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 						// XXX skip unloaded collections...
 						.filter(function(title){ return !!rc[title].data })
 						.forEach(function(title){
-							rc[title].data.tags.tags = c[title].local_tags })
-			}],
+							rc[title].data.tags.tags = c[title].local_tags }) }],
 		// load collection local tags from .data.tags to .local_tags...
 		// ...this is needed if the collections are fully loaded as part 
 		// of the index...
@@ -2081,17 +2015,14 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 							var c = that.collections[title]
 
 							if(!c || !c.data){
-								return
-							}
+								return }
 
 							var t = (c.data.tags || {}).tags || {}
 							var lt = c.local_tags = c.local_tags || {}
 
 							;(that.config['collection-local-tags'] || [])
 								.forEach(function(tag){
-									lt[tag] = new Set(lt[tag] || t[tag] || []) })
-						})
-			}],
+									lt[tag] = new Set(lt[tag] || t[tag] || []) }) }) }],
 	],
 })
 
@@ -2169,8 +2100,7 @@ var AutoCollectionsActions = actions.Actions({
 			this.saveCollection(title, 'empty')
 
 			this.collections[title].level_query = query
-			this.collections[title].source = source
-		}],
+			this.collections[title].source = source }],
 
 	// XXX do we need real tag queries???
 	collectionAutoTagsLoader: ['- Collections/',
@@ -2221,13 +2151,9 @@ var AutoCollectionsActions = actions.Actions({
 			tags = tags instanceof Array ? tags : [tags]
 
 			if(tags.length == 0){
-				return
-			}
-
+				return }
 			this.saveCollection(title, 'empty')
-
-			this.collections[title].tag_query = tags
-		}],
+			this.collections[title].tag_query = tags }],
 })
 
 var AutoCollections =
@@ -2263,8 +2189,7 @@ module.AutoCollections = core.ImageGridFeatures.Feature({
 						var r = rc[title]
 
 						if(!cur){
-							return
-						}
+							return }
 
 						// XXX is this the right way to go???
 						if('tag_query' in cur){
@@ -2273,11 +2198,7 @@ module.AutoCollections = core.ImageGridFeatures.Feature({
 						} else if('level_query' in cur){
 							r.level_query = cur.level_query
 							if(cur.source){
-								r.source = cur.source
-							}
-						}
-					})
-			}],
+								r.source = cur.source } } }) }],
 	],
 })
 
@@ -2540,9 +2461,8 @@ var UICollectionActions = actions.Actions({
 
 								// rename was successful...
 								if(to in that.collections){
-									collections[collections.indexOf(from)] = to } },
-						})
-				}, {
+									collections[collections.indexOf(from)] = to } }, }) }, 
+				{
 					cls: 'collection-list',
 					// focus current collection...
 					selected: (last_used 
@@ -2580,8 +2500,7 @@ var UICollectionActions = actions.Actions({
 						.on('update', function(){
 							dialog.filter(JSON.stringify((that.collection || MAIN_COLLECTION_TITLE)
 									.replace(/\$/g, '')))
-								.addClass('highlighted')
-						})
+								.addClass('highlighted') })
 
 					all = all || that.collection_order || []
 					if(defaults){
@@ -2606,9 +2525,7 @@ var UICollectionActions = actions.Actions({
 									// 		too often...
 									clearTimeout(t)
 									t = setTimeout(function(){
-										dialog.update() 
-									}, 100)
-								}) 
+										dialog.update() }, 100) }) 
 							return c })
 					
 					// containing collections...
@@ -2634,23 +2551,16 @@ var UICollectionActions = actions.Actions({
 								to_remove: to_remove,
 								itemopen: function(_, title){
 									var i = to_remove.indexOf(title)
-
 									i >= 0 ? 
 										to_remove.splice(i, 1) 
 										: to_remove.push(title)
-
-									dialog.update()
-								},
+									dialog.update() },
 								itemedit: function(_, from, to){
 									that.renameCollection(from, to)
-
 									all[all.indexOf(from)] = to
-
-									that.collection_order = all
-								},
+									that.collection_order = all },
 							})
-						: make.Empty('No collections...')
-				})
+						: make.Empty('No collections...') })
 				.close(function(){
 					that.collection_order = all
 
@@ -2659,9 +2569,7 @@ var UICollectionActions = actions.Actions({
 							&& to_remove.indexOf(title.replace(/\$/g, '')) < 0
 							&& that.collect(gid, title) })
 					to_remove.forEach(function(title){ 
-						that.uncollect(gid, title) }) 
-				})
-		})],
+						that.uncollect(gid, title) }) }) })],
 
 
 	// Collection actions with collection selection...
@@ -2717,9 +2625,7 @@ var UICollectionActions = actions.Actions({
 				this.ensureCollection(title)
 					.then(function(collection){
 						var images = collection.data.getImages('all')
-
-						that.crop(images, false)
-					}) }, 
+						that.crop(images, false) }) }, 
 			null,
 			{ last_used: false })],
 	cropOutImagesInCollection: ['Collections|Crop/Remove collection images from crop...',
@@ -2731,8 +2637,7 @@ var UICollectionActions = actions.Actions({
 						var to_remove = collection.data.getImages('all')
 						var images = that.data.getImages('loaded')
 							.filter(function(gid){ return to_remove.indexOf(gid) < 0 })
-						that.crop(images, false)
-					}) }, 
+						that.crop(images, false) }) }, 
 			null,
 			{ last_used: false })],
 
@@ -2865,23 +2770,19 @@ module.UICollection = core.ImageGridFeatures.Feature({
 		],
 			function(_, gids, collection){
 				(collection == null || this.collection == collection)
-					&& this.reload(true)
-			}],
+					&& this.reload(true) }],
 
 		// maintain crop viewer state when loading/unloading collections...
 		['load clear reload collectionLoading collectionUnloaded',
 			function(){
 				if(!this.dom){
-					return
-				}
+					return }
 				this.dom[this.collection ? 
 					'addClass' 
 					: 'removeClass']('collection-mode')
-
 				this.dom[this.cropped ? 
 					'addClass' 
-					: 'removeClass']('crop-mode')
-			}],
+					: 'removeClass']('crop-mode') }],
 	],
 })
 
@@ -2917,7 +2818,9 @@ var CollectionMarksActions = actions.Actions({
 			return this.collect(this.marked, collection) }],
 	uncollectMarked: ['Collections|Mark/Remove marked from collection',
 		{mode: function(){ 
-			return (!this.collection || this.marked.length == 0) && 'disabled' }},
+			return (!this.collection 
+					|| this.marked.length == 0) 
+				&& 'disabled' }},
 		function(collection){
 			return this.uncollect(this.marked, collection) }],
 
@@ -2964,7 +2867,8 @@ var UICollectionMarksActions = actions.Actions({
 					that.toggleMark(images, 'on') }) })],
 	addMarkedToCollection: ['Collections|Mark/Add marked to $collection...',
 		{mode: function(){ 
-			return this.marked.length == 0 && 'disabled' }},
+			return this.marked.length == 0 
+				&& 'disabled' }},
 		mixedModeCollectionAction(function(title){ 
 			this.collectMarked(title) })],
 })
@@ -3015,8 +2919,7 @@ var FileSystemCollectionActions = actions.Actions({
 
 			// if data is present, do not reload...
 			if(state.data){
-				return
-			}
+				return }
 
 			// XXX get a logger...
 			logger = logger || this.logger
@@ -3035,10 +2938,7 @@ var FileSystemCollectionActions = actions.Actions({
 						.then(function(res){
 							// load the collection data...
 							that.collections[title].data = 
-								that.prepareIndexForLoad(res[path]).data
-						})
-				}))
-		}],
+								that.prepareIndexForLoad(res[path]).data }) })) }],
 
 	// XXX revise...
 	// XXX this should be generic... (???)
@@ -3050,8 +2950,7 @@ var FileSystemCollectionActions = actions.Actions({
 			var that = this
 
 			if(this.changes === true || this.changes === undefined){
-				return
-			}
+				return }
 
 			// XXX get a logger...
 			logger = logger || this.logger
@@ -3073,10 +2972,7 @@ var FileSystemCollectionActions = actions.Actions({
 						logger && logger.emit('title', title)
 
 						c.count = c.data.length
-						delete c.data
-					}
-				})
-		}],
+						delete c.data } }) }],
 
 	importCollectionsFromPath: ['- Collections|File/Import collections from path',
 		function(path){
