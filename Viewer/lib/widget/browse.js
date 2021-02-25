@@ -568,6 +568,8 @@ function(data, options){
 // 		// it as item text...
 // 		new_item: <text>|<bool>,
 //
+// 		place_new_item: null | 'end' | 'start',
+//
 // 		// If true (default), enable direct editing of items...
 // 		//
 // 		editable_items: <bool>,
@@ -755,8 +757,7 @@ function(list, options){
 	// save item to lst...
 	var saveItem = function(txt, replace){
 		if(txt == replace || txt.trim() == ''){
-			return txt
-		}
+			return txt }
 		txt = options.normalize ? 
 			options.normalize(txt) 
 			: txt
@@ -770,8 +771,7 @@ function(list, options){
 		// invalid format...
 		if(options.check && !options.check(txt)){
 			dialog.update()
-			return
-		}
+			return }
 
 		lst = dialog.__list[id]
 		var normalized = lst.map(function(e){ 
@@ -784,13 +784,11 @@ function(list, options){
 			options.overflow 
 				&& options.overflow.call(dialog, txt)
 
-			return
-		}
+			return }
 
 		// prevent editing non-arrays...
 		if(!editable || !lst){
-			return
-		}
+			return }
 
 		// check if item pre-existed...
 		var preexisted = utxt ? 
@@ -802,9 +800,12 @@ function(list, options){
 				|| normalized.indexOf(ntxt) >= 0)
 
 		// add new value and sort list...
+		// XXX add option to append/prepend item to list...
 		;(replace && lst.indexOf(replace) >= 0) ?
 			lst[lst.indexOf(replace)] = txt
-			: lst.push(txt)
+		: options.place_new_item == 'start' ?
+			lst.unshift(txt)
+		: lst.push(txt)
 
 		// unique...
 		if(options.unique == null || options.unique === true){
@@ -813,8 +814,7 @@ function(list, options){
 
 		// unique filter...
 		} else if(options.unique instanceof Function){
-			lst = lst.unique(options.unique) 
-		}
+			lst = lst.unique(options.unique) }
 
 		// itemadded handler...
 		options.itemadded
@@ -827,8 +827,7 @@ function(list, options){
 			lst = lst
 				.sort(options.sort instanceof Function ? 
 					options.sort 
-					: undefined)
-		}
+					: undefined) }
 
 		lst = write(dialog.__list[id], lst)
 		
@@ -1101,16 +1100,14 @@ function(list, options){
 						.toArray()
 				var l = dialog.__list[id]
 				l.splice.apply(l, [0, l.length].concat(order))
-				dialog.updateItemNumbers()
-			},
-		})
-	}
+				dialog.updateItemNumbers() },
+		}) }
 
 	// mark items for removal -- if a list is given by user...
-	to_remove.forEach(function(e){
-		dialog.filter('"'+ e +'"')
-			.addClass('strike-out')
-	})
+	to_remove
+		.forEach(function(e){
+			dialog.filter('"'+ e +'"')
+				.addClass('strike-out') })
 
 	options.itemopen
 		&& res.on('open', function(evt){ 
@@ -1122,8 +1119,7 @@ function(list, options){
 	if(options.editable_items !== false){
 		var trigger_edit = function(){ 
 			dialog.select('!')
-				.trigger('itemedit')
-		}
+				.trigger('itemedit') }
 		$(res)
 			.on('itemedit', function(){ editItem($(this)) })
 		;(options.item_edit_keys || ['F2'])
@@ -1133,8 +1129,7 @@ function(list, options){
 		options.item_edit_events != false 
 			&& options.item_edit_events != ''
 		 	&& $(res).on(options.item_edit_events || 'menu', 
-				function(){ $(this).trigger('itemedit') })
-	}
+				function(){ $(this).trigger('itemedit') }) }
 
 	// new item...
 	if(options.new_item !== false){
@@ -1150,15 +1145,12 @@ function(list, options){
 			.on('edit-commit', function(evt, txt){ 
 				if(txt.trim() != ''){
 					txt = saveItem(txt) 
-
 					dialog.update()
 						.done(function(){
 							//dialog.select('"'+txt+'"')
 							txt 
-								&& dialog.select('"'+txt.replace(/\$/g, '')+'"') })
-				}
-			}))
-	}
+								&& dialog
+									.select('"'+txt.replace(/\$/g, '')+'"') }) } })) }
 
 	// dialog handlers...
 	// NOTE: we bind these only once per dialog...
@@ -1169,15 +1161,12 @@ function(list, options){
 			.on('update', function(){
 				to_remove.forEach(function(e){
 					dialog.filter('"'+ e +'"')
-						.addClass('strike-out')
-				})
-			})
+						.addClass('strike-out') }) })
 			// clear the to_remove items + save list...
 			.on('close', function(){
 				// prevent editing non-arrays...
 				if(!editable){
-					return
-				}
+					return }
 
 				lst = dialog.__list[id]
 
@@ -1188,20 +1177,18 @@ function(list, options){
 					.forEach(function(e){
 						var i = lst.indexOf(e)
 						i >= 0 
-							&& lst.splice(i, 1)
-					})
+							&& lst.splice(i, 1) })
 
 				// sort...
 				if(options.sort){
-					lst.sort(options.sort !== true ? options.sort : undefined)
-				}
+					lst.sort(
+						options.sort !== true ? 
+							options.sort 
+							: undefined) }
 
-				write(list, lst)
-			})
-	}
+				write(list, lst) }) }
 
-	return $(res)
-}
+	return $(res) }
 
 
 

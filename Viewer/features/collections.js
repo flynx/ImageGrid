@@ -146,13 +146,12 @@ var CollectionActions = actions.Actions({
 		var order = this.__collection_order = this.__collection_order || []
 
 		// add unsorted things to the head of the list...
-		var res = keys
-			.concat(order)
-			.reverse()
-			.unique()
-			.reverse()
+		var res = [
+			...keys,
+			...order,
+		].tailUnique()
 
-		// XXX defaults...
+		// defaults...
 		res = res.concat(defaults).unique()
 
 		// keep MAIN_COLLECTION_TITLE out of the collection order...
@@ -574,6 +573,8 @@ var CollectionActions = actions.Actions({
 					&& collection != MAIN_COLLECTION_TITLE
 
 			// save the data...
+			// XXX would be nice to be able to add new collections both 
+			// 		to the start and end of list...
 			var state = collections[collection] = 
 				collections[collection] 
 				|| {}
@@ -2249,6 +2250,13 @@ var UICollectionActions = actions.Actions({
 		// This will be auto-selected in .browseCollections(..) on next 
 		// add/edit operation...
 		//'collection-last-used': null,
+		
+		// can be:
+		// 		'end' | null	- place new items at end of list
+		// 		'start'			- place new items at start of list
+		//
+		// XXX make this configurable???
+		'collection-ui-place-new': 'start',
 	},
 
 	// UI...
@@ -2375,6 +2383,7 @@ var UICollectionActions = actions.Actions({
 						i && $(this).attr('count', i) }
 
 					// update collection list if changed externally...
+					/* XXX
 					collections.splice.apply(collections, 
 						// NOTE: if the length calculation here looks a "bit"
 						// 		convoluted, that's because it is, this fixes
@@ -2387,6 +2396,15 @@ var UICollectionActions = actions.Actions({
 							.concat(collections
 								.concat(that.collection_order || [])
 								.unique()))
+					/*/
+					console.log('>>>>', that.collection_order)
+					collections
+						.splice(0, collections.length,
+							...[
+								...collections,
+								...(that.collection_order || []),
+							].tailUnique())
+					//*/
 
 					// main collection...
 					var main = typeof(show_main) == 'function' ?
@@ -2429,6 +2447,7 @@ var UICollectionActions = actions.Actions({
 								: action ? 
 									'$New...' 
 								: '$New from current state...',
+							place_new_item: that.config['collection-ui-place-new'],
 
 							unique: true,
 							sortable: 'y',
