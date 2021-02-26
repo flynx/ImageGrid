@@ -2255,7 +2255,7 @@ var UICollectionActions = actions.Actions({
 		// 		'end' | null	- place new items at end of list
 		// 		'start'			- place new items at start of list
 		//
-		// XXX make this configurable???
+		// XXX edit this with a toggler???
 		'collection-ui-place-new': 'start',
 	},
 
