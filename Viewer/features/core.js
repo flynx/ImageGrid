@@ -2703,6 +2703,9 @@ function(title, func){
 // thus making the final behaviour unpredictable.
 //
 //
+// NOTE: promise results are .flat()-tened, thus if it is needed to return 
+// 		a list of arrays then one must wrap the handler return value in an
+// 		array...
 // NOTE: sync-mode actions do not externally log anything, basic progress 
 // 		logging is handled by the queue/task which is not created in sync
 // 		mode.

@@ -375,6 +375,9 @@ var ExampleActions = actions.Actions({
 						console.log('\t\tSKIP', item)
 						return runner.SKIP }
 
+					// NOTE: the handler's return value list is .flat()-end
+					// 		so if one needs to return a array the it must be
+					// 		wrapped in an array...
 					return item+1 }),
 			// handle inputs (async/queue)... 
 			function(item, ...args){

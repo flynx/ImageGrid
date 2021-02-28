@@ -288,7 +288,7 @@ var SharpActions = actions.Actions({
 					if(!image || !['image', null, undefined]
 							.includes(image.type)){
 						return runner.SKIP }
-					return [
+					return [[
 						// source...
 						this.getImagePath(gid),
 						// target...
@@ -307,7 +307,7 @@ var SharpActions = actions.Actions({
 							flipped: image.flipped,
 							// crop...
 						},
-					] }),
+					]] }),
 			// do the actual resizing (global queue)...
 			function([source, to, image={}], size, _, options={}){
 				// handle skipped items -- source, to and image are undefined...
@@ -625,7 +625,7 @@ var SharpActions = actions.Actions({
 					var base = base_path 
 						|| img.base_path 
 						|| this.location.path
-					return [
+					return [[
 						gid,
 						// source...
 						this.getImagePath(gid), 
@@ -643,7 +643,7 @@ var SharpActions = actions.Actions({
 										pathlib.join(base, name)),
 								] }),
 						index_dir,
-					]}),
+					]]}),
 			// generate the previews...
 			// NOTE: this is competely isolated...
 			// XXX args/logger is wrong here...
