@@ -869,10 +869,19 @@ var SharpActions = actions.Actions({
 	cacheAllMetadata: ['- Sharp/Image/',
 		'cacheMetadata: "all" ...'],
 
-	// XXX IDEA: generator action chaining...
-	// 		might be a good idea to implement the queue/task actions as 
-	// 		generators or generator like entities to be able to chain 
-	// 		them in a simple and uniform manner...
+	// XXX IDEA: action default context...
+	// 		...a way for an action to be run in a context by default with
+	// 		a way to override explicitly if needed...
+	// 		this will enable action chaining by default...
+	// 		now:
+	// 			ig
+	// 				.someAction()
+	// 				.then(function(){
+	// 					ig.someOtherAction() })
+	// 		target:
+	// 			ig
+	// 				.someAction()
+	// 				.someOtherAction()
 
 	// XXX EXPERIMENTAL...
 	// XXX if we are not careful this may result in some data loss due 
