@@ -2926,6 +2926,13 @@ module.LinkContext = ImageGridFeatures.Feature({
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
+// XXX add ability to trigger actions when:
+// 		- all tasks are done and/or fail
+// 		- all session tasks are done and/or fail
+// 		...in theory this can be done via:
+// 			ig.tasks
+// 				.then(function(){ .. })
+// 		but this is a bit too cumbersome...
 // XXX revise logging and logger passing...
 // XXX add a task manager UI...
 // XXX might be a good idea to confirm session task stops when loading a 

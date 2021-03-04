@@ -882,6 +882,8 @@ var SharpActions = actions.Actions({
 	// 			ig
 	// 				.someAction()
 	// 				.someOtherAction()
+	// 		...considering how often this might be useful would be nice
+	// 		to make this a constructor/framework feature...
 
 	// XXX EXPERIMENTAL...
 	// XXX if we are not careful this may result in some data loss due 
