@@ -869,6 +869,22 @@ var SharpActions = actions.Actions({
 	cacheAllMetadata: ['- Sharp/Image/',
 		'cacheMetadata: "all" ...'],
 
+	// XXX IDEA: action default context...
+	// 		...a way for an action to be run in a context by default with
+	// 		a way to override explicitly if needed...
+	// 		this will enable action chaining by default...
+	// 		now:
+	// 			ig
+	// 				.someAction()
+	// 				.then(function(){
+	// 					ig.someOtherAction() })
+	// 		target:
+	// 			ig
+	// 				.someAction()
+	// 				.someOtherAction()
+	// 		...considering how often this might be useful would be nice
+	// 		to make this a constructor/framework feature...
+
 	// XXX EXPERIMENTAL...
 	// XXX if we are not careful this may result in some data loss due 
 	// 		to unlinking or double edits before save... 

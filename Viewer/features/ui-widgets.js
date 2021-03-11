@@ -3199,12 +3199,6 @@ var ButtonsActions = actions.Actions({
 			'&#10634;': ['right', 'nextImage -- Next image'],
 			'&#8615;': ['down', 'shiftImageDown -- Shift image down'],
 		},
-
-		'button-highlight-color': 'white',
-		'button-highlight-colors': [ 
-			'white',
-			'yellow',
-		],
 	},
 
 	toggleMainButtons: ['Interface/Main buttons',
@@ -3229,14 +3223,6 @@ var ButtonsActions = actions.Actions({
 					right.apply(this, arguments) 
 				})
 		})()],
-
-	toggleButtonHighlightColor: ['Interface/Theme/Button highlight color',
-		{mode: 'advancedBrowseModeAction'},
-		core.makeConfigToggler(
-			'button-highlight-color',
-			function(){ return this.config['button-highlight-colors'] },
-			// update the buttons...
-			function(){ this.reload() })],
 })
 
 var Buttons = 
@@ -3275,12 +3261,6 @@ module.Buttons = core.ImageGridFeatures.Feature({
 			'reload',
 		], 
 			function(){
-				// XXX is this the right way to go???
-				$('.main-buttons.buttons .crop.button')
-					.css({ 'color': this.cropped ? 
-						(this.config['button-highlight-color'] || 'white')
-						: '', })
-
 				var l = (this.crop_stack || []).length
 
 				$('.main-buttons.buttons .crop.button sub')
@@ -3305,12 +3285,6 @@ module.Buttons = core.ImageGridFeatures.Feature({
 			'collectionUnloaded', 
 		], 
 			function(){
-				// XXX is this the right way to go???
-				$('.main-buttons.buttons .collections.button')
-					.css({ 'color': this.collection ?
-						(this.config['button-highlight-color'] || 'white')
-						: '', })
-
 				var l = this.collections_length
 
 				// current collection unsaved indicator...
