@@ -37,13 +37,13 @@
 * 	- tasks
 * 		tasks -- manage long running actions
 * 		queue -- manage lots of small actions as a single task
+* 		contexts -- XXX
 * 	- self-test
 * 		basic framework for running test actions at startup...
 *
 *
 * XXX some actions use the .clone(..) action/protocol, should this be 
 * 	defined here???
-* XXX should this be split into a generic app building lib?
 *
 **********************************************************************/
 ((typeof define)[0]=='u'?function(f){module.exports=f(require)}:define)
