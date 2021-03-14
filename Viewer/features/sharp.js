@@ -423,7 +423,10 @@ var SharpActions = actions.Actions({
 	// 		a-la .makeResizedImage(..)???
 	// XXX this does not update image.base_path -- is this correct???
 	// XXX make index dir hidden...
-	makePreviews: ['Sharp|File/Make image $previews',
+	// XXX BROKEN: this seems not to do anything now...
+	// 		....not sure if this needs fixing as it will get removed soon,
+	// 		but the finding out the reason it was broken might be useful...
+	_makePreviews: ['- Sharp|File/Make image $previews (old)',
 		core.doc`Make image previews
 
 			Make previews for all images...
@@ -563,7 +566,37 @@ var SharpActions = actions.Actions({
 	// 			ig.peer.clone().makePreviews() // hypothetical api...
 	// 		the only question here is how to manage this...
 	// XXX change base_path to target path...
-	_makePreviews: ['- Sharp|File/Make image $previews (experimental)',
+	makePreviews: ['Sharp|File/Make image $previews (experimental)',
+		core.doc`Make image previews
+
+			Make previews for all images...
+			.makePreviews()
+			.makePreviews('all')
+				-> promise
+
+			Make previews for current image...
+			.makePreviews('current')
+				-> promise
+
+			Make previews for specific image(s)...
+			.makePreviews(gid)
+			.makePreviews([gid, gid, ..])
+				-> promise
+
+
+			Make previews of images, size and at base_path...
+			.makePreviews(images, sizes)
+			.makePreviews(images, sizes, base_path)
+				-> promise
+
+	
+		NOTE: if base_path is given .images will not be updated with new 
+			preview paths...
+		NOTE: currently this is a core.sessionQueueHandler(..) and not a .queueHandler(..)
+			mainly because we need to add the preview refs back to the index and this
+			would need keeping the index in memory even if we loaded a different index,
+			this is possible but needs more thought.
+		`,
 		core.queueHandler('Make image previews', 
 			core.sessionQueueHandler('Getting image data for previews', 
 				// prepare the static data...
