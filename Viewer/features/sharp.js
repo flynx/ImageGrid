@@ -419,8 +419,7 @@ var SharpActions = actions.Actions({
 											// XXX what should we return???
 											return to }) }) }) })],
 
-	// XXX should we split this into a session and global versions 
-	// 		a-la .makeResizedImage(..)???
+	/* XXX 
 	// XXX this does not update image.base_path -- is this correct???
 	// XXX make index dir hidden...
 	// XXX BROKEN: this seems not to do anything now...
@@ -555,6 +554,7 @@ var SharpActions = actions.Actions({
 										logger 
 											&& logger.emit('skipped', `${gid} / ${size}`)
 									}) })) })],
+	//*/
 	// XXX EXPERIMENTAL: need a way to update the index when preview is 
 	// 		created (if we did not navigate away)
 	// 			- we could abort the update if we go away...
