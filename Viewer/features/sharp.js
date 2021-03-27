@@ -26,6 +26,9 @@ if(typeof(process) != 'undefined'){
 	var fse = requirejs('fs-extra')
 	var pathlib = requirejs('path')
 	var glob = requirejs('glob')
+	// XXX migrate to exifreader as it is a bit more flexible...
+	// 		...use it in browser mode...
+	//var exifReader = requirejs('exifreader')
 	var exifReader = requirejs('exif-reader')
 
 	var file = require('imagegrid/file')
