@@ -24,7 +24,7 @@
     "colors": "^1.4.0",
     "electron": "^9.4.3",
     "exif-reader": "^1.0.3",
-    "exifreader": "^3.14.1",
+    "exifreader": "^2.6.0",
     "exiftool": "^0.0.3",
     "fs-extra": "^7.0.1",
     "fs-walk": "^0.0.1",
