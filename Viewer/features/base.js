@@ -852,7 +852,8 @@ actions.Actions({
 	// XXX undo...
 	shiftImageTo: ['- Edit|Sort|Image/',
 		{undo: function(a){ this.shiftImageTo(a.args[1], a.args[0]) }},
-		function(target, to, mode){ this.data.shiftImage(target, to, mode) }],
+		function(target, to, mode){ 
+			this.data.shiftImage(target, to, mode) }],
 	
 	shiftImageUp: ['Edit|Image/Shift image up',
 		core.doc`Shift image up...
@@ -920,29 +921,31 @@ actions.Actions({
 				this.direction = 'right' }
 			this.data.shiftImageRight(target) 
 			this.focusImage() }],
-		// XXX these are effectively identical...
-		// XXX when shifting the first image in ribbon alignment is a bit off...
-		// XXX add undo...
-		shiftImageToTop: ['Edit|Image/Shift image to top ribbon',
-			function(target){
-				console.warn('shiftImageToTop(..)/shiftImageToBottom(..): need proper undo.')
-				if(target == null){
-					var cur = this.current
-					var next = this.getNextFocused(cur)
-					this.data.shiftImage(cur, 0, 'vertical')
-					this.focusImage(next) 
-				} else {
-					this.data.shiftImage(target, 0, 'vertical') } }],
-		shiftImageToBottom: ['Edit|Image/Shift image to bottom ribbon',
-			function(target){
-				console.warn('shiftImageToTop(..)/shiftImageToBottom(..): need proper undo.')
-				if(target == null){
-					var cur = this.current
-					var next = this.getNextFocused(cur)
-					this.data.shiftImage(cur, -1, 'vertical')
-					this.focusImage(next) 
-				} else {
-					this.data.shiftImage(target, 0, 'vertical') } }],
+	// XXX these are effectively identical...
+	// XXX when shifting the first image in ribbon alignment is a bit off...
+	// XXX add undo...
+	// XXX BUG: after move the wrong image is centered -- correct positioning after move...
+	// XXX ASAP: add animation...
+	shiftImageToTop: ['Edit|Image/Shift image to top ribbon',
+		function(target){
+			console.warn('shiftImageToTop(..)/shiftImageToBottom(..): need proper undo.')
+			if(target == null){
+				var cur = this.current
+				var next = this.getNextFocused(cur)
+				this.data.shiftImage(cur, 0, 'vertical')
+				this.focusImage(next) 
+			} else {
+				this.data.shiftImage(target, 0, 'vertical') } }],
+	shiftImageToBottom: ['Edit|Image/Shift image to bottom ribbon',
+		function(target){
+			console.warn('shiftImageToTop(..)/shiftImageToBottom(..): need proper undo.')
+			if(target == null){
+				var cur = this.current
+				var next = this.getNextFocused(cur)
+				this.data.shiftImage(cur, -1, 'vertical')
+				this.focusImage(next) 
+			} else {
+				this.data.shiftImage(target, 0, 'vertical') } }],
 		/*
 		shiftImageToBase: ['Edit|Image/Shift image to base robbon',
 			function(){}],
@@ -1151,6 +1154,9 @@ core.ImageGridFeatures.Feature({
 			'shiftImageDown',
 			'shiftImageLeft',
 			'shiftImageRight',
+			'shiftImageToTop',
+			'shiftImageToBottom',
+			'shiftImageToBase',
 		], 
 			function(){ this.shiftImage.apply(this, [].slice(arguments, 1))}],
 		// horizontal shifting...
