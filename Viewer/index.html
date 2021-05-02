@@ -63,7 +63,8 @@ if(window.require){
 		// electron...
 		} else {
 			try{
-				require('electron').remote.getCurrentWindow().openDevTools()
+				require('electron').remote.getCurrentWindow()
+					.openDevTools({mode: 'undocked'})
 			} catch(err){ } }
 	}, STARTUP_DEVTOOLS_TIMEOUT) }
 </script>

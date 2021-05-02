@@ -136,8 +136,8 @@ function createWindow(){
 		function(){ WIN = null })
 
 	// devtools for different windows...
-	//WIN.webContents.openDevTools()
-	//WIN.openDevTools()
+	//WIN.webContents.openDevTools({mode: 'undocked'})
+	//WIN.openDevTools({mode: 'undocked'})
 
 	return WIN }
 
