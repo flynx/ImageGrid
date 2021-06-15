@@ -223,7 +223,7 @@ while true ; do
 
 	mkdir -vp "$DIR"
 
-	echo "Copying files from ${BASE}/${DRIVE} (`du -hs "${BASE}/${DRIVE}" | cut -f 1`)..."
+	echo "Copying files from ${BASE}/${DRIVE} (~`du -hs "${BASE}/${DRIVE}" | cut -f 1`)..."
 	$COPY $COPYFLAGS ${BASE}/${DRIVE}/* "$DIR"
 	echo "Copying files: done."
 
