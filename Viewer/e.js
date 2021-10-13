@@ -136,8 +136,9 @@ function createWindow(){
 		function(){ WIN = null })
 
 	// devtools for different windows...
+	process.env.IMAGEGRID_DEBUG
+		&& WIN.openDevTools({mode: 'undocked'})
 	//WIN.webContents.openDevTools({mode: 'undocked'})
-	//WIN.openDevTools({mode: 'undocked'})
 
 	return WIN }
 
