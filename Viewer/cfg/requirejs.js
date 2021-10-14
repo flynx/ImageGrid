@@ -96,6 +96,8 @@ var setup = function(require, root){
 		global.requirejs = 
 		res.requirejs =
 			global.requirejs 
+				// XXX this breaks for electron version 15...
+				// 		the problem seems to be the "#!/..." at the start of r.js...
 				|| require('requirejs') 
 
 		global.nodeRequire = 
