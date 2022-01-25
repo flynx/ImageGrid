@@ -283,7 +283,6 @@ CSS_DIR = css
 CFG_DIR = cfg
 DOMAIN_DIR = imagegrid
 FEATURES_DIR = features
-WORKERS_DIR = workers
 IMAGES_DIR = images
 ASSET_DIR := data
 
@@ -299,7 +298,6 @@ ROOT_JS_FILES := $(wildcard *.js)
 JS_FILES := $(ROOT_JS_FILES) \
 	$(wildcard $(DOMAIN_DIR)/*.js) \
 	$(wildcard $(FEATURES_DIR)/*.js) \
-	$(wildcard $(WORKERS_DIR)/*.js) \
 	$(wildcard $(LIB_DIR)/*.js) \
 	$(wildcard $(LIB_DIR)/*/*.js) \
 	$(wildcard $(EXT_LIB_DIR)/*.js)
@@ -656,7 +654,7 @@ $(BUILD_DIR)/$(APP_NAME)/: $(PROJECT_FILES) \
 	$(MD) "$@"
 	cp -r $(PROJECT_FILES) $(ROOT_JS_FILES) $(HTML_FILES) \
 		$(CFG_DIR) $(LIB_DIR) $(EXT_LIB_DIR) $(FEATURES_DIR) \
-		$(DOMAIN_DIR) $(WORKERS_DIR) $(CSS_DIR) $(IMAGES_DIR) \
+		$(DOMAIN_DIR) $(CSS_DIR) $(IMAGES_DIR) \
 		$(ASSET_DIR) \
 		$(BUILD_INFO) \
 		$(LICENSE) \

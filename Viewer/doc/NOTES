@@ -1,4 +1,25 @@
 
+Debugging startup errors
+========================
+
+If something goes wrong on startup -- the splash screen is shown but the 
+main window is not, DevTools should be automatically started in about 5 
+seconds.
+
+If DevTools does not run then they can be started manually by:
+	$ IMAGEGRID_DEBUG=1 ig.js gui
+or:
+	$ IMAGEGRID_DEBUG=1 make run
+
+Common reasons for failure on startup:
+	- path set in cfg/requirejs.js (baseUrl) is not correct on this 
+	  version on node/electron
+	- electron compatibility issue 
+	- rarely: some feature fails to call .declareReady() and the 
+	  startup process stalls waiting for it, this can be manually
+	  overridden by calling .ready()
+
+
 Modules and RequireJS
 =====================
 
