@@ -35,6 +35,7 @@ var VERSION = require('./version').version
 
 var app = electron.app
 var BrowserWindow = electron.BrowserWindow
+var ipcMain = electron.ipcMain
 
 // 
 global.ELECTRON_PACKAGED = app.isPackaged
@@ -46,15 +47,17 @@ global.START_GUI = false
 
 
 /*********************************************************************/
+// XXX do we need multiwindow support???
 
 
 // Splash window...
 //
 // XXX might be nice to show load progress on splash...
+var SPLASH
 function createSplash(){
 	// NOTE: this is done here as this does not depend on code loading, 
 	// 		thus showing the splash significantly faster...
-	var splash = global.splash = new BrowserWindow({
+	SPLASH = new BrowserWindow({
 		// let the window to get ready before we show it to the user...
 		show: false,
 
@@ -74,31 +77,44 @@ function createSplash(){
 
 		autoHideMenuBar: true,
 	})
-	splash.loadURL(url.format({
+	SPLASH.loadURL(url.format({
 		pathname: path.join(__dirname, 'splash.html'),
 		protocol: 'file:',
 		slashes: true
 	}))
-	splash.once('ready-to-show', function(){
+	SPLASH.once('ready-to-show', function(){
 		this.webContents
 			// see if the splash screen is disabled...
 			.executeJavaScript('localStorage.disableSplashScreen')
-			.then(function(disabled){
-				// update version...
-				disabled
-					|| splash.webContents
-						.executeJavaScript(
-							`document.getElementById("version").innerText = "${VERSION}"`)
-				// show/destroy..
-				disabled ?
-					splash.destroy()
-					: splash.show() }) })
-	return splash }
+				.then(function(disabled){
+					// update version...
+					disabled
+						|| SPLASH.webContents
+							.executeJavaScript(
+								`document.getElementById("version").innerText = "${VERSION}"`)
+					// show/destroy..
+					disabled ?
+						SPLASH.destroy()
+						: SPLASH.show() }) })
+	SPLASH.on('closed', 
+		function(){ 
+			SPLASH = null 
+			WIN
+				&& WIN.webContents.executeJavaScript('document.appSplashScreen = false') })
+
+	// handle main window state...
+	WIN
+		&& WIN.webContents.executeJavaScript('document.appSplashScreen = true')
+
+	return SPLASH }
 
 
 // Create main window...
 //
 // XXX get initial settings from config...
+// XXX handle maximize corretly...
+// 		...currently it does not differ visually from fullscreen -- either
+// 		make them the same or keep them separate visually...
 var WIN
 function createWindow(){
 	// Create the browser window.
@@ -112,6 +128,7 @@ function createWindow(){
 
 		// let the window get ready before we show it to the user...
 		show: false,
+		frame: false,
 
 		backgroundColor: '#333333',
 
@@ -129,18 +146,39 @@ function createWindow(){
 		protocol: 'file:',
 		slashes: true,
 	}))
-	// XXX HACK: pass this in a formal way... (???)
+
 	WIN.once('ready-to-show', 
-		function(){ global.readyToShow = true })
+		function(){ 
+			WIN.webContents.executeJavaScript(`
+				document.readyToShow = true 
+
+				// XXX make these a prop...
+				document.appFullScreen = false
+				document.appDevTools = false
+			`) 
+			// splash screen...
+			WIN.webContents.executeJavaScript(
+				SPLASH ?
+					'document.appSplashScreen = true'
+					: 'document.appSplashScreen = false') })
 	WIN.on('closed', 
 		function(){ WIN = null })
 
+	// devtools...
+	WIN.on('devtools-opened', 
+		function(){
+			WIN && WIN.webContents.executeJavaScript('document.appDevTools = true') })
+	WIN.on('devtools-closed', 
+		function(){
+			WIN && WIN.webContents.executeJavaScript('document.appDevTools = false') })
+
+	// handle env...
 	// devtools for different windows...
-	//process.env.IMAGEGRID_ROOT_DEBUG
-	//	&& WIN.openDevTools({mode: 'undocked'})
 	process.env.IMAGEGRID_DEBUG
 		&& WIN.openDevTools({mode: 'undocked'})
-		//&& WIN.webContents.openDevTools({mode: 'undocked'})
+	// Force show window...
+	process.env.IMAGEGRID_FORCE_SHOW
+		&& WIN.show()
 
 	return WIN }
 
@@ -163,9 +201,9 @@ function start(){
 
 // On macOS it's common to re-create a window in the app when the
 // dock icon is clicked and there are no other windows open.
+// XXX test...
 app.on('activate', function(){
-	WIN === null
-		&& createWindow() }) 
+	WIN || createWindow() }) 
 
 // Quit when all windows are closed.
 // On macOS it is common for applications and their menu bar
@@ -173,6 +211,49 @@ app.on('activate', function(){
 app.on('window-all-closed', function(){
 	process.platform !== 'darwin'
 		&& app.quit() })
+
+
+
+//---------------------------------------------------------------------
+
+// Window states...
+ipcMain.on('show', 
+	function(){ WIN && WIN.show() })
+ipcMain.on('hide', 
+	function(){ WIN && WIN.hide() })
+
+ipcMain.on('minimize', 
+	function(){ WIN && WIN.minimize() })
+
+ipcMain.on('enterFullScreen', 
+	function(){ 
+		if(WIN){
+			WIN.setFullScreen(true) 
+			WIN.webContents.executeJavaScript('document.appFullScreen = true') } })
+ipcMain.on('exitFullScreen', 
+	function(){ 
+		if(WIN){
+			WIN.setFullScreen(false)
+			WIN.webContents.executeJavaScript('document.appFullScreen = false') } })
+
+// Splash screen...
+ipcMain.on('openSplashScreen', 
+	function(){ SPLASH || createSplash() })
+ipcMain.on('closeSplashScreen', 
+	function(){ SPLASH && SPLASH.destroy() })
+
+// devtools...
+// XXX need to focus devtools here...
+// 		see: webContents.getAllWebContents()
+ipcMain.on('openDevTools', 
+	function(){ 
+		WIN
+			&& WIN.openDevTools({
+				mode: 'undocked',
+				activate: true,
+			}) })
+ipcMain.on('closeDevTools', 
+	function(){ WIN && WIN.closeDevTools() })
 
 
 

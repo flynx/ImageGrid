@@ -302,6 +302,16 @@ button:hover {
 	color: red;
 }
 
+
+.drag-bar {
+	position: absolute;
+	-webkit-app-region: drag;
+	height: 50px;
+	top: 0px;
+	left: 0px;
+	right: 0px;
+}
+
 /*
 .full-screen-mode .title-bar {
 	display: none;
@@ -313,6 +323,7 @@ button:hover {
 	display: block;
 	position: relative;
 	float: left;
+	-webkit-app-region: no-drag;
 
 	size: 30px;
 

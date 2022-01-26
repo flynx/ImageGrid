@@ -212,8 +212,7 @@ var NWHostActions = actions.Actions({
 		function(action){
 			if(action == '?'){
 				// XXX get the devtools stage...
-				return false
-			}
+				return false }
 			nw.Window.get().showDevTools &&
 				nw.Window.get().showDevTools()
 		}],
@@ -257,46 +256,44 @@ var ElectronHostActions = actions.Actions({
 	// XXX should this be nested in a .window object???
 	// XXX should these be props or methods???
 	get title(){
-		return electron.remote.getCurrentWindow().getTitle() },
+		return document.title },
 	set title(value){
-		electron.remote.getCurrentWindow().setTitle(value) },
+		document.title = value },
 	get size(){
-		return electron.remote.getCurrentWindow().getSize() },
+		return [window.outerWidth, window.outerHeight] },
 	set size(value){
 		value 
-			&& electron.remote.getCurrentWindow()
-				.setSize(Math.round(value[0]), Math.round(value[1])) },
+			&& window.resizeTo(...value) },
 	get position(){
-		return electron.remote.getCurrentWindow().getPosition() },
+		return [window.screenX, window.screenY] },
 	set position(value){
 		value 
-			&& electron.remote.getCurrentWindow()
-				.setPosition(Math.round(value[0]), Math.round(value[1])) },
+			&& window.moveTo(...value) },
 
+	// XXX revise...
+	// XXX need to handle mazimize correctly -- see e.js...
+	// XXX do we need .hide(..) here???
 	show: ['- Window/',
 		function(){
-			if(electron.remote.getGlobal('readyToShow')){
-				electron.remote.getCurrentWindow().show()
-
-			} else {
-				var win = electron.remote.getCurrentWindow()
-				win.once('ready-to-show', function(){
-					win.show()
-				})
-			}
-		}],
+			electron.ipcRenderer.send('show') }],
+			// if(electron.remote.getGlobal('readyToShow')){
+			// 	electron.remote.getCurrentWindow().show()
+			// } else {
+			// 	var win = electron.remote.getCurrentWindow()
+			// 	win.once('ready-to-show', 
+			// 		function(){ win.show() }) } }],
 	minimize: ['Window/Minimize',
 		function(){
-			electron.remote.getCurrentWindow().minimize() }],
+			electron.ipcRenderer.send('minimize') }],
 	toggleFullScreen: ['Window/Full screen mode',
 		toggler.CSSClassToggler(
 			function(){ return document.body }, 
 			'.full-screen-mode',
 			function(action){
 				var that = this
-				var win = electron.remote.getCurrentWindow()
 
-				var state = win.isFullScreen() ? 'on' : 'off'
+				// get current state...
+				var state = document.appFullScreen ? 'on' : 'off'
 
 				// change the state only if the target state is not the same
 				// as the current state...
@@ -306,10 +303,14 @@ var ElectronHostActions = actions.Actions({
 					// hide the viewer to hide any animation crimes...
 					this.dom[0].style.visibility = 'hidden'
 
-					// XXX async...
-					// 		...this complicates things as we need to do the next
-					// 		bit AFTER the resize is done...
-					win.setFullScreen(action == 'on' ? true : false)
+					// NOTE: electrons policy that developers can't trust 
+					// 		their own code making them jump through context 
+					// 		hoops all of the time instead of in the specific 
+					// 		contexts that need isolation is crap...
+					electron.ipcRenderer.send(
+						state == 'on' ?
+							'exitFullScreen'
+							: 'enterFullScreen')
 
 					setTimeout(function(){ 
 						that
@@ -317,32 +318,16 @@ var ElectronHostActions = actions.Actions({
 							.focusImage()
 							.ribbons
 								.restoreTransitions()
-
-						that.dom[0].style.visibility = ''
-					}, 100)
-				}
-
-				// NOTE: we delay this to account for window animation...
-				setTimeout(function(){ 
-					that.storeWindowGeometry() 
-				}, 500)
-			})],
+						// show viewer after we are done...
+						that.dom[0].style.visibility = '' }, 150) } })],
 
 	// XXX should this be a toggler???
 	showDevTools: ['Interface|Development/Show Dev Tools',
 		{mode: 'advancedBrowseModeAction'},
 		function(action){
-			var w = electron.remote.getCurrentWindow()
-
 			if(action == '?'){
-				return w.isDevToolsOpened()
-			}
-				
-			w.openDevTools() 
-			// focus the devtools if its window is available...
-			w.devToolsWebContents
-				&& w.devToolsWebContents.focus()
-		}],
+				return document.appDevTools }
+			electron.ipcRenderer.send('openDevTools') }],
 	// XXX make this portable (osx, linux)...
 	showInFolder: ['File|Image/Show in $folder',
 		function(image){
@@ -363,60 +348,16 @@ var ElectronHostActions = actions.Actions({
 	toggleSplashScreen: ['Interface/',
 		{mode: 'advancedBrowseModeAction'},
 		function(action){
-			var splash = this.splash = (!this.splash || this.splash.isDestroyed()) ?
-				electron.remote.getGlobal('splash')
-				: this.splash
+			var splash = document.appSplashScreen
 
 			if(action == '?'){
-				return !splash || splash.isDestroyed() ? 'off' : 'on'
-			}
+				return !splash ? 'off' : 'on' }
 
-			// XXX HACK: use real toggler protocol...
-			if(action != 'off' && (!splash || splash.isDestroyed())){
-				var splash = this.splash = 
-					// XXX move this to splash.js and use both here and in e.js...
-					new electron.remote.BrowserWindow({
-						// let the window to get ready before we show it to the user...
-						show: false,
-
-						transparent: true,
-						frame: false,
-						center: true,
-						width: 800, 
-						height: 500,
-
-						alwaysOnTop: true,
-
-						resizable: false,
-						movable: false,
-						minimizable: false,
-						maximizable: false,
-						fullscreenable: false,
-
-						autoHideMenuBar: true,
-					})
-
-				splash.setMenu(null)
-
-				// and load the index.html of the app.
-				splash.loadURL(url.format({
-					// XXX unify this with index.html
-					pathname: pathlib.join(__dirname, 'splash.html'),
-					protocol: 'file:',
-					slashes: true
-				}))
-				
-				splash.once('ready-to-show', function(){
-					splash.webContents
-						.executeJavaScript(
-							`document.getElementById("version").innerText = "${VERSION}"`)
-					splash.show()
-				})
+			if(action != 'off' && !splash){
+				electron.ipcRenderer.send('openSplashScreen')
 
 			} else if(action != 'on' && splash){
-				splash.destroy()
-			}
-		}],
+				electron.ipcRenderer.send('closeSplashScreen') } }],
 
 	// XXX should this support resizing???
 	copy: ['Image|Edit/Copy image',
@@ -669,7 +610,8 @@ var WindowedAppControlActions = actions.Actions({
 				// 		is defined...
 				var cfg = this.config.window = this.config.window || {}
 				cfg.fullscreen = true
-				cfg.devtools = this.showDevTools('?')
+				cfg.devtools = this.showDevTools
+					&& this.showDevTools('?')
 
 			} else {
 				this.config.window = {
@@ -680,18 +622,15 @@ var WindowedAppControlActions = actions.Actions({
 					y: position[1],
 
 					fullscreen: false,
-					devtools: this.showDevTools('?'),
-				}
-			}
-		}],
+					devtools: this.showDevTools 
+						&& this.showDevTools('?'),
+				} } }],
 	restoreWindowGeometry: ['- Window/Restore window state',
 		function(){
 			var that = this
 			var cfg = this.config.window || {}
 
-			var fullscreen = cfg.fullscreen || false
-
-			if(fullscreen){
+			if(cfg.fullscreen){
 				that.toggleFullScreen('on')
 
 			} else {
@@ -701,9 +640,7 @@ var WindowedAppControlActions = actions.Actions({
 				var y = cfg.y || (screen.height - h)/2
 
 				this.position = [x, y]
-				this.size = [w, h]
-			}
-		}],
+				this.size = [w, h] } }],
 
 	toggleSplashScreenShowing: ['Interface/Splash screen on start',
 		{mode: 'advancedBrowseModeAction'},
@@ -761,6 +698,9 @@ module.WindowedAppControl = core.ImageGridFeatures.Feature({
 				// NOTE: this will also set the size to which the OS will 
 				// 		resize the window in state change...
 				if(cfg){
+					cfg.devtools
+						&& this.showDevTools() 
+
 					var W = screen.width
 					var H = screen.height
 					var w = cfg.width || Math.max(0.8 * W, 600)
@@ -769,18 +709,14 @@ module.WindowedAppControl = core.ImageGridFeatures.Feature({
 					var y = cfg.y || (H - h)/2
 
 					this.position = [x, y]
-					this.size = [w, h]
-
-					cfg.devtools
-						&& this.showDevTools() }
+					this.size = [w, h] }
 
 				// restore actual window state... 
 				this.restoreWindowGeometry() 
 
 				// declare we are ready when DOM is ready...
 				$(function(){ 
-					that.declareReady('ui-windowed-app-control') })
-			}],
+					that.declareReady('ui-windowed-app-control') }) }],
 
 		// show window + hide splash screen...
 		['ready',
