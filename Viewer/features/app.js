@@ -214,8 +214,7 @@ var NWHostActions = actions.Actions({
 				// XXX get the devtools stage...
 				return false }
 			nw.Window.get().showDevTools &&
-				nw.Window.get().showDevTools()
-		}],
+				nw.Window.get().showDevTools() }],
 	showInFolder: ['File|Image/Show in $folder',
 		function(image){
 			image = this.images[this.data.getImage(image)]
@@ -224,8 +223,7 @@ var NWHostActions = actions.Actions({
 			var filename = image.path
 			var path = pathlib.normalize(base + '/' + filename)
 
-			nw.Shell.showItemInFolder(path)
-		}],
+			nw.Shell.showItemInFolder(path) }],
 
 	toggleSplashScreen: ['Interface/',
 		{mode: 'advancedBrowseModeAction'},
@@ -270,18 +268,11 @@ var ElectronHostActions = actions.Actions({
 		value 
 			&& window.moveTo(...value) },
 
-	// XXX revise...
-	// XXX need to handle mazimize correctly -- see e.js...
+	// XXX need to handle maximize correctly -- see e.js...
 	// XXX do we need .hide(..) here???
 	show: ['- Window/',
 		function(){
 			electron.ipcRenderer.send('show') }],
-			// if(electron.remote.getGlobal('readyToShow')){
-			// 	electron.remote.getCurrentWindow().show()
-			// } else {
-			// 	var win = electron.remote.getCurrentWindow()
-			// 	win.once('ready-to-show', 
-			// 		function(){ win.show() }) } }],
 	minimize: ['Window/Minimize',
 		function(){
 			electron.ipcRenderer.send('minimize') }],

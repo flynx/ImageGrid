@@ -38,8 +38,8 @@
     "ig-types": "^6.0.9",
     "json5": "^2.2.0",
     "object-run": "^1.0.1",
-    "requirejs": "^2.3.6",
-    "requirejs-plugins": "^1.0.2",
+    "requirejs": "*",
+    "requirejs-plugins": "*",
     "sharp": "^0.25.4",
     "v8-compile-cache": "^2.2.0",
     "wildglob": "^0.1.1"
