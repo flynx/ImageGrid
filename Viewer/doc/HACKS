@@ -2,6 +2,16 @@
 Hacks and fixes
 ===============
 
+20220126:
+- node_modules/requirejs/bin/r,js:
+	Under Electron v14+ requirejs breaks with a SyntaxError on the 
+	first char of r.js ('#!/...') -- a hackish way to fix this is to 
+	comment it out, not yet sure why is this happening...
+
+- cfg/requirejs.js:
+	.baseUrl calculation under U*IX systems needs a '/' prefixed...
+
+
 
 20210122:
 Marking changes twice on load...
