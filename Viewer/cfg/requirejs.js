@@ -35,7 +35,10 @@ var setup = function(require, root){
 				(require.main ?
 					require.main.filename.split(/[\\\/]/g).slice(0, -1).join('/')
 					: document.baseURI
-						.replace(/^[a-zA-Z]+:\/\/\/?/, '')
+						// remove URL protocol...
+						.replace(/^[a-zA-Z]+:\/\/\/?/, '/')
+						// remove leading '/' on windows drives...
+						.replace(/^\/[a-zA-Z]:/, '')
 						.split(/[#&]/)[0].split(/[\\\/]/g).slice(0, -1).join('/'))
 			:  '.',
 

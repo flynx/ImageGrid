@@ -11,6 +11,8 @@ Hacks and fixes
 - cfg/requirejs.js:
 	.baseUrl calculation under U*IX systems needs a '/' prefixed...
 
+Both issues are currently tweaked manually...
+
 
 
 20210122:

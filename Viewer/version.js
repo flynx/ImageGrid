@@ -13,7 +13,7 @@
 // 				> node version.js
 // 			- browser + requirejs + file://
 // 			- browser + requirejs + http*
-var VERSION = '4.0.0a'
+var VERSION = '4.0.1a'
 
 //console.log(VERSION)
 
