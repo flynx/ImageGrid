@@ -137,6 +137,9 @@ function createWindow(){
 
 		fullscreenable: true,
 
+		// XXX not sure about this...
+		//maximizable: false,
+
 		//autoHideMenuBar: true,
 	})
 	// disable default menu...
@@ -165,10 +168,10 @@ function createWindow(){
 		function(){ WIN = null })
 
 	// devtools...
-	WIN.on('devtools-opened', 
+	WIN.webContents.on('devtools-opened', 
 		function(){
 			WIN && WIN.webContents.executeJavaScript('document.appDevTools = true') })
-	WIN.on('devtools-closed', 
+	WIN.webContents.on('devtools-closed', 
 		function(){
 			WIN && WIN.webContents.executeJavaScript('document.appDevTools = false') })
 
