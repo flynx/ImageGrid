@@ -3177,11 +3177,11 @@ var ButtonsActions = actions.Actions({
 				'browseActions: "Interface/" -- Interface settings...',
 				'toggleSideButtons -- Toggle touch controls',
 			]],
-			'_': ['minimize', 
+			'_': ['minimize always-shown', 
 				'minimize -- Minimize'],
 			'&#8601;': ['fullscreen always-shown', 
 				'toggleFullScreen -- Toggle fullscreen'],
-			'&times;': ['close', 
+			'&times;': ['close always-shown', 
 				'close -- Quit'],
 		},
 
