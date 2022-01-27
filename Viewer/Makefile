@@ -174,8 +174,8 @@ LESSC := npx lessc
 # 		   procs to access their paths (as is done below)
 # 		2) set path and launch a child make -- not sure how to 
 # 		   do this...
+#
 ELECTRON := npx electron
-# XXX stopped working while sharp started working out of the box...
 ELECTRON_REBUILD := npx electron-rebuild
 ASAR := npx asar
 ELECTRON_VERSION_FALLBACK ?= v1.8.1
@@ -641,6 +641,11 @@ $(BUILD_INFO): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 
 $(NODE_DIR): package.json
 	npm install
+	# patch requirejs (see: NOTES)
+	cp -f $(NODE_DIR)/requirejs/bin/r.js{,.bak}
+	cat $(NODE_DIR)/requirejs/bin/r.js.bak \
+		| sed 's/^\(#!\/\)/\/\/\1/' \
+		> $(NODE_DIR)/requirejs/bin/r.js
 	# NOTE: this may break on some systems due to a dependency issue...
 #	$(ELECTRON_REBUILD)
 	@touch "$@"
