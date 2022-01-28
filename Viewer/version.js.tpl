@@ -1,8 +1,8 @@
 /**********************************************************************
 * 
 * NOTE: version.js is generated automatically by Makefile from a template
-* 		do not edit directly.
-* 		Edit version.js.tpl instead.
+* 	do not edit directly.
+* 	Edit version.js.tpl instead.
 *
 *
 **********************************************************************/
@@ -19,7 +19,7 @@
 // 	- browser (local)	- can't get access to .json files
 // Thus the only way around this is to generate this file from a template.
 
-module.version = '4.0.1a-202201282135-el'
+module.version = '$VERSION'
 
 
 

@@ -152,7 +152,7 @@ VERSION_FALLBACK ?= 4.0.0a
 # NOTE: we are not using './ig --version 2> /dev/null' because it will 
 # 	not work before we do 'npm install'...
 VERSION := $(strip $(shell \
-	echo 'console.log(require("./version").version)' | node - \
+	echo 'console.log(require("./package.json").version)' | node - \
 		|| echo $(VERSION_FALLBACK)))
 DATE := $(strip $(shell date "+%Y%m%d%H%M"))
 COMMIT := $(strip $(shell git rev-parse HEAD))
@@ -293,7 +293,7 @@ PROJECT_FILES = package.json
 # replace .less with .css making them build targets...
 CSS_FILES := $(patsubst %.less,%.css,$(wildcard css/*.less))
 HTML_FILES := $(wildcard *.html)
-ROOT_JS_FILES := $(wildcard *.js)
+ROOT_JS_FILES := $(wildcard *.js) version.js
 # NOTE: this is only used for make change/dependency tracking checking...
 JS_FILES := $(ROOT_JS_FILES) \
 	$(wildcard $(DOMAIN_DIR)/*.js) \
@@ -377,6 +377,7 @@ doc/MAKE: Makefile
 version: ## Print version and exit
 version:
 	@echo $(VERSION)
+
 
 
 # XXX might be a good idea to print the generated env...
@@ -619,6 +620,12 @@ $(BUILD_INFO): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 	@echo "date: $(DATE)" | tee -a "$@"
 	@echo "commit: $(COMMIT)" | tee -a "$@"
 	@echo "electron: $(ELECTRON_VERSION)" | tee -a "$@"
+
+
+version.js: package.json
+	cat version.js.tpl \
+		| sed 's/\$$VERSION/$(VERSION)/' \
+		> version.js
 
 
 %.css: %.less

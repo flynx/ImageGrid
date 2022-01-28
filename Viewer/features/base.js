@@ -42,7 +42,8 @@ actions.Actions({
 	config: {
 		// XXX should this be here???
 		// 		...where should this be stored???
-		version: version.version || '4.0.0a',
+		version: version.version 
+			|| '4.0.0a',
 
 		'default-direction': 'right',
 
@@ -71,9 +72,9 @@ actions.Actions({
 	},
 
 	
-	// XXX
 	get version(){
-		return this.config.version },
+		return version.version 
+			|| '4.0.0a' },
 
 	// basic state...
 	// NOTE: the setters in the following use the appropriate actions

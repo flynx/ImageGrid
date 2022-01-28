@@ -54,7 +54,11 @@ global.START_GUI = false
 //
 // XXX might be nice to show load progress on splash...
 var SPLASH
-function createSplash(){
+function createSplash(force=false){
+	// singleton window...
+	if(!force && SPLASH){
+		return SPLASH }
+
 	// NOTE: this is done here as this does not depend on code loading, 
 	// 		thus showing the splash significantly faster...
 	SPLASH = new BrowserWindow({
@@ -111,12 +115,18 @@ function createSplash(){
 
 // Create main window...
 //
-// XXX get initial settings from config...
+// NOTE: initial window metrics are loaded by the app feature...
+// 		XXX should this be done here???
+//
 // XXX handle maximize corretly...
 // 		...currently it does not differ visually from fullscreen -- either
 // 		make them the same or keep them separate visually...
 var WIN
-function createWindow(){
+function createWindow(force=false){
+	// singleton window...
+	if(!force && WIN){
+		return WIN }
+
 	// Create the browser window.
 	WIN = new BrowserWindow({
 		webPreferences: {
@@ -186,6 +196,9 @@ function createWindow(){
 	return WIN }
 
 
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
 // Start the app...
 //
 function start(){
@@ -201,23 +214,7 @@ function start(){
 
 
 //---------------------------------------------------------------------
-
-// On macOS it's common to re-create a window in the app when the
-// dock icon is clicked and there are no other windows open.
-// XXX test...
-app.on('activate', function(){
-	WIN || createWindow() }) 
-
-// Quit when all windows are closed.
-// On macOS it is common for applications and their menu bar
-// to stay active until the user quits explicitly with Cmd + Q
-app.on('window-all-closed', function(){
-	process.platform !== 'darwin'
-		&& app.quit() })
-
-
-
-//---------------------------------------------------------------------
+// Event handlers...
 
 // Window states...
 ipcMain.on('show', 
@@ -245,7 +242,7 @@ ipcMain.on('openSplashScreen',
 ipcMain.on('closeSplashScreen', 
 	function(){ SPLASH && SPLASH.destroy() })
 
-// devtools...
+// DevTools...
 // XXX need to focus devtools here...
 // 		see: webContents.getAllWebContents()
 ipcMain.on('openDevTools', 
@@ -257,6 +254,24 @@ ipcMain.on('openDevTools',
 			}) })
 ipcMain.on('closeDevTools', 
 	function(){ WIN && WIN.closeDevTools() })
+
+
+
+//---------------------------------------------------------------------
+// Event handlers (macOS)...
+
+// On macOS it's common to re-create a window in the app when the
+// dock icon is clicked and there are no other windows open.
+// XXX test...
+app.on('activate', function(){
+	WIN || createWindow() }) 
+
+// Quit when all windows are closed.
+// On macOS it is common for applications and their menu bar
+// to stay active until the user quits explicitly with Cmd + Q
+app.on('window-all-closed', function(){
+	process.platform !== 'darwin'
+		&& app.quit() })
 
 
 

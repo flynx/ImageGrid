@@ -26,8 +26,9 @@ var setup = function(require, root){
 	var requirejs = _requirejs
 
 	var requirejs_cfg = {
-		// NOTE: this is really odd: running electron as a packed binary breaks
-		// 		requirejs' paths...
+		// XXX under electron the path seems to be one level above the 
+		// 		actual base URL, i.e. one level above the $0, hence the 
+		// 		need to correct this...
 		baseUrl: root ?
 				root
 			: typeof(process) != 'undefined' 
