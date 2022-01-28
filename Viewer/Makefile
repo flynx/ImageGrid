@@ -430,7 +430,7 @@ doc: $(DOC_FILES)
 
 .PHONY: dev
 dev: ## Build the development environment
-dev: $(NODE_DIR) css
+dev: $(JS_FILES) $(NODE_DIR) css
 
 
 .PHONY: dist
