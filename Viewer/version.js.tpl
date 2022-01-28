@@ -4,6 +4,11 @@
 * 	do not edit directly.
 * 	Edit version.js.tpl instead.
 *
+* Build: $BUILD
+* Commit: $COMMIT
+*
+* NOTE: the build/commit data is of the time the version.js was built 
+* 	but may not be the current/latest...
 *
 **********************************************************************/
 ((typeof define)[0]=='u'?function(f){module.exports=f(require)}:define)
@@ -24,4 +29,4 @@ module.version = '$VERSION'
 
 
 /**********************************************************************
-* vim:set ts=4 sw=4 :                               */ return module })
+* vim:set ts=4 sw=4 ft=javascript :                 */ return module })

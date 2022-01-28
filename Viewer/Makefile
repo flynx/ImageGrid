@@ -624,9 +624,11 @@ $(BUILD_INFO): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 	@echo "electron: $(ELECTRON_VERSION)" | tee -a "$@"
 
 
-version.js: package.json
+version.js: package.json version.js.tpl
 	cat version.js.tpl \
 		| sed 's/\$$VERSION/$(APP_VERSION)/' \
+		| sed 's/\$$BUILD/$(DATE)/' \
+		| sed 's/\$$COMMIT/$(COMMIT)/' \
 		> version.js
 
 
