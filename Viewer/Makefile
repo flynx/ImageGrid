@@ -151,9 +151,10 @@ APP_NAME ?= ImageGrid.Viewer
 VERSION_FALLBACK ?= 4.0.0a
 # NOTE: we are not using './ig --version 2> /dev/null' because it will 
 # 	not work before we do 'npm install'...
-VERSION := $(strip $(shell \
+APP_VERSION := $(strip $(shell \
 	echo 'console.log(require("./package.json").version)' | node - \
 		|| echo $(VERSION_FALLBACK)))
+VERSION := $(APP_VERSION)
 DATE := $(strip $(shell date "+%Y%m%d%H%M"))
 COMMIT := $(strip $(shell git rev-parse HEAD))
 
@@ -376,7 +377,7 @@ doc/MAKE: Makefile
 .PHONY: version
 version: ## Print version and exit
 version:
-	@echo $(VERSION)
+	@echo $(APP_VERSION)
 
 
 
@@ -509,6 +510,7 @@ web: ## Build a browser-runnable package
 web: $(DIST_DIR)/$(APP_NAME)-$(VERSION)-web.zip
 
 
+
 ##-------------------------------------------------------- Electron ---
 
 # XXX this can potentially do a build for an existing/matching *.zip in
@@ -624,7 +626,7 @@ $(BUILD_INFO): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 
 version.js: package.json
 	cat version.js.tpl \
-		| sed 's/\$$VERSION/$(VERSION)/' \
+		| sed 's/\$$VERSION/$(APP_VERSION)/' \
 		> version.js
 
 
