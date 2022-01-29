@@ -112,7 +112,6 @@
 # 		- ...
 # 	- cross-compiling support (???)
 # 	- cross-package with pre-built libs...
-# 	- nwjs???
 #
 #
 # Links:
@@ -185,14 +184,6 @@ ELECTRON_VERSION := $(strip $(shell \
 		|| echo $(ELECTRON_VERSION_FALLBACK)))
 ELECTRON_DOWNOAD_URL ?= https://github.com/electron/electron/releases/download/$(ELECTRON_VERSION)
 ELECTRON_DIST ?= electron-$(ELECTRON_VERSION)-$(TARGET_OS)-$(ARCH).zip
-
-
-# NW...
-#
-# XXX get the version dynamically... (???)
-NW_VERSION ?= v0.28.0
-NW_DIST ?= nwjs-sdk-$(NW_VERSION)-$(NW_OS)-$(ARCH).zip
-NW_DOWNOAD_URL ?= https://dl.nwjs.io/$(NW_VERSION)
 
 
 BUILD_MODE ?= in-place
@@ -294,6 +285,9 @@ PROJECT_FILES = package.json
 # replace .less with .css making them build targets...
 CSS_FILES := $(patsubst %.less,%.css,$(wildcard css/*.less))
 HTML_FILES := $(wildcard *.html)
+# NOTE: these must be explicitly included in all other categories as they
+# 	will not be matched by wildcard if they are not generated yet 
+# 	resulting in them not being copied to the build...
 GENERATED_JS_FILES := version.js
 ROOT_JS_FILES := $(wildcard *.js) version.js
 # NOTE: this is only used for make change/dependency tracking checking...
@@ -552,28 +546,6 @@ electron-run: dev
 
 
 
-##-------------------------------------------------------------- NW ---
-
-# XXX do we actually need this???
-# XXX this clashes with the electron build as the recepies do not take the
-# 	host framework into account...
-#.PHONY: nw-dist
-#nw-dist: VERSION := $(VERSION)-nw
-#nw-dist: DIST := $(DIST_DIR)/$(APP_NAME)-$(VERSION)-$(TARGET_OS)-$(ARCH).zip
-#nw-dist: $$(DIST)
-
-
-# XXX
-
-
-# XXX needs a different package.json or a way to share it with electron...
-.PHONY: nw-run
-nw-run: ## Run app in nw (outdated)
-nw-run: dev
-	nw .
-
-
-
 ##----------------------------------------------- Windows installer ---
 
 # XXX
@@ -614,7 +586,6 @@ PACK_FULL = $(BUILD_DIR)/$(APP_NAME)/ $(BUILD_DIR)/$(APP_NAME)/$(NODE_DIR)
 # build date...
 # NOTE: this depends on lots of stuff so as to be updated in case any of
 # 	the dependencies are touched...
-# XXX add nw version option...
 $(BUILD_INFO): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 		$(JS_FILES) $(CSS_FILES) $(HTML_FILES)
 	$(MD) "$(@D)"
@@ -819,49 +790,6 @@ $(BUILD_DIR)/$(APP_NAME)-%.repack.zip: $(BUILD_DIR)/$(APP_NAME)-%/
 $(DIST_DIR)/$(APP_NAME)-%.zip: $(BUILD_DIR)/$(APP_NAME)-%.$(BUILD_MODE).zip
 	$(MD) "$(@D)"
 	cp "$<" "$@"
-
-
-
-#----------------------------------------------------------------------
-# NW.js... 
-
-.PHONY: nw-target
-nw-target: $(TARGET_DIR)/$(NW_DIST)
-
-.PRECIOUS: $(TARGET_DIR)/$(NW_DIST)
-$(TARGET_DIR)/$(NW_DIST):
-	$(MD) "$(@D)"
-	wget \
-		-nc "$(NW_DOWNOAD_URL)/$(@F)" \
-		-O "$@"
-
-
-# NOTE: this needs a clean app dir...
-# XXX BUG: can't find modules in unpacked node_modules...
-.PRECIOUS: $(BUILD_DIR)/package.nw
-$(BUILD_DIR)/package.nw: INCLUDE_NODE_MODULES += $(INCLUDE_NW_NODE_MODULES)
-$(BUILD_DIR)/package.nw: PACK_MINIMAL = $(BUILD_DIR)/$(APP_NAME)/ \
-		$(call includeNodeModules,$(INCLUDE_NODE_MODULES))
-$(BUILD_DIR)/package.nw: $$(PACK_MINIMAL)
-	# update package.json to start nw...
-	cd "$<" ; \
-		sed -i 's/"e.js"/"index.html"/g' package.json
-	$(call zipFrom,$<,$@,*)
-
-
-# XXX how do we resolve name collisions between this and electron builds???
-# 	a) naming convention: specific build directory suffixes...
-# 	b) generic components mixed and matched (node_modules, ImageGrid.Viewer, ...)
-# 		Q: will this actually save us any time/space, considering
-# 		   we'll need to copy the files anyway???
-# 		   	- it would be nice to have reusable components that
-# 		   	  would be used as-is to build different builds
-# 		   	- this will lead to added complexity for instance 
-# 		   	  in zipping...
-# 	c) both...
-# XXX things to do next:
-# 	- copy rest of node_modules... (???)
-# 	- pack...
 
 
 

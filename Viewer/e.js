@@ -240,7 +240,11 @@ ipcMain.on('exitFullScreen',
 ipcMain.on('openSplashScreen', 
 	function(){ SPLASH || createSplash() })
 ipcMain.on('closeSplashScreen', 
-	function(){ SPLASH && SPLASH.destroy() })
+	function(){ 
+		// force this to run after this frame avoiding races...
+		setTimeout(
+			function(){ SPLASH && SPLASH.destroy() }, 
+			10) })
 
 // DevTools...
 // XXX need to focus devtools here...
