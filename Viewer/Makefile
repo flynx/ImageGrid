@@ -294,9 +294,11 @@ PROJECT_FILES = package.json
 # replace .less with .css making them build targets...
 CSS_FILES := $(patsubst %.less,%.css,$(wildcard css/*.less))
 HTML_FILES := $(wildcard *.html)
+GENERATED_JS_FILES := version.js
 ROOT_JS_FILES := $(wildcard *.js) version.js
 # NOTE: this is only used for make change/dependency tracking checking...
 JS_FILES := $(ROOT_JS_FILES) \
+	$(GENERATED_JS_FILES) \
 	$(wildcard $(DOMAIN_DIR)/*.js) \
 	$(wildcard $(FEATURES_DIR)/*.js) \
 	$(wildcard $(LIB_DIR)/*.js) \
@@ -470,7 +472,7 @@ run: electron-run
 
 .PHONY: clean
 clean: ## Clean the BUILD_DIR directory
-	$(RM) $(BUILD_DIR)
+	$(RM) $(BUILD_DIR) $(GENERATED_JS_FILES)
 
 
 .PHONY: clean-dist
