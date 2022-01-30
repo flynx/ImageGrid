@@ -335,6 +335,9 @@ button:hover {
 /* general button visibility */
 .buttons .button {
 	opacity: 0.4;
+
+	/* XXX not sure about this... */
+	transition : all 0.1s ease;
 }
 .buttons:hover .button {
 	opacity: 1;
@@ -547,12 +550,12 @@ button:hover {
 }
 
 /* XXX not sure if this is the right way to go... */
-.single-image-mode .main-buttons:not(:hover),
-.single-image-mode .app-buttons:not(:hover) {
+.single-image-mode .main-buttons:not(:hover) .button,
+.single-image-mode .app-buttons:not(:hover) .button {
 	opacity: 0.1;
 }
-.slideshow-running .main-buttons:not(:hover),
-.slideshow-running .app-buttons:not(:hover) {
+.slideshow-running .main-buttons:not(:hover) .button,
+.slideshow-running .app-buttons:not(:hover) .button {
 	opacity: 0;
 }
 

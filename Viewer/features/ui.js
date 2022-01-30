@@ -2084,9 +2084,7 @@ var ControlActions = actions.Actions({
 						.off('swiperight')
 						.off('swipeup')
 						.off('swipedown')
-						.removeData('hammer')
-				}
-			})],
+						.removeData('hammer') } })],
 
 
 	/*// XXX we are not using this....
