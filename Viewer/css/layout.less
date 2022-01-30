@@ -382,9 +382,13 @@ button:hover {
 /* Custom buttons... */
 
 /* XXX do we need both this and the active update??? */
-.crop-mode .buttons:not(:hover) .button.crop,
-.collection-mode .buttons:not(:hover) .button.collections {
+.crop-mode:not(.slideshow-running) .buttons:not(:hover) .button.crop,
+.collection-mode:not(.slideshow-running) .buttons:not(:hover) .button.collections {
 	opacity: 0.7;
+}
+.single-image-mode:not(.slideshow-running).crop-mode .buttons:not(:hover) .button.crop,
+.single-image-mode:not(.slideshow-running).collection-mode .buttons:not(:hover) .button.collections {
+	opacity: 0.2;
 }
 
 .buttons .button.ui-settings {
