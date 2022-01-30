@@ -385,13 +385,22 @@ button:hover {
 /* Custom buttons... */
 
 /* XXX do we need both this and the active update??? */
-.crop-mode:not(.slideshow-running) .buttons:not(:hover) .button.crop,
-.collection-mode:not(.slideshow-running) .buttons:not(:hover) .button.collections {
+/* XXX this seems a bit overcomplicated... */
+.crop-mode:not(.slideshow-running) .buttons .button.crop,
+.collection-mode:not(.slideshow-running) .buttons .button.collections {
 	opacity: 0.7;
 }
-.single-image-mode:not(.slideshow-running).crop-mode .buttons:not(:hover) .button.crop,
-.single-image-mode:not(.slideshow-running).collection-mode .buttons:not(:hover) .button.collections {
+.crop-mode:not(.slideshow-running) .buttons:hover .button.crop,
+.collection-mode:not(.slideshow-running) .buttons:hover .button.collections {
+	opacity: 1;
+}
+.single-image-mode:not(.slideshow-running).crop-mode .buttons .button.crop,
+.single-image-mode:not(.slideshow-running).collection-mode .buttons .button.collections {
 	opacity: 0.2;
+}
+.single-image-mode:not(.slideshow-running).crop-mode .buttons:hover .button.crop,
+.single-image-mode:not(.slideshow-running).collection-mode .buttons:hover .button.collections {
+	opacity: 1;
 }
 
 .buttons .button.ui-settings {
