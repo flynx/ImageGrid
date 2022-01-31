@@ -158,9 +158,13 @@ DATE := $(strip $(shell date "+%Y%m%d%H%M"))
 COMMIT := $(strip $(shell git rev-parse HEAD))
 
 
+# do not install stuff unless the eser explicitly asks for it...
+NPX := npx --no
+
+
 # less...
 #
-LESSC := npx lessc
+LESSC := $(NPX) lessc
 
 
 # Electron...
@@ -176,9 +180,9 @@ LESSC := npx lessc
 # 		2) set path and launch a child make -- not sure how to 
 # 		   do this...
 #
-ELECTRON := npx electron
-ELECTRON_REBUILD := npx electron-rebuild
-ASAR := npx asar
+ELECTRON := $(NPX) electron
+ELECTRON_REBUILD := $(NPX) electron-rebuild
+ASAR := $(NPX) asar
 ELECTRON_VERSION_FALLBACK ?= v1.8.1
 ELECTRON_VERSION := $(strip $(shell \
 	$(ELECTRON) -v 2> /dev/null \
