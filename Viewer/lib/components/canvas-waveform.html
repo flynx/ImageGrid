@@ -1,5 +1,13 @@
 <!DOCTYPE html>
 <html>
+
+<!-- 
+
+XXX this file is way out of sync...
+
+-->
+
+
 <style>
 
 
@@ -54,7 +62,10 @@
 
 <script src="../../lib/jli.js"></script>
 
-<script src="ig-image-graph.js"></script>
+<script 
+	data-main="ig-image-graph" 
+	src="../../node_modules/requirejs/require.js"></script>
+
 
 <script>
 
@@ -153,7 +164,7 @@ var start = function(){
 	//document.body.appendChild(makeWaveform(document.getElementById('input'), 'color', 'normalized'))
 	document.body.appendChild(makeWaveform(document.getElementById('input')))
 
-	document.body.appendChild(makeWaveform('../images/splash-800x500.jpg'))
+	document.body.appendChild(makeWaveform('../../images/splash-800x500.jpg'))
 }
 
 
@@ -164,20 +175,20 @@ var start = function(){
 <body>
 
 
-<img id="input" src="../images/splash-800x500.jpg" onload="start()"/>
+<img id="input" src="../../images/splash-800x500.jpg" onload="start()"/>
 
 <br>
 
 <ig-image-graph 
 	graph="histogram"
-	src="../images/splash-800x500.jpg"
+	src="../../images/splash-800x500.jpg"
 	mode="color"
 	color="normalized" 
 	style="width: 600px; height: 300px"></ig-image-graph>
 
 <ig-image-graph 
 	graph="waveform"
-	src="../images/splash-800x500.jpg"
+	src="../../images/splash-800x500.jpg"
 	mode="color"
 	color="normalized" ></ig-image-graph>
 

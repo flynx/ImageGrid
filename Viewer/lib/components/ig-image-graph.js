@@ -1,7 +1,24 @@
 /**********************************************************************
 * 
+* Web Component defining an image waveform/histogram view widget.
 *
 *
+* Example:
+*	<script>
+*		require('nib/object')
+*		require('ig-image-graph')
+*		...
+*	</script>
+*	...
+*	<ig-image-graph 
+*		graph="histogram"
+*		src="../images/splash-800x500.jpg"
+*		mode="color"
+*		color="normalized" 
+*		style="width: 600px; height: 300px"></ig-image-graph>
+* 
+*
+* XXX add docs and examples -- canvas-waveform.html is out outdated...
 * XXX add worker support...
 *
 **********************************************************************/

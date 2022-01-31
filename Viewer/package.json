@@ -44,7 +44,7 @@
     "v8-compile-cache": "^2.2.0",
     "wildglob": "^0.1.1"
   },
-  "dependencies-disabled": {
+  "-dependencies": {
     "openseadragon": "^2.4.1",
     "flickrapi": "^0.3.28",
     "pouchdb": "^7.2.2",
@@ -59,11 +59,13 @@
     "less": "^3.13.1",
     "rcedit": "^3.0.0"
   },
+  "-devDependencies": {
+  },
   "bin": {
     "ig": "ig.js"
   },
   "scripts": {
     "start": "echo Use 'make run' instead of npm start..."
   },
-  "vim-cfg": " vim:set ts=2 sw=2 expandtab : "
+  "-vim-cfg": " vim:set ts=2 sw=2 expandtab : "
 }

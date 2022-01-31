@@ -1,5 +1,16 @@
 /**********************************************************************
 * 
+* Keyboard handler
+*
+* This provides language layout independent way to handle keyboard 
+* control based on the base English language keys.
+*
+*
+*
+* Non-US English punctuation
+* 	Difene a new layout then overload SHIFT_KEYS and regenerate 
+* 	UNSHIFT_KEYS via:
+* 		UNSHIFT_KEYS = reverseDict(SHIFT_KEYS)
 *
 *
 **********************************************************************/
@@ -8,6 +19,17 @@
 /*********************************************************************/
 
 var object = require('lib/object')
+
+
+/*********************************************************************/
+// Helpers...
+
+var reverseDict = 
+module.reverseDict =
+function(dict, res={}){
+	for(var k in dict){
+		res[dict[k]] = k }
+	return res }
 
 
 
@@ -73,6 +95,10 @@ module.SPECIAL_KEYS = {
 							186: ';',	222: '\'',
 				188: ',',	190: '.',	191: '/',
 }
+// build a reverse map of SPECIAL_KEYS
+var KEY_CODES =
+module.KEY_CODES = {}
+	reverseDict(SPECIAL_KEYS)
 
 
 var SHIFT_KEYS =
@@ -89,24 +115,15 @@ module.SHIFT_KEYS = {
 							';': ':',	'\'': '"',
 				',': '<',	'.':  '>',	'/':  '?',
 }
-
-
 var UNSHIFT_KEYS = 
-module.UNSHIFT_KEYS = {}
-for(var k in SHIFT_KEYS){
-	UNSHIFT_KEYS[SHIFT_KEYS[k]] = k }
-
-
-// build a reverse map of SPECIAL_KEYS
-var KEY_CODES =
-module.KEY_CODES = {}
-for(var k in SPECIAL_KEYS){
-	KEY_CODES[SPECIAL_KEYS[k]] = k }
+module.UNSHIFT_KEYS = 
+	reverseDict(SHIFT_KEYS)
 
 
 // This is used to identify and correct key notation...
 // NOTE: the keys here are intentionally lowercase...
-var SPECIAL_KEY_ALTERNATIVE_TITLES = {
+var SPECIAL_KEY_ALTERNATIVE_TITLES =
+module.SPECIAL_KEY_ALTERNATIVE_TITLES = {
 	1: '#1', 2: '#2', 3: '#3', 4: '#4', 5: '#5', 
 	6: '#6', 7: '#7', 8: '#8', 9: '#9', 0: '#0',
 
@@ -126,7 +143,8 @@ var SPECIAL_KEY_ALTERNATIVE_TITLES = {
 
 	windows: 'Win',
 }
-var SPECIAL_KEYS_DICT = {}
+var SPECIAL_KEYS_DICT =
+module.SPECIAL_KEYS_DICT = {}
 for(var k in SPECIAL_KEYS){
 	SPECIAL_KEYS_DICT[SPECIAL_KEYS[k].toLowerCase()] = SPECIAL_KEYS[k] }
 
