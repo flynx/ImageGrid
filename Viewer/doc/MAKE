@@ -2,7 +2,14 @@
 ImageGrid.Viewer Makefile...
 
 To print full list of user make targets use:
-	make help
+	 make help
+
+
+In some cases making things may fail on a clean directory, if this 
+happens first build the environment and then try again:
+	 make dev
+	...
+	 make dist
 
 
 Variables to control the build:
@@ -38,20 +45,24 @@ NOTE: cross compilation is at this time not supported, if you try it
 
 Examples:
 	# check if all dependencies are available...
-	make check
+	 make check
 
 	# make development environment...
-	make dev
+	 make dev
 
 	# full build...
-	make clean dist
+	 make clean dist
 
 	# build in repack mode...
-	BUILD_MODE=repack make dist
+	 BUILD_MODE=repack make dist
 
 	# build for darwin... (EXPERIMENTAL)
-	TARGET_OS=darwin make clean dist
+	 TARGET_OS=darwin make clean dist
 
+
+Help and info:
+   help:                          Print make target help and exit
+   version:                       Print version and exit
 
 Dependency checking:
    check:                         Run all dependency checks
@@ -85,9 +96,6 @@ Electron:
    electron-test-dist:            Make electron test distributable
    electron-unpacked:             Make unpacked electron app
    electron-run:                  Run app in electron
-
-NW:
-   nw-run:                        Run app in nw (outdated)
 
 Windows installer:
 

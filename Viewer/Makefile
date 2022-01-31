@@ -38,8 +38,9 @@
 ## To print full list of user make targets use:
 ## 	$ make help
 ##
-## Currently it is not possible to do a make dist on a clean directory,
-## this needs to be done in two stages:
+##
+## In some cases making things may fail on a clean directory, if this 
+## happens first build the environment and then try again:
 ##	$ make dev
 ##	...
 ##	$ make dist
@@ -136,12 +137,7 @@
 
 #.EXPORT_ALL_VARIABLES:
 
-# XXX for some reason in some contexts bash complains somewhere after 
-# 	this point but otherwise works fine:
-# 		- ssh localhost
-# 		- termux on android
-# 	while everything is OK on ubuntu and normal dev context...
-SHELL := $(shell which bash)
+SHELL := bash
 
 # set path to use local tools...
 # NOTE this does not affect where make is seraching for commands...
@@ -524,7 +520,7 @@ web: $(DIST_DIR)/$(APP_NAME)-$(VERSION)-web.zip
 electron-dist: ## Make electron distributable
 electron-dist: VERSION := $(VERSION)-el
 electron-dist: DIST := $(DIST_DIR)/$(APP_NAME)-$(VERSION)-$(TARGET_OS)-$(ARCH).zip
-electron-dist: dev $$(DIST)
+electron-dist: $$(DIST)
 
 
 # add a time stamp to version...
@@ -532,7 +528,7 @@ electron-dist: dev $$(DIST)
 electron-test-dist: ## Make electron test distributable
 electron-test-dist: VERSION := $(VERSION)-$(DATE)-el
 electron-test-dist: DIST := $(DIST_DIR)/$(APP_NAME)-$(VERSION)-$(TARGET_OS)-$(ARCH).zip
-electron-test-dist: dev $$(DIST)
+electron-test-dist: $$(DIST)
 #electron-test-dist: $(DIST_DIR)/$(APP_NAME)-$$(VERSION)-$(TARGET_OS)-$(ARCH).zip
 
 
@@ -540,7 +536,7 @@ electron-test-dist: dev $$(DIST)
 .PHONY: electron-unpacked
 electron-unpacked: ## Make unpacked electron app
 electron-unpacked: VERSION := $(VERSION)-el
-electron-unpacked: dev $(BUILD_DIR)/$(APP_NAME)-$$(VERSION)-$(TARGET_OS)-$(ARCH)/
+electron-unpacked: $(BUILD_DIR)/$(APP_NAME)-$$(VERSION)-$(TARGET_OS)-$(ARCH)/
 
 
 #.PHONY: electron-inst
