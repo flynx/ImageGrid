@@ -36,7 +36,13 @@
 #
 #
 ## To print full list of user make targets use:
-## 	make help
+## 	$ make help
+##
+## Currently it is not possible to do a make dist on a clean directory,
+## this needs to be done in two stages:
+##	$ make dev
+##	...
+##	$ make dist
 ##
 ##
 ## Variables to control the build:
@@ -77,19 +83,19 @@
 ##
 ## Examples:
 ##	# check if all dependencies are available...
-##	make check
+##	$ make check
 ##
 ##	# make development environment...
-##	make dev
+##	$ make dev
 ##
 ## 	# full build...
-## 	make clean dist
+## 	$ make clean dist
 ##
 ##	# build in repack mode...
-##	BUILD_MODE=repack make dist
+##	$ BUILD_MODE=repack make dist
 ##
 ## 	# build for darwin... (EXPERIMENTAL)
-## 	TARGET_OS=darwin make clean dist
+## 	$ TARGET_OS=darwin make clean dist
 ##
 #
 #
@@ -128,6 +134,8 @@
 
 .SECONDEXPANSION:
 
+#.EXPORT_ALL_VARIABLES:
+
 # XXX for some reason in some contexts bash complains somewhere after 
 # 	this point but otherwise works fine:
 # 		- ssh localhost
@@ -158,8 +166,7 @@ DATE := $(strip $(shell date "+%Y%m%d%H%M"))
 COMMIT := $(strip $(shell git rev-parse HEAD))
 
 
-# do not install stuff unless the eser explicitly asks for it...
-NPX := npx --no
+NPX := npx --yes
 
 
 # less...
@@ -183,10 +190,7 @@ LESSC := $(NPX) lessc
 ELECTRON := $(NPX) electron
 ELECTRON_REBUILD := $(NPX) electron-rebuild
 ASAR := $(NPX) asar
-ELECTRON_VERSION_FALLBACK ?= v1.8.1
-ELECTRON_VERSION := $(strip $(shell \
-	$(ELECTRON) -v 2> /dev/null \
-		|| echo $(ELECTRON_VERSION_FALLBACK)))
+ELECTRON_VERSION := $(strip $(shell $(ELECTRON) -v 2> /dev/null))
 ELECTRON_DOWNOAD_URL ?= https://github.com/electron/electron/releases/download/$(ELECTRON_VERSION)
 ELECTRON_DIST ?= electron-$(ELECTRON_VERSION)-$(TARGET_OS)-$(ARCH).zip
 
@@ -520,7 +524,7 @@ web: $(DIST_DIR)/$(APP_NAME)-$(VERSION)-web.zip
 electron-dist: ## Make electron distributable
 electron-dist: VERSION := $(VERSION)-el
 electron-dist: DIST := $(DIST_DIR)/$(APP_NAME)-$(VERSION)-$(TARGET_OS)-$(ARCH).zip
-electron-dist: $$(DIST)
+electron-dist: dev $$(DIST)
 
 
 # add a time stamp to version...
@@ -528,7 +532,7 @@ electron-dist: $$(DIST)
 electron-test-dist: ## Make electron test distributable
 electron-test-dist: VERSION := $(VERSION)-$(DATE)-el
 electron-test-dist: DIST := $(DIST_DIR)/$(APP_NAME)-$(VERSION)-$(TARGET_OS)-$(ARCH).zip
-electron-test-dist: $$(DIST)
+electron-test-dist: dev $$(DIST)
 #electron-test-dist: $(DIST_DIR)/$(APP_NAME)-$$(VERSION)-$(TARGET_OS)-$(ARCH).zip
 
 
@@ -536,7 +540,7 @@ electron-test-dist: $$(DIST)
 .PHONY: electron-unpacked
 electron-unpacked: ## Make unpacked electron app
 electron-unpacked: VERSION := $(VERSION)-el
-electron-unpacked: $(BUILD_DIR)/$(APP_NAME)-$$(VERSION)-$(TARGET_OS)-$(ARCH)/
+electron-unpacked: dev $(BUILD_DIR)/$(APP_NAME)-$$(VERSION)-$(TARGET_OS)-$(ARCH)/
 
 
 #.PHONY: electron-inst
