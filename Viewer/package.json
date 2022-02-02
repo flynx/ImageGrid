@@ -24,7 +24,7 @@
     "colors": "^1.4.0",
     "electron": "*",
     "exif-reader": "^1.0.3",
-    "exifreader": "^2.6.0",
+    "exifreader": "*",
     "exiftool": "^0.0.3",
     "fs-extra": "^7.0.1",
     "fs-walk": "^0.0.1",
@@ -40,7 +40,7 @@
     "object-run": "^1.0.1",
     "requirejs": "*",
     "requirejs-plugins": "*",
-    "sharp": "^0.25.4",
+    "sharp": "*",
     "v8-compile-cache": "^2.2.0",
     "wildglob": "^0.1.1"
   },
