@@ -1,4 +1,11 @@
 
+Version numbers
+===============
+
+The app version number is automatically synced between package.json (primary)
+and version.js. All version changes should be made in the former.
+
+
 Debugging startup errors
 ========================
 

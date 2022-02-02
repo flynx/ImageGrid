@@ -36,15 +36,15 @@
 #
 #
 ## To print full list of user make targets use:
-## 	$ make help
+## 	$$ make help
 ##
-##
-## In some cases making things may fail on a clean directory, if this 
-## happens first build the environment and then try again:
-##	$ make dev
+## In some cases making things directly starting from a clean directory
+## may either fail or use global version of a utility instead of the 
+## version specified for the app, if this happens first build the 
+## environment and then try again:
+##	$$ make dev
 ##	...
-##	$ make dist
-##
+##	$$ make dist
 ##
 ## Variables to control the build:
 ## 	APP_NAME	- Application name
@@ -70,46 +70,40 @@
 ## NOTE: cross compilation is at this time not supported, if you try it 
 ## 	and it works then 1) you got very lucky and 2) tell me about it =)
 ## 	...at least the node native packages (sharp) will likely either 
-## 	fail or	will get compiled to the wrong arch and not be used and 
+## 	fail or	will get compiled to the wrong arch and not be used, and 
 ##	some non-native packages may misbehave (though I'm not aware of 
 ##	any at this point, so report them if you encounter one).
 ##	This is complicated by the fact that most of ImageGrid.Viewer is
 ##	platform-agnostic and will run on almost anything and will simply 
 ##	try to ignore broken packages and features depending on them, so
 ##	check the console log for any odd load reports...
-##	...but note that cross-building and packaging is possible either
-##	without the native modules or with them pre-built for the target
-##	platform.
+##	...but note that cross-building and packaging is only possible 
+##	either without the native modules or with them pre-built for the 
+##	target platform, at this point.
 ##
 ##
 ## Examples:
 ##	# check if all dependencies are available...
-##	$ make check
+##	$$ make check
 ##
 ##	# make development environment...
-##	$ make dev
+##	$$ make dev
 ##
 ## 	# full build...
-## 	$ make clean dist
+## 	$$ make clean dist
 ##
 ##	# build in repack mode...
-##	$ BUILD_MODE=repack make dist
+##	$$ BUILD_MODE=repack make dist
 ##
 ## 	# build for darwin... (EXPERIMENTAL)
-## 	$ TARGET_OS=darwin make clean dist
+## 	$$ TARGET_OS=darwin make clean dist
 ##
 #
 #
 #----------------------------------------------------------------------
 #
 # ToDo:
-# 	- sync version numbers between:
-# 		- git tags (currently not used)
-# 		- package.json
-# 			can't use only this because it can't be imported 
-# 			in browser directly...
-# 			...do we actually need the file:// version working?
-# 		- version.js
+# 	- sync version numbers between with git tags (when used)
 # 	- app icons...
 # 	- add a cli-only build target...
 # 	- installers:
@@ -182,7 +176,6 @@ LESSC := $(NPX) lessc
 # 		   procs to access their paths (as is done below)
 # 		2) set path and launch a child make -- not sure how to 
 # 		   do this...
-#
 ELECTRON := $(NPX) electron
 ELECTRON_REBUILD := $(NPX) electron-rebuild
 ASAR := $(NPX) asar
