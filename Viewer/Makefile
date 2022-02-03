@@ -29,7 +29,9 @@
 # 	- Windows
 # 		- MSVS -- to build native node modules (sharp) (optional?)
 #	- Linux
+#		- basic gcc toolchain (g++ for sharp)
 #	- macOS
+#		???
 #	- iOS
 # 	- Android
 # 	- web
