@@ -37,8 +37,14 @@
 # 	- web
 #
 #
-## To print full list of user make targets use:
-## 	$$ make help
+## To check for buld/development dependencies that make can't install itself:
+##	$$ make check
+##
+## To setup the development environment:
+##	$$ make dev
+##
+## To do a default build use:
+##	$$ make dist
 ##
 ## In some cases making things directly starting from a clean directory
 ## may either fail or use global version of a utility instead of the 
@@ -47,6 +53,10 @@
 ##	$$ make dev
 ##	...
 ##	$$ make dist
+##
+## To print full list of user make targets use:
+## 	$$ make help
+##
 ##
 ## Variables to control the build:
 ## 	APP_NAME	- Application name
