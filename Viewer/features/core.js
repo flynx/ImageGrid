@@ -1918,6 +1918,10 @@ module.Timers = ImageGridFeatures.Feature({
 // 		enough.
 //
 //
+// Protocol:
+// 	XXX
+//
+//
 
 // XXX would be great to add a mechanism define how to reverse actions...
 // 		...one way to do this at this point is to revert to last state
