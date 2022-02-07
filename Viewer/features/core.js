@@ -2003,11 +2003,11 @@ var JournalActions = actions.Actions({
 						action: action, 
 						args: [...arguments],
 						current: this.current, 
-						// set in the post handler...
+						// NOTE: we set this after the action is done...
 						target: undefined, 
 					}
 
-					// get action method handling aliases...
+					// helper: get action method handling aliases...
 					var _getActionMethod = function(action, attr){
 						var meth = that.getActionAttr(action, attr)
 						while(typeof(meth) == typeof('str')){
@@ -2018,12 +2018,13 @@ var JournalActions = actions.Actions({
 					var test = _getActionMethod(action, 'undoable')
 					if(test && !test.call(that, data)){
 						return }
-					// prep to get additional undo state...
-					var update = _getActionMethod(action, 'getUndoState')
 
 					// journal after the action is done...
 					return function(){ 
 						data.target = this.current
+
+						// prep to get additional undo state...
+						var update = _getActionMethod(action, 'getUndoState')
 						update 
 							&& update instanceof Function
 							&& update.call(that, data)
