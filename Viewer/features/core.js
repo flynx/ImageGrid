@@ -1934,8 +1934,8 @@ module.Timers = ImageGridFeatures.Feature({
 //
 
 // XXX need a mechanism to store the journal in sync (localStorage/fs)
-// 		and be able to execute the journal from last save position if 
-// 		recovering from close/crash...
+// 		and be able to execute the journal from a save position (which one?) 
+// 		if recovering from close/crash...
 // 		XXX should this be a separate feature???
 //
 // XXX would be great to add a mechanism define how to reverse actions...
@@ -2188,6 +2188,36 @@ module.Journal = ImageGridFeatures.Feature({
 		// log state, action and its args... 
 		['start',
 			function(){ this.updateJournalableActions() }],
+	],
+})
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+// XXX persistent journal...
+// 		- save journal to localStorage
+// 		- save journal to file (auto-save)
+// 			...fs???
+// 		- on load -> load journal after last save
+// XXX need to revise journaling actions before shipping this...
+// XXX EXPERIMENTAL...
+var PersistentJournalActions = actions.Actions({
+	// XXX
+})
+
+var PersistentJournal = 
+module.PersistentJournal = ImageGridFeatures.Feature({
+	title: 'Action persistent Journal',
+
+	tag: 'persistent-journal',
+	depends: [
+		'journal',
+	],
+
+	actions: PersistentJournalActions,
+
+	handlers: [
+		// XXX
 	],
 })
 

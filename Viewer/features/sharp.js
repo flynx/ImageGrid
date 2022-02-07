@@ -871,6 +871,7 @@ var SharpActions = actions.Actions({
 								})
 
 						// read the metadata...
+						// XXX this can err on some images, need to handle this...
 						var exif = metadata.exif 
 							&& exifReader(metadata.exif) 
 						exif
