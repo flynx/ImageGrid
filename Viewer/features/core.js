@@ -1933,56 +1933,36 @@ module.Timers = ImageGridFeatures.Feature({
 //
 //
 
+// XXX need a mechanism to store the journal in sync (localStorage/fs)
+// 		and be able to execute the journal from last save position if 
+// 		recovering from close/crash...
+// 		XXX should this be a separate feature???
+//
 // XXX would be great to add a mechanism define how to reverse actions...
 // 		...one way to do this at this point is to revert to last state
 // 		and re-run the journal until the desired event...
 // XXX need to define a clear journaling strategy in the lines of:
 // 		- save state clears journal and adds a state load action
 // 		- .load(..) clears journal
-// XXX need a way to store additional info in the journal...
-// 		can either be done as: 
-// 			- a hook (action handler and/or attr)
-// 			- inline code inside the action...
-//		can't say I like #2 as it will mess the code up...
 // XXX needs careful testing...
 var JournalActions = actions.Actions({
 
 	clone: [function(full){
-			return function(res){
-				res.rjournal = null
-				res.journal = null
-				if(full && this.hasOwnProperty('journal') && this.journal){
-					res.journal = JSON.parse(JSON.stringify(this.journal))
-				}
-			}
-		}],
+		return function(res){
+			res.rjournal = null
+			res.journal = null
+			if(full && this.hasOwnProperty('journal') && this.journal){
+				res.journal = JSON.parse(JSON.stringify(this.journal)) } } }],
 
-	// Format:
-	// 	[
-	// 		{
-	// 			type: 'basic' | ...,
-	//
-	// 			action: <action-name>,
-	// 			args: [ ...	],
-	//
-	//			// the current image before the action...
-	// 			current: undefined | <gid>
-	//
-	//			// the target (current) image after action...
-	// 			target: undefined | <gid>
-	//
-	// 			// additional data, can be set via: 
-	// 			//		<action>.getUndoState(<data>)...
-	// 			...
-	// 		},
-	// 		...
-	// 	]
-	//
+	// for format docs see: .updateJournalableActions(..)
 	journal: null,
 	rjournal: null,
 
 	journalable: null,
 
+	// XXX docs...
+	// XXX <action>.getUndoState(..) should be called for every action 
+	// 		in chain...
 	// XXX should aliases support explicit undo??? (test)
 	updateJournalableActions: ['System/Update list of journalable actions',
 		doc`
@@ -1990,8 +1970,34 @@ var JournalActions = actions.Actions({
 		This will setup the action journal handler as a .pre handler 
 		(tagged: 'journal-handler'), calling this again will reset the existing 
 		handlers and add new ones.
-		
+
 		NOTE: action aliases can not handle undo.
+
+		.journal / .rjournal format:
+			[
+				// journaled action..
+				{
+					type: 'basic' | ...,
+					date: <timestamp>,
+		
+					action: <action-name>,
+					args: [ ...	],
+		
+					// the current image before the action...
+					current: undefined | <gid>
+		
+					// the target (current) image after action...
+					target: undefined | <gid>
+		
+					// additional data, can be set via: 
+					//		<action>.getUndoState(<data>)...
+					...
+				},
+
+				...
+			]
+
+		NOTE: newer journal items are pushed to the .journal tail...
 		`,
 		function(){
 			var that = this
@@ -2000,8 +2006,11 @@ var JournalActions = actions.Actions({
 				return function(){
 					var data = {
 						type: 'basic',
+						date: Date.now(),
+
 						action: action, 
 						args: [...arguments],
+
 						current: this.current, 
 						// NOTE: we set this after the action is done...
 						target: undefined, 
@@ -2023,6 +2032,7 @@ var JournalActions = actions.Actions({
 					return function(){ 
 						data.target = this.current
 						// prep to get additional undo state...
+						// XXX this should be called for all actions in chain...
 						var update = _getActionMethod(action, 'getUndoState')
 						update 
 							&& update instanceof Function
