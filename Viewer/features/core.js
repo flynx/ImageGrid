@@ -2084,7 +2084,7 @@ var JournalActions = actions.Actions({
 	// XXX should we control what gets pushed to the journal???
 	// XXX should we run undo of every action that supports it in the chain???
 	// 		...i.e. multiple extending actions can support undo
-	// 		XXX will also need to handle aliases in chain...
+	// 		XXX will also need to handle other methods + aliases in chain...
 	undo: ['Edit/Undo',
 		doc`Undo last action from .journal that can be undone
 
