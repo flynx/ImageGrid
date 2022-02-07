@@ -1889,7 +1889,7 @@ module.Timers = ImageGridFeatures.Feature({
 // This feature logs actions that either have the journal attribute set 
 // to true or have an undo method/alias...
 // 
-//	Example:
+// Example:
 // 		someAction: ['Path/to/Some action',
 // 			// just journal the action, but it can't be undone...
 // 			{journal: true},
@@ -1908,7 +1908,21 @@ module.Timers = ImageGridFeatures.Feature({
 //
 // 		someOtherAction: ['Path/to/Some other action',
 // 			// use .otherAction(..) to undo...
-// 			{undo: 'otherAction'},
+// 			{undo: 'otherAction'
+//
+// 				// test if action can be undone (returns bool)...
+// 				// NOTE: this is called before the <action>...
+// 				// NOTE: this can be an alias...
+// 				undoable: function(data){
+// 					...
+// 				},
+//
+// 				// store aditional undo state in the data, to be used by <action>.undo(..)...
+// 				// NOTE: this is called after the <action>...
+// 				// NOTE: this can be an alias...
+// 				getUndoState: function(data){
+// 					...
+// 				}},
 // 			function(){ 
 // 				... 
 // 			}],
@@ -1916,10 +1930,6 @@ module.Timers = ImageGridFeatures.Feature({
 // NOTE: .undo has priority over .journal, so there is no point of 
 // 		defining both .journal and .undo action attributes, one is 
 // 		enough.
-//
-//
-// Protocol:
-// 	XXX
 //
 //
 
@@ -1947,19 +1957,39 @@ var JournalActions = actions.Actions({
 			}
 		}],
 
+	// Format:
+	// 	[
+	// 		{
+	// 			type: 'basic' | ...,
+	//
+	// 			action: <action-name>,
+	// 			args: [ ...	],
+	//
+				// the current image before the action...
+	// 			current: undefined | <gid>
+	//
+				// the target (current) image after action...
+	// 			target: undefined | <gid>
+	//
+	// 			// additional data, can be set via: 
+	// 			//		<action>.getUndoState(<data>)...
+	// 			...
+	// 		},
+	// 		...
+	// 	]
+	//
 	journal: null,
 	rjournal: null,
 
 	journalable: null,
 
-	// XXX doc supported attrs:
-	// 		undo
-	// 		undoable
-	//		getUndoState
-	// XXX should the action have control over what gets journaled and how???
-	// XXX should aliases support explicit undo???
+	// XXX should aliases support explicit undo??? (test)
 	updateJournalableActions: ['System/Update list of journalable actions',
 		doc`
+
+		This will setup the action journal handler as a .pre handler 
+		(tagged: 'journal-handler'), calling this again will reset the existing 
+		handlers and add new ones.
 		
 		NOTE: action aliases can not handle undo.
 		`,
@@ -1968,55 +1998,49 @@ var JournalActions = actions.Actions({
 
 			var handler = function(action){
 				return function(){
-					var cur = this.current
-					var args = [...arguments]
-
 					var data = {
 						type: 'basic',
-
 						action: action, 
-						args: args,
-						// the current image before the action...
-						current: cur, 
-						// the target (current) image after action...
-						target: this.current, 
+						args: [...arguments],
+						current: this.current, 
+						// set in the post handler...
+						target: undefined, 
 					}
+
+					// get action method handling aliases...
+					var _getActionMethod = function(action, attr){
+						var meth = that.getActionAttr(action, attr)
+						while(typeof(meth) == typeof('str')){
+							meth = that.getActionAttr(meth, attr) }
+						return meth }
 
 					// test if we need to journal this action signature...
-					var test = that.getActionAttr(action, 'undoable')
+					var test = _getActionMethod(action, 'undoable')
 					if(test && !test.call(that, data)){
-						return
-					}
-
-					// get additional undo state...
-					var update = that.getActionAttr(action, 'getUndoState')
-					while(typeof(update) == typeof('str')){
-						update = that.getActionAttr(update, 'getUndoState')
-					}
-					update 
-						&& update instanceof Function
-						&& update.call(that, data)
+						return }
+					// prep to get additional undo state...
+					var update = _getActionMethod(action, 'getUndoState')
 
 					// journal after the action is done...
-					return function(){ this.journalPush(data) }
-				}
-			}
+					return function(){ 
+						data.target = this.current
+						update 
+							&& update instanceof Function
+							&& update.call(that, data)
+						this.journalPush(data) } } }
 
 			this.journalable = this.actions
 				.filter(function(action){
+					// remove all existing journal handlers before we setup again...
+					that.off(action+'.pre', 'journal-handler')
 					// skip aliases...
 					return !(that[action] instanceof actions.Alias)
 						&& (!!that.getActionAttr(action, 'undo') 
-							|| !!that.getActionAttr(action, 'journal'))
-				})
-				// reset the handler
+							|| !!that.getActionAttr(action, 'journal')) })
+				// set the handler
 				.map(function(action){
-					that
-						.off(action+'.pre', 'journal-handler')
-						.on(action+'.pre', 'journal-handler', handler(action))
-					return action
-				})
-		}],
+					that.on(action+'.pre', 'journal-handler', handler(action))
+					return action }) }],
 
 	journalPush: ['- System/Journal/Add an item to journal',
 		function(data){
@@ -2027,8 +2051,7 @@ var JournalActions = actions.Actions({
 			this.journal = (this.hasOwnProperty('journal') || this.journal) ? 
 				this.journal || []
 				: []
-			this.journal.push(data)
-		}],
+			this.journal.push(data) }],
 	clearJournal: ['System/Journal/Clear the action journal',
 		function(){
 			// NOTE: overwriting here is better as it will keep
@@ -2041,8 +2064,7 @@ var JournalActions = actions.Actions({
 			this.journal
 				&& (this.journal = null)
 			this.rjournal
-				&& (this.rjournal = null)
-		}],
+				&& (this.rjournal = null) }],
 	runJournal: ['- System/Journal/Run journal',
 		//{journal: true},
 		function(journal){
@@ -2052,9 +2074,7 @@ var JournalActions = actions.Actions({
 				that
 					.focusImage(e.current)
 					// run action...
-					[e.action].apply(that, e.args)
-			})
-		}],
+					[e.action].apply(that, e.args) }) }],
 
 	// XXX needs very careful revision...
 	// 		- should this be thread safe??? (likely not)
@@ -2121,10 +2141,7 @@ var JournalActions = actions.Actions({
 					this.journal = journal
 					this.rjournal = rjournal
 
-					break
-				}
-			}
-		}],
+					break } } }],
 	redo: ['Edit/Redo',
 		doc`Redo an action from .rjournal
 
@@ -2136,11 +2153,8 @@ var JournalActions = actions.Actions({
 			return (this.rjournal && this.rjournal.length > 0) || 'disabled' }},
 		function(){
 			if(!this.rjournal || this.rjournal.length == 0){
-				return
-			}
-
-			this.runJournal([this.rjournal.pop()])
-		}],
+				return }
+			this.runJournal([this.rjournal.pop()]) }],
 })
 
 
