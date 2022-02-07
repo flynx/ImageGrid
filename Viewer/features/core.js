@@ -1965,10 +1965,10 @@ var JournalActions = actions.Actions({
 	// 			action: <action-name>,
 	// 			args: [ ...	],
 	//
-				// the current image before the action...
+	//			// the current image before the action...
 	// 			current: undefined | <gid>
 	//
-				// the target (current) image after action...
+	//			// the target (current) image after action...
 	// 			target: undefined | <gid>
 	//
 	// 			// additional data, can be set via: 
@@ -3380,4 +3380,4 @@ module.SelfTest = ImageGridFeatures.Feature({
 
 
 /**********************************************************************
-* vim:set ts=4 sw=4 :                               */ return module })
+* vim:set ts=4 sw=4 nowrap :                        */ return module })
