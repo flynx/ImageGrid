@@ -2022,7 +2022,6 @@ var JournalActions = actions.Actions({
 					// journal after the action is done...
 					return function(){ 
 						data.target = this.current
-
 						// prep to get additional undo state...
 						var update = _getActionMethod(action, 'getUndoState')
 						update 
