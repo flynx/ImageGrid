@@ -2203,14 +2203,14 @@ module.Journal = ImageGridFeatures.Feature({
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
 // XXX persistent journal...
-// 		- save journal to localStorage
-// 		- save journal to file (auto-save)
+// 		- on journal -- save journal to localStorage
+// 		- on clear/load/timer -- save journal to file (auto-save)
 // 			...fs???
 // 		- on load -> load journal after last save
 // XXX need to revise journaling actions before shipping this...
 // XXX EXPERIMENTAL...
 var PersistentJournalActions = actions.Actions({
-	// XXX
+	// XXX undoUnsaved(..) / reloadSaved(..)
 })
 
 var PersistentJournal = 
