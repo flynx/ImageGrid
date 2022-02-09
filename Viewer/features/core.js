@@ -2086,6 +2086,9 @@ var JournalActions = actions.Actions({
 					// run action...
 					[e.action].apply(that, e.args) }) }],
 
+	// XXX would be a good idea to add arguments this this:
+	// 		<count>		- number of actions to undo
+	// 		'unsaved'	- all actions till last save marker
 	// XXX needs very careful revision...
 	// 		- should this be thread safe??? (likely not)
 	// 		- should the undo action have side-effects on the 
