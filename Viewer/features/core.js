@@ -2087,7 +2087,7 @@ var JournalActions = actions.Actions({
 					[e.action].apply(that, e.args) }) }],
 
 	// XXX would be a good idea to add arguments this this:
-	// 		<count>		- number of actions to undo
+	// 		<count>		- number of actions to undo (DONE)
 	// 		'unsaved'	- all actions till last save marker
 	// XXX needs very careful revision...
 	// 		- should this be thread safe??? (likely not)
@@ -2098,6 +2098,7 @@ var JournalActions = actions.Actions({
 	// XXX should we run undo of every action that supports it in the chain???
 	// 		...i.e. multiple extending actions can support undo
 	// 		XXX will also need to handle other methods + aliases in chain...
+	// XXX EXPERIMENTAL...
 	undo: ['Edit/Undo',
 		doc`Undo last action from .journal that can be undone
 
@@ -2112,49 +2113,53 @@ var JournalActions = actions.Actions({
 		`,
 		{mode: function(){ 
 			return (this.journal && this.journal.length > 0) || 'disabled' }},
-		function(){
+		function(count=1){
 			var journal = this.journal.slice() || []
+			var rjournal = 
+				this.rjournal = 
+					(this.hasOwnProperty('rjournal') || this.rjournal) ? 
+						this.rjournal || [] 
+						: []
 
-			var rjournal = this.rjournal = 
-				(this.hasOwnProperty('rjournal') || this.rjournal) ? 
-					this.rjournal || [] 
-					: []
+			// XXX add test for save point...
+			// XXX this counts undoable actions only -- is this correct...
+			while(count-- > 0 
+					&& journal.length > 1){
+				for(var i = journal.length-1; i >= 0; i--){
+					var a = journal[i]
 
-			for(var i = journal.length-1; i >= 0; i--){
-				var a = journal[i]
+					// see if the action has an explicit undo attr...
+					var undo = this.getActionAttr(a.action, 'undo')
 
-				// see if the action has an explicit undo attr...
-				var undo = this.getActionAttr(a.action, 'undo')
+					// general undo...
+					if(undo){
+						// restore focus to where it was when the action 
+						// was called...
+						this.focusImage(a.current)
 
-				// general undo...
-				if(undo){
-					// restore focus to where it was when the action 
-					// was called...
-					this.focusImage(a.current)
+						// call the undo method/action...
+						// NOTE: this is likely to have side-effect on the 
+						// 		journal and maybe even rjournal...
+						// NOTE: these side-effects are cleaned out later.
+						var undo = undo instanceof Function ?
+								// pass the action name...
+								undo.call(this, a)
+							: typeof(undo) == typeof('str') ? 
+								// XXX pass journal structure as-is... (???)
+								this[undo].apply(this, a.args)
+							: null
 
-					// call the undo method/action...
-					// NOTE: this is likely to have side-effect on the 
-					// 		journal and maybe even rjournal...
-					// NOTE: these side-effects are cleaned out later.
-					var undo = undo instanceof Function ?
-							// pass the action name...
-							undo.call(this, a)
-						: typeof(undo) == typeof('str') ? 
-							// XXX pass journal structure as-is... (???)
-							this[undo].apply(this, a.args)
-						: null
+						// push the undone command to the reverse journal...
+						rjournal.push(journal.splice(i, 1)[0])
 
-					// push the undone command to the reverse journal...
-					rjournal.push(journal.splice(i, 1)[0])
+						// restore journal state...
+						// NOTE: calling the undo action would have cleared
+						// 		the rjournal and added stuff to the journal
+						// 		so we will need to restore things...
+						this.journal = journal
+						this.rjournal = rjournal
 
-					// restore journal state...
-					// NOTE: calling the undo action would have cleared
-					// 		the rjournal and added stuff to the journal
-					// 		so we will need to restore things...
-					this.journal = journal
-					this.rjournal = rjournal
-
-					break } } }],
+						break } } } }],
 	redo: ['Edit/Redo',
 		doc`Redo an action from .rjournal
 
