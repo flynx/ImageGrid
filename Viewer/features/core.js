@@ -2100,9 +2100,10 @@ var JournalActions = actions.Actions({
 	// 		XXX will also need to handle other methods + aliases in chain...
 	// XXX EXPERIMENTAL...
 	undo: ['Edit/Undo',
-		doc`Undo last action from .journal that can be undone
+		doc`Undo last action(s) from .journal that can be undone
 
 			.undo()
+			.undo(<count>)
 
 		This will shift the action from .journal to .rjournal preparing 
 		it for .redo()
@@ -2121,7 +2122,7 @@ var JournalActions = actions.Actions({
 						this.rjournal || [] 
 						: []
 
-			// XXX add test for save point...
+			// XXX add test for save point -- 'unsaved' keyword...
 			// XXX this counts undoable actions only -- is this correct...
 			while(count-- > 0 
 					&& journal.length > 1){
