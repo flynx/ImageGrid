@@ -2094,7 +2094,6 @@ var JournalActions = actions.Actions({
 	// 		- should the undo action have side-effects on the 
 	// 			journal/rjournal or should we clean them out??? 
 	// 			(currently cleaned)
-	// XXX should we control what gets pushed to the journal???
 	// XXX should we run undo of every action that supports it in the chain???
 	// 		...i.e. multiple extending actions can support undo
 	// 		XXX will also need to handle other methods + aliases in chain...
@@ -2116,7 +2115,7 @@ var JournalActions = actions.Actions({
 			return (this.journal && this.journal.length > 0) || 'disabled' }},
 		function(count=1){
 			var journal = this.journal.slice() || []
-			var rjournal = 
+			var rjournal =
 				this.rjournal = 
 					(this.hasOwnProperty('rjournal') || this.rjournal) ? 
 						this.rjournal || [] 
