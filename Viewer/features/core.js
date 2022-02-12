@@ -2089,6 +2089,9 @@ var JournalActions = actions.Actions({
 	// XXX would be a good idea to add arguments this this:
 	// 		<count>		- number of actions to undo (DONE)
 	// 		'unsaved'	- all actions till last save marker
+	// XXX need to add generic handlers for:
+	// 		- save actions... (XXX)
+	// 		- load/unload...
 	// XXX needs very careful revision...
 	// 		- should this be thread safe??? (likely not)
 	// 		- should the undo action have side-effects on the 
