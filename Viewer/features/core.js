@@ -916,6 +916,22 @@ var LifeCycleActions = actions.Actions({
 			return (this.__ready_announce_requested = (this.__ready_announce_requested || 0) + 1)
 		}],
 
+	// XXX revise args...
+	// XXX should this be here???
+	// XXX EXPERIMENTAL...
+	save: ['- System/',
+		doc``,
+		function(comment){
+			// XXX should this trigger the saved event pre/post outer action...
+			this.saved(...arguments) }],
+	saved: ['- System/',
+		doc``,
+		Event(function(comment){
+			// Base save event...
+			//
+			// Not intended for direct use.
+		})],
+
 	stop: ['- System/', 
 		doc`Stop core action
 
@@ -931,20 +947,19 @@ var LifeCycleActions = actions.Actions({
 		`,
 		function(){
 			// browser...
-			if(this.__stop_handler && this.runtime.browser){
-				$(window).off('beforeunload', this.__stop_handler)
-			}
+			this.__stop_handler 
+				&& this.runtime.browser
+				&& $(window).off('beforeunload', this.__stop_handler)
 
 			// nw...
 			if(this.__nw_stop_handler && this.runtime.nw){
 				nw.Window.get().removeAllListeners('close')
-				delete this.__nw_stop_handler
-			}
+				delete this.__nw_stop_handler }
 
 			// node...
-			if(this.__stop_handler && this.runtime.node){
-				process.removeAllListeners('exit')
-			}
+			this.__stop_handler 
+				&& this.runtime.node
+				&& process.removeAllListeners('exit')
 
 			delete this.__ready
 			delete this.__stop_handler
@@ -953,8 +968,7 @@ var LifeCycleActions = actions.Actions({
 				&& this.logger.push('System').emit('stop')
 
 			// trigger the stopped event...
-			this.stopped()
-		}],
+			this.stopped() }],
 	stopped: ['- System/System stopped event',
 		doc`
 		`,
