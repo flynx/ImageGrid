@@ -107,9 +107,7 @@ module.ImageGridMetaActions = {
 				&& (args[0] == '?' || args[0] == '??')){
 			return {
 				result: handlers.slice(-1)[0].pre.apply(this, args),
-			}
-		}
-	}),
+			} } }),
 } 
 
 var ImageGrid = 
@@ -196,7 +194,6 @@ if(typeof(window) != 'undefined'){
 var makeConfigToggler = 
 module.makeConfigToggler = 
 function(attr, states, a, b){
-
 	states = states || [false, true]
 	var pre = a
 	// XXX is this a good default???
@@ -223,11 +220,8 @@ function(attr, states, a, b){
 
 			} else {
 				cfg[a[a.length-1]] = action
-				this.config[a[0]] = this.config[a[0]]
-			}
-		},
-		states, pre, post)
-}
+				this.config[a[0]] = this.config[a[0]] } },
+		states, pre, post) }
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -371,8 +365,7 @@ var IntrospectionActions = actions.Actions({
 				// check for loops...
 				if(m && visited[m] != null){
 					m = null
-					break
-				}
+					break }
 				visited.push(m)
 			} while(typeof(m) == typeof('str'))
 
@@ -761,8 +754,7 @@ var LifeCycleActions = actions.Actions({
 
 						DEBUG || nw.App.quit()
 						//this.close(true)
-					}
-				}
+					} }
 				nw.Window.get().on('close', this.__nw_stop_handler)
 
 
@@ -798,30 +790,29 @@ var LifeCycleActions = actions.Actions({
 			this.config['declare-ready-timeout'] > 0
 				&& !this.__ready_announce_timeout
 				&& (this.__ready_announce_timeout = 
-					setTimeout(function(){
-						// cleanup...
-						delete this.__ready_announce_timeout
-						if((this.__ready_announce_requests || new Set()).size == 0){
-							delete this.__ready_announce_requests
-						}
-						// force start...
-						if(!this.isReady()){
-							// report...
-							this.logger 
-								&& this.logger.push('start')
-									.emit('forcing ready.')
-									.emit('stalled:', 
-										this.__ready_announce_requested, 
-										...(this.__ready_announce_requests || []))
-
-							// force ready...
-							this.__ready = !!this.ready() 
-
+					setTimeout(
+						function(){
 							// cleanup...
-							delete this.__ready_announce_requested
-							delete this.__ready_announce_requests
-						}
-					}.bind(this), this.config['declare-ready-timeout']))
+							delete this.__ready_announce_timeout
+							if((this.__ready_announce_requests || new Set()).size == 0){
+								delete this.__ready_announce_requests }
+							// force start...
+							if(!this.isReady()){
+								// report...
+								this.logger 
+									&& this.logger.push('start')
+										.emit('forcing ready.')
+										.emit('stalled:', 
+											this.__ready_announce_requested, 
+											...(this.__ready_announce_requests || []))
+
+								// force ready...
+								this.__ready = !!this.ready() 
+
+								// cleanup...
+								delete this.__ready_announce_requested
+								delete this.__ready_announce_requests } }.bind(this), 
+						this.config['declare-ready-timeout']))
 
 			// trigger the started event...
 			this.started() }],
@@ -913,8 +904,8 @@ var LifeCycleActions = actions.Actions({
 					this.__ready_announce_requests || new Set())
 				&& this.__ready_announce_requests.add(message)
 
-			return (this.__ready_announce_requested = (this.__ready_announce_requested || 0) + 1)
-		}],
+			return (this.__ready_announce_requested = 
+				(this.__ready_announce_requested || 0) + 1) }],
 
 	// XXX revise args...
 	// XXX should this be here???
@@ -1585,16 +1576,16 @@ var TimersActions = actions.Actions({
 					// run...
 					func instanceof Function ? 
 						func.call(this) 
-						: this.call(func)
-				}.bind(this),
-				ms || 0)
-		}],
+						: this.call(func) }.bind(this),
+				ms || 0) }],
 	clearTimeout: ['- System/',
 		function(id){
-			var timeouts = this.__timeouts = this.__timeouts || {}
+			var timeouts = 
+				this.__timeouts = 
+					this.__timeouts 
+					|| {}
 			clearTimeout(timeouts[id])
-			delete timeouts[id]	
-		}],
+			delete timeouts[id]	}],
 
 	setInterval: ['- System/',
 		function(id, func, ms){
@@ -1606,14 +1597,12 @@ var TimersActions = actions.Actions({
 			intervals[id] = setInterval(
 				(func instanceof Function ? func : function(){ this.call(func) })
 					.bind(this),
-				ms || 0)
-		}],
+				ms || 0) }],
 	clearInterval: ['- System/',
 		function(id){
 			var intervals = this.__intervals = this.__intervals || {}
 			clearInterval(intervals[id])
-			delete intervals[id]	
-		}],
+			delete intervals[id] }],
 
 	setPersistentInterval: ['- System/',
 		doc`
@@ -1639,12 +1628,10 @@ var TimersActions = actions.Actions({
 			// checks...
 			if(!ms || !action){
 				console.error('Persistent interval: both action and ms must be set.')
-				return
-			}
+				return }
 			if(typeof(action) != typeof('str')){
 				console.error('Persistent interval: handler must be a string.')
-				return
-			}
+				return }
 
 			id in  intervals
 				&& clearInterval(intervals[id])
@@ -1656,9 +1643,9 @@ var TimersActions = actions.Actions({
 			}
 
 			intervals[id] = setInterval(
-				function(){ this.call(action) }.bind(this), 
-				ms || 0)
-		}],
+				function(){ 
+					this.call(action) }.bind(this), 
+				ms || 0) }],
 	clearPersistentInterval: ['- System/',
 		function(id, stop_only){
 			var intervals = 
@@ -1667,9 +1654,7 @@ var TimersActions = actions.Actions({
 			clearInterval(intervals[id])
 			delete intervals[id]	
 			if(!stop_only){
-				delete this.config['persistent-intervals'][id]
-			}
-		}],
+				delete this.config['persistent-intervals'][id] } }],
 	// XXX revise name (???)
 	// XXX do we need actions other than start/stop ???
 	persistentIntervals: ['- System/',
@@ -1696,8 +1681,7 @@ var TimersActions = actions.Actions({
 				ids.forEach(function(id){
 					this.clearPersistentInterval(id, true) }.bind(this))
 			// unknown action...
-			: console.error('persistentIntervals: unknown action:', action)
-		}],
+			: console.error('persistentIntervals: unknown action:', action) }],
 
 	// Events...
 	//
@@ -1815,13 +1799,12 @@ var TimersActions = actions.Actions({
 				var tag = (args[0] instanceof Function 
 						|| this[args[0]] instanceof Function) ? 
 					args[0] 
-					: args.shift()
-			}
+					: args.shift() }
 
 			// sanity check: when debouncing a function a tag is required...
 			if(tag instanceof Function){
-				throw new TypeError('debounce: when passing a function a tag is required.')
-			}
+				throw new TypeError(
+					'debounce: when passing a function a tag is required.') }
 
 			var action = args.shift()
 			var attr = '__debounce_'+ tag
@@ -1841,15 +1824,12 @@ var TimersActions = actions.Actions({
 							// on the keyboard and triggering key repeat...
 							&& retriggered < (options.timeout || 200) / 200){
 						var func = this[attr] = this[attr] || debounce(options, action)
-						func.call(this, ...args)
-					}
-				},
+						func.call(this, ...args) } },
 			})
 
 			var func = this[attr] = this[attr] || debounce(options, action)
 
-			return func.call(this, ...args)
-		}],
+			return func.call(this, ...args) }],
 })
 
 var Timers = 
@@ -1876,8 +1856,7 @@ module.Timers = ImageGridFeatures.Feature({
 				Object.keys(this.__timeouts || {})
 					.forEach(function(id){ this.clearTimeout(id) }.bind(this))
 
-				this.persistentIntervals('stop') 
-			}],
+				this.persistentIntervals('stop') }],
 
 		// fixed timer actions...
 		// XXX not sure about these...
@@ -1890,8 +1869,7 @@ module.Timers = ImageGridFeatures.Feature({
 					.setInterval('every5Minutes', 'every5Minutes', m*5)
 					.setInterval('every10Minutes', 'every10Minutes', m*10)
 					.setInterval('every30Minutes', 'every30Minutes', m*30)
-					.setInterval('everyHour', 'everyHour', m*60)
-			}],
+					.setInterval('everyHour', 'everyHour', m*60) }],
 	],
 })
 
@@ -2447,9 +2425,7 @@ module.makeWorkspaceConfigWriter = function(keys, callback){
 			workspace[key] = JSON.parse(JSON.stringify(that.config[key]))
 		})
 
-		callback && callback.call(this, workspace)
-	}
-}
+		callback && callback.call(this, workspace) } }
 
 // XXX should this delete a prop if it's not in the loading workspace???
 // XXX only replace a prop if it has changed???
@@ -2470,14 +2446,10 @@ module.makeWorkspaceConfigLoader = function(keys, callback){
 			// no key set...
 			// XXX is this the right way to go???
 			} else {
-				delete that.config[key]
-			}
-		})
+				delete that.config[key] } })
 
 		callback 
-			&& callback.call(this, workspace)
-	}
-}
+			&& callback.call(this, workspace) } }
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -2514,17 +2486,15 @@ var WorkspaceActions = actions.Actions({
 	saveWorkspace: ['Workspace/Save Workspace',
 		function(name){
 			if(!this.config.hasOwnProperty('workspaces')){
-				this.config['workspaces'] = JSON.parse(JSON.stringify(this.config['workspaces']))
-			}
+				this.config['workspaces'] = 
+					JSON.parse(JSON.stringify(this.config['workspaces'])) }
 
 			var res = {}
 
 			if(name !== null){
-				this.config['workspaces'][name || this.config.workspace] = res
-			}
+				this.config['workspaces'][name || this.config.workspace] = res }
 
-			return res
-		}],
+			return res }],
 	// NOTE: merging the state data is the responsibility of the feature
 	// 		...this is done so as not to restrict the feature to one 
 	// 		specific way to do stuff...
@@ -2540,9 +2510,7 @@ var WorkspaceActions = actions.Actions({
 
 			// we got the workspace object...
 			} else {
-				return name
-			}
-		}],
+				return name } }],
 
 	// NOTE: this will not save the current workspace...
 	toggleWorkspace: ['Workspace/workspace',
@@ -2559,23 +2527,19 @@ var WorkspaceActions = actions.Actions({
 			this.saveWorkspace()
 
 			if(stack.slice(-1)[0] == name){
-				return
-			}
+				return }
 
 			this.workspace != name && this.loadWorkspace(name)
-			stack.push(name)
-		}],
+			stack.push(name) }],
 	popWorkspace: ['- Workspace/',
 		function(){
 			var stack = this.__workspace_stack
 
 			if(!stack || stack.length == 0){
-				return
-			}
+				return }
 
 			this.saveWorkspace()
-			this.loadWorkspace(stack.pop())
-		}],
+			this.loadWorkspace(stack.pop()) }],
 })
 
 
