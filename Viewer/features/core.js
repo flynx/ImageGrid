@@ -923,7 +923,7 @@ var LifeCycleActions = actions.Actions({
 		doc``,
 		function(comment){
 			// XXX should this trigger the saved event pre/post outer action...
-			this.saved(...arguments) }],
+		}],
 	saved: ['- System/',
 		doc``,
 		Event(function(comment){
