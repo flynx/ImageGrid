@@ -2573,6 +2573,8 @@ module.FileSystemWriter = core.ImageGridFeatures.Feature({
 					//this.markChanged('none')
 					var that = this
 					res.then(function(){
+						// XXX should be done for all things that save...
+						that.saved()
 						that.markChanged('none') }) } }],
 	],
 })
