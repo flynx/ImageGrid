@@ -2078,11 +2078,11 @@ var JournalActions = actions.Actions({
 					// run action...
 					[e.action].apply(that, e.args) }) }],
 
-	// XXX would be a good idea to add arguments this this:
-	// 		<count>		- number of actions to undo (DONE)
-	// 		'unsaved'	- all actions till last save marker
+	// XXX might be a good idea to add support for:
+	// 		- time-periods
+	// 		- specific times
 	// XXX need to add generic handlers for:
-	// 		- save actions... (XXX)
+	// 		- save actions... DONE
 	// 		- load/unload...
 	// XXX needs very careful revision...
 	// 		- should this be thread safe??? (likely not)
@@ -2092,6 +2092,7 @@ var JournalActions = actions.Actions({
 	// XXX should we run undo of every action that supports it in the chain???
 	// 		...i.e. multiple extending actions can support undo
 	// 		XXX will also need to handle other methods + aliases in chain...
+	// XXX in mode method count the undoable actions...
 	// XXX EXPERIMENTAL...
 	undo: ['Edit/Undo',
 		doc`Undo last action(s) from .journal that can be undone
@@ -2101,6 +2102,8 @@ var JournalActions = actions.Actions({
 			.undo(<count>)
 
 			.undo('unsaved')
+
+			.undo('all')
 
 
 		This will shift the action from .journal to .rjournal preparing 
@@ -2117,15 +2120,22 @@ var JournalActions = actions.Actions({
 					(this.hasOwnProperty('rjournal') || this.rjournal) ? 
 						this.rjournal || [] 
 						: []
+			count = count == 'all' ?
+				Infinity
+				: count
 
 			for(var i = journal.length-1; i >= 0; i--){
 				var a = journal[i]
 
 				// stop at save point...
-				if(count == 'unsaved' 
-						&& (a.type == 'save' 
-							|| a == 'SAVED')){
+				if(count == 'unsaved'
+						&& (a == 'SAVED' 
+							|| a.type == 'save')){
 					break }
+				// stop at load...
+				// XXX not sure if this is correct....
+				if(a.action == 'load'){
+					break}
 
 				// see if the action has an explicit undo attr...
 				var undo = this.getActionAttr(a.action, 'undo')
@@ -2153,7 +2163,7 @@ var JournalActions = actions.Actions({
 			
 				// stop when done...
 				if(undo 
-						&& count != 'unsaved' 
+						&& count != 'unsaved'
 						&& --count <= 0){
 					break } } 
 
@@ -2163,19 +2173,32 @@ var JournalActions = actions.Actions({
 			// 		so we will need to restore things...
 			this.journal = journal
 			this.rjournal = rjournal }],
+	// XXX add arg: 
+	// 		- count			- DONE
+	// 		- 'unsaved' / 'all'
+	// XXX REVISE...
 	redo: ['Edit/Redo',
 		doc`Redo an action from .rjournal
 
 			.redo()
+			.redo(<count>)
+			.redo('all')
 
 		Essentially this will remove and re-run the last action in .rjournal
 		`,
 		{mode: function(){ 
 			return (this.rjournal && this.rjournal.length > 0) || 'disabled' }},
-		function(){
-			if(!this.rjournal || this.rjournal.length == 0){
-				return }
-			this.runJournal([this.rjournal.pop()]) }],
+		function(count=1){
+			count = count == 'all' ?
+				Infinity
+				: count
+			while(count-- > 0 
+					&& (this.rjournal || []).length > 0){
+				// XXX only run undoable actions... (???)
+				this.runJournal([this.rjournal.pop()]) }],
+
+	//undoUnsaved: ['Edit/Undo unsaved',
+	//	'undo: "unsaved"'],
 })
 
 
@@ -2199,6 +2222,14 @@ module.Journal = ImageGridFeatures.Feature({
 		// log state, action and its args... 
 		['start',
 			function(){ this.updateJournalableActions() }],
+
+		// clear journal when clearing...
+		// XXX we should be loading new journal instead...
+		// XXX is this a good idea???
+		['load clear',
+			function(){
+				delete this.journal
+				delete this.rjournal }],
 		// log saved event to journal...
 		['saved',
 			function(res, ...args){
@@ -2206,16 +2237,11 @@ module.Journal = ImageGridFeatures.Feature({
 				//this.journal.push('SAVED')
 				this.journalPush({
 					type: 'save',
+					// XXX should use the actual save timestamp...
 					date: Date.now(),
-
-					// XXX do we need this???
-					//action: action, 
-					//args: [...args],
-
 					current: this.current, 
 					target: this.current, 
-				})
-			}],
+				}) }],
 	],
 })
 
