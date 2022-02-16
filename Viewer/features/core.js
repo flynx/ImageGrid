@@ -2191,6 +2191,12 @@ module.Journal = ImageGridFeatures.Feature({
 		// log state, action and its args... 
 		['start',
 			function(){ this.updateJournalableActions() }],
+		// log saved event to journal...
+		['saved',
+			function(){
+				// XXX
+				this.journal.push('SAVED')
+			}],
 	],
 })
 
