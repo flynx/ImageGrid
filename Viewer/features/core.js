@@ -1937,6 +1937,7 @@ module.Timers = ImageGridFeatures.Feature({
 // 		- save state clears journal and adds a state load action
 // 		- .load(..) clears journal
 // XXX needs careful testing...
+// XXX add a ui...
 var JournalActions = actions.Actions({
 
 	clone: [function(full){
