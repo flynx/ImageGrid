@@ -2044,15 +2044,18 @@ var JournalActions = actions.Actions({
 					that.on(action+'.pre', 'journal-handler', handler(action))
 					return action }) }],
 
+	// XXX do not clear .rjournal on redo...
 	journalPush: ['- System/Journal/Add an item to journal',
 		function(data){
 			// clear the reverse journal...
+			// XXX we do not want to do this on redo...
 			this.rjournal
 				&& (this.rjournal = null)
 
-			this.journal = (this.hasOwnProperty('journal') || this.journal) ? 
-				this.journal || []
-				: []
+			this.journal = 
+				(this.hasOwnProperty('journal') || this.journal) ? 
+					this.journal || []
+					: []
 			this.journal.push(data) }],
 	clearJournal: ['System/Journal/Clear the action journal',
 		function(){
@@ -2114,15 +2117,13 @@ var JournalActions = actions.Actions({
 		{mode: function(){ 
 			return (this.journal && this.journal.length > 0) || 'disabled' }},
 		function(count=1){
-			var journal = this.journal.slice() || []
-			var rjournal =
-				this.rjournal = 
-					(this.hasOwnProperty('rjournal') || this.rjournal) ? 
-						this.rjournal || [] 
-						: []
 			count = count == 'all' ?
 				Infinity
 				: count
+			// NOTE: these are isolated from any other contexts and will 
+			// 		be saved as own attributes...
+			var journal = (this.journal || []).slice() || []
+			var rjournal = (this.rjournal || []).slice() || [] 
 
 			for(var i = journal.length-1; i >= 0; i--){
 				var a = journal[i]
@@ -2159,7 +2160,7 @@ var JournalActions = actions.Actions({
 					: null } 
 
 				// push the action to the reverse journal...
-				rjournal.push(journal.splice(i, 1)[0]) 
+				rjournal.push(journal.pop()) 
 			
 				// stop when done...
 				if(undo 
@@ -2189,13 +2190,24 @@ var JournalActions = actions.Actions({
 		{mode: function(){ 
 			return (this.rjournal && this.rjournal.length > 0) || 'disabled' }},
 		function(count=1){
+			if(!this.rjournal || this.rjournal.length == 0){
+				return }
+
 			count = count == 'all' ?
 				Infinity
 				: count
-			while(count-- > 0 
-					&& (this.rjournal || []).length > 0){
-				// XXX only run undoable actions... (???)
-				this.runJournal([this.rjournal.pop()]) }],
+			var rjournal = this.rjournal
+			var l = rjournal.length
+
+			// XXX need to handle un-undoable actions...
+			// XXX need to count undoable actions instead of all actions (like in .undo(..))...
+			this.runJournal(rjournal.splice(l-count || 0, count)) 
+
+			// restore .rjournal after actions are run...
+			// NOTE: this is done to compensate for .journalPush(..) clearing
+			// 		the .rjournal in normal operation...
+			// XXX HACK???
+			this.rjournal = rjournal }],
 
 	//undoUnsaved: ['Edit/Undo unsaved',
 	//	'undo: "unsaved"'],
