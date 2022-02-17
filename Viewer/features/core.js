@@ -2009,16 +2009,10 @@ var JournalActions = actions.Actions({
 						target: undefined, 
 					}
 
-					// helper: get action method handling aliases...
-					var _getActionMethod = function(action, attr){
-						var meth = that.getActionAttr(action, attr)
-						while(typeof(meth) == typeof('str')){
-							meth = that.getActionAttr(meth, attr) }
-						return meth }
-
 					// test if we need to journal this action signature...
-					var test = _getActionMethod(action, 'undoable')
-					if(test && !test.call(that, data)){
+					var test = that.getActionAttrAliased(action, 'undoable')
+					if(test === false 
+							|| (test && !test.call(that, data))){
 						return }
 
 					// journal after the action is done...
@@ -2026,7 +2020,7 @@ var JournalActions = actions.Actions({
 						data.target = this.current
 						// prep to get additional undo state...
 						// XXX this should be called for all actions in chain...
-						var update = _getActionMethod(action, 'getUndoState')
+						var update = that.getActionAttrAliased(action, 'getUndoState')
 						update 
 							&& update instanceof Function
 							&& update.call(that, data)
@@ -2097,6 +2091,9 @@ var JournalActions = actions.Actions({
 	// 		...i.e. multiple extending actions can support undo
 	// 		XXX will also need to handle other methods + aliases in chain...
 	// XXX in mode method count the undoable actions...
+	// XXX should we stop at non-undoable actions???
+	// 		...intuitively, yes, as undoing past these may result in an 
+	// 		inconsistent state...
 	// XXX EXPERIMENTAL...
 	undo: ['Edit/Undo',
 		doc`Undo last action(s) from .journal that can be undone
@@ -2137,7 +2134,13 @@ var JournalActions = actions.Actions({
 				// stop at load...
 				// XXX not sure if this is correct....
 				if(a.action == 'load'){
-					break}
+					break }
+				// stop at explicitly undoable actions...
+				var undoable = this.getActionAttrAliased(a.action, 'undoable')
+				if(undoable === false 
+						|| (undoable
+							&& !undoable.call(this, a))){
+					break }
 
 				// see if the action has an explicit undo attr...
 				var undo = this.getActionAttr(a.action, 'undo')
