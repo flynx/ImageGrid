@@ -1981,6 +1981,9 @@ var JournalActions = actions.Actions({
 		
 					// the target (current) image after action...
 					target: undefined | <gid>
+
+					// action state, only set on undoable actions when undone.
+					undone: true | false,
 		
 					// additional data, can be set via: 
 					//		<action>.getUndoState(<data>)...
@@ -2039,7 +2042,6 @@ var JournalActions = actions.Actions({
 					that.on(action+'.pre', 'journal-handler', handler(action))
 					return action }) }],
 
-	// XXX do not clear .rjournal on redo...
 	journalPush: ['- System/Journal/Add an item to journal',
 		function(data){
 			// clear the reverse journal...
@@ -2065,32 +2067,29 @@ var JournalActions = actions.Actions({
 				&& (this.journal = null)
 			this.rjournal
 				&& (this.rjournal = null) }],
+	// XXX not sure about the filter arg...
 	runJournal: ['- System/Journal/Run journal',
 		//{journal: true},
-		function(journal){
+		function(journal, filter){
 			var that = this
 			journal.forEach(function(e){
-				// load state...
-				that
-					.focusImage(e.current)
-					// run action...
-					[e.action].apply(that, e.args) }) }],
+				;(typeof(filter) == 'function'?
+						filter.call(that, e)
+						: true)
+					&& that
+						.focusImage(e.current)
+						// run action...
+						[e.action].apply(that, e.args) }) }],
 
 	// XXX might be a good idea to add support for:
 	// 		- time-periods
 	// 		- specific times
-	// XXX need to add generic handlers for:
-	// 		- save actions... DONE
-	// 		- load/unload...
 	// XXX needs very careful revision...
 	// 		- should this be thread safe??? (likely not)
 	// 		- should the undo action have side-effects on the 
 	// 			journal/rjournal or should we clean them out??? 
 	// 			(currently cleaned)
-	// XXX should we run undo of every action that supports it in the chain???
-	// 		...i.e. multiple extending actions can support undo
-	// 		XXX will also need to handle other methods + aliases in chain...
-	// XXX in mode method count the undoable actions...
+	// XXX how do we handle nested action calls??
 	// XXX should we stop at non-undoable actions???
 	// 		...intuitively, yes, as undoing past these may result in an 
 	// 		inconsistent state...
@@ -2111,6 +2110,8 @@ var JournalActions = actions.Actions({
 		it for .redo()
 
 		NOTE: this counts undoable actions only.
+		NOTE: actions when undone (i.e. undoable) are marked with .undone = true
+			while unundoable actions are simply copied over to .rjournal
 		`,
 		{mode: function(){ 
 			return (this.journal && this.journal.length > 0) || 'disabled' }},
@@ -2155,13 +2156,16 @@ var JournalActions = actions.Actions({
 					// NOTE: this is likely to have side-effect on the 
 					// 		journal and maybe even rjournal...
 					// NOTE: these side-effects are cleaned out later.
+					// XXX should we cache this???
 					undo instanceof Function ?
 						// pass the action name...
 						undo.call(this, a)
 					: typeof(undo) == typeof('str') ? 
 						// XXX pass journal structure as-is... (???)
 						this[undo].apply(this, a.args)
-					: null } 
+					: null 
+
+					a.undone = true } 
 
 				// push the action to the reverse journal...
 				rjournal.push(journal.pop()) 
@@ -2190,6 +2194,8 @@ var JournalActions = actions.Actions({
 			.redo('all')
 
 		Essentially this will remove and re-run the last action in .rjournal
+
+		NOTE: this will clear the .undone attr of redoable actions
 		`,
 		{mode: function(){ 
 			return (this.rjournal && this.rjournal.length > 0) || 'disabled' }},
@@ -2197,15 +2203,33 @@ var JournalActions = actions.Actions({
 			if(!this.rjournal || this.rjournal.length == 0){
 				return }
 
-			count = count == 'all' ?
-				Infinity
-				: count
+			var journal = this.journal
 			var rjournal = this.rjournal
 			var l = rjournal.length
 
-			// XXX need to handle un-undoable actions...
-			// XXX need to count undoable actions instead of all actions (like in .undo(..))...
-			this.runJournal(rjournal.splice(l-count || 0, count)) 
+			if(count == 'all'){
+				count = Infinity
+			} else {
+				var t = 0
+				var c = 0
+				// count only undoable actions, i.e. the ones we undid...
+				for(var a of rjournal.slice().reverse()){
+					c++
+					a.undone	
+						&& t++
+					if(t >= count){
+						break } }
+				count = c }
+
+			this.runJournal(
+				rjournal.splice(l-count || 0, count),
+				// skip actions not undoable and push them back to the journal...
+				function(e){
+					var redo = e.undone
+					!redo
+						&& journal.push(e)
+					delete e.undone
+					return redo })
 
 			// restore .rjournal after actions are run...
 			// NOTE: this is done to compensate for .journalPush(..) clearing
