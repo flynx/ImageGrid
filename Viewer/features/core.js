@@ -2086,14 +2086,11 @@ var JournalActions = actions.Actions({
 	// 		- specific times
 	// XXX needs very careful revision...
 	// 		- should this be thread safe??? (likely not)
-	// 		- should the undo action have side-effects on the 
-	// 			journal/rjournal or should we clean them out??? 
-	// 			(currently cleaned)
+	// 		- revise actions...
 	// XXX how do we handle nested action calls??
 	// XXX should we stop at non-undoable actions???
 	// 		...intuitively, yes, as undoing past these may result in an 
 	// 		inconsistent state...
-	// XXX EXPERIMENTAL...
 	undo: ['Edit/Undo',
 		doc`Undo last action(s) from .journal that can be undone
 
