@@ -2091,6 +2091,7 @@ var JournalActions = actions.Actions({
 	// XXX should we stop at non-undoable actions???
 	// 		...intuitively, yes, as undoing past these may result in an 
 	// 		inconsistent state...
+	// XXX should we implement redo as an undo of undo?
 	undo: ['Edit/Undo',
 		doc`Undo last action(s) from .journal that can be undone
 
@@ -2181,8 +2182,8 @@ var JournalActions = actions.Actions({
 			this.rjournal = rjournal }],
 	// XXX add arg: 
 	// 		- count			- DONE
-	// 		- 'unsaved' / 'all'
-	// XXX REVISE...
+	// 		- 'all'			- DONE
+	// 		- 'unsaved'
 	redo: ['Edit/Redo',
 		doc`Redo an action from .rjournal
 
