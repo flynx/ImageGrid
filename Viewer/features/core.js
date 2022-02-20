@@ -2265,8 +2265,8 @@ module.Journal = ImageGridFeatures.Feature({
 		// XXX is this a good idea???
 		['load clear',
 			function(){
-				delete this.journal
-				delete this.rjournal }],
+				this.clearJournal() }],
+
 		// log saved event to journal...
 		['saved',
 			function(res, ...args){
