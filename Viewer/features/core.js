@@ -1950,7 +1950,7 @@ var JournalActions = actions.Actions({
 	// for format docs see: .updateJournalableActions(..)
 	journal: null,
 	rjournal: null,
-
+	// XXX make this a cached prop...
 	journalable: null,
 
 	// XXX docs...
