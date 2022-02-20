@@ -1950,7 +1950,7 @@ var JournalActions = actions.Actions({
 	// for format docs see: .updateJournalableActions(..)
 	journal: null,
 	rjournal: null,
-
+	// XXX make this a cached prop...
 	journalable: null,
 
 	// XXX docs...
@@ -2041,7 +2041,7 @@ var JournalActions = actions.Actions({
 				.map(function(action){
 					that.on(action+'.pre', 'journal-handler', handler(action))
 					return action }) }],
-
+	// XXX unify names (globally) -> .journal<Action>(..) or .<action>Journal(..)
 	journalPush: ['- System/Journal/Add an item to journal',
 		function(data){
 			// clear the reverse journal...
@@ -2266,8 +2266,8 @@ module.Journal = ImageGridFeatures.Feature({
 		// XXX is this a good idea???
 		['load clear',
 			function(){
-				delete this.journal
-				delete this.rjournal }],
+				this.clearJournal() }],
+
 		// log saved event to journal...
 		['saved',
 			function(res, ...args){
