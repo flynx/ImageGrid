@@ -2041,7 +2041,7 @@ var JournalActions = actions.Actions({
 				.map(function(action){
 					that.on(action+'.pre', 'journal-handler', handler(action))
 					return action }) }],
-
+	// XXX unify names (globally) -> .journal<Action>(..) or .<action>Journal(..)
 	journalPush: ['- System/Journal/Add an item to journal',
 		function(data){
 			// clear the reverse journal...
