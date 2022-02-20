@@ -2358,13 +2358,12 @@ var ChangesActions = actions.Actions({
 	set _changes(value){},
 
 	clone: [function(full){
-			return function(res){
-				res.changes = null
-				if(full && this.hasOwnProperty('changes') && this.changes){
-					res.changes = JSON.parse(JSON.stringify(this.changes))
-				}
-			}
-		}],
+		return function(res){
+			res.changes = null
+			if(full 
+					&& this.hasOwnProperty('changes') 
+					&& this.changes){
+				res.changes = JSON.parse(JSON.stringify(this.changes)) } } }],
 
 	// XXX this should also track .changes...
 	// 		...would also need to make this applicable to changes, 
@@ -2422,8 +2421,7 @@ var ChangesActions = actions.Actions({
 			// section items...
 			} else if(items instanceof Array) {
 				if(changes[section] === true){
-					return
-				}
+					return }
 				changes[section] = (changes[section] || [])
 					.concat(items)
 					.unique()
@@ -2432,11 +2430,8 @@ var ChangesActions = actions.Actions({
 			// section(s)...
 			} else {
 				args.forEach(function(arg){
-					changes[arg] = true
-				})
-				this.changes = changes
-			}
-		}],
+					changes[arg] = true })
+				this.changes = changes } }],
 })
 
 
@@ -2457,15 +2452,11 @@ module.Changes = ImageGridFeatures.Feature({
 		['json',
 			function(res, mode){
 				if(this.changes != null){
-					res.changes = JSON.parse(JSON.stringify(this.changes))
-				}
-			}],
+					res.changes = JSON.parse(JSON.stringify(this.changes)) } }],
 		['load',
 			function(_, data){
 				if(data.changes){
-					this.changes = JSON.parse(JSON.stringify(data.changes))
-				}
-			}],
+					this.changes = JSON.parse(JSON.stringify(data.changes)) } }],
 
 		// clear caches relating to stuff we just changed...
 		['markChanged',
@@ -2507,12 +2498,13 @@ module.makeWorkspaceConfigWriter = function(keys, callback){
 	return function(workspace){
 		var that = this
 
-		var data = keys instanceof Function ? keys.call(this) : keys
+		var data = keys instanceof Function ? 
+			keys.call(this) 
+			: keys
 
 		// store data...
 		data.forEach(function(key){
-			workspace[key] = JSON.parse(JSON.stringify(that.config[key]))
-		})
+			workspace[key] = JSON.parse(JSON.stringify(that.config[key])) })
 
 		callback && callback.call(this, workspace) } }
 
@@ -2524,7 +2516,9 @@ module.makeWorkspaceConfigLoader = function(keys, callback){
 	return function(workspace){
 		var that = this
 
-		var data = keys instanceof Function ? keys.call(this) : keys
+		var data = keys instanceof Function ? 
+			keys.call(this) 
+			: keys
 
 		// load data...
 		data.forEach(function(key){
