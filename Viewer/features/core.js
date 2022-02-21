@@ -1950,7 +1950,22 @@ var JournalActions = actions.Actions({
 	// for format docs see: .updateJournalableActions(..)
 	journal: null,
 	rjournal: null,
-	// XXX make this a cached prop...
+
+	// XXX EXPERIMENTAL...
+	get journalUnsaved(){
+		var res = []
+		//for(var e of (this.journal || []).slice().reverse()){
+		for(var i=this.journal.length-1; i >= 0; i--){
+			var e = this.journal[i]
+			// everything until a load or a save event...
+			if(e == 'SAVED' 
+					|| e.type == 'save'
+					|| e.action == 'load'){
+				break }
+			res.unshift(e) }
+		return res },
+
+	// XXX make this a cached prop... (???)
 	journalable: null,
 
 	// XXX docs...
@@ -2041,6 +2056,7 @@ var JournalActions = actions.Actions({
 				.map(function(action){
 					that.on(action+'.pre', 'journal-handler', handler(action))
 					return action }) }],
+
 	// XXX unify names (globally) -> .journal<Action>(..) or .<action>Journal(..)
 	journalPush: ['- System/Journal/Add an item to journal',
 		function(data){
@@ -2092,6 +2108,7 @@ var JournalActions = actions.Actions({
 	// 		...intuitively, yes, as undoing past these may result in an 
 	// 		inconsistent state...
 	// XXX should we implement redo as an undo of undo?
+	// XXX use .journalUnsaved...
 	undo: ['Edit/Undo',
 		doc`Undo last action(s) from .journal that can be undone
 
@@ -2301,7 +2318,7 @@ var PersistentJournal =
 module.PersistentJournal = ImageGridFeatures.Feature({
 	title: 'Action persistent Journal',
 
-	tag: 'persistent-journal',
+	tag: 'journal-persistent',
 	depends: [
 		'journal',
 	],
