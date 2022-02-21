@@ -2104,6 +2104,8 @@ var JournalActions = actions.Actions({
 	// 		- should this be thread safe??? (likely not)
 	// 		- revise actions...
 	// XXX how do we handle nested action calls??
+	// 		Example:
+	// 			.toggleMark(..) -> .tag(..)
 	// XXX should we stop at non-undoable actions???
 	// 		...intuitively, yes, as undoing past these may result in an 
 	// 		inconsistent state...
