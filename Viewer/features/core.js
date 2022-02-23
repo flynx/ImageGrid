@@ -1147,15 +1147,41 @@ var CacheActions = actions.Actions({
 	__cache: null,
 	cache: doc('Get or set cache value',
 		doc`Get or set cache value
+
+			Get cached value in global group...
+			.cache(title)
+			.cache('global', title)
+				-> value
+				-> undefined
+
+			Get cached value in a specific group...
+			.cache(group, title)
+				-> value
+				-> undefined
 		
+
+			Get/set cached value in the global group...
 			.cache(title, handler)
+			.cache('global', title, handler)
 				-> value
 		
+			Get/set cached value in a specific group...
 			.cache(group, title, handler)
+				-> value
+
+
+			handler(value)
 				-> value
 		
 
+		Handler calls will overwrite the cached value with the handler 
+		returned value on every call, this is different to pure getters 
+		that will only fetch a value if it exists.
+
+
 		Currently the used groups are:
+			Global group -- default group
+				global
 			Session groups -- cleared on .clear() (feature: 'cache')
 				session-*
 				view-*
@@ -1192,19 +1218,29 @@ var CacheActions = actions.Actions({
 			not logical...
 		`,
 		function(title, handler){
+			var args = [...arguments]
+			var handler = args.pop()
 			var group = 'global'
+			args.length == 2
+				&& ([group, title] = args)
+
 			// caching disabled...
 			if(!(this.config || {}).cache){
-				return handler.call(this) }
-			arguments.length > 2
-				&& ([group, title, handler] = arguments)
-			var cache = this.__cache = this.__cache || {}
-			cache = cache[group] = cache[group] || {}
-			return (cache[title] = 
-				title in cache ? 
-					// pass the cached data for cloning/update to the handler...
-					handler.call(this, cache[title])
-					: handler.call(this)) }),
+				return typeof(handler) != 'function' ?
+					undefined
+					: handler.call(this) }
+			// get...
+			if(typeof(handler) != 'function'){
+				return ((this.__cache || {})[group] || {})[handler]
+			// handle...
+			} else {
+				var cache = this.__cache = this.__cache || {}
+				cache = cache[group] = cache[group] || {}
+				return (cache[title] = 
+					title in cache ? 
+						// pass the cached data for cloning/update to the handler...
+						handler.call(this, cache[title])
+						: handler.call(this)) } }),
 	clearCache: ['System/Clear cache',
 		doc`
 
@@ -1965,20 +2001,25 @@ var JournalActions = actions.Actions({
 			res.unshift(e) }
 		return res },
 
-	// XXX make this a cached prop... (???)
-	journalable: null,
+	get journalable(){
+		return this.cache('journalable-actions', function(data){
+			return data ?
+				data.slice()
+				: this.updateJournalableActions() }) },
 
-	// XXX docs...
 	// XXX <action>.getUndoState(..) should be called for every action 
 	// 		in chain...
 	// XXX should aliases support explicit undo??? (test)
-	updateJournalableActions: ['System/Update list of journalable actions',
-		doc`
+	updateJournalableActions: ['- System/',
+		doc`Update journalable actions
 
 		This will setup the action journal handler as a .pre handler 
-		(tagged: 'journal-handler'), calling this again will reset the existing 
-		handlers and add new ones.
+		(tagged: 'journal-handler').
 
+		NOTE: calling this again will reset the existing handlers and add 
+			new ones.
+		NOTE: the list of journalable actions is cached and accessible via
+			.journalable prop and the cache API, e.g. via .cache('journalable-actions').
 		NOTE: action aliases can not handle undo.
 
 		.journal / .rjournal format:
@@ -2012,7 +2053,6 @@ var JournalActions = actions.Actions({
 		`,
 		function(){
 			var that = this
-
 			var handler = function(action){
 				return function(){
 					var data = {
@@ -2044,18 +2084,21 @@ var JournalActions = actions.Actions({
 							&& update.call(that, data)
 						this.journalPush(data) } } }
 
-			this.journalable = this.actions
-				.filter(function(action){
-					// remove all existing journal handlers before we setup again...
-					that.off(action+'.pre', 'journal-handler')
-					// skip aliases...
-					return !(that[action] instanceof actions.Alias)
-						&& (!!that.getActionAttr(action, 'undo') 
-							|| !!that.getActionAttr(action, 'journal')) })
-				// set the handler
-				.map(function(action){
-					that.on(action+'.pre', 'journal-handler', handler(action))
-					return action }) }],
+			return this
+				// NOTE: we will overwrite the cache on every call...
+				.cache('journalable-actions', function(){ 
+					return this.actions
+						.filter(function(action){
+							// remove all existing journal handlers before we setup again...
+							that.off(action+'.pre', 'journal-handler')
+							// skip aliases...
+							return !(that[action] instanceof actions.Alias)
+								&& (!!that.getActionAttr(action, 'undo') 
+									|| !!that.getActionAttr(action, 'journal')) })
+						// set the handler
+						.map(function(action){
+							that.on(action+'.pre', 'journal-handler', handler(action))
+							return action }) }) }],
 
 	// XXX unify names (globally) -> .journal<Action>(..) or .<action>Journal(..)
 	journalPush: ['- System/Journal/Add an item to journal',
@@ -2098,8 +2141,9 @@ var JournalActions = actions.Actions({
 						[e.action].apply(that, e.args) }) }],
 
 	// XXX might be a good idea to add support for:
-	// 		- time-periods
-	// 		- specific times
+	// 		- time-periods		- DONE
+	// 		- specific times	- DONE
+	// 		...might be a good idea to support date strings directly...
 	// XXX needs very careful revision...
 	// 		- should this be thread safe??? (likely not)
 	// 		- revise actions...
@@ -2115,11 +2159,9 @@ var JournalActions = actions.Actions({
 		doc`Undo last action(s) from .journal that can be undone
 
 			.undo()
-
 			.undo(<count>)
-
+			.undo('<time-period>')
 			.undo('unsaved')
-
 			.undo('all')
 
 
@@ -2136,6 +2178,15 @@ var JournalActions = actions.Actions({
 			count = count == 'all' ?
 				Infinity
 				: count
+			var to = 
+				// time period...
+				(typeof(count) == 'string' 
+						&& Date.isPeriod(count)) ?
+					Date.now() - Date.str2ms(count)
+				// Date...
+				: count instanceof Date ?
+					count.valueOf()
+				: false
 			// NOTE: these are isolated from any other contexts and will 
 			// 		be saved as own attributes...
 			var journal = (this.journal || []).slice() || []
@@ -2148,6 +2199,9 @@ var JournalActions = actions.Actions({
 				if(count == 'unsaved'
 						&& (a == 'SAVED' 
 							|| a.type == 'save')){
+					break }
+				// stop at date...
+				if(to && a.date*1 < to){
 					break }
 				// stop at load...
 				// XXX not sure if this is correct....
@@ -2189,7 +2243,7 @@ var JournalActions = actions.Actions({
 			
 				// stop when done...
 				if(undo 
-						&& count != 'unsaved'
+						&& typeof(count) == 'number'
 						&& --count <= 0){
 					break } } 
 
@@ -2199,10 +2253,6 @@ var JournalActions = actions.Actions({
 			// 		so we will need to restore things...
 			this.journal = journal
 			this.rjournal = rjournal }],
-	// XXX add arg: 
-	// 		- count			- DONE
-	// 		- 'all'			- DONE
-	// 		- 'unsaved'
 	redo: ['Edit/Redo',
 		doc`Redo an action from .rjournal
 
@@ -2278,14 +2328,13 @@ module.Journal = ImageGridFeatures.Feature({
 	handlers: [
 		// log state, action and its args... 
 		['start',
-			function(){ this.updateJournalableActions() }],
+			'updateJournalableActions'],
 
 		// clear journal when clearing...
 		// XXX we should be loading new journal instead...
 		// XXX is this a good idea???
 		['load clear',
-			function(){
-				this.clearJournal() }],
+			'clearJournal'],
 
 		// log saved event to journal...
 		['saved',
