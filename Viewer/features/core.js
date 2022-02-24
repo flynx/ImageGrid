@@ -2007,6 +2007,9 @@ var JournalActions = actions.Actions({
 				data.slice()
 				: this.updateJournalableActions() }) },
 
+	// XXX can things get on the journal while an action is running??? (race)
+	// 		...if yes, this would make the way nested actions are collected 
+	// 		wrong...
 	// XXX <action>.getUndoState(..) should be called for every action 
 	// 		in chain...
 	// XXX should aliases support explicit undo??? (test)
@@ -2040,6 +2043,11 @@ var JournalActions = actions.Actions({
 
 					// action state, only set on undoable actions when undone.
 					undone: true | false,
+
+					// nested action journal (optional)
+					// this contains actions called from within the current
+					// action that can be undone.
+					nested: [ ... ],
 		
 					// additional data, can be set via: 
 					//		<action>.getUndoState(<data>)...
@@ -2055,6 +2063,7 @@ var JournalActions = actions.Actions({
 			var that = this
 			var handler = function(action){
 				return function(){
+					var len = (this.journal || []).length
 					var data = {
 						type: 'basic',
 						date: Date.now(),
@@ -2076,6 +2085,9 @@ var JournalActions = actions.Actions({
 					// journal after the action is done...
 					return function(){ 
 						data.target = this.current
+						// collect nested journal data...
+						if((this.journal || []).length > len){
+							data.nested = (this.journal || []).splice(len) }
 						// prep to get additional undo state...
 						// XXX this should be called for all actions in chain...
 						var update = that.getActionAttrAliased(action, 'getUndoState')
@@ -2140,21 +2152,23 @@ var JournalActions = actions.Actions({
 						// run action...
 						[e.action].apply(that, e.args) }) }],
 
-	// XXX might be a good idea to add support for:
-	// 		- time-periods		- DONE
-	// 		- specific times	- DONE
-	// 		...might be a good idea to support date strings directly...
-	// XXX needs very careful revision...
-	// 		- should this be thread safe??? (likely not)
-	// 		- revise actions...
+	// XXX handle .nested undo actions...
+	// 		...either automatically or allow the client to recursively 
+	// 		call the undo handler for them...
 	// XXX how do we handle nested action calls??
 	// 		Example:
 	// 			.toggleMark(..) -> .tag(..)
+	// 		...one way to do this is to group all the nested calls and 
+	// 		undo them as one unit, this should also be controllable by 
+	// 		the root action...
+	// XXX needs very careful revision...
+	// 		- should this be thread safe??? (likely not)
+	// 		- revise actions...
 	// XXX should we stop at non-undoable actions???
 	// 		...intuitively, yes, as undoing past these may result in an 
 	// 		inconsistent state...
 	// XXX should we implement redo as an undo of undo?
-	// XXX use .journalUnsaved...
+	// XXX use .journalUnsaved???
 	undo: ['Edit/Undo',
 		doc`Undo last action(s) from .journal that can be undone
 
@@ -2253,6 +2267,8 @@ var JournalActions = actions.Actions({
 			// 		so we will need to restore things...
 			this.journal = journal
 			this.rjournal = rjournal }],
+	// NOTE: we do not have to care about .nested actions on the redo
+	// 		level as they will be nested again by the root action...
 	redo: ['Edit/Redo',
 		doc`Redo an action from .rjournal
 
