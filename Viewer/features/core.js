@@ -1945,6 +1945,15 @@ module.Timers = ImageGridFeatures.Feature({
 // 					...
 // 				},
 //
+// 				// if true do not group nested action calls (default: store)
+// 				// this can be:
+// 				//	'store'		- store nested journal in .nested
+// 				//	'drop'		- drop nested actions from journal
+// 				//	'keep'		- keep nested actions in journal
+// 				// XXX currently store/drop modes may include deferred or
+// 				//		triggered by external events actions...
+// 				nestedUndo: 'store',
+//
 // 				// store aditional undo state in the data, to be used by <action>.undo(..)...
 // 				// NOTE: this is called after the <action>...
 // 				// NOTE: this can be an alias...
@@ -2009,7 +2018,10 @@ var JournalActions = actions.Actions({
 
 	// XXX can things get on the journal while an action is running??? (race)
 	// 		...if yes, this would make the way nested actions are collected 
-	// 		wrong...
+	// 		wrong -- this could happen for long and deferred actions...
+	// 		...not sure how handlers outside the action can be handled here 
+	// 		too...
+	// 		...let the client action configure things...
 	// XXX <action>.getUndoState(..) should be called for every action 
 	// 		in chain...
 	// XXX should aliases support explicit undo??? (test)
@@ -2086,8 +2098,14 @@ var JournalActions = actions.Actions({
 					return function(){ 
 						data.target = this.current
 						// collect nested journal data...
-						if((this.journal || []).length > len){
-							data.nested = (this.journal || []).splice(len) }
+						var nestedUndo = 
+							this.getActionAttr(action, 'nestedUndo') 
+							|| 'store'
+						if(nestedUndo != 'keep'
+								&& (this.journal || []).length > len){
+							var nested = (this.journal || []).splice(len) 
+							nestedUndo == 'store'
+								&& (data.nested = nested) }
 						// prep to get additional undo state...
 						// XXX this should be called for all actions in chain...
 						var update = that.getActionAttrAliased(action, 'getUndoState')
