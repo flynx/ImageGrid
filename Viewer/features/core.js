@@ -2027,8 +2027,7 @@ var JournalActions = actions.Actions({
 	// 				...too complicated?
 	// 				...requires updating code in runtime -- see requirejs...
 	// 				...can we use something similar to gettext???
-	// 			- run in isolated context
-	// 				...error prone...
+	// 			- run in isolated context -- can be very error prone...
 	// XXX <action>.getUndoState(..) should be called for every action 
 	// 		in chain???
 	// XXX should aliases support explicit undo??? (test)
