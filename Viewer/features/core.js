@@ -1996,7 +1996,7 @@ var JournalActions = actions.Actions({
 	journal: null,
 	rjournal: null,
 
-	// XXX EXPERIMENTAL...
+	// XXX revise... 
 	get journalUnsaved(){
 		var res = []
 		//for(var e of (this.journal || []).slice().reverse()){
