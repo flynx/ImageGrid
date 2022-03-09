@@ -2017,8 +2017,8 @@ var JournalActions = actions.Actions({
 				: this.updateJournalableActions() }) },
 
 	// XXX RACE?: can things get on the journal while an action is running???
-	// 		...if yes, this would make the way nested actions are collected 
-	// 		wrong -- this could happen for long and deferred actions...
+	// 		...this would make the way nested actions are collected wrong 
+	// 		...this could happen for long and deferred actions...
 	// 		...not sure how handlers outside the action can be handled here 
 	// 		too...
 	// 		...let the client action configure things???
