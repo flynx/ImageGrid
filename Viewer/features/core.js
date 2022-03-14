@@ -2020,7 +2020,8 @@ var JournalActions = actions.Actions({
 	// 		...this would make the way nested actions are collected wrong 
 	// 		...this could happen for long and deferred actions...
 	// 		...not sure how handlers outside the action can be handled here 
-	// 		...investigate pushing undo to either top or bottom (data)...
+	// 		...investigate pushing undo to either top (explicitly user-called 
+	// 		action) or the bottom (actual data manipulation) levels...
 	// 		...let the client action configure things???
 	// 		...can we automate this -- marking nested actions???
 	// XXX <action>.getUndoState(..) should be called for every action 
