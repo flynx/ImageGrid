@@ -2024,6 +2024,9 @@ var JournalActions = actions.Actions({
 	// 		action) or the bottom (actual data manipulation) levels...
 	// 		...let the client action configure things???
 	// 		...can we automate this -- marking nested actions???
+	// 		...a way to indirectly go around this is to investigate/document
+	// 		the possibilities and conditions of undo usage providing 
+	// 		appropriate API for all cases...
 	// XXX <action>.getUndoState(..) should be called for every action 
 	// 		in chain???
 	// XXX should aliases support explicit undo??? (test)
