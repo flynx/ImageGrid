@@ -110,6 +110,14 @@
 ## 	# build for darwin... (EXPERIMENTAL)
 ## 	$$ TARGET_OS=darwin make clean dist
 ##
+## 	# run with Devtools started... 
+## 	$$ IMAGEGRID_DEBUG=1 make run 
+##
+## 	# force show the main window... 
+## 	$$ IMAGEGRID_FORCE_SHOW=1 make run 
+##
+##
+##
 #
 #
 #----------------------------------------------------------------------
