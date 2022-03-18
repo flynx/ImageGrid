@@ -444,7 +444,7 @@ doc: $(DOC_FILES)
 
 .PHONY: dev
 dev: ## Build the development environment
-dev: $(JS_FILES) $(NODE_DIR) css
+dev: $(JS_FILES) $(NODE_DIR) patched-requirejs css
 
 
 .PHONY: dist
@@ -644,10 +644,7 @@ version.js: package.json version.js.tpl
 $(NODE_DIR): package.json
 	npm install
 	# patch requirejs (see: NOTES)
-	cp -f $(NODE_DIR)/requirejs/bin/r.js{,.bak}
-	cat $(NODE_DIR)/requirejs/bin/r.js.bak \
-		| sed 's/^\(#!\/\)/\/\/\1/' \
-		> $(NODE_DIR)/requirejs/bin/r.js
+	make patched-requirejs
 	# NOTE: this may break on some systems due to a dependency issue...
 #	$(ELECTRON_REBUILD)
 	@touch "$@"
@@ -678,7 +675,7 @@ $(BUILD_DIR)/$(APP_NAME)/: $(PROJECT_FILES) \
 # NOTE: making $(NODE_DIR) a link/junction would be quite a bit faster 
 # 	but it will also choke asar...
 # XXX %/$(NODE_DIR): $(NODE_DIR) ???
-$(BUILD_DIR)/$(APP_NAME)/$(NODE_DIR): $(NODE_DIR)
+$(BUILD_DIR)/$(APP_NAME)/$(NODE_DIR): $(NODE_DIR) patched-requirejs
 	$(MD) "$@"
 	cp -r "$(NODE_DIR)" "$(@D)"
 	@touch "$@"
@@ -689,6 +686,21 @@ $(BUILD_DIR)/$(APP_NAME)/$(NODE_DIR)/%: $(NODE_DIR)
 	$(MD) "$(@D)"
 	cp -r "$(NODE_DIR)/$*" "$(@D)"
 	@touch "$@"
+
+
+# patch/unpatch requirejs (see: NOTES)
+.PHONY: patched-requirejs
+patched-requirejs: $(NODE_DIR) $(NODE_DIR)/requirejs/bin/r.js
+	# HACK: for some reason requirejs breaks if we do not do this (see: NOTES)
+	cp -f $(NODE_DIR)/requirejs/bin/r.js{,.bak}
+	cat $(NODE_DIR)/requirejs/bin/r.js.bak \
+		| sed 's/^\(#!\/\)/\/\/\1/' \
+		> $(NODE_DIR)/requirejs/bin/r.js
+
+.PHONY: unpatched-requirejs
+unpatched-requirejs: $(NODE_DIR) $(NODE_DIR)/requirejs/bin/r.js.bak
+	mv -f $(NODE_DIR)/requirejs/bin/r.js{.bak,}
+
 
 
 #----------------------------------------------------------------------
