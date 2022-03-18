@@ -296,6 +296,8 @@ FEATURES_DIR = features
 IMAGES_DIR = images
 ASSET_DIR := data
 
+BACKUP_EXT := .ig-backup
+
 LICENSE = LICENSE
 BUILD_INFO = $(BUILD_DIR)/INFO
 PROJECT_FILES = package.json
@@ -643,8 +645,8 @@ version.js: package.json version.js.tpl
 
 $(NODE_DIR): package.json
 	npm install
-	# patch requirejs (see: NOTES)
-	make patched-requirejs
+#	# patch requirejs (see: NOTES)
+#	make patched-requirejs
 	# NOTE: this may break on some systems due to a dependency issue...
 #	$(ELECTRON_REBUILD)
 	@touch "$@"
@@ -688,18 +690,31 @@ $(BUILD_DIR)/$(APP_NAME)/$(NODE_DIR)/%: $(NODE_DIR)
 	@touch "$@"
 
 
+
+##--------------------------------------------------------- Patches ---
+
 # patch/unpatch requirejs (see: NOTES)
-.PHONY: patched-requirejs
-patched-requirejs: $(NODE_DIR) $(NODE_DIR)/requirejs/bin/r.js
+# XXX need to find a better way around this...
+REQUREJS := $(NODE_DIR)/requirejs/bin/r.js
+
+$(REQUREJS): $(NODE_DIR) $(REQUREJS)$(BACKUP_EXT)
+
+$(REQUREJS)$(BACKUP_EXT): $(NODE_DIR)
 	# HACK: for some reason requirejs breaks if we do not do this (see: NOTES)
-	cp -f $(NODE_DIR)/requirejs/bin/r.js{,.bak}
-	cat $(NODE_DIR)/requirejs/bin/r.js.bak \
+	cp -f $(REQUREJS){,$(BACKUP_EXT)}
+	cat $(REQUREJS)$(BACKUP_EXT) \
 		| sed 's/^\(#!\/\)/\/\/\1/' \
-		> $(NODE_DIR)/requirejs/bin/r.js
+		> $(REQUREJS)
+
+.PHONY: patched-requirejs
+patched-requirejs: ## Patch requirejs (see: NOTES)
+patched-requirejs: $(REQUREJS)
 
 .PHONY: unpatched-requirejs
-unpatched-requirejs: $(NODE_DIR) $(NODE_DIR)/requirejs/bin/r.js.bak
-	mv -f $(NODE_DIR)/requirejs/bin/r.js{.bak,}
+unpatched-requirejs: ## Unpatch requirejs
+unpatched-requirejs: 
+	[ -e $(REQUREJS)$(BACKUP_EXT) ] \
+		&& mv -f $(REQUREJS){$(BACKUP_EXT),}
 
 
 
