@@ -3211,6 +3211,15 @@ var ButtonsActions = actions.Actions({
 		{mode: 'advancedBrowseModeAction'},
 		makeButtonControlsToggler('app-buttons')],
 
+	toggleMinimizeButton: ['Interface/Minimize button',
+		core.makeConfigToggler('minimize-button',
+			['on', 'off'],
+			function(state){
+				this.dom
+					&& (state == 'on' ?
+						this.dom.find('.buttons .minimize').css('display', '')
+						: this.dom.find('.buttons .minimize').css('display', 'none')) })],
+
 	toggleSideButtons: ['Interface/70: Touch buttons', 
 		(function(){
 			var left = makeButtonControlsToggler('side-buttons-left')
@@ -3244,15 +3253,15 @@ module.Buttons = core.ImageGridFeatures.Feature({
 	handlers: [
 		['start.pre', 
 			function(){ 
-				this.toggleAppButtons('on')
-		   	}],
+				this.toggleAppButtons('on') }],
 		// NOTE: these need to be loaded AFTER the .config has been loaded...
 		['start', 
 			function(){ 
 				this.toggleMainButtons(this.config['main-buttons-state'] || 'on')
 				this.toggleSecondaryButtons(this.config['secondary-buttons-state'] || 'on')
 				this.toggleSideButtons(this.config['side-buttons-state'] || 'on')
-		   	}],
+
+				this.toggleMinimizeButton('!') }],
 
 		// update crop button status...
 		[[
@@ -3272,8 +3281,7 @@ module.Buttons = core.ImageGridFeatures.Feature({
 					})
 					.text(l == 0 ? ''
 						: l > 99 ? '99+'
-						: l) 
-			}],
+						: l) }],
 		// update collection button status...
 		[[
 			'load', 
@@ -3369,8 +3377,7 @@ module.Buttons = core.ImageGridFeatures.Feature({
 					}
 
 					//this.toggleFullScreenControls(fullScreen)
-				}
-			}],
+				} }],
 	],
 })
 
