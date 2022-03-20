@@ -70,6 +70,16 @@
 ## 	ELECTRON_DIST	- electron distribution file name pattern
 ## 	BUILD_MODE	- can be "repack" or "in-place" (default)
 ##
+##
+## Variables to help with troubleshooting:
+##	IMAGEGRID_DEBUG - force show devtools on startup
+##			  NOTE: devtools will should start automaticalky
+##				if loading takes too long or if it was 
+##				started on last run,
+##	IMAGEGRID_FORCE_SHOW
+##			- force show viewer GUI on startup
+##
+##
 ## NOTE: when setting variables avoid using spaces and other characters 
 ## 	make can get fussy about...
 ## NOTE: to do a repack build call:
