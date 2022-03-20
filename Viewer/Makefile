@@ -186,6 +186,10 @@ DATE := $(strip $(shell date "+%Y%m%d%H%M"))
 COMMIT := $(strip $(shell git rev-parse HEAD))
 
 
+# NOTE: running things via npx can slow things down when running make on a 
+# 	clean repo...
+# 	XXX this is mainly happening on getting electron version, need to
+# 		avoid this...
 NPX := npx --yes
 
 
