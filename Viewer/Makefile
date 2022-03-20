@@ -320,11 +320,16 @@ JS_FILES := $(ROOT_JS_FILES) \
 	$(wildcard $(EXT_LIB_DIR)/*.js)
 DOC_FILES := doc/MAKE
 
+REQUREJS := $(NODE_DIR)/requirejs/bin/r.js
+
+
 INCLUDE_NODE_MODULES = \
 	ig-object ig-actions ig-features ig-types ig-argv object-run \
 	requirejs requirejs-plugins
 
 INCLUDE_NW_NODE_MODULES = app-module-path
+
+PATCHES := $(REQUREJS)
 
 
 
@@ -446,7 +451,7 @@ doc: $(DOC_FILES)
 
 .PHONY: dev
 dev: ## Build the development environment
-dev: $(JS_FILES) $(NODE_DIR) patched-requirejs css
+dev: $(JS_FILES) $(NODE_DIR) $(PATCHES) css
 
 
 .PHONY: dist
@@ -677,7 +682,7 @@ $(BUILD_DIR)/$(APP_NAME)/: $(PROJECT_FILES) \
 # NOTE: making $(NODE_DIR) a link/junction would be quite a bit faster 
 # 	but it will also choke asar...
 # XXX %/$(NODE_DIR): $(NODE_DIR) ???
-$(BUILD_DIR)/$(APP_NAME)/$(NODE_DIR): $(NODE_DIR) patched-requirejs
+$(BUILD_DIR)/$(APP_NAME)/$(NODE_DIR): $(NODE_DIR) $(PATCHES)
 	$(MD) "$@"
 	cp -r "$(NODE_DIR)" "$(@D)"
 	@touch "$@"
@@ -695,8 +700,6 @@ $(BUILD_DIR)/$(APP_NAME)/$(NODE_DIR)/%: $(NODE_DIR)
 
 # patch/unpatch requirejs (see: NOTES)
 # XXX need to find a better way around this...
-REQUREJS := $(NODE_DIR)/requirejs/bin/r.js
-
 $(REQUREJS): $(NODE_DIR) $(REQUREJS)$(BACKUP_EXT)
 
 $(REQUREJS)$(BACKUP_EXT): $(NODE_DIR)
