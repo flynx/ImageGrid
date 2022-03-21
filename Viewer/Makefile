@@ -179,14 +179,19 @@ VERSION := $(APP_VERSION)
 DATE := $(strip $(shell date "+%Y%m%d%H%M"))
 COMMIT := $(strip $(shell git rev-parse HEAD))
 
+# if node_modules does not exist, set FIRST_RUN to 1...
+FIRST_RUN := $(if $(filter node_modules,$(wildcard *)),,1)
+
+
 
 # NOTE: running things via npx can slow things down when running make on a 
 # 	clean repo...
 NPX := npx --yes
 
 
+
 # Warn user...
-IGNORE := $(if $(filter node_modules,$(wildcard *)),, \
+_ := $(if $(FIRST_RUN),\
 	$(info Missing ./node_modules/: Running make on a clean repository \
 		may take some time... ))
 
