@@ -191,9 +191,9 @@ NPX := npx --yes
 
 
 # Warn user...
-_ := $(if $(FIRST_RUN),\
-	$(info Missing ./node_modules/: Running make on a clean repository \
-		may take some time... ))
+_ := $(if $(FIRST_RUN), $(info \
+	Missing ./node_modules/: Running make on a clean repository may take \
+	some time... ))
 
 
 # less...
