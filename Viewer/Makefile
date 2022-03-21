@@ -163,20 +163,6 @@
 
 SHELL := bash
 
-# set path to use local tools...
-# NOTE this does not affect where make is seraching for commands...
-# XXX this breaks which when looking for egrep/fgrep...
-#export PATH := $(shell pwd)/node_modules/.bin/:$(PATH)
-
-
-# Warn user...
-#
-# This is mainly due to npx needing to cache things...
-IGNORE := $(if $(filter node_modules,$(wildcard *)),, \
-	$(info Missing ./node_modules/: Running make on a clean repository \
-		may take some time... ))
-
-
 
 # variables...
 
@@ -197,6 +183,12 @@ COMMIT := $(strip $(shell git rev-parse HEAD))
 # NOTE: running things via npx can slow things down when running make on a 
 # 	clean repo...
 NPX := npx --yes
+
+
+# Warn user...
+IGNORE := $(if $(filter node_modules,$(wildcard *)),, \
+	$(info Missing ./node_modules/: Running make on a clean repository \
+		may take some time... ))
 
 
 # less...
