@@ -169,6 +169,14 @@ SHELL := bash
 #export PATH := $(shell pwd)/node_modules/.bin/:$(PATH)
 
 
+# Warn user...
+#
+# This is mainly due to npx needing to cache things...
+IGNORE := $(if $(filter node_modules,$(wildcard *)),, \
+	$(info Missing ./node_modules/: Running make on a clean repository \
+		may take some time... ))
+
+
 
 # variables...
 
@@ -188,8 +196,6 @@ COMMIT := $(strip $(shell git rev-parse HEAD))
 
 # NOTE: running things via npx can slow things down when running make on a 
 # 	clean repo...
-# 	XXX this is mainly happening on getting electron version, need to
-# 		avoid this...
 NPX := npx --yes
 
 
