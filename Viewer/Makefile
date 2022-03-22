@@ -1,8 +1,8 @@
 #**********************************************************************
 ##
-## ImageGrid.Viewer Makefile...
+## ImageGrid.Viewer Makefile
 ##
-#
+##
 # Make dependencies that need to be installed (make check):
 # 	- make basics
 # 		- bash
@@ -82,8 +82,6 @@
 ##
 ## NOTE: when setting variables avoid using spaces and other characters 
 ## 	make can get fussy about...
-## NOTE: to do a repack build call:
-## 		(export BUILD_MODE=repack && make)
  # NOTE: in most cases we do not add a "/" to target dirs to destinguish 
  # 	them from target files except for one case:
  #		$(BUILD_DIR)/$(APP_NAME)-%/
@@ -117,7 +115,7 @@
 ##	# build in repack mode...
 ##	$$ BUILD_MODE=repack make dist
 ##
-## 	# build for darwin... (EXPERIMENTAL)
+## 	# build for darwin/macOS... (EXPERIMENTAL)
 ## 	$$ TARGET_OS=darwin make clean dist
 ##
 ## 	# run with Devtools started... 
@@ -125,8 +123,6 @@
 ##
 ## 	# force show the main window... 
 ## 	$$ IMAGEGRID_FORCE_SHOW=1 make run 
-##
-##
 ##
 #
 #

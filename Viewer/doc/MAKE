@@ -1,5 +1,6 @@
 
-ImageGrid.Viewer Makefile...
+ImageGrid.Viewer Makefile
+
 
 To check for buld/development dependencies that make can't install itself:
 	$ make check
@@ -46,8 +47,6 @@ Variables to help with troubleshooting:
 
 NOTE: when setting variables avoid using spaces and other characters 
 	make can get fussy about...
-NOTE: to do a repack build call:
-		(export BUILD_MODE=repack && make)
 NOTE: cross compilation is at this time not supported, if you try it 
 	and it works then 1) you got very lucky and 2) tell me about it =)
 	...at least the node native packages (sharp) will likely either 
@@ -76,7 +75,7 @@ Examples:
 	# build in repack mode...
 	$ BUILD_MODE=repack make dist
 
-	# build for darwin... (EXPERIMENTAL)
+	# build for darwin/macOS... (EXPERIMENTAL)
 	$ TARGET_OS=darwin make clean dist
 
 	# run with Devtools started... 
@@ -84,8 +83,6 @@ Examples:
 
 	# force show the main window... 
 	$ IMAGEGRID_FORCE_SHOW=1 make run 
-
-
 
 
 Help and info:
