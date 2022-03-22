@@ -189,9 +189,8 @@ FIRST_RUN := $(if $(filter node_modules,$(wildcard *)),,1)
 NPX := npx --yes
 
 
-
 # Warn user...
-_ := $(if $(FIRST_RUN), $(info \
+_ := $(if $(FIRST_RUN), $(warning \
 	Missing ./node_modules/: Running make on a clean repository may take \
 	some time... ))
 
