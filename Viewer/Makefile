@@ -169,6 +169,17 @@ SHELL := bash
 APP_NAME ?= ImageGrid.Viewer
 
 
+# XXX move these to a better spot...
+# XXX install path should depend on type of install...
+# 	- dev		- run from repo dir
+# 	- user		- install in user dir
+# 	- system	- global install
+INSTALL_PATH ?=
+
+APP_PATH ?= $(INSTALL_PATH)/ig
+ICON_PATH ?=
+
+
 VERSION_FALLBACK ?= 4.0.0a
 # NOTE: we are not using './ig --version 2> /dev/null' because it will 
 # 	not work before we do 'npm install'...
@@ -317,15 +328,27 @@ BACKUP_EXT := .ig-backup
 LICENSE = LICENSE
 BUILD_INFO = $(BUILD_DIR)/INFO
 PROJECT_FILES = package.json
-# get all .css build targets, in addition, get all the .less files and 
-# replace .less with .css making them build targets...
-CSS_FILES := $(patsubst %.less,%.css,$(wildcard css/*.less))
 HTML_FILES := $(wildcard *.html)
+
 # NOTE: these must be explicitly included in all other categories as they
 # 	will not be matched by wildcard if they are not generated yet 
 # 	resulting in them not being copied to the build...
-GENERATED_JS_FILES := version.js
-ROOT_JS_FILES := $(wildcard *.js) version.js
+GENERATED_CSS_FILES := \
+	$(patsubst %.less,%.css,$(wildcard css/*.less))
+# XXX should this be a wildcard???
+GENERATED_JS_FILES := \
+	version.js
+GENERATED_FILES := \
+	$(GENERATED_JS_FILES) \
+	$(GENERATED_CSS_FILES) \
+	$(APP_NAME).desktop
+
+CSS_FILES := \
+	$(wildcard css/*.css) \
+	$(GENERATED_CSS_FILES)
+ROOT_JS_FILES := \
+	$(wildcard *.js) \
+	version.js
 # NOTE: this is only used for make change/dependency tracking checking...
 JS_FILES := $(ROOT_JS_FILES) \
 	$(GENERATED_JS_FILES) \
@@ -502,12 +525,22 @@ run: ## Run app in-place
 run: electron-run 
 
 
+# XXX INSTALL
+.PHONY: install
+install: dev
+
 
 ### Cleanup...
 
 .PHONY: clean
-clean: ## Clean the BUILD_DIR directory
-	$(RM) $(BUILD_DIR) $(GENERATED_JS_FILES)
+clean: ## Cleanup
+clean: clean-generated
+	$(RM) $(BUILD_DIR) 
+
+
+.PHONY: clean-generated
+clean-generated: ## Clean generated files
+	$(RM) $(GENERATED_FILES)
 
 
 .PHONY: clean-dist
@@ -526,7 +559,13 @@ clean-all: clean clean-dist
 
 .PHONY: css
 css: ## Build CSS
-css: $(CSS_FILES)
+css: $(GENERATED_CSS_FILES)
+
+
+.PHONY: js
+js: ## Build JS modules
+js: $(GENERATED_JS_FILES)
+
 
 # NOTE: do not use these phony targets as dependencies...
 # NOTE: these intersect, so one should remove the previos before making 
@@ -628,7 +667,7 @@ PACK_FULL = $(BUILD_DIR)/$(APP_NAME)/ $(BUILD_DIR)/$(APP_NAME)/$(NODE_DIR)
 # NOTE: this depends on lots of stuff so as to be updated in case any of
 # 	the dependencies are touched...
 $(BUILD_INFO): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
-		$(JS_FILES) $(CSS_FILES) $(HTML_FILES)
+		$(JS_FILES) $(HTML_FILES)
 	$(MD) "$(@D)"
 	@echo "Build info:"
 	@echo "$(APP_NAME)" | tee "$@"
@@ -638,12 +677,22 @@ $(BUILD_INFO): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 	@echo "electron: $(ELECTRON_VERSION)" | tee -a "$@"
 
 
-version.js: package.json version.js.tpl
-	cat version.js.tpl \
+%.js: %.js.tpl package.json
+	cat $< \
 		| sed 's/\$$VERSION/$(APP_VERSION)/' \
 		| sed 's/\$$BUILD/$(DATE)/' \
 		| sed 's/\$$COMMIT/$(COMMIT)/' \
-		> version.js
+		> $@
+
+
+# XXX this should be a generic rule: %.desktop <- %.desktop.tpl
+$(APP_NAME).desktop: App.desktop.tpl package.json
+	cat $< \
+		| sed 's/\$$VERSION/$(APP_VERSION)/' \
+		| sed 's/\$$APP_NAME/$(APP_NAME)/' \
+		| sed 's/\$$APP_PATH/$(APP_PATH)/' \
+		| sed 's/\$$ICON_PATH/$(ICON_PATH)/' \
+		> $@
 
 
 %.css: %.less
