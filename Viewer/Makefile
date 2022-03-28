@@ -176,7 +176,7 @@ APP_NAME ?= ImageGrid.Viewer
 # 	- system	- global install
 INSTALL_PATH ?=
 
-APP_PATH ?= $(INSTALL_PATH)/ig
+APP_PATH ?= ig
 ICON_PATH ?=
 
 
@@ -677,26 +677,24 @@ $(BUILD_INFO): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 	@echo "electron: $(ELECTRON_VERSION)" | tee -a "$@"
 
 
-%.js: %.js.tpl package.json
+# XXX is this too broad???
+%: %.tpl package.json
 	cat $< \
 		| sed 's/\$$VERSION/$(APP_VERSION)/' \
 		| sed 's/\$$BUILD/$(DATE)/' \
 		| sed 's/\$$COMMIT/$(COMMIT)/' \
-		> $@
-
-
-# XXX this should be a generic rule: %.desktop <- %.desktop.tpl
-$(APP_NAME).desktop: App.desktop.tpl package.json
-	cat $< \
-		| sed 's/\$$VERSION/$(APP_VERSION)/' \
 		| sed 's/\$$APP_NAME/$(APP_NAME)/' \
-		| sed 's/\$$APP_PATH/$(APP_PATH)/' \
-		| sed 's/\$$ICON_PATH/$(ICON_PATH)/' \
+		| sed 's/\$$APP_PATH/$(subst /,\/,$(APP_PATH))/' \
+		| sed 's/\$$ICON_PATH/$(subst /,\/,$(ICON_PATH))/' \
 		> $@
 
 
 %.css: %.less
 	$(LESSC) $< > $@
+
+
+$(APP_NAME).desktop: App.desktop
+	mv $< $@
 
 
 # XXX might be a good idea to install directly to $(BUILD_DIR) so as not 
