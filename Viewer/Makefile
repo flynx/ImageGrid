@@ -658,9 +658,14 @@ zipDelFrom = cd $1 ; \
 #**********************************************************************
 # build rules...
 
-includeNodeModules = $(foreach m,$1,$(BUILD_DIR)/$(APP_NAME)/$(NODE_DIR)/$(m))
-PACK_MINIMAL = $(BUILD_DIR)/$(APP_NAME)/ $(call includeNodeModules,$(INCLUDE_NODE_MODULES))
-PACK_FULL = $(BUILD_DIR)/$(APP_NAME)/ $(BUILD_DIR)/$(APP_NAME)/$(NODE_DIR)
+includeNodeModules = \
+	$(foreach m,$1,$(BUILD_DIR)/$(APP_NAME)/$(NODE_DIR)/$(m))
+PACK_MINIMAL = \
+	$(BUILD_DIR)/$(APP_NAME)/ \
+	$(call includeNodeModules,$(INCLUDE_NODE_MODULES))
+PACK_FULL = \
+	$(BUILD_DIR)/$(APP_NAME)/ \
+	$(BUILD_DIR)/$(APP_NAME)/$(NODE_DIR)
 
 
 # build date...
@@ -677,7 +682,6 @@ $(BUILD_INFO): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 	@echo "electron: $(ELECTRON_VERSION)" | tee -a "$@"
 
 
-# XXX is this too broad???
 %: %.tpl package.json
 	cat $< \
 		| sed 's/\$$VERSION/$(APP_VERSION)/' \
