@@ -227,7 +227,8 @@ ELECTRON := $(NPX) electron
 ELECTRON_REBUILD := $(NPX) electron-rebuild
 ASAR := $(NPX) asar
 ELECTRON_VERSION := $(strip $(shell $(ELECTRON) -v 2> /dev/null))
-ELECTRON_DOWNOAD_URL ?= https://github.com/electron/electron/releases/download/$(ELECTRON_VERSION)
+ELECTRON_DOWNOAD_URL ?= \
+	https://github.com/electron/electron/releases/download/$(ELECTRON_VERSION)
 ELECTRON_DIST ?= electron-$(ELECTRON_VERSION)-$(TARGET_OS)-$(ARCH).zip
 
 
@@ -668,7 +669,7 @@ PACK_FULL = \
 	$(BUILD_DIR)/$(APP_NAME)/$(NODE_DIR)
 
 
-# build date...
+# build data...
 # NOTE: this depends on lots of stuff so as to be updated in case any of
 # 	the dependencies are touched...
 $(BUILD_INFO): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
@@ -682,6 +683,7 @@ $(BUILD_INFO): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 	@echo "electron: $(ELECTRON_VERSION)" | tee -a "$@"
 
 
+# basic templates...
 %: %.tpl package.json
 	cat $< \
 		| sed 's/\$$VERSION/$(APP_VERSION)/' \
@@ -702,7 +704,7 @@ $(APP_NAME).desktop: App.desktop
 
 
 # XXX might be a good idea to install directly to $(BUILD_DIR) so as not 
-# 	to messup the current dir...
+# 	to mess up the current dir...
 # XXX need to make this arch/os specific for cross compiling...
 # XXX requirejs breaks here for some reason, breaking npm install and 
 # 	the build...
