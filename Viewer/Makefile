@@ -232,6 +232,9 @@ ELECTRON_DOWNOAD_URL ?= \
 ELECTRON_DIST ?= electron-$(ELECTRON_VERSION)-$(TARGET_OS)-$(ARCH).zip
 
 
+APP_DIR ?= $(HOME)/.local/share/applications/
+
+
 BUILD_MODE ?= in-place
 
 
@@ -645,6 +648,18 @@ electron-run: dev
 
 
 
+##---------------------------------------------------- Open Desktop ---
+
+.PHONY: desktop
+desktop: dev $(APP_NAME).desktop
+	desktop-file-install --dir="$(APP_DIR)" $(APP_NAME).desktop
+
+.PHONY: desktop-remove
+desktop-remove:
+	rm -f $(APP_DIR)/$(APP_NAME).desktop
+
+
+
 #**********************************************************************
 # helpers...
 
@@ -699,8 +714,12 @@ $(BUILD_INFO): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 	$(LESSC) $< > $@
 
 
-$(APP_NAME).desktop: App.desktop
-	mv $< $@
+# XXX get this from the install path...
+$(APP_NAME).desktop: APP_LAUNCHER := $(shell pwd)/ig.js gui
+$(APP_NAME).desktop: templates/App.desktop
+	cat $< \
+		| sed 's#\$$LAUNCHER#$(APP_LAUNCHER)#' \
+		> $@
 
 
 # XXX might be a good idea to install directly to $(BUILD_DIR) so as not 
