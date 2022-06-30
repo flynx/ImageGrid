@@ -168,6 +168,9 @@ SHELL := bash
 
 APP_NAME ?= ImageGrid.Viewer
 
+COMMENT ?= Image sorting and editing
+CATEGORIES ?= Photography;Graphics;Database;Viewer;
+
 DEVEL_PATH  := $(shell pwd)
 
 # install mode...
@@ -720,12 +723,15 @@ $(BUILD_INFO): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 
 
 # basic templates...
+# XXX revise $LAUNCHER -- should it be absolute or relative and when???
 %: %.tpl package.json
 	cat $< \
+		| sed 's/\$$APP_NAME/$(APP_NAME)/' \
+		| sed 's/\$$COMMENT/$(subst \/,\/,$(COMMENT))/' \
+		| sed 's/\$$CATEGORIES/$(subst \/,\/,$(CATEGORIES))/' \
 		| sed 's/\$$VERSION/$(APP_VERSION)/' \
 		| sed 's/\$$BUILD/$(DATE)/' \
 		| sed 's/\$$COMMIT/$(COMMIT)/' \
-		| sed 's/\$$APP_NAME/$(APP_NAME)/' \
 		| sed 's#\$$APP_PATH#$(APP_PATH)#' \
 		| sed 's#\$$ICON_PATH#$(ICON_PATH)#' \
 		| sed 's#\$$LAUNCHER#$(INSTALL_PATH)/$(APP_LAUNCHER)#' \

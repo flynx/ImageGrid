@@ -1,7 +1,7 @@
 [Desktop Entry]
 Name=$APP_NAME
-Comment=Image sorting and editing
-Categories=Photography;Graphics;Database;Viewer;
+Comment=$COMMENT
+Categories=$CATEGORIES
 Exec=$LAUNCHER
 Icon=$ICON_PATH
 Terminal=false
