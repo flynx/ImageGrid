@@ -723,8 +723,9 @@ $(BUILD_INFO): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 		| sed 's/\$$BUILD/$(DATE)/' \
 		| sed 's/\$$COMMIT/$(COMMIT)/' \
 		| sed 's/\$$APP_NAME/$(APP_NAME)/' \
-		| sed 's/\$$APP_PATH/$(subst /,\/,$(APP_PATH))/' \
-		| sed 's/\$$ICON_PATH/$(subst /,\/,$(ICON_PATH))/' \
+		| sed 's#\$$APP_PATH#$(APP_PATH)#' \
+		| sed 's#\$$ICON_PATH#$(ICON_PATH)#' \
+		| sed 's#\$$LAUNCHER#$(INSTALL_PATH)/$(APP_LAUNCHER)#' \
 		> $@
 
 
@@ -732,12 +733,8 @@ $(BUILD_INFO): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 	$(LESSC) $< > $@
 
 
-$(APP_NAME).desktop: App.desktop.tpl
-	cat $< \
-		| sed 's#\$$APP_NAME#$(APP_NAME)#' \
-		| sed 's#\$$LAUNCHER#$(INSTALL_PATH)/$(APP_LAUNCHER)#' \
-		| sed 's#\$$ICON#$(ICON_PATH)#' \
-		> $@
+$(APP_NAME).desktop: App.desktop
+	mv $< $@
 
 
 # XXX might be a good idea to install directly to $(BUILD_DIR) so as not 
