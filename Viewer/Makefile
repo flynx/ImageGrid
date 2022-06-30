@@ -179,6 +179,9 @@ INSTALL_PATH ?=
 APP_PATH ?= ig
 ICON_PATH ?=
 
+# XXX not sure about these yet...
+INSTALL_PATH ?= $(shell pwd)
+APP_LAUNCHER ?= $(INSTALL_PATH)/ig.js gui
 
 VERSION_FALLBACK ?= 4.0.0a
 # NOTE: we are not using './ig --version 2> /dev/null' because it will 
@@ -713,9 +716,7 @@ $(BUILD_INFO): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 %.css: %.less
 	$(LESSC) $< > $@
 
-
 # XXX get this from the install path...
-$(APP_NAME).desktop: APP_LAUNCHER := $(shell pwd)/ig.js gui
 $(APP_NAME).desktop: templates/App.desktop
 	cat $< \
 		| sed 's#\$$LAUNCHER#$(APP_LAUNCHER)#' \
