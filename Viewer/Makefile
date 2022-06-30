@@ -175,15 +175,18 @@ DEVEL_PATH  := $(shell pwd)
 INSTALL_PATH ?=
 INSTALL ?= dev
 ifeq ($(INSTALL_PATH),)
+	# in-place...
 	ifeq ($(INSTALL),dev)
 		INSTALL_PATH := $(DEVEL_PATH)
 		DESKTOP_PATH ?= $(HOME)/.local/share/applications/
 	endif
+	# local to user...
 	ifeq ($(INSTALL),user)
 		# XXX
 		INSTALL_PATH :=
 		DESKTOP_PATH ?= $(HOME)/.local/share/applications/
 	endif
+	# system-wide...
 	ifeq ($(INSTALL),system)
 		# XXX
 		INSTALL_PATH :=

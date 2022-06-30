@@ -1,6 +1,5 @@
 [Desktop Entry]
 Name=$APP_NAME
-Version=$VERSION
 Comment=Image sorting and editing
 Categories=Photography;Graphics;Database;Viewer;
 Exec=$LAUNCHER
