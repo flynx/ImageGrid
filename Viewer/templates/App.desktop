@@ -1,9 +1,9 @@
 [Desktop Entry]
 Name=ImageGrid.Viewer
 Comment=Image sorting and editing
-Categories=Graphics;Database;Viewer;Photography;
+Categories=Photography;Graphics;Database;Viewer;
 Exec=$LAUNCHER
-Icon=
+Icon=$ICON
 Terminal=false
 Type=Application
 StartupNotify=true

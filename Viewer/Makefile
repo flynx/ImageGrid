@@ -168,20 +168,34 @@ SHELL := bash
 
 APP_NAME ?= ImageGrid.Viewer
 
+DEVEL_PATH  := $(shell pwd)
 
-# XXX move these to a better spot...
-# XXX install path should depend on type of install...
-# 	- dev		- run from repo dir
-# 	- user		- install in user dir
-# 	- system	- global install
+# install mode...
+# XXX revise...
 INSTALL_PATH ?=
+INSTALL ?= dev
+ifeq ($(INSTALL_PATH),)
+	ifeq ($(INSTALL),dev)
+		INSTALL_PATH := $(DEVEL_PATH)
+		DESKTOP_PATH ?= $(HOME)/.local/share/applications/
+	endif
+	ifeq ($(INSTALL),user)
+		# XXX
+		INSTALL_PATH :=
+		DESKTOP_PATH ?= $(HOME)/.local/share/applications/
+	endif
+	ifeq ($(INSTALL),system)
+		# XXX
+		INSTALL_PATH :=
+		DESKTOP_PATH ?= /usr/local/share/applications/
+	endif
+endif
+
 
 APP_PATH ?= ig
 ICON_PATH ?=
 
-# XXX not sure about these yet...
-INSTALL_PATH ?= $(shell pwd)
-APP_LAUNCHER ?= $(INSTALL_PATH)/ig.js gui
+APP_LAUNCHER := ig.js gui
 
 VERSION_FALLBACK ?= 4.0.0a
 # NOTE: we are not using './ig --version 2> /dev/null' because it will 
@@ -233,9 +247,6 @@ ELECTRON_VERSION := $(strip $(shell $(ELECTRON) -v 2> /dev/null))
 ELECTRON_DOWNOAD_URL ?= \
 	https://github.com/electron/electron/releases/download/$(ELECTRON_VERSION)
 ELECTRON_DIST ?= electron-$(ELECTRON_VERSION)-$(TARGET_OS)-$(ARCH).zip
-
-
-APP_DIR ?= $(HOME)/.local/share/applications/
 
 
 BUILD_MODE ?= in-place
@@ -653,13 +664,17 @@ electron-run: dev
 
 ##---------------------------------------------------- Open Desktop ---
 
+.PHONY: desktop-file
+desktop-file: $(APP_NAME).desktop
+
 .PHONY: desktop
-desktop: dev $(APP_NAME).desktop
-	desktop-file-install --dir="$(APP_DIR)" $(APP_NAME).desktop
+desktop: dev desktop-file
+	desktop-file-install --dir="$(DESKTOP_PATH)" $(APP_NAME).desktop
+	update-desktop-database "$(DESKTOP_PATH)"
 
 .PHONY: desktop-remove
 desktop-remove:
-	rm -f $(APP_DIR)/$(APP_NAME).desktop
+	rm -f $(DESKTOP_PATH)/$(APP_NAME).desktop
 
 
 
@@ -719,7 +734,8 @@ $(BUILD_INFO): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 # XXX get this from the install path...
 $(APP_NAME).desktop: templates/App.desktop
 	cat $< \
-		| sed 's#\$$LAUNCHER#$(APP_LAUNCHER)#' \
+		| sed 's#\$$LAUNCHER#$(INSTALL_PATH)/$(APP_LAUNCHER)#' \
+		| sed 's#\$$ICON#$(ICON_PATH)#' \
 		> $@
 
 
