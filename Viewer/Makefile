@@ -731,9 +731,10 @@ $(BUILD_INFO): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 %.css: %.less
 	$(LESSC) $< > $@
 
-# XXX get this from the install path...
-$(APP_NAME).desktop: templates/App.desktop
+
+$(APP_NAME).desktop: App.desktop.tpl
 	cat $< \
+		| sed 's#\$$APP_NAME#$(APP_NAME)#' \
 		| sed 's#\$$LAUNCHER#$(INSTALL_PATH)/$(APP_LAUNCHER)#' \
 		| sed 's#\$$ICON#$(ICON_PATH)#' \
 		> $@
