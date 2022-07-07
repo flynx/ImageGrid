@@ -58,6 +58,7 @@ var setup = function(require, root){
 			'lib/types': 'node_modules/ig-types/',
 			'lib/actions': 'node_modules/ig-actions/actions',
 			'lib/features': 'node_modules/ig-features/features',
+			'lib/stoppable': 'node_modules/ig-stoppable/stoppable',
 			//'lib/keyboard': './node_modules/ig-keyboard/keyboard',
 			'object-run': 'node_modules/object-run/run',
 			
@@ -73,6 +74,7 @@ var setup = function(require, root){
 				'ig-types': 'lib/types',
 				'ig-actions': 'lib/actions',
 				'ig-features': 'lib/features',
+				'ig-stoppable': 'lib/stoppable',
 
 				//'ig-keyboard': 'lib/keyboard',
 
