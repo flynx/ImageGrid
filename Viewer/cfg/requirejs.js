@@ -54,6 +54,7 @@ var setup = function(require, root){
 			//'react-dom': 'node_modules/react-dom/dist/react-dom.min.js',
 			//'ext-lib/preact': './node_modules/preact/dist/preact.dev',
 
+			'lib/doc': 'node_modules/ig-doc/doc',
 			'lib/object': 'node_modules/ig-object/object',
 			'lib/types': 'node_modules/ig-types/',
 			'lib/actions': 'node_modules/ig-actions/actions',
@@ -70,6 +71,7 @@ var setup = function(require, root){
 				// back-refs
 				// ...these enable the npm modules reference each other in 
 				// a cross-platform manner....
+				'ig-doc': 'lib/doc',
 				'ig-object': 'lib/object',
 				'ig-types': 'lib/types',
 				'ig-actions': 'lib/actions',
