@@ -420,6 +420,7 @@ var FileSystemLoaderActions = actions.Actions({
 	// 		given path???
 	getPreviews: ['- File/',
 		function(pattern, path, images){
+			var that = this
 			images = images || this.images
 			pattern = pattern == 'current' ? this.current + '*'
 				: pattern == 'all' ? '*'
@@ -451,16 +452,15 @@ var FileSystemLoaderActions = actions.Actions({
 									var rel = pathlib.relative(images[gid].base_path, base)
 
 									images[gid].path = pathlib.join(rel, images[gid].path) 
-									images[gid].base_path = base
-								}
+									images[gid].base_path = base }
 
-								images[gid].preview = p[gid].preview
-							}
-						})
-					}
-					return images
-				})
-		}],
+								images[gid].preview = p[gid].preview 
+								// XXX should we check if things have changed???
+								that.markChanged('images', [gid]) } }) }
+					return images }) }],
+	// XXX indicate progress???
+	getAllPreviews: ['File/Update image preview list',
+		'getPreviews: "all"'],
 
 	// Get images in path...
 	//

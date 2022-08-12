@@ -55,11 +55,11 @@ var setup = function(require, root){
 			//'ext-lib/preact': './node_modules/preact/dist/preact.dev',
 
 			'lib/doc': 'node_modules/ig-doc/doc',
+			'lib/stoppable': 'node_modules/ig-stoppable/stoppable',
 			'lib/object': 'node_modules/ig-object/object',
 			'lib/types': 'node_modules/ig-types/',
 			'lib/actions': 'node_modules/ig-actions/actions',
 			'lib/features': 'node_modules/ig-features/features',
-			'lib/stoppable': 'node_modules/ig-stoppable/stoppable',
 			//'lib/keyboard': './node_modules/ig-keyboard/keyboard',
 			'object-run': 'node_modules/object-run/run',
 			
