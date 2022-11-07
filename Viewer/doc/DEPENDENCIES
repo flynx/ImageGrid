@@ -3,8 +3,9 @@
 Future tasks
 ============
 
+- Remove dependency on less, don't think we need it anymore...
 - Remove/merge legacy modules
-- move generic stuff to separate libs (npm)
+- Move generic stuff to separate libs (npm)
 	- lib/keyboard.js
 	- lib/toggler.js
 
