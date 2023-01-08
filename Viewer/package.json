@@ -37,7 +37,7 @@
     "ig-doc": "*",
     "ig-object": "*",
     "ig-types": "*",
-    "json5": "^2.2.0",
+    "json5": "^2.2.2",
     "object-run": "*",
     "requirejs": "*",
     "requirejs-plugins": "*",
