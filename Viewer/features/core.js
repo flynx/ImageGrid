@@ -2000,7 +2000,7 @@ var JournalActions = actions.Actions({
 	get journalUnsaved(){
 		var res = []
 		//for(var e of (this.journal || []).slice().reverse()){
-		for(var i=this.journal.length-1; i >= 0; i--){
+		for(var i=(this.journal || []).length-1; i >= 0; i--){
 			var e = this.journal[i]
 			// everything until a load or a save event...
 			if(e == 'SAVED' 
