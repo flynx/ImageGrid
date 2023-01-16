@@ -328,15 +328,24 @@ fi
 
 # build cache...
 if [ -z $SKIP_CACHE ] ; then
-	# a little tweak to make build cache work...
-	export PYTHONIOENCODING=UTF-8
+
+	# ig...
+	if ! [ -z `command -v ig` ] ; then
+		CACHE="ig init"
+	# buildcache (legacy)...
+	elif [ -z `command -v buildcache` ] ; then
+		# a little tweak to make build cache work...
+		export PYTHONIOENCODING=UTF-8
+		CACHE=buildcache
+	fi
+
 	#if [ -z $TOTAL ] ; then
 	#	export TOTAL=`find . -path '*hi-res (RAW)/*.jpg' | wc -l`
 	#fi
 	if ! [ -z "$COMMON_PREVIEWS" ] && [ -e "./$COMMON_PREVIEWS/preview (RAW)" ] ; then
-		buildcache "./$COMMON_PREVIEWS/preview (RAW)"
+		$CACHE "./$COMMON_PREVIEWS/preview (RAW)"
 	else
-		find . -type d -name 'preview (RAW)' -exec buildcache "{}" \;
+		find . -type d -name 'preview (RAW)' -exec $CACHE "{}" \;
 	fi
 fi
 
