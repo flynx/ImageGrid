@@ -326,17 +326,36 @@ var CLIActions = actions.Actions({
 				doc: 'List nested/recursive indexes',
 				type: 'bool',
 			},
+
+			'-n': '-nested-only',
+			'-nested-only': {
+				doc: 'Ignore the top-level index and only list the indexes below',
+				type: 'bool',
+			},
+
 		})},
 		function(path, options={}){
+			var that = this
+			this.setupFeatures()
 			file.listIndexes(path)
 				.on('end', function(paths){
-					paths = 
-						(options.recursive ? 
-							paths
-							: file.skipNested(paths))
-						.sortAs(paths)
+					paths = paths
+						.map(function(p){
+							return p
+								.split(that.config['index-dir'])
+								.shift() })
+					// normalize path...
+					path.at(-1) != '/'
+						&& (path += '/')
+					// handle --nested-only
+					options['nested-only']
+						&& paths.splice(paths.indexOf(path), 1)
+					paths = options.recursive ? 
+						paths
+						: file.skipNested(paths)
+							.sortAs(paths)
 					for(var p of paths){
-						console.log(p.replace(/.ImageGrid$/, '')) } }) }],
+						console.log(p) } }) }],
 
 	/* XXX
 	startWorker: ['- System/Start as worker',

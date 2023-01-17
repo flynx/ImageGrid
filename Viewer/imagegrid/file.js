@@ -43,30 +43,26 @@ var INDEX_DIR = '.ImageGrid'
 var skipNested = 
 module.skipNested =
 function(paths, index_dir, logger){
+	index_dir = index_dir || INDEX_DIR
 	logger = logger && logger.push('Skipping nested')
 
 	paths = paths
-		.map(function(p){ return p.split(index_dir).shift() })
-		.sort(function(a, b){ return a.length - b.length })
+		.map(function(p){ 
+			return p.split(index_dir).shift() })
+		.sort(function(a, b){ 
+			return a.length - b.length })
 	for(var i=0; i < paths.length; i++){
 		var p = paths[i]
-
-		if(p == null){
-			continue
-		}
-
+		if(p instanceof Array){
+			continue }
 		for(var j=i+1; j < paths.length; j++){
+			if(paths[j] instanceof Array){
+				continue }
 			var o = paths[j].split(p)
-
 			if(o[0] == '' && o.length > 1){
 				logger && logger.emit('skipping', paths[j])
-				delete paths[j]
-			}
-		}
-	}
-	return paths
-		.filter(function(p){ return !!p })
-}
+				paths[j] = [] } } }
+	return paths.flat() }
 
 
 // Guarantee that the 'end' and 'match' handlers will always get called 
