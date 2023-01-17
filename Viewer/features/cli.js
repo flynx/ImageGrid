@@ -273,44 +273,6 @@ var CLIActions = actions.Actions({
 			// XXX
 		}],
 	//*/
-	// XXX revise naming...
-	// XXX how do we handle errors???
-	cliListCollections: ['- System/List collections in index',
-		{cli: argv && argv.Parser({
-			key: '@collections',
-			doc: 'List collection in index at PATH',
-			arg: 'PATH',
-
-			'-version': undefined,
-			'-quiet': undefined,
-
-			'-f': '-full',
-			'-full': {
-				doc: 'show full collection information',
-				type: 'bool',
-			},
-		})},
-		function(path, options={}){
-			var that = this
-
-			this.setupFeatures()
-
-			path = path || options.value
-			path = util.normalizePath(
-				path ?
-					pathlib.resolve(process.cwd(), path)
-					: process.cwd())
-			return this.loadIndex(path)
-				.then(
-					function(){
-						for(var name of that.collection_order || []){
-							// XXX revise output formatting...
-							options.full ?
-					   			console.log(that.collections[name].gid, name) 
-								: console.log(name) } },
-					function(err){
-						// XXX how do we handle rejection???
-						console.error('Can\'t find or load index at:', path) }) }],
 	// XXX handle errors...
 	cliListIndexes: ['- System/List indexes in PATH',
 		{cli: argv && argv.Parser({
@@ -356,6 +318,44 @@ var CLIActions = actions.Actions({
 							.sortAs(paths)
 					for(var p of paths){
 						console.log(p) } }) }],
+	// XXX revise naming...
+	// XXX how do we handle errors???
+	cliListCollections: ['- System/List collections in index',
+		{cli: argv && argv.Parser({
+			key: '@collections',
+			doc: 'List collection in index at PATH',
+			arg: 'PATH',
+
+			'-version': undefined,
+			'-quiet': undefined,
+
+			'-f': '-full',
+			'-full': {
+				doc: 'show full collection information',
+				type: 'bool',
+			},
+		})},
+		function(path, options={}){
+			var that = this
+
+			this.setupFeatures()
+
+			path = path || options.value
+			path = util.normalizePath(
+				path ?
+					pathlib.resolve(process.cwd(), path)
+					: process.cwd())
+			return this.loadIndex(path)
+				.then(
+					function(){
+						for(var name of that.collection_order || []){
+							// XXX revise output formatting...
+							options.full ?
+					   			console.log(that.collections[name].gid, name) 
+								: console.log(name) } },
+					function(err){
+						// XXX how do we handle rejection???
+						console.error('Can\'t find or load index at:', path) }) }],
 
 	/* XXX
 	startWorker: ['- System/Start as worker',
