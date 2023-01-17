@@ -184,12 +184,12 @@ var CLIActions = actions.Actions({
 		function(...tags){
 			var features = this.features.FeatureSet
 			requirejs('features/all')
-			features.setup(this, tags.length == 0 ?
-				[
-					'imagegrid-testing', 
-					...this.features.input,
-				]
-				: tags) }],
+			features.setup(this, [
+				'imagegrid-testing', 
+				...(tags.length == 0 ?
+					this.features.input
+					: tags),
+			]) }],
 
 
 	// Startup commands...
@@ -262,23 +262,49 @@ var CLIActions = actions.Actions({
 
 	// Introspection...
 	//
-	/* XXX 
+	// XXX handle errors...
 	cliInfo: ['- System/Show information about index in PATH',
 		{cli: {
 			name: '@info', 
 			arg: 'PATH',
-			default: '.',
 		}},
 		function(path, options={}){
-			// XXX
-		}],
-	//*/
+			var that = this
+			path = path ?? '.'
+			this.setupFeatures()
+			return this.loadIndex(path)
+				.then(
+					async function(){
+						var modified = 
+							Object.values(
+								await that.loadSaveHistoryList())
+							.map(function(log){
+								return Object.keys(log) })
+							.flat()
+							.sort()
+							.pop()
+						// calculate core.doc compatible offset for nested items.
+						var offset = '\t'.repeat(`
+							`.split('\t').length)
+						console.log(core.doc`
+							Load path: ${ path }
+							Index path: ${ that.location.path }
+							Loaded indexes: ${ 
+								['', ...that.location.loaded].join('\n'+offset) }
+							Current image: ${ that.current }
+							Image count: ${ that.data.order.length }
+							Collections: ${ 
+								that.collections ?
+									['', ...Object.keys(that.collections || [])].join('\n'+offset)
+									: '-' }
+							Modified date: ${ modified }`) },
+					function(err){
+						console.error('Can\'t find or load index at:', path) }) }],
 	// XXX handle errors...
 	cliListIndexes: ['- System/List indexes in PATH',
 		{cli: argv && argv.Parser({
 			key: '@ls', 
 			arg: 'PATH',
-			default: '.',
 
 			'-version': undefined,
 			'-quiet': undefined,
@@ -298,7 +324,10 @@ var CLIActions = actions.Actions({
 		})},
 		function(path, options={}){
 			var that = this
-			this.setupFeatures()
+			path = path ?? '.'
+			// needed to get the default index dir name...
+			this.setupFeatures('fs')
+			//this.setupFeatures()
 			file.listIndexes(path)
 				.on('end', function(paths){
 					paths = paths
@@ -311,6 +340,7 @@ var CLIActions = actions.Actions({
 						&& (path += '/')
 					// handle --nested-only
 					options['nested-only']
+						&& paths.includes(path)
 						&& paths.splice(paths.indexOf(path), 1)
 					paths = options.recursive ? 
 						paths
