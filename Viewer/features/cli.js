@@ -48,12 +48,10 @@ var CLIActions = actions.Actions({
 					console.log('')
 				}) }],
 
-
 	get cliActions(){
 		return this.actions
 			.filter(function(action){
 				return this.getActionAttr(action, 'cli') }.bind(this)) },
-
 
 	// XXX should this be here???
 	// 		...move this to progress...
@@ -178,7 +176,6 @@ var CLIActions = actions.Actions({
 				this.showProgress(['Error'].concat(msg), '+0', '+'+l) }
 		}],
 
-
 	// XXX SETUP revise default...
 	setupFeatures: ['- System/',
 		function(...tags){
@@ -194,17 +191,21 @@ var CLIActions = actions.Actions({
 
 	// Startup commands...
 	//
-	startREPL: ['- System/Start CLI interpreter',
+	cliStartREPL: ['- System/CLI/start CLI interpreter',
 		{cli: {
 			name: '@repl',
+			arg: 'PATH'
 			//interactive: true,
 		}},
-		function(){
+		function(path, options){
 			var that = this
 			var repl = nodeRequire('repl')
 
 			// XXX SETUP
 			this.setupFeatures()
+
+			if(path){
+				this.loadIndex(path) }
 
 			this.__keep_running = true
 
@@ -238,14 +239,38 @@ var CLIActions = actions.Actions({
 					that.stop() }) }],
 	// XXX move this to a feature that requires electron...
 	// 		...and move electron to an optional dependency...
-	// XXX should we require electron or npx electron???
-	// XXX add --dev-tools flag...
-	startGUI: ['- System/Start viewer GUI',
+	cliStartGUI: ['- System/CLI/start viewer GUI',
 		core.doc`
 
 		NOTE: this will not wait for the viewer to exit.`,
-		{cli: '@gui'},
-		function(){
+		{cli: argv && argv.Parser({
+			key: '@gui',
+			arg: 'PATH',
+			doc: 'start viewer GUI',
+
+			'-version': undefined,
+			'-quiet': undefined,
+
+			'-devtools': {
+				doc: 'show DevTools',
+				type: 'bool',
+			},
+			'-show': {
+				doc: 'force show interface',
+				type: 'bool',
+			},
+		})},
+		function(path, options={}){
+			var env = { ...process.env }
+			path
+				&& (env.IMAGEGRID_PATH = 
+					util.normalizePath(
+						pathlib.resolve(process.cwd(), path)))
+			options.devtools
+				&& (env.IMAGEGRID_DEBUG = true)
+			options.show
+				&& (env.IMAGEGRID_FORCE_SHOW = true)
+
 			// already in electron...
 			if(process.versions.electron){
 				// XXX this feels hackish... 
@@ -258,12 +283,16 @@ var CLIActions = actions.Actions({
 						[ pathlib.join(
 							pathlib.dirname(nodeRequire.main.filename), 
 							'e.js') ],
-						{ detached: true, }) } }],
+						{ 
+							detached: true, 
+							env,
+						}) } }],
 
 	// Introspection...
 	//
+	// XXX revise naming...
 	// XXX handle errors...
-	cliInfo: ['- System/Show information about index in PATH',
+	cliInfo: ['- System/CLI/show information about index in PATH',
 		{cli: {
 			name: '@info', 
 			arg: 'PATH',
@@ -300,24 +329,24 @@ var CLIActions = actions.Actions({
 							Modified date: ${ modified }`) },
 					function(err){
 						console.error('Can\'t find or load index at:', path) }) }],
-	// XXX handle errors...
-	cliListIndexes: ['- System/List indexes in PATH',
+	cliListIndexes: ['- System/CLI/list indexes in PATH',
 		{cli: argv && argv.Parser({
 			key: '@ls', 
 			arg: 'PATH',
+			doc: 'list indexes in PATH',
 
 			'-version': undefined,
 			'-quiet': undefined,
 
 			'-r': '-recursive',
 			'-recursive': {
-				doc: 'List nested/recursive indexes',
+				doc: 'list nested/recursive indexes',
 				type: 'bool',
 			},
 
 			'-n': '-nested-only',
 			'-nested-only': {
-				doc: 'Ignore the top-level index and only list the indexes below',
+				doc: 'ignore the top-level index and only list the indexes below',
 				type: 'bool',
 			},
 
@@ -348,12 +377,10 @@ var CLIActions = actions.Actions({
 							.sortAs(paths)
 					for(var p of paths){
 						console.log(p) } }) }],
-	// XXX revise naming...
-	// XXX how do we handle errors???
-	cliListCollections: ['- System/List collections in index',
+	cliListCollections: ['- System/CLI/list collections in index',
 		{cli: argv && argv.Parser({
 			key: '@collections',
-			doc: 'List collection in index at PATH',
+			doc: 'list collection in index at PATH',
 			arg: 'PATH',
 
 			'-version': undefined,
@@ -387,59 +414,16 @@ var CLIActions = actions.Actions({
 						// XXX how do we handle rejection???
 						console.error('Can\'t find or load index at:', path) }) }],
 
-	/* XXX
-	startWorker: ['- System/Start as worker',
-		{cli: '-worker'},
-		function(){
-			// XXX
-		}],
-
-	// Actions...
-	//
-	// XXX
-	// XXX this should be a nested parser...
-	// 		args:
-	// 			from=PATH
-	// 			to=PATH
-	// 			...
-	cliExportIindex: ['- System/Clone index',
-		{cli: {
-			name: '@clone',
-			arg: 'PATH',
-			valueRequired: true,
-		}},
-		function(){
-			// XXX
-		}],
-	cliPullChanges: ['- System/Pull changes',
-		{cli: {
-			name: '@pull',
-			arg: 'PATH',
-			valueRequired: true,
-		}},
-		function(){
-			// XXX
-		}],
-	cliPushChanges: ['- System/Push changes',
-		{cli: {
-			name: '@push',
-			arg: 'PATH',
-			valueRequired: true,
-		}},
-		function(){
-			// XXX
-		}],
-	//*/
-
 	// XXX report that can't find an index...
 	// XXX move options to generic object for re-use...
 	// XXX how do we handle errors???
-	cliExportImages: ['- System/Export images',
+	cliExportImages: ['- System/CLI/export images',
 		{cli: argv && argv.Parser({
 			key: '@export',
+			doc: 'export images',
 			// help...
 			'-help-pattern': {
-				doc: 'Show image filename pattern info and exit',
+				doc: 'show image filename pattern info and exit',
 				priority: 89,
 				handler: function(){
 					this.parent.context
@@ -452,55 +436,55 @@ var CLIActions = actions.Actions({
 			'-quiet': undefined,
 			// commands...
 			'@from': {
-				doc: 'Source path',
+				doc: 'source path',
 				arg: 'PATH | from',
 				default: '.',
 				valueRequired: true, },
 			// XXX
 			'@collection': {
-				doc: 'Source collection (name/gid)',
+				doc: 'source collection (name/gid)',
 				arg: 'COLLECTION | collection',
 				//default: 'ALL',
 				valueRequired: false, },
 			//*/
 			'@to': {
-				doc: 'Destination path',
+				doc: 'destination path',
 				arg: 'PATH | path',
 				required: true,
 				valueRequired: true, },
 			// bool options...
 			// XXX these should get defaults from .config
 			'-include-virtual': {
-				doc: 'Include virtual blocks',
+				doc: 'include virtual blocks',
 				arg: '| include-virtual',
 				type: 'bool',
 				//value: true, 
 				default: true, },
 			'-clean-target': {
-				doc: 'Cleanup target before export (backup)',
+				doc: 'cleanup target before export (backup)',
 				arg: '| clean-target',
 				type: 'bool',
 				//value: true,
 				default: true, },
 			'-no-*': {
-				doc: 'Negate boolean option value',
+				doc: 'negate boolean option value',
 				handler: function(rest, key, value, ...args){
 					rest.unshift(key.replace(/^-?-no/, '') +'=false') } },
 			// options...
 			'-image-name': {
-				doc: 'Image name pattern',
+				doc: 'image name pattern',
 				arg: 'PATTERN | preview-name-pattern',
 				default: '%(fav)l%n%(-%c)c',
 				valueRequired: true, },
 			'-mode': { 
 				// XXX get doc values from system...
-				doc: 'Export mode, can be "resize" or "copy best match"', 
+				doc: 'export mode, can be "resize" or "copy best match"', 
 				arg: 'MODE | export-mode',
 				//default: 'copy best match',
 				default: 'resize',
 				valueRequired: true, },
 			'-image-size': {
-				doc: 'Output image size',
+				doc: 'output image size',
 				arg: 'SIZE | preview-size',
 				default: 1000,
 				valueRequired: true, },
@@ -555,26 +539,26 @@ var CLIActions = actions.Actions({
 	// XXX this is reletively generic, might be useful globally...
 	// XXX should we use a clean index or do this in-place???
 	// XXX add ability to disable sort...
-	initIndex: ['- System/Make index',
+	cliInitIndex: ['- System/CLI/make index',
 		core.doc`
 
 			Create index in current directory
-			.initIndex()
-			.initIndex('create')
+			.cliInitIndex()
+			.cliInitIndex('create')
 				-> promise
 
 			Create index in path...
-			,initIndex(path)
-			.initIndex('create', path)
+			,cliInitIndex(path)
+			.cliInitIndex('create', path)
 				-> promise
 
 
 			Update index in current directory
-			.initIndex('update')
+			.cliInitIndex('update')
 				-> promise
 
 			Update index in path...
-			.initIndex('update', path)
+			.cliInitIndex('update', path)
 				-> promise
 
 		`,
@@ -620,7 +604,7 @@ var CLIActions = actions.Actions({
 						.saveIndex() }) }],
 
 	// XXX this is still wrong...
-	_makeIndex: ['- System/',
+	_cliMakeIndex: ['- System/',
 		`chain: [
 			"loadImages: $1",
 			"saveIndex",
@@ -629,15 +613,60 @@ var CLIActions = actions.Actions({
 			"saveIndex", ]`],
 
 	// XXX does not work yet...
-	updateIndex: ['- System/Update index',
+	cliUpdateIndex: ['- System/CLI/update index',
 		{cli: {
 			name: '@update',
 			arg: 'PATH',
 		}},
-		'initIndex: "update" ...'],
-	cleanIndex: ['- System/',
+		'cliInitIndex: "update" ...'],
+	cliCleanIndex: ['- System/',
 		{},
 		function(path, options){}],
+
+	/* XXX
+	cliStartServer: ['- System/CLI/start as server',
+		{cli: '-server'},
+		function(){
+			// XXX
+		}],
+
+	// Actions...
+	//
+	// XXX
+	// XXX this should be a nested parser...
+	// 		args:
+	// 			from=PATH
+	// 			to=PATH
+	// 			...
+	cliExportIindex: ['- System/CLI/clone index',
+		{cli: {
+			name: '@clone',
+			arg: 'PATH',
+			valueRequired: true,
+		}},
+		function(){
+			// XXX
+		}],
+	cliPullChanges: ['- System/CLI/pull changes',
+		{cli: {
+			name: '@pull',
+			arg: 'PATH',
+			valueRequired: true,
+		}},
+		function(){
+			// XXX
+		}],
+	cliPushChanges: ['- System/CLI/push changes',
+		{cli: {
+			name: '@push',
+			arg: 'PATH',
+			valueRequired: true,
+		}},
+		function(){
+			// XXX
+		}],
+	//*/
+
 })
 
 
@@ -692,13 +721,13 @@ module.CLI = core.ImageGridFeatures.Feature({
 						license: pkg.license,
 
 						'-verbose': {
-							doc: 'Enable verbose (very) output',
+							doc: 'enable (very) verbose output',
 							handler: function(){
 								that.logger 
 									&& (that.logger.quiet = false) } },
 						// XXX merge this with -quiet...
 						'-no-progress': {
-							doc: 'Disable progress bar display',
+							doc: 'disable progress bar display',
 							handler: function(){
 								that.__progress = false } },
 
