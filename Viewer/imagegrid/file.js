@@ -40,7 +40,9 @@ var INDEX_DIR = '.ImageGrid'
 
 // Skip nested indexes from tree...
 //
-var skipNested = function(paths, index_dir, logger){
+var skipNested = 
+module.skipNested =
+function(paths, index_dir, logger){
 	logger = logger && logger.push('Skipping nested')
 
 	paths = paths
