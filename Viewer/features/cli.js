@@ -53,6 +53,14 @@ var CLIActions = actions.Actions({
 				return this.getActionAttr(action, 'cli') }.bind(this)) },
 
 
+	// XXX need introspection...
+	// 		...some thing like .ls(path) to printout:
+	// 			- metadata (image count, dates, ...)
+	// 			- collections
+	// 			- ...
+	// XXX
+
+
 	// XXX should this be here???
 	// 		...move this to progress...
 	// XXX we are missing some beats, is this because we do not let the 
@@ -303,6 +311,7 @@ var CLIActions = actions.Actions({
 
 	// XXX report that can't find an index...
 	// XXX move options to generic object for re-use...
+	// XXX how do we handle errors???
 	cliExportImages: ['- System/Export images',
 		{cli: argv && argv.Parser({
 			key: '@export',
@@ -325,6 +334,13 @@ var CLIActions = actions.Actions({
 				arg: 'PATH | from',
 				default: '.',
 				valueRequired: true, },
+			// XXX
+			'@collection': {
+				doc: 'Source collection (name/gid)',
+				arg: 'COLLECTION | collection',
+				//default: 'ALL',
+				valueRequired: false, },
+			//*/
 			'@to': {
 				doc: 'Destination path',
 				arg: 'PATH | path',
@@ -379,11 +395,68 @@ var CLIActions = actions.Actions({
 					pathlib.resolve(process.cwd(), path)
 					: process.cwd())
 
+			var collection = options.collection
+
 			return this.loadIndex(path)
 				.then(
 					function(){
+						// export collection...
+						if(collection){
+							if(!that.collections[collection]){
+								console.error(
+									'Can\'t find collection "'+collection+'" in index at:', path)
+								// XXX how do we handle rejection???
+								//return Promise.reject('moo') 
+								return } 
+							var resolve
+							var reject
+							// XXX add a timeout???
+							that.one('collectionLoading.post', 
+								function(){
+									resolve(that.exportImages(options)) })
+							that.loadCollection(collection)
+							return new Promise(function(res, rej){
+								resolve = res
+								reject = rej }) }
+						// export root...
 						return that.exportImages(options) },
 					function(err){
+						// XXX how do we handle rejection???
+						console.error('Can\'t find or load index at:', path) }) }],
+
+	// XXX revise naming...
+	// XXX how do we handle errors???
+	cliListCollections: ['- System/List collections in index',
+		{cli: argv && argv.Parser({
+			key: '@collections',
+			arg: 'PATH',
+
+			'-f': '-full',
+			'-full': {
+				doc: 'show full collection information',
+				type: 'bool',
+			},
+		})},
+		function(path, options={}){
+			var that = this
+
+			this.setupFeatures()
+
+			path = path || options.value
+			path = util.normalizePath(
+				path ?
+					pathlib.resolve(process.cwd(), path)
+					: process.cwd())
+			return this.loadIndex(path)
+				.then(
+					function(){
+						for(var name of that.collection_order || []){
+							// XXX revise output formatting...
+							options.full ?
+					   			console.log(that.collections[name].gid, name) 
+								: console.log(name) } },
+					function(err){
+						// XXX how do we handle rejection???
 						console.error('Can\'t find or load index at:', path) }) }],
 
 	// Utility... (EXPERIMENTAL)

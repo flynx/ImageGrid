@@ -2779,8 +2779,7 @@ module.UICollection = core.ImageGridFeatures.Feature({
 		// loaded...
 		['collectionLoading',
 			function(){
-				this.reload() 
-			}],
+				this.reload() }],
 
 		// update view when editing current collection...
 		[[
