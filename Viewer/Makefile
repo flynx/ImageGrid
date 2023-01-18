@@ -518,7 +518,7 @@ dev: $(JS_FILES) $(NODE_DIR) $(PATCHES) css
 
 .PHONY: dev-npm
 dev-npm: ## Install the npm global dev package
-dev-npm:
+dev-npm: $(JS_FILES) $(PATCHES) css
 	npm install .
 
 .PHONY: dist
