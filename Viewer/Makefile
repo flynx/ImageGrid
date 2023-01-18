@@ -516,6 +516,10 @@ doc: $(DOC_FILES)
 dev: ## Build the development environment
 dev: $(JS_FILES) $(NODE_DIR) $(PATCHES) css
 
+.PHONY: dev-npm
+dev-npm: ## Install the npm global dev package
+dev-npm:
+	npm install .
 
 .PHONY: dist
 dist: ## Build distributable package
