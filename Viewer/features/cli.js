@@ -178,6 +178,12 @@ var CLIActions = actions.Actions({
 
 	// XXX SETUP revise default...
 	setupFeatures: ['- System/',
+		core.doc`Load required features.
+			
+			NOTE: this is hete because cli is designed to be loaded in a very
+				limited context and for some actions will need additional
+				features.
+			`,
 		function(...tags){
 			var features = this.features.FeatureSet
 			requirejs('features/all')
