@@ -781,7 +781,7 @@ module.CLI = core.ImageGridFeatures.Feature({
 						console.log('No args.')
 
 						// XXX we should either start the GUI here or print help...
-						args.push('--help')
+						args.push('-h')
 						//args.push('gui')
 					})
 					.stop(function(){ process.exit() })
