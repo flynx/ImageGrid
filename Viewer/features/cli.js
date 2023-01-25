@@ -195,6 +195,16 @@ var CLIActions = actions.Actions({
 			]) }],
 
 
+	// XXX do a better set of examples...
+	cliExamples: [[
+		'Create/init index in current directory',
+		'$ $SCRIPTNAME init',
+		'',
+		'Export 500px previews from current index to ./preview directory',
+		'$ $SCRIPTNAME export from=. to=./previews --image-size=500',
+	]],
+
+
 	// Startup commands...
 	//
 	cliStartREPL: ['- System/CLI/start CLI interpreter',
@@ -724,6 +734,11 @@ module.CLI = core.ImageGridFeatures.Feature({
 						author: pkg.author,
 						version: pkg.version,
 						license: pkg.license,
+
+						// examples...
+						examples: CLIActions.cliExamples ?
+							CLIActions.cliExamples.flat()
+							: null,
 
 						'-verbose': {
 							doc: 'enable (very) verbose output',
