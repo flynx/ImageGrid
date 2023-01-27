@@ -3053,36 +3053,23 @@ function(title, func){
 							.map(function(e){ 
 								return [e, ...args] }) 
 						: [[items, ...args]])
-					// XXX do we .flat(..) the results???
 					return q
 			   			.then(function(res){ 
-							return res }) } } 
 							// XXX we need to flatten this once and in-place...
 							// 		...if we keep this code it will copy res 
 							// 		on each call...
 							// 		...if we splice the flattened data back 
 							// 		into res it will be done on each call...
 							//return res && res.flat() }) } } 
+							// NOTE: we are compensating for this not being flat
+							// 		in the queue handler above...
+							return res }) } } 
 
 			// run...
 			return (inputs instanceof Promise 
 					|| inputs instanceof runner.FinalizableQueue) ?
 				inputs.then(
 					function(items){
-						// XXX BUG: the problem here is that by the time 
-						// 		this is run the items can accumulate from 
-						// 		multiple calls but run is still called 
-						// 		once per original call...
-						// 		...the problem occurs when inputs is a 
-						// 		queue thus it will resolve to the whole
-						// 		set of items and not the item we were 
-						// 		called with, we are compensating for 
-						// 		this ( .splice(..) ) above but it does 
-						// 		not work for some reason -- the array 
-						// 		seems not to be the same for each run...
-						// XXX items is definitely copied, though the 
-						// 		items are the same...
-						// 		...check the splits/merges...
 						return run([items, ...args]) },
 					function(){
 						q && q.abort() })
