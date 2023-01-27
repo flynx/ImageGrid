@@ -270,7 +270,7 @@ var SharpActions = actions.Actions({
 								images 
 							: [images],
 						...args.slice(1),
-					]},
+					] },
 				// prepare index independent data, this can be a tad slow...
 				function(gid, _, path, options={}){
 					// special case: we already got the paths...
@@ -731,8 +731,7 @@ var SharpActions = actions.Actions({
 										return [gid, size, name] },
 									function(err){
 										logger 
-											&& logger.emit('skipped', `${gid} / ${size}`)
-									}) })) })],
+											&& logger.emit('skipped', `${gid} / ${size}`) }) })) })],
 
 	// XXX revise logging and logger passing...
 	cacheMetadata: ['- Sharp|Image/',

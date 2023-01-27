@@ -57,6 +57,7 @@ var CLIActions = actions.Actions({
 	// 		...move this to progress...
 	// XXX we are missing some beats, is this because we do not let the 
 	// 		bar update before closing???
+	// XXX need to reset this when done...
 	__progress: null,
 	showProgress: ['- System/',
 		function(text, value, max){
@@ -429,6 +430,10 @@ var CLIActions = actions.Actions({
 						// XXX how do we handle rejection???
 						console.error('Can\'t find or load index at:', path) }) }],
 
+	// XXX
+	cliCloneIndex: ['- System/CLI/clone index',
+		function(){
+		}],
 	// XXX report that can't find an index...
 	// XXX move options to generic object for re-use...
 	// XXX how do we handle errors???

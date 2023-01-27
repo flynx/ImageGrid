@@ -19,8 +19,7 @@ if(typeof(process) != 'undefined'){
 	var guaranteeEvents = requirejs('guarantee-events')
 
 } else {
-	return module
-}
+	return module }
 
 var data = require('imagegrid/data')
 var images = require('imagegrid/images')

@@ -3045,6 +3045,9 @@ function(title, func){
 							// NOTE: this will prevent the items from getting 
 							// 		processed multiple times when the action 
 							// 		is called multiple times...
+							// 		XXX this does not work -- we seem to 
+							// 			be getting different arrays on 
+							// 			each call...
 							.splice(0, items.length)
 							.map(function(e){ 
 								return [e, ...args] }) 
@@ -3060,6 +3063,17 @@ function(title, func){
 					|| inputs instanceof runner.FinalizableQueue) ?
 				inputs.then(
 					function(items){
+						// XXX BUG: the problem here is that by the time 
+						// 		this is run the items can accumulate from 
+						// 		multiple calls but run is still called 
+						// 		once per original call...
+						// 		...the problem occurs when inputs is a 
+						// 		queue thus it will resolve to the whole
+						// 		set of items and not the item we were 
+						// 		called with, we are compensating for 
+						// 		this ( .splice(..) ) above but it does 
+						// 		not work for some reason -- the array 
+						// 		seems not to be the same for each run...
 						return run([items, ...args]) },
 					function(){
 						q && q.abort() })

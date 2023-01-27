@@ -16,8 +16,7 @@ if(typeof(process) != 'undefined'){
 	var glob = requirejs('glob')
 	var wglob = requirejs('wildglob')
 
-	var file = require('imagegrid/file')
-}
+	var file = require('imagegrid/file') }
 
 var data = require('imagegrid/data')
 var images = require('imagegrid/images')
