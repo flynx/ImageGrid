@@ -305,7 +305,8 @@ var SharpActions = actions.Actions({
 						{
 							orientation: image.orientation,
 							flipped: image.flipped,
-							// crop...
+							// XXX unused...
+							crop: image.crop,
 						},
 					]] }),
 			// do the actual resizing (global queue)...

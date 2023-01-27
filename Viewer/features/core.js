@@ -2999,8 +2999,8 @@ function(title, func){
 			// special-case: empty inputs -- no need to handle anything...
 			if(inputs instanceof Array 
 					&& (inputs.length == 0
-						|| (inputs[0] || []).length == 0)){
-				return Promise.resolve(inputs[0] || []) }
+						|| (inputs[0] ?? []).length == 0)){
+				return Promise.resolve(inputs[0] ?? []) }
 
 			// Define the runner and prepare...
 			//
@@ -3030,6 +3030,10 @@ function(title, func){
 						{ 
 							__session_task__: !!action.__session_task__,
 							handler: function([item, args]){
+								// XXX is this correct in all cases...
+								item = item instanceof Array ?
+									item.flat()
+									: item
 								return func.call(that, item, ...(args || [])) }, 
 						}))
 				q.title = action.name 
@@ -3045,18 +3049,16 @@ function(title, func){
 							// NOTE: this will prevent the items from getting 
 							// 		processed multiple times when the action 
 							// 		is called multiple times...
-							// 		XXX this does not work -- we seem to 
-							// 			be getting different arrays on 
-							// 			each call...
 							.splice(0, items.length)
 							.map(function(e){ 
 								return [e, ...args] }) 
 						: [[items, ...args]])
 					// XXX do we .flat(..) the results???
-					//return q.promise() } } 
-					return q.promise()
+					return q
 			   			.then(function(res){ 
-							return res && res.flat() }) } } 
+							return res }) } } 
+							// XXX we need to flatten this once and in-place...
+							//return res && res.flat() }) } } 
 
 			// run...
 			return (inputs instanceof Promise 
