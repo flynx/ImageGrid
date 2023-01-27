@@ -3074,6 +3074,9 @@ function(title, func){
 						// 		this ( .splice(..) ) above but it does 
 						// 		not work for some reason -- the array 
 						// 		seems not to be the same for each run...
+						// XXX items is definitely copied, though the 
+						// 		items are the same...
+						// 		...check the splits/merges...
 						return run([items, ...args]) },
 					function(){
 						q && q.abort() })
