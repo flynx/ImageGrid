@@ -241,9 +241,29 @@ var CLIActions = actions.Actions({
 			// print banner...
 			//XXX
 			
+			var code
 			repl
 				.start({
-					prompt: 'ig> ',
+					...(process.stdin.isTTY ?
+						// interactive...
+						{
+							prompt: 'ig> ',
+						}
+						// non-tty / non-interactive repl...
+						: {
+							terminal: false,
+							prompt: '',
+							// XXX HACK???
+							// collect the code...
+							// NOTE: we are using a custom eval here as it 
+							// 		seems that there is no way to either 
+							// 		disable the default writer or to define 
+							// 		an alternative that would not output \n's
+							//		per non-empty line of input...
+							eval: function(cmd, context, filename, callback) {
+								code = code ?? ''
+								code += cmd + '\n' }
+						}),
 
 					useGlobal: true,
 
@@ -253,6 +273,11 @@ var CLIActions = actions.Actions({
 					//ignoreUndefined: true,
 				})
 				.on('exit', function(){
+					// XXX HACK???
+					// run collected code...
+					if(code){
+						var AsyncFunction = (async function(){}).constructor
+						AsyncFunction(code)() }
 					that.stop() }) }],
 	// XXX move this to a feature that requires electron...
 	// 		...and move electron to an optional dependency...
