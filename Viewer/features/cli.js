@@ -38,7 +38,27 @@ var CLIActions = actions.Actions({
 	config: {
 		// XXX do we care that something is not "ready" here???
 		'declare-ready-timeout': 0,
+
+		banner: core.doc`$APPNAME $VERSION:`,
 	},
+
+
+	// docs...
+	//
+	// XXX do a better set of examples...
+	cliExamples: [[
+		'Create/init index in current directory',
+		'$ $SCRIPTNAME init',
+		'',
+		'Export 500px previews from current index to ./preview directory',
+		'$ $SCRIPTNAME export from=. to=./previews --image-size=500',
+	]],
+
+
+	// the argvparser...
+	//
+	// this is set by argv's Parser on .onArgs(..) in .ready(..) handler below...
+	argv: undefined,
 
 	help: ['- System/Show action help',
 		function(...actions){
@@ -196,16 +216,6 @@ var CLIActions = actions.Actions({
 			]) }],
 
 
-	// XXX do a better set of examples...
-	cliExamples: [[
-		'Create/init index in current directory',
-		'$ $SCRIPTNAME init',
-		'',
-		'Export 500px previews from current index to ./preview directory',
-		'$ $SCRIPTNAME export from=. to=./previews --image-size=500',
-	]],
-
-
 	// Startup commands...
 	//
 	cliStartREPL: ['- System/CLI/start CLI interpreter',
@@ -217,6 +227,7 @@ var CLIActions = actions.Actions({
 		function(path, options){
 			var that = this
 			var repl = nodeRequire('repl')
+			var package = nodeRequire('./package.json')
 
 			// XXX SETUP
 			this.setupFeatures()
@@ -230,30 +241,37 @@ var CLIActions = actions.Actions({
 			global.ig =
 			global.ImageGrid = 
 				this
-
 			global.help = function(...actions){
 				global.ig.help(...actions) }
-
-			var features = global.ImageGridFeatures = core.ImageGridFeatures
-
-			//var ig = core.ImageGridFeatures
+			//var features = global.ImageGridFeatures = core.ImageGridFeatures
 
 			// print banner...
-			//XXX
+			var banner = this.banner 
+				|| this.config.banner
+			banner
+				&& process.stdin.isTTY
+				&& process.stdout.isTTY
+				&& console.log(banner 
+					.replace(/\$APPNAME/g, package.name)
+					.replace(/\$AUTHOR/g, package.author)
+					.replace(/\$REPO/g, package.repository)
+					.replace(/\$SCRIPTNAME/g, this.argv.scriptName)
+					.replace(/\$VERSION/g, this.version))
 			
+			// start the repl...
 			var code
 			repl
 				.start({
 					...(process.stdin.isTTY ?
 						// interactive...
-						{
-							prompt: 'ig> ',
-						}
+						{ prompt: 'ig> ', }
 						// non-tty / non-interactive repl...
+						// NOTE: this is handled by node's repl to avoid 
+						// 		handling extra stuff here...
+						// 		XXX is this necessary???
 						: {
 							terminal: false,
 							prompt: '',
-							// XXX HACK???
 							// collect the code...
 							// NOTE: we are using a custom eval here as it 
 							// 		seems that there is no way to either 
@@ -273,7 +291,6 @@ var CLIActions = actions.Actions({
 					//ignoreUndefined: true,
 				})
 				.on('exit', function(){
-					// XXX HACK???
 					// run collected code...
 					if(code){
 						var AsyncFunction = (async function(){}).constructor
@@ -756,6 +773,7 @@ module.CLI = core.ImageGridFeatures.Feature({
 				// XXX SETUP need to setup everything that has command-line features...
 				//this.setupFeatures()
 
+				// revise name...
 				argv.Parser({
 						context: this,
 
@@ -822,6 +840,8 @@ module.CLI = core.ImageGridFeatures.Feature({
 
 								return res }, {}),
 					})
+					.onArgs(function(){
+						that.argv = this })
 					.onNoArgs(function(args){
 						console.log('No args.')
 
