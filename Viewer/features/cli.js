@@ -214,10 +214,37 @@ var CLIActions = actions.Actions({
 					this.features.input
 					: tags),
 			]) }],
+	setupGlobals: ['- System/',
+		function(){
+			// setup the global ns...
+			global.ig =
+			global.ImageGrid = 
+				this
+			global.help = function(...actions){
+				global.ig.help(...actions) }
+			global.ImageGridFeatures = core.ImageGridFeatures }],
 
 
-	// Startup commands...
+	// basic code runner...
+	// XXX should we handle/print errors here???
+	cliDo: ['- System/CLI/run CODE', 
+		{cli: {
+			name: '@do',
+			arg: 'CODE'
+		}},
+		function(code){
+			var AsyncFunction = (async function(){}).constructor
+
+			this.setupFeatures()
+			this.setupGlobals()
+
+			AsyncFunction(code)()
+
+			this.stop() }],
+
+	// Interactive commands...
 	//
+	// XXX should we handle/print errors in script mode here???
 	cliStartREPL: ['- System/CLI/start CLI interpreter',
 		{cli: {
 			name: '@repl',
@@ -226,7 +253,6 @@ var CLIActions = actions.Actions({
 		}},
 		function(path, options){
 			var that = this
-			var repl = nodeRequire('repl')
 			var package = nodeRequire('./package.json')
 
 			// XXX SETUP
@@ -237,65 +263,43 @@ var CLIActions = actions.Actions({
 
 			this.__keep_running = true
 
-			// setup the global ns...
-			global.ig =
-			global.ImageGrid = 
-				this
-			global.help = function(...actions){
-				global.ig.help(...actions) }
-			//var features = global.ImageGridFeatures = core.ImageGridFeatures
+			this.setupGlobals()
 
-			// print banner...
-			var banner = this.banner 
-				|| this.config.banner
-			banner
-				&& process.stdin.isTTY
-				&& process.stdout.isTTY
-				&& console.log(banner 
-					.replace(/\$APPNAME/g, package.name)
-					.replace(/\$AUTHOR/g, package.author)
-					.replace(/\$REPO/g, package.repository)
-					.replace(/\$SCRIPTNAME/g, this.argv.scriptName)
-					.replace(/\$VERSION/g, this.version))
-			
-			// start the repl...
-			var code
-			repl
-				.start({
-					...(process.stdin.isTTY ?
-						// interactive...
-						{ prompt: 'ig> ', }
-						// non-tty / non-interactive repl...
-						// NOTE: this is handled by node's repl to avoid 
-						// 		handling extra stuff here...
-						// 		XXX is this necessary???
-						: {
-							terminal: false,
-							prompt: '',
-							// collect the code...
-							// NOTE: we are using a custom eval here as it 
-							// 		seems that there is no way to either 
-							// 		disable the default writer or to define 
-							// 		an alternative that would not output \n's
-							//		per non-empty line of input...
-							eval: function(cmd, context, filename, callback) {
-								code = code ?? ''
-								code += cmd + '\n' }
-						}),
+			// start non-tty / script mode...
+			if(!process.stdin.isTTY){
+				var fs = nodeRequire('fs')
+				var AsyncFunction = (async function(){}).constructor
 
-					useGlobal: true,
+				AsyncFunction(
+					fs.readFileSync(process.stdin.fd, 'utf-8'))()
+				this.stop()
 
-					input: process.stdin,
-					output: process.stdout,
+			// start repl mode...
+			} else {
+				var repl = nodeRequire('repl')
+				// print banner...
+				var banner = this.banner 
+					|| this.config.banner
+				banner
+					&& process.stdin.isTTY
+					&& process.stdout.isTTY
+					&& console.log(banner 
+						.replace(/\$APPNAME/g, package.name)
+						.replace(/\$AUTHOR/g, package.author)
+						.replace(/\$REPO/g, package.repository)
+						.replace(/\$SCRIPTNAME/g, this.argv.scriptName)
+						.replace(/\$VERSION/g, this.version))
 
-					//ignoreUndefined: true,
-				})
-				.on('exit', function(){
-					// run collected code...
-					if(code){
-						var AsyncFunction = (async function(){}).constructor
-						AsyncFunction(code)() }
-					that.stop() }) }],
+				// start the repl...
+				repl
+					.start({
+						prompt: 'ig> ',
+						useGlobal: true,
+						input: process.stdin,
+						output: process.stdout,
+					})
+					.on('exit', function(){
+						that.stop() }) } }],
 	// XXX move this to a feature that requires electron...
 	// 		...and move electron to an optional dependency...
 	cliStartGUI: ['- System/CLI/start viewer GUI',
