@@ -226,7 +226,6 @@ var CLIActions = actions.Actions({
 
 
 	// basic code runner...
-	// XXX should we handle/print errors here???
 	cliDo: ['- System/CLI/run CODE', 
 		{cli: {
 			name: '@do',
@@ -244,7 +243,6 @@ var CLIActions = actions.Actions({
 
 	// Interactive commands...
 	//
-	// XXX should we handle/print errors in script mode here???
 	cliStartREPL: ['- System/CLI/start CLI interpreter',
 		{cli: {
 			name: '@repl',
