@@ -263,7 +263,7 @@ var CLIActions = actions.Actions({
 	cliDo: ['- System/CLI/run CODE', 
 		{cli: {
 			name: '@do',
-			arg: 'CODE'
+			arg: 'CODE',
 		}},
 		function(code){
 			var AsyncFunction = (async function(){}).constructor
@@ -383,6 +383,20 @@ var CLIActions = actions.Actions({
 							env,
 						}) } }],
 
+	// XXX
+	cliiGID: ['- System/GLI/generate GID',
+		{cli: {
+			name: '@gid',
+			arg: 'IMAGE',
+			valueRequired: true,
+
+			// XXX REMOVE WHEN DONE...
+			doc: false,
+		}},
+		function(path){
+			// XXX
+			console.warn('Not implemented yet...')
+		}],
 	cliListIndexes: ['- System/CLI/list indexes in PATH',
 		{cli: argv && argv.Parser({
 			key: '@ls', 
