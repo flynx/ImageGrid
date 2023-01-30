@@ -105,9 +105,12 @@ var CLIActions = actions.Actions({
 			// actions...
 			if(value == 'reset'){
 				// XXX this is not the same as ui-progress...
+				// 		...here we first set timeout then and close, 
+				// 		there we set to 0 and timeout and close...
 				state.timeout = setTimeout(
 					function(){
-						this.showProgress(text, 0, 0) }.bind(this),
+						//this.showProgress(text, 0, 0) }.bind(this),
+						this.showProgress(text, 'close') }.bind(this),
 					this.config['progress-done-delay'] || 1000)
 				return }
 			if(value == 'close'){
@@ -170,8 +173,7 @@ var CLIActions = actions.Actions({
 			if(value >= max){
 				state.timeout = setTimeout(
 					function(){
-						delete state.timeout
-						this.showProgress(text, 'clear') }.bind(this), 
+						this.showProgress(text, 'close') }.bind(this), 
 					this.config['progress-done-delay'] || 1000) } }],
 
 	// handle logger progress...
