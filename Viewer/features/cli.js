@@ -39,7 +39,9 @@ var CLIActions = actions.Actions({
 		// XXX do we care that something is not "ready" here???
 		'declare-ready-timeout': 0,
 
-		banner: core.doc`$APPNAME $VERSION:`,
+		'progress-done-delay': 1000,
+
+		banner: '$APPNAME $VERSION:',
 	},
 
 
@@ -92,16 +94,35 @@ var CLIActions = actions.Actions({
 				text[0] 
 				: text
 
-			var settings = this.__progress = this.__progress || {}
-			var state = settings[text] = settings[text] || {}
+			var settings = this.__progress = this.__progress ?? {}
+			var bars = settings.bars = settings.bars ?? {}
+			var state = bars[text] = bars[text] ?? {}
+
+			if(state.timeout){
+				clearTimeout(state.timeout)
+				delete state.timeout }
+
+			// actions...
+			if(value == 'reset'){
+				// XXX this is not the same as ui-progress...
+				state.timeout = setTimeout(
+					function(){
+						this.showProgress(text, 0, 0) }.bind(this),
+					this.config['progress-done-delay'] || 1000)
+				return }
+			if(value == 'close'){
+				delete bars[text]
+				// check if no bars left...
+				if(Object.keys(bars) == 0){
+					delete this.__progress }
+				return }
 
 			var l = Math.max(text.length, settings.__text_length || 0)
 			// length changed -> update the bars...
 			l != settings.__text_length
-				&& Object.entries(settings)
+				&& Object.entries(bars)
 					.forEach(function([key, value]){
-						value instanceof Object 
-							&& 'bar' in value
+						value.bar
 							&& value.bar.update({text: key.padEnd(l)}) })
 			settings.__text_length = l
 
@@ -138,14 +159,23 @@ var CLIActions = actions.Actions({
 								//console.log('moo'.padEnd(process.stdout.columns))
 							}) }))
 			var bar = state.bar = 
-				state.bar || container.create(0, 0, {text: text.padEnd(l)})
+				state.bar 
+					|| container.create(0, 0, {text: text.padEnd(l)})
 
 			// XXX for some reason this does not work under electron...
 			bar.setTotal(Math.max(max, value))
-			bar.update(value)
-		}],
+			bar.update(value) 
+
+			// auto-clear when complete...
+			if(value >= max){
+				state.timeout = setTimeout(
+					function(){
+						delete state.timeout
+						this.showProgress(text, 'clear') }.bind(this), 
+					this.config['progress-done-delay'] || 1000) } }],
 
 	// handle logger progress...
+	// XXX reset is called at odd spots by the queue handler (see: features/core.js)
 	// XXX this is a copy from ui-progress -- need to reuse if possible...
 	handleLogItem: ['- System/',
 		function(logger, path, status, ...rest){
@@ -175,10 +205,12 @@ var CLIActions = actions.Actions({
 
 			// close...
 			if(status == 'close' || close.has(status)){
-				//this.showProgress(path, 'close')
+				this.showProgress(path, 'close')
 			// reset...
+			// XXX this seems to be called before "Cache image metadata" is done
+			// 		when called from .cliInitIndex(..) -- messing up the numbers...
 			} else if(status == 'reset' || reset.has(status)){
-				//this.showProgress(path, 'reset')
+				this.showProgress(path, 'reset')
 			// added new item -- increase max...
 			// XXX show msg in the progress bar???
 			} else if(status == 'add' || add.has(status)){
@@ -349,46 +381,6 @@ var CLIActions = actions.Actions({
 							env,
 						}) } }],
 
-	// Introspection...
-	//
-	// XXX handle errors...
-	cliInfo: ['- System/CLI/show information about index in PATH',
-		{cli: {
-			name: '@info', 
-			arg: 'PATH',
-		}},
-		function(path, options={}){
-			var that = this
-			path = path ?? '.'
-			this.setupFeatures()
-			return this.loadIndex(path)
-				.then(
-					async function(){
-						var modified = 
-							Object.values(
-								await that.loadSaveHistoryList())
-							.map(function(log){
-								return Object.keys(log) })
-							.flat()
-							.sort()
-							.pop()
-						// calculate core.doc compatible offset for nested items.
-						var offset = '\t'.repeat(`
-							`.split('\t').length)
-						console.log(core.doc`
-							Load path: ${ path }
-							Index path: ${ that.location.path }
-							Loaded indexes: ${ 
-								['', ...that.location.loaded].join('\n'+offset) }
-							Current image: ${ that.current }
-							Image count: ${ that.data.order.length }
-							Collections: ${ 
-								that.collections ?
-									['', ...Object.keys(that.collections || [])].join('\n'+offset)
-									: '-' }
-							Modified date: ${ modified }`) },
-					function(err){
-						console.error('Can\'t find or load index at:', path) }) }],
 	cliListIndexes: ['- System/CLI/list indexes in PATH',
 		{cli: argv && argv.Parser({
 			key: '@ls', 
@@ -437,6 +429,123 @@ var CLIActions = actions.Actions({
 							.sortAs(paths)
 					for(var p of paths){
 						console.log(p) } }) }],
+
+	// XXX metadata caching and preview creation are not in sync, can 
+	// 		this be a problem???
+	// 		...if not, add a note...
+	// XXX should we support creating multiple indexes at the same time???
+	// XXX this is reletively generic, might be useful globally...
+	// XXX should we use a clean index or do this in-place???
+	// XXX add ability to disable sort...
+	cliInitIndex: ['- System/CLI/make index',
+		core.doc`
+
+			Create index in current directory
+			.cliInitIndex()
+			.cliInitIndex('create')
+				-> promise
+
+			Create index in path...
+			,cliInitIndex(path)
+			.cliInitIndex('create', path)
+				-> promise
+
+
+			Update index in current directory
+			.cliInitIndex('update')
+				-> promise
+
+			Update index in path...
+			.cliInitIndex('update', path)
+				-> promise
+
+		`,
+		{cli: {
+			name: '@init',
+			arg: 'PATH',
+			//valueRequired: true,
+		}},
+		function(path, options){
+			// XXX SETUP
+			this.setupFeatures()
+
+			// get mode...
+			if(path == 'create' || path == 'update'){
+				var [mode, path, options] = arguments }
+			mode = mode || 'create'
+			// normalize path...
+			path = util.normalizePath(
+				path ?
+					pathlib.resolve(process.cwd(), path)
+					: process.cwd())
+			options = options || {}
+
+			// XXX should we use a clean index or do this in-place???
+			//var index = this.constructor(..)
+			var index = this
+			return (mode == 'create' ?
+					index.loadImages(path)
+					: index.loadNewImages(path))
+				// save base index...
+				.then(function(){ 
+					return index.saveIndex() })
+				// sharp stuff...
+				.then(function(){
+					if(index.makePreviews){
+						return Promise.all([
+							// NOTE: no need to call .cacheMetadata(..) as 
+							// 		it is already running after .loadImages(..)
+							index.makePreviews('all') ])} })
+				.then(function(){
+					return index
+						.sortImages()
+						.saveIndex() }) }],
+	// XXX does not work yet...
+	cliUpdateIndex: ['- System/CLI/update index',
+		{cli: {
+			name: '@update',
+			arg: 'PATH',
+		}},
+		'cliInitIndex: "update" ...'],
+
+	// XXX handle errors...
+	cliInfo: ['- System/CLI/show information about index in PATH',
+		{cli: {
+			name: '@info', 
+			arg: 'PATH',
+		}},
+		function(path, options={}){
+			var that = this
+			path = path ?? '.'
+			this.setupFeatures()
+			return this.loadIndex(path)
+				.then(
+					async function(){
+						var modified = 
+							Object.values(
+								await that.loadSaveHistoryList())
+							.map(function(log){
+								return Object.keys(log) })
+							.flat()
+							.sort()
+							.pop()
+						// calculate core.doc compatible offset for nested items.
+						var offset = '\t'.repeat(`
+							`.split('\t').length)
+						console.log(core.doc`
+							Load path: ${ path }
+							Index path: ${ that.location.path }
+							Loaded indexes: ${ 
+								['', ...that.location.loaded].join('\n'+offset) }
+							Current image: ${ that.current }
+							Image count: ${ that.data.order.length }
+							Collections: ${ 
+								that.collections ?
+									['', ...Object.keys(that.collections || [])].join('\n'+offset)
+									: '-' }
+							Modified date: ${ modified }`) },
+					function(err){
+						console.error('Can\'t find or load index at:', path) }) }],
 	cliListCollections: ['- System/CLI/list collections in index',
 		{cli: argv && argv.Parser({
 			key: '@collections',
@@ -594,78 +703,38 @@ var CLIActions = actions.Actions({
 						// XXX how do we handle rejection???
 						console.error('Can\'t find or load index at:', path) }) }],
 
-	// Utility... (EXPERIMENTAL)
-	//
-	// XXX metadata caching and preview creation are not in sync, can 
-	// 		this be a problem???
-	// 		...if not, add a note...
-	// XXX should we support creating multiple indexes at the same time???
-	// XXX this is reletively generic, might be useful globally...
-	// XXX should we use a clean index or do this in-place???
-	// XXX add ability to disable sort...
-	cliInitIndex: ['- System/CLI/make index',
-		core.doc`
 
-			Create index in current directory
-			.cliInitIndex()
-			.cliInitIndex('create')
-				-> promise
-
-			Create index in path...
-			,cliInitIndex(path)
-			.cliInitIndex('create', path)
-				-> promise
-
-
-			Update index in current directory
-			.cliInitIndex('update')
-				-> promise
-
-			Update index in path...
-			.cliInitIndex('update', path)
-				-> promise
-
-		`,
-		{cli: {
-			name: '@init',
+	cliRepairIndex: ['- System/CLI/repair index',
+		{cli: argv && argv.Parser({
+			key: '@repair',
+			doc: 'repair index',
 			arg: 'PATH',
-			//valueRequired: true,
-		}},
-		function(path, options){
-			// XXX SETUP
+
+			'-version': undefined,
+			'-quiet': undefined,
+
+			'-read-only': '-ro',
+			'-ro': {
+				doc: 'only show possible fixes',
+				type: 'bool',
+			},
+
+		})},
+		async function(path, options){
 			this.setupFeatures()
 
-			// get mode...
-			if(path == 'create' || path == 'update'){
-				var [mode, path, options] = arguments }
-			mode = mode || 'create'
-			// normalize path...
-			path = util.normalizePath(
-				path ?
-					pathlib.resolve(process.cwd(), path)
-					: process.cwd())
-			options = options || {}
+			await this.loadIndex(path ?? '.')
 
-			// XXX should we use a clean index or do this in-place???
-			//var index = this.constructor(..)
-			var index = this
-			return (mode == 'create' ?
-					index.loadImages(path)
-					: index.loadNewImages(path))
-				// save base index...
-				.then(function(){ 
-					return index.saveIndex() })
-				// sharp stuff...
-				.then(function(){
-					if(index.makePreviews){
-						return Promise.all([
-							// NOTE: no need to call .cacheMetadata(..) as 
-							// 		it is already running after .loadImages(..)
-							index.makePreviews('all') ])} })
-				.then(function(){
-					return index
-						.sortImages()
-						.saveIndex() }) }],
+			var changes = await this.checkIndex()
+
+			// XXX print...
+			console.log(options.ro, changes)
+
+			options.ro
+				//|| this.saveIndexHere()
+				|| console.log('save')
+	   	}],
+
 
 	// XXX this is still wrong...
 	_cliMakeIndex: ['- System/',
@@ -676,13 +745,6 @@ var CLIActions = actions.Actions({
 			"sortImages",
 			"saveIndex", ]`],
 
-	// XXX does not work yet...
-	cliUpdateIndex: ['- System/CLI/update index',
-		{cli: {
-			name: '@update',
-			arg: 'PATH',
-		}},
-		'cliInitIndex: "update" ...'],
 	cliCleanIndex: ['- System/',
 		{},
 		function(path, options){}],

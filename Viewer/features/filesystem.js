@@ -829,6 +829,7 @@ var FileSystemLoaderActions = actions.Actions({
 					return res }) }],
 
 	// XXX might be a good idea to also search for previews here...
+	// XXX is this different from .removeMissingImages(..)???
 	checkIndexPaths: ['- File/',
 		core.doc`Check index image path consistency
 
