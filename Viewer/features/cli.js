@@ -384,7 +384,7 @@ var CLIActions = actions.Actions({
 						}) } }],
 
 	// XXX
-	cliiGID: ['- System/GLI/generate GID',
+	cliGID: ['- System/GLI/generate GID',
 		{cli: {
 			name: '@gid',
 			arg: 'IMAGE',
