@@ -432,8 +432,8 @@ help:
 		if [ -z "$${help_line/'#'#[#-]*/}" ] ; then \
 			echo ; \
 			echo "$${help_line}" \
-				| sed 's/#\+[- ]*//' \
-				| sed 's/\s*\(...\|---\)\s*$$/:/'; \
+				| sed -e 's/#\+[- ]*//' \
+					-e 's/\s*\(...\|---\)\s*$$/:/'; \
 		elif [ -z "$${help_line/'#'*/}" ] ; then \
 			echo "$${help_line}" \
 				| sed 's/#\+[- ]*//' ; \
@@ -730,15 +730,15 @@ $(BUILD_INFO): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 # XXX revise $LAUNCHER -- should it be absolute or relative and when???
 %: %.tpl package.json
 	cat $< \
-		| sed 's/\$$APP_NAME/$(APP_NAME)/' \
-		| sed 's/\$$COMMENT/$(subst \/,\/,$(COMMENT))/' \
-		| sed 's/\$$CATEGORIES/$(subst \/,\/,$(CATEGORIES))/' \
-		| sed 's/\$$VERSION/$(APP_VERSION)/' \
-		| sed 's/\$$BUILD/$(DATE)/' \
-		| sed 's/\$$COMMIT/$(COMMIT)/' \
-		| sed 's#\$$APP_PATH#$(APP_PATH)#' \
-		| sed 's#\$$ICON_PATH#$(ICON_PATH)#' \
-		| sed 's#\$$LAUNCHER#$(INSTALL_PATH)/$(APP_LAUNCHER)#' \
+		| sed -e 's/\$$APP_NAME/$(APP_NAME)/' \
+			-e 's/\$$COMMENT/$(subst \/,\/,$(COMMENT))/' \
+			-e 's/\$$CATEGORIES/$(subst \/,\/,$(CATEGORIES))/' \
+			-e 's/\$$VERSION/$(APP_VERSION)/' \
+			-e 's/\$$BUILD/$(DATE)/' \
+			-e 's/\$$COMMIT/$(COMMIT)/' \
+			-e 's#\$$APP_PATH#$(APP_PATH)#' \
+			-e 's#\$$ICON_PATH#$(ICON_PATH)#' \
+			-e 's#\$$LAUNCHER#$(INSTALL_PATH)/$(APP_LAUNCHER)#' \
 		> $@
 
 
