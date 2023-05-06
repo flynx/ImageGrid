@@ -501,11 +501,11 @@ var FileSystemLoaderActions = actions.Actions({
 
 			// get the image list...
 			return new Promise(function(resolve, reject){
-				glob(path + '/'+ that.config['image-file-pattern'], {
+				glob.globStream(path + '/'+ that.config['image-file-pattern'], {
 						stat: !!read_stat,
 						strict: false,
 					})
-					.on('match', function(e){ found.push(e) })
+					.on('data', function(e){ found.push(e) })
 					.on('error', function(err){
 						update_interval
 							&& clearInterval(update_interval)

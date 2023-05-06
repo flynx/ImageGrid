@@ -64,13 +64,13 @@ function(paths, index_dir, logger){
 	return paths.flat() }
 
 
-// Guarantee that the 'end' and 'match' handlers will always get called 
+// Guarantee that the 'end' and 'data' handlers will always get called 
 // with all results at least once...
 //
 // This does two things:
 // 	- every 'end' event handler will get the full result set, regardless
 // 		of when it was set...
-// 	- every 'match' handler will be called for every match found, again
+// 	- every 'data' handler will be called for every match found, again
 // 		regardless of whether it was set before or after the time of 
 // 		match.
 //
@@ -78,13 +78,15 @@ function(paths, index_dir, logger){
 // essentially making it similar to how Promise/Deferred handle their
 // callbacks.
 //
+// XXX ASAP: end event arguments changed -- need to collect the list of 
+// 		matches manually...
 var guaranteeGlobEvents =
 module.guaranteeGlobEvents =
-function(glob){ return guaranteeEvents('match end', glob) }
+function(glob){ return guaranteeEvents('data end', glob) }
 
 var gGlob = 
 module.gGlob = function(){
-	return guaranteeGlobEvents(glob.apply(null, arguments)) }
+	return guaranteeGlobEvents(glob.globStream.apply(null, arguments)) }
 
 
 
@@ -114,7 +116,7 @@ function(base, index_dir, logger){
 			.on('error', function(err){
 				reject(err)
 			})
-			.on('match', function(path){
+			.on('data', function(path){
 				logger && logger.emit('found', path)
 			})
 			.on('end', function(paths){
@@ -681,7 +683,7 @@ function(base, pattern, previews, index_dir, absolute_path){
 				//})
 				// preview name syntax:
 				// 	<res>px/<gid> - <orig-filename>.jpg
-				.on('match', function(path){
+				.on('data', function(path){
 					// get the data we need...
 					var gid = pathlib.basename(path).split(' - ')[0]
 					var res = pathlib.basename(pathlib.dirname(path))
@@ -713,7 +715,7 @@ function(base, pattern, previews, index_dir, absolute_path){
 				// XXX handle errors....
 				//.on('error', function(err){
 				//})
-				.on('match', function(base){
+				.on('data', function(base){
 					queue.push(loadPreviews(base, pattern, previews, index_dir, absolute_path))
 				})
 				.on('end', function(){
