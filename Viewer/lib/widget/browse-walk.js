@@ -57,8 +57,8 @@ function(path, make){
 				'error',
 			], 
 			glob.glob(path))*/
-			glob.glob(path)
-				.on('match', function(path){
+			glob.globStream(path)
+				.on('data', function(path){
 					fs.stat(path, function(err, stat){
 						if(err){
 							make(fullpath ? path : path.split(/[\\\/]/).pop(), null, true)
@@ -134,18 +134,12 @@ function(path, make){
 		var _countDirFiles = function(path, file, elem){
 			if(that.options.fileCountPattern){
 				var i = 0
-				glob(path +'/'+ file +'/'+ that.options.fileCountPattern)
-					/*
-					.on('match', function(){
-						i += 1
-						elem.attr('count', '('+ i +')')
-					})
-					*/
-					.on('end', function(lst){
-						i += 1
-						elem.attr('count', lst.length)
-					})
-			}
+				glob.globStream(path +'/'+ file +'/'+ that.options.fileCountPattern)
+					.on('data', function(){
+						i += 1 })
+					.on('end', function(){
+						i > 0 
+							&& elem.attr('count', i) }) }
 			return elem }
 
 		return new Promise(function(resolve, reject){
@@ -154,8 +148,7 @@ function(path, make){
 				// XXX
 				if(err){
 					reject(err)
-					return
-				}
+					return }
 				var res = []
 
 				if(that.options.dotDirs){
@@ -168,8 +161,7 @@ function(path, make){
 					_countDirFiles(path, './',
 						make(fullpath ? path + './' : './'))
 					_countDirFiles(path, '../',
-						make(fullpath ? path + '../' : '../'))
-				}
+						make(fullpath ? path + '../' : '../')) }
 
 				// XXX split out the making stage after the stat stage to
 				// 		be able to sort suff correctly...
@@ -179,16 +171,14 @@ function(path, make){
 							.catch(function(err){
 								make(fullpath 
 									? path +'/'+ file 
-									: file, null, true)
-							})
+									: file, null, true) })
 							.then(function(res){
 								// can't read stat... (XXX ???)
 								if(res == null){
 									make(fullpath 
 										? path +'/'+ file 
 										: file, null, true)
-									return
-								}
+									return }
 
 								var dir = res.isDirectory()
 								var elem = res 
@@ -207,8 +197,7 @@ function(path, make){
 								// NOTE: we do not care how long it will take
 								// 		so we'll not wait...
 								res && dir && elem 
-									&& _countDirFiles(path, file, elem)
-							})
+									&& _countDirFiles(path, file, elem) })
 							// NOTE: we are not using promise.all(..) here because it
 							// 		triggers BEFORE the first make(..) is called...
 							// 		...not sure I fully understand why...
@@ -219,14 +208,7 @@ function(path, make){
 								// 		or by-design though...
 								res.push(file)
 								if(res.length == files.length){
-									resolve()
-								}
-							})
-					})
-			})
-		})
-	}
-}
+									resolve() } }) }) }) }) } }
 
 // NOTE: this should work from a chrome app and does not require anything
 // 		but fs access...
