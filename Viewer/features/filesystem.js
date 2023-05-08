@@ -501,17 +501,26 @@ var FileSystemLoaderActions = actions.Actions({
 
 			// get the image list...
 			return new Promise(function(resolve, reject){
+				var files = {}
 				glob.globStream(path + '/'+ that.config['image-file-pattern'], {
 						stat: !!read_stat,
+						withFileTypes: true,
 						strict: false,
 					})
-					.on('data', function(e){ found.push(e) })
+					.on('data', function(e){ 
+						var p = e.fullpath()
+							// normalize win paths...
+							.replace(/\\/g, '/')
+						files[p] = e
+						found.push(p) })
 					.on('error', function(err){
 						update_interval
 							&& clearInterval(update_interval)
 						console.error(err)
 						reject(err) })
-					.on('end', function(lst){ 
+					.on('end', function(){ 
+						// XXX do we need to have two copies of the list???
+						var lst = found.slice()
 						update_interval
 							&& clearInterval(update_interval)
 						logger && found.length > 0
@@ -526,11 +535,13 @@ var FileSystemLoaderActions = actions.Actions({
 						var imgs = images.Images.fromArray(lst, path)
 
 						if(!!read_stat){
-							var stats = this.statCache
 							var p = pathlib.posix
 
 							imgs.forEach(function(gid, img){
-								var stat = stats[p.join(img.base_path, img.path)]
+								var stat = files[
+									img.base_path ?
+										p.join(img.base_path, img.path)
+										: img.path]
 
 								img.atime = stat.atime
 								img.mtime = stat.mtime
@@ -1203,48 +1214,47 @@ var FileSystemLoaderUIActions = actions.Actions({
 	browseImages: ['- File/Load images...', makeBrowseProxy('loadImages')],
 
 	browseSubIndexes: ['File/List sub-indexes...',
-		widgets.makeUIDialog(function(){
-			var that = this
-			var index_dir = this.config['index-dir']
+		widgets
+			.makeUIDialog(function(){
+				var that = this
+				var index_dir = this.config['index-dir']
 
-			var o = browse.makeLister(null, function(path, make){
-				var dialog = this
-				var path = that.location.path
+				var o = browse.makeLister(null, function(path, make){
+					var dialog = this
+					var path = that.location.path
 
-				if(that.location.load != 'loadIndex'){
-					make('No indexes loaded...', null, true)
-					return
-				}
+					if(that.location.load != 'loadIndex'){
+						make('No indexes loaded...', null, true)
+						return }
 
-				// indicate that we are working...
-				var spinner = make('...')
+					// indicate that we are working...
+					var spinner = make('...')
 
-				// XXX we do not need to actually read anything....
-				//file.loadIndex(path, that.config['index-dir'], this.logger)
-				// XXX we need to prune the indexes -- avoid loading nested indexes...
-				file.listIndexes(path, index_dir)
-					.on('error', function(err){
-						console.error(err)
-					})
-					.on('end', function(res){
+					// XXX we do not need to actually read anything....
+					//file.loadIndex(path, that.config['index-dir'], this.logger)
+					// XXX we need to prune the indexes -- avoid loading nested indexes...
+					var res = []
+					file.listIndexes(path, index_dir)
+						.on('error', function(err){
+							console.error(err) })
+						.on('data', function(path){
+							res.push(path) })
+						.on('end', function(){
+							// we got the data, we can now remove the spinner...
+							spinner.remove()
 
-						// we got the data, we can now remove the spinner...
-						spinner.remove()
+							res.forEach(function(p){
+								// trim local paths and keep external paths as-is...
+								p = p.split(index_dir)[0]
+								var txt = p.split(path).pop()
+								txt = txt != p ? './'+pathlib.join('.', txt) : txt
 
-						res.forEach(function(p){
-							// trim local paths and keep external paths as-is...
-							p = p.split(index_dir)[0]
-							var txt = p.split(path).pop()
-							txt = txt != p ? './'+pathlib.join('.', txt) : txt
-
-							make(txt)
-								.on('open', function(){
-									that.loadIndex(p) }) }) }) })
-			.on('open', function(){
-				o.close() })
-
-			return o
-		})],
+								make(txt)
+									.on('open', function(){
+										that.loadIndex(p) }) }) }) })
+				.on('open', function(){
+					o.close() })
+			return o })],
 
 	toggleDotFileDrawing: ['Interface/File browser/Hide dot files',
 		core.makeConfigToggler(

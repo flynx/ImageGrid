@@ -25,7 +25,7 @@ if(typeof(process) != 'undefined'){
 	var cp = requirejs('child_process')
 	var fse = requirejs('fs-extra')
 	var pathlib = requirejs('path')
-	var glob = requirejs('glob')
+	//var glob = requirejs('glob')
 	// XXX migrate to exifreader as it is a bit more flexible...
 	// 		...use it in browser mode...
 	//var exifReader = requirejs('exifreader')
