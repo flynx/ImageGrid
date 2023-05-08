@@ -8,6 +8,8 @@ Future tasks
 - Move generic stuff to separate libs (npm)
 	- lib/keyboard.js
 	- lib/toggler.js
+- Electron seems to constantly drift out of spec 
+- Check if we actually need the less dependency
 
 
 
