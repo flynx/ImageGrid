@@ -44,7 +44,6 @@ module.skipNested =
 function(paths, index_dir, logger){
 	index_dir = index_dir || INDEX_DIR
 	logger = logger && logger.push('Skipping nested')
-
 	paths = paths
 		.map(function(p){ 
 			return p.split(index_dir).shift() })
@@ -82,11 +81,13 @@ function(paths, index_dir, logger){
 // 		matches manually...
 var guaranteeGlobEvents =
 module.guaranteeGlobEvents =
-function(glob){ return guaranteeEvents('data end', glob) }
+function(glob){ 
+	return guaranteeEvents('data end', glob) }
 
 var gGlob = 
 module.gGlob = function(){
-	return guaranteeGlobEvents(glob.globStream.apply(null, arguments)) }
+	return guaranteeGlobEvents(
+		glob.globStream.apply(null, arguments)) }
 
 
 
@@ -109,20 +110,21 @@ function(base, index_dir){
 var getIndexes =
 module.getIndexes = 
 function(base, index_dir, logger){
-	logger = logger && logger.push('Searching')
-
+	logger = logger 
+		&& logger.push('Searching')
 	return new Promise(function(resolve, reject){
+		var paths = []
 		listIndexes(base, index_dir)
 			.on('error', function(err){
-				reject(err)
-			})
+				reject(err) })
 			.on('data', function(path){
-				logger && logger.emit('found', path)
-			})
-			.on('end', function(paths){
+				logger 
+					&& logger.emit('found', path) 
+				paths.push(path) })
+			.on('end', function(){
 				// skip nested indexes...
-				resolve(skipNested(paths, index_dir, logger))
-			}) }) }
+				resolve(
+					skipNested(paths, index_dir, logger)) }) }) }
 
 
 var listPreviews =
@@ -136,7 +138,8 @@ function(base, img_pattern){
 var listJSON =
 module.listJSON =
 function(path, pattern){
-	pattern = pattern || '*'
+	pattern = pattern 
+		|| '*'
 	path = util.normalizePath(path)
 	return gGlob(path +'/'+ pattern +'.json', {strict: false}) }
 
@@ -153,8 +156,10 @@ function(func){
 	return function(){
 		var args = [...arguments]
 		return new Promise(function(resolve, reject){
-			func.apply(that, args.concat([function(err, res){
-				return err ? reject(err) : resolve(res) }])) }) } }
+			func.call(that, ...args, function(err, res){
+				return err ? 
+					reject(err) 
+					: resolve(res) }) }) } }
 
 var loadFile = denodeify(fse.readFile)
 var writeFile = denodeify(fse.writeFile)
@@ -163,9 +168,8 @@ var ensureDir = denodeify(fse.ensureDir)
 
 // XXX handle errors...
 function loadJSON(path){
-	path = util.normalizePath(path)
-	return loadFile(path).then(JSON.parse)
-}
+	return loadFile(util.normalizePath(path))
+		.then(JSON.parse) }
 
 
 // Format:
@@ -189,25 +193,20 @@ var groupByDate =
 module.groupByDate = 
 function(list){
 	var res = {}
-
 	list
 		.forEach(function(n){
 			var b = pathlib.basename(n)
 			var s = b.split(/[-.]/g).slice(0, -1)
-
 			// no date set...
 			if(s.length == 1){
-				res.root = res.root || []
+				res.root = res.root 
+					|| []
 				res.root.push(n)
-
 			} else {
-				res[s[0]] = res[s[0]] || []
-				res[s[0]].push(n)
-			}
-		})
-
-	return res
-}
+				res[s[0]] = res[s[0]] 
+					|| []
+				res[s[0]].push(n) } })
+	return res }
 
 
 
@@ -249,7 +248,11 @@ function(list, from_date, logger){
 		.reverse()
 		// skip dates before from_date...
 		// NOTE: from_date is included...
-		.filter(function(d){ return from_date ? d <= from_date || d == 'root' : true })
+		.filter(function(d){ 
+			return from_date ? 
+				d <= from_date 
+					|| d == 'root' 
+				: true })
 		.forEach(function(d){
 			dates[d]
 				.sort()
@@ -265,53 +268,47 @@ function(list, from_date, logger){
 					var k = s[1]
 					var d = s[2] == 'diff'
 
-					k = d ? k : s.slice(1).join('-')
+					k = d ? 
+						k 
+						: s.slice(1).join('-')
 
 					// new keyword...
 					if(index[k] == null){
 						index[k] = [[d, n]]
 						logger && logger.emit('queued', n)
 						queued += 1
-
 					// do not add anything past the latest non-diff 
 					// for each keyword...
 					} else if(index[k].slice(-1)[0][0] == true){
 						index[k].push([d, n])
 						logger && logger.emit('queued', n)
-						queued += 1
-					}
-				}) });
-
+						queued += 1 } }) })
 	// add base files back where needed...
 	// <keyword>.json / non-diff
-	(dates.root || [])
+	;(dates.root || [])
 		.forEach(function(n){
 			var b = pathlib.basename(n)
 			var k = b.split(/\./g)[0]
-
 			// no diffs...
 			if(index[k] == null){
 				index[k] = [[false, n]]
-				logger && logger.emit('queued', n)
+				logger 
+					&& logger.emit('queued', n)
 				queued += 1
-
 			// add root file if no base is found...
 			} else if(index[k].slice(-1)[0][0] == true){
 				index[k].push([false, n])
-				logger && logger.emit('queued', n)
-				queued += 1
-			}
-		})
-
+				logger 
+					&& logger.emit('queued', n)
+				queued += 1 } })
 	// remove the flags...
 	for(var k in index){
 		index[k] = index[k]
-			.map(function(e){ return e[1] }) }
-
-	logger && logger.emit('files-queued', queued, index)
-
-	return index
-}
+			.map(function(e){ 
+				return e[1] }) }
+	logger 
+		&& logger.emit('files-queued', queued, index)
+	return index }
 
 
 
@@ -326,40 +323,41 @@ function(list, from_date, logger){
 var loadSaveHistoryList =
 module.loadSaveHistoryList =
 function(path, index_dir, logger){
-	logger = logger && logger.push('Save history')
+	logger = logger 
+		&& logger.push('Save history')
 
 	path = util.normalizePath(path)
-	index_dir = index_dir || INDEX_DIR
+	index_dir = index_dir 
+		|| INDEX_DIR
 
 	return new Promise(function(resolve, reject){
 		// direct index...
 		if(pathlib.basename(path) == index_dir){
+			var files = []
 			listJSON(path)
 				// XXX handle errors...
 				.on('error', function(err){
-					logger && logger.emit('error', err)
-					console.error(err)
-				})
-				.on('end', function(files){
+					logger 
+						&& logger.emit('error', err)
+					console.error(err) })
+				.on('data', function(path){
+					paths.push(path) })
+				.on('end', function(){
 					var data = groupByDate(files)
-
 					// XXX should we mark the root timestamp in any way???
-					if('root' in data && data.root.length > 0){
+					if('root' in data 
+							&& data.root.length > 0){
 						// XXX handle stat error...
 						data[fse.statSync(data.root[0]).birthtime.getTimeStamp()] = data.root
-						delete data.root
-					}
-
-					resolve(data)
-				})
-
+						delete data.root }
+					resolve(data) })
 		// need to locate indexes...
 		} else {
 			var res = {}
-
 			getIndexes(path, index_dir, logger)
 				.catch(function(err){
-					logger && logger.emit('error', err)
+					logger 
+						&& logger.emit('error', err)
 					console.error(err) })
 				.then(function(paths){
 					// start loading...
@@ -376,7 +374,8 @@ function(path, index_dir, logger){
 									// 		we do not need to include the index 
 									// 		itself in the base path...
 									res[p] = obj }) })) })
-				.then(function(){ resolve(res) }) } }) }
+				.then(function(){ 
+					resolve(res) }) } }) }
 
 
 
@@ -470,22 +469,25 @@ function(path, index_dir, logger){
 var loadIndex =
 module.loadIndex = 
 function(path, index_dir, from_date, logger){
-	logger = logger && logger.push('Index')
+	logger = logger 
+		&& logger.push('Index')
 
 	path = util.normalizePath(path)
 
-	if(index_dir && index_dir.emit != null){
+	if(index_dir 
+			&& index_dir.emit != null){
 		logger = index_dir
 		index_dir = from_date = null
 
-	} else if(from_date && from_date.emit != null){
+	} else if(from_date 
+			&& from_date.emit != null){
 		logger = from_date
-		from_date = null
-	}
+		from_date = null }
 	//index_dir = index_dir || INDEX_DIR
 	index_dir = index_dir === false ? 
 		index_dir 
-		: (index_dir || INDEX_DIR)
+		: (index_dir 
+			|| INDEX_DIR)
 
 	// XXX should this be interactive (a-la EventEmitter) or as it is now 
 	// 		return the whole thing as a block (Promise)...
@@ -499,25 +501,29 @@ function(path, index_dir, from_date, logger){
 		var p = util.normalizePath(path).split(/[\\\/]/g).slice(-i.length)
 
 		var explicit_index_dir = !index_dir 
-			|| (i.filter(function(e, j){ return e == p[j] }).length == i.length)
+			|| (i
+				.filter(function(e, j){ 
+					return e == p[j] })
+				.length == i.length)
 
 		// we've got an index...
 		// XXX do we need to check if it's a dir???
 		if(explicit_index_dir){
+			logger 
+				&& logger.emit('path', path)
 
-			logger && logger.emit('path', path)
-
+			var files = []
 			listJSON(path)
 				// XXX handle errors...
 				.on('error', function(err){
-					logger && logger.emit('error', err)
-					console.error(err)
-				})
-				.on('end', function(files){
+					logger 
+						&& logger.emit('error', err)
+					console.error(err) })
+				.on('data', function(path){
+					files.push(path)})
+				.on('end', function(){
 					var res = {}
-
 					var index = groupByKeyword(files, from_date, logger)
-
 					// load...
 					Promise
 						.all(Object.keys(index).map(function(keyword){
@@ -528,12 +534,10 @@ function(path, index_dir, from_date, logger){
 							// XXX not sure about this...
 							if(keyword == '__dates'){
 								res.__dates = index.__dates
-								return true
-							}
+								return true }
 							if(keyword == '__date'){
 								res.__date = index.__date
-								return true
-							}
+								return true }
 
 							// NOTE: so far I really do not like how nested and
 							// 		unreadable the Promise/Deferred code becomes
@@ -549,7 +553,6 @@ function(path, index_dir, from_date, logger){
 									logger && logger.emit('loaded', keyword, latest)
 
 									var loading = {}
-
 									// handle diffs...
 									return Promise
 										// load diffs...
@@ -559,47 +562,32 @@ function(path, index_dir, from_date, logger){
 												// XXX we should abort loading this index...
 												.catch(function(err){
 													logger && logger.emit('error', err)
-													console.error(err)
-												})
+													console.error(err) })
 												.then(function(json){
 													// NOTE: we can't merge here
 													// 		as the files can be
 													// 		read in arbitrary order...
-													loading[p] = json
-												})
-										}))
+													loading[p] = json }) }))
 										// merge diffs...
 										.then(function(){
 											diffs
 												.reverse()
 												.forEach(function(p){
 													var json = loading[p]
-
 													for(var n in json){
-														data[n] = json[n]
-													}
-
-													logger && logger.emit('loaded', keyword+'-diff', p)
-												})
-
-											res[keyword] = data
-										})
-								})
-						}))
+														data[n] = json[n] }
+													logger 
+														&& logger.emit('loaded', keyword+'-diff', p) })
+											res[keyword] = data }) }) }))
 						.then(function(){
-							logger && logger.emit('index', path, res)
-
+							logger 
+								&& logger.emit('index', path, res)
 							var d = {}
 							d[path] = res
-
-							resolve(d)
-						})
-				})
-
+							resolve(d) }) })
 		// no explicit index given -- find all in sub tree...
 		} else {
 			var res = {}
-
 			// special case: root index...
 			if(fse.existsSync(path +'/'+ index_dir)){
 				var n = path +'/'+ index_dir
@@ -612,36 +600,29 @@ function(path, index_dir, from_date, logger){
 						// 		we do not need to include the index 
 						// 		itself in the base path...
 						res[path] = obj[n] 
-						resolve(res)
-					})
-			}
-
+						resolve(res) }) }
 			// full search...
 			getIndexes(path, index_dir, logger)
 				.catch(function(err){
 					logger && logger.emit('error', err)
-					console.error(err)
-				})
+					console.error(err) })
 				.then(function(paths){
 					// start loading...
-					Promise.all(paths.map(function(p){
-						p = util.normalizePath(p)
-						//var path = pathlib.normalize(p +'/'+ index_dir) 
-						var path = util.normalizePath(p +'/'+ index_dir) 
-						return loadIndex(path, index_dir, from_date, logger) 
-							.then(function(obj){ 
-								// NOTE: considering that all the paths within
-								// 		the index are relative to the preview 
-								// 		dir (the parent dir to the index root)
-								// 		we do not need to include the index 
-								// 		itself in the base path...
-								res[p] = obj[path] 
-							})
-					})).then(function(){ resolve(res) })
-				})
-		}
-	})
-}
+					Promise
+						.all(paths.map(function(p){
+							p = util.normalizePath(p)
+							//var path = pathlib.normalize(p +'/'+ index_dir) 
+							var path = util.normalizePath(p +'/'+ index_dir) 
+							return loadIndex(path, index_dir, from_date, logger) 
+								.then(function(obj){ 
+									// NOTE: considering that all the paths within
+									// 		the index are relative to the preview 
+									// 		dir (the parent dir to the index root)
+									// 		we do not need to include the index 
+									// 		itself in the base path...
+									res[p] = obj[path] }) }))
+						.then(function(){ 
+							resolve(res) }) }) } }) }
  
 
 // get/populate the previews...
@@ -663,20 +644,20 @@ function(path, index_dir, from_date, logger){
 var loadPreviews =
 module.loadPreviews =
 function(base, pattern, previews, index_dir, absolute_path){
-	previews = previews || {}
-	index_dir = index_dir || INDEX_DIR
+	previews = previews 
+		|| {}
+	index_dir = index_dir 
+		|| INDEX_DIR
 	base = util.normalizePath(base)
-	pattern = pattern || '*'
+	pattern = pattern 
+		|| '*'
 
 	// we got an explicit index....
 	if(pathlib.basename(base) == index_dir){
 		return new Promise(function(resolve, reject){
 			if(!(base in previews)){
-				previews[base] = {}
-			}
-
+				previews[base] = {} }
 			var images = previews[base]
-
 			listPreviews(base, pattern)
 				// XXX handle errors....
 				//.on('error', function(err){
@@ -687,26 +668,18 @@ function(base, pattern, previews, index_dir, absolute_path){
 					// get the data we need...
 					var gid = pathlib.basename(path).split(' - ')[0]
 					var res = pathlib.basename(pathlib.dirname(path))
-
 					// build the structure if it does not exist...
 					if(!(gid in images)){
-						images[gid] = {}
-					}
+						images[gid] = {} }
 					if(images[gid].preview == null){
-						images[gid].preview = {}
-					}
-
+						images[gid].preview = {} }
 					// add a preview...
 					// NOTE: this will overwrite a previews if they are found in
 					// 		several locations...
 					images[gid].preview[res] =
-						util.normalizePath(index_dir +'/'+ path.split(index_dir)[1])
-				})
+						util.normalizePath(index_dir +'/'+ path.split(index_dir)[1]) })
 				.on('end', function(){
-					resolve(previews)
-				})
-		})
-
+					resolve(previews) }) })
 	// find all sub indexes...
 	} else {
 		return new Promise(function(resolve, reject){
@@ -716,17 +689,12 @@ function(base, pattern, previews, index_dir, absolute_path){
 				//.on('error', function(err){
 				//})
 				.on('data', function(base){
-					queue.push(loadPreviews(base, pattern, previews, index_dir, absolute_path))
-				})
+					queue.push(
+						loadPreviews(base, pattern, previews, index_dir, absolute_path)) })
 				.on('end', function(){
 					Promise.all(queue)
 						.then(function(){
-							resolve(previews)
-						})
-				})
-		})
-	}
-}
+							resolve(previews) }) }) }) } }
 
 
 // XXX
@@ -765,67 +733,69 @@ var FILENAME = '${DATE}-${KEYWORD}.${EXT}'
 var writeIndex =
 module.writeIndex = 
 function(json, path, date, filename_tpl, logger){
-	logger = logger && logger.push('Index')
+	logger = logger 
+		&& logger.push('Index')
 
 	// XXX get this from args/config...
 	var spaces = null
 
 	path = util.normalizePath(path)
-	filename_tpl = filename_tpl || FILENAME
+	filename_tpl = filename_tpl 
+		|| FILENAME
 	// XXX for some reason this gets the unpatched node.js Date, so we 
 	// 		get the patched date explicitly...
-	date = date || window.Date.timeStamp()
+	date = date 
+		|| window.Date.timeStamp()
 
 	var files = []
 
 	// build the path if it does not exist...
 	return ensureDir(path)
 		.catch(function(err){
-			logger && logger.emit('error', err)
-			console.error(err)
-		})
+			logger 
+				&& logger.emit('error', err)
+			console.error(err) })
 		.then(function(){
-			logger && logger.emit('path', path)
+			logger 
+				&& logger.emit('path', path)
 
 			// write files...
 			// NOTE: we are not doing this sequencilly as there will not
 			// 		be too many files...
 			return Promise
-				.all(Object.keys(json).map(function(keyword){
-					//var data = JSON.stringify(json[keyword])
-					var data = JSON.stringify(json[keyword], null, spaces)
+				.all(Object.keys(json)
+					.map(function(keyword){
+						//var data = JSON.stringify(json[keyword])
+						var data = JSON.stringify(json[keyword], null, spaces)
 
-					// get the sub-path and keyword...
-					var sub_path = keyword.split(/[\\\/]/g)
-					keyword = sub_path.pop()
-					sub_path = sub_path.join('/')
+						// get the sub-path and keyword...
+						var sub_path = keyword.split(/[\\\/]/g)
+						keyword = sub_path.pop()
+						sub_path = sub_path.join('/')
 
-					var file = path +'/'+ sub_path +'/'+ (filename_tpl
-						.replace('${DATE}', date)
-						.replace('${KEYWORD}', keyword)
-						.replace('${EXT}', 'json'))
+						var file = path +'/'+ sub_path +'/'+ (filename_tpl
+							.replace('${DATE}', date)
+							.replace('${KEYWORD}', keyword)
+							.replace('${EXT}', 'json'))
 
-					return ensureDir(pathlib.dirname(file))
-						.then(function(){
-							files.push(file)
+						return ensureDir(pathlib.dirname(file))
+							.then(function(){
+								files.push(file)
 
-							logger && logger.emit('queued', file)
+								logger 
+									&& logger.emit('queued', file)
 
-							return writeFile(file, data, 'utf8')
-								.catch(function(err){
-									logger && logger.emit('error', err)
-									console.error(err)
-								})
-								.then(function(){
-									logger && logger.emit('written', file)
-								})
-						})
-				}))
-			.then(function(){
-				logger && logger.emit('done', files)
-			})
-		})
-}
+								return writeFile(file, data, 'utf8')
+									.catch(function(err){
+										logger 
+											&& logger.emit('error', err)
+										console.error(err) })
+									.then(function(){
+										logger 
+											&& logger.emit('written', file) }) }) }))
+				.then(function(){
+					logger 
+						&& logger.emit('done', files) }) }) }
 
 
 
