@@ -4,11 +4,20 @@
 
 /******************************************************** Settings ***/
 
+/* XXX might be a good idea to rename this to something more specific like imagegrid-viewer */
+.viewer {
+	--image-tile-size: 50vmin;
+
+	--image-mark-size: calc(var(--image-tile-size) / 60);
+	--image-border: calc(var(--image-tile-size) / 80);
+	--ribbon-margin: calc(var(--image-tile-size) / 30);
+	--ribbon-mark-offset: calc(var(--image-tile-size) / 200);
+	--ribbon-mark-size: calc(var(--image-tile-size) / 30);
+	--single-image-indicator-size: calc(var(--image-tile-size) / 30);
+}
+
+
 // new style config...
-
-
-
-
 
 //@image-tile-size: 300px;
 //@image-tile-size: 600px;
@@ -648,8 +657,8 @@ stretching in width... */
 
 	background: black;
 
-	margin-top: @ribbon-margin;
-	margin-bottom: @ribbon-margin;
+	margin-top: var(--ribbon-margin);
+	margin-bottom: var(--ribbon-margin);
 
 	will-change: transform;
 }
@@ -692,7 +701,7 @@ stretching in width... */
 	display: block;
 
 	position: absolute;
-	width: @image-tile-size;
+	width: var(--image-tile-size);
 	bottom: 0px;
 	left: 0px;
 	padding: 5px;
@@ -725,8 +734,8 @@ stretching in width... */
 	display: inline-block;
 	vertical-align: middle;
 	text-align:left;
-	width: @image-tile-size;
-	height: @image-tile-size;
+	width: var(--image-tile-size);
+	height: var(--image-tile-size);
 	font-size: 12pt;
 	overflow: hidden;
 
@@ -741,7 +750,7 @@ stretching in width... */
 	 	affected by filters... */
 	background: no-repeat 50% transparent;
 	background-size: contain;
-	border: solid @image-border transparent;
+	border: solid var(--image-border) transparent;
 
 	/* XXX we are taking care of this in code -- see if we can use this */
 	image-orientation: none;
@@ -754,9 +763,9 @@ stretching in width... */
 	display: block;
 	position: absolute;
 
-	max-width: @image-tile-size;
+	max-width: var(--image-tile-size);
 	width: auto;
-	max-height: @image-tile-size;
+	max-height: var(--image-tile-size);
 	height: auto;
 
 	left: 50%;
@@ -822,8 +831,8 @@ stretching in width... */
 
 	top: 0;
 	left: 0;
-	margin-top: -@image-tile-size / 2;
-	margin-left: -@image-tile-size / 2;
+	margin-top: calc(-1 * var(--image-tile-size) / 2);
+	margin-left: calc(-1 * var(--image-tile-size) / 2);
 
 	/* pass events through... (do we need IE10-?) */
 	pointer-events: none;
@@ -1109,7 +1118,7 @@ stretching in width... */
 
 .mark {
 	/* this fully covers the image to simplify positioning of actual marks */
-	margin-left: -@image-tile-size;
+	margin-left: calc(-1 * var(--image-tile-size));
 	border: none;
 }
 .viewer:not(.marks-visible) .mark {
@@ -1132,19 +1141,19 @@ stretching in width... */
 	font-size: 0pt;
 	border: none;
 
-	width: @image-mark-size;
-	height: @image-mark-size;
+	width: var(--image-mark-size);
+	height: var(--image-mark-size);
 
 	top: auto;
-	bottom: @image-tile-size/30;
+	bottom: calc(var(--image-tile-size)/30);
 	left: auto;
-	right: @image-tile-size/30;
+	right: calc(var(--image-tile-size)/30);
 
 	box-shadow: 
-		@image-tile-size/300
-		@image-tile-size/300
-		@image-tile-size/43
-		-@image-tile-size/231
+		calc(var(--image-tile-size)/300)
+		calc(var(--image-tile-size)/300)
+		calc(var(--image-tile-size)/43)
+		calc(-1 * var(--image-tile-size)/231)
 		rgba(0,0,0,0.8);
 
 	box-sizing: border-box;
@@ -1152,7 +1161,7 @@ stretching in width... */
 
 
 	background: blue;
-	left: -@image-tile-size/12;
+	left: calc(-1 * var(--image-tile-size)/12);
 }
 .marks-visible.single-image-mode.viewer .mark:before,
 .marks-visible.single-image-mode.viewer .mark:after {
@@ -1161,36 +1170,36 @@ stretching in width... */
 
 .mark.bookmark:after {
 	background: yellow;
-	left: -@image-tile-size/20;
+	left: calc(-1 * var(--image-tile-size)/20);
 }
 
 
 /* the marked tick... */
 .mark.marked:before,
 .mark.marked:after {
-	top: @image-tile-size/30;
-	left: -@image-tile-size/15;
+	top: calc(var(--image-tile-size)/30);
+	left: calc(-1 * var(--image-tile-size)/15);
 	bottom: auto;
 
-	border-radius: @image-tile-size/100;
+	border-radius: calc(var(--image-tile-size)/100);
 
 	.rotate(-45deg);
 }
 .mark.marked:before {
-	width: @image-tile-size/100;
-	height: @image-tile-size/50;
+	width: calc(var(--image-tile-size)/100);
+	height: calc(var(--image-tile-size)/50);
 }
 .mark.marked:after {
-	width: @image-tile-size/25;
-	height: @image-tile-size/100;
+	width: calc(var(--image-tile-size)/25);
+	height: calc(var(--image-tile-size)/100);
 }
 
 
 /* XXX these are still experimental... */
 .mark.brace-open,
 .mark.brace-close {
-	width: @image-border * 2;
-	height: @image-tile-size;
+	width: calc(var(--image-border) * 2);
+	height: var(--image-tile-size);
 	overflow: visible;
 
 	margin-left: 0px;
@@ -1201,29 +1210,29 @@ stretching in width... */
 	position: absolute;
 	content: "";
 
-	width: @image-tile-size / 20;
+	width: calc(var(--image-tile-size) / 20);
 	height: 100%;
 
 	box-sizing: content-box;
 
-	border-top: solid @image-border*2 yellow;
-	border-bottom: solid @image-border*2 yellow;
+	border-top: solid calc(var(--image-border)*2) yellow;
+	border-bottom: solid calc(var(--image-border)*2) yellow;
 
-	margin-top: -@image-border * 2;
+	margin-top: calc(-1 * var(--image-border) * 2);
 }
 .mark.brace-open:after {
-	border-left: solid @image-border*2 yellow;
+	border-left: solid calc(var(--image-border)*2) yellow;
 }
 .mark.brace-close:after {
-	left: -@image-tile-size / 20;
+	left: calc(-1 * var(--image-tile-size) / 20);
 
-	border-right: solid @image-border*2 yellow;
+	border-right: solid calc(var(--image-border)*2) yellow;
 }
 
 
 .mark.partition {
-	width: @image-border;
-	height: @image-tile-size;
+	width: var(--image-border);
+	height: var(--image-tile-size);
 
 	overflow: visible;
 
@@ -1234,23 +1243,23 @@ stretching in width... */
 	position: absolute;
 	content: "";
 
-	width: @image-border;
+	width: var(--image-border);
 	height: 102%;
 
 	background: yellow;
 
-	margin-top: -@image-tile-size / 50;
+	margin-top: calc(-1 * var(--image-tile-size) / 50);
 	margin-bottom: 0px;
 }
 .mark.partition:after {
 	display: block;
 	position: absolute;
-	left: @image-border * 2;
+	left: calc(var(--image-border) * 2);
 	content: attr(text);
 
 	color: yellow;
 
-	margin-top: -@image-tile-size / 24;
+	margin-top: calc(-1 * var(--image-tile-size) / 24);
 }
 
 
@@ -1748,7 +1757,7 @@ stretching in width... */
 	position: absolute;
 	height: 20px;
 	width: auto;
-	min-width: @image-tile-size;
+	min-width: var(--image-tile-size);
 	text-align: right;
 
 	color: transparent;
@@ -1933,7 +1942,7 @@ stretching in width... */
 	display: block;
 
 	width: 100%;
-	height: @image-tile-size/50;
+	height: calc(var(--image-tile-size)/50);
 	top: 101%;
 	//left: -100%;
 
@@ -1947,24 +1956,24 @@ stretching in width... */
 	display: none;
 	position: fixed;
 
-	width: @image-tile-size / 16;
-	height: @image-tile-size / 4;
+	width: calc(var(--image-tile-size) / 16);
+	height: calc(var(--image-tile-size) / 4);
 
-	margin-top: -@image-tile-size / 8;
+	margin-top: calc(-1 * var(--image-tile-size) / 8);
 
 	box-sizing: border-box;
 
-	border-top: solid @image-tile-size / 8 transparent;
-	border-bottom: solid @image-tile-size / 8 transparent;
+	border-top: solid calc(var(--image-tile-size) / 8) transparent;
+	border-bottom: solid calc(var(--image-tile-size) / 8) transparent;
 }
 .range-offscreen-indicator.left {
-	border-right: solid @image-tile-size / 16 yellow;
-	border-left: solid @image-border * 2 transparent;
+	border-right: solid calc(var(--image-tile-size) / 16) yellow;
+	border-left: solid calc(var(--image-border) * 2) transparent;
 }
 .range-offscreen-indicator.right {
 
-	border-left: solid @image-tile-size / 16 yellow;
-	border-right: solid @image-border * 2 transparent;
+	border-left: solid calc(var(--image-tile-size) / 16) yellow;
+	border-right: solid calc(var(--image-border) * 2) transparent;
 }
 
 
