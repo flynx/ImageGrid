@@ -39,15 +39,18 @@ var object = require('lib/object')
 var Filters = 
 module.Filters = {
 	makeCanvas: function(w, h, canvas){
-		var c = canvas || document.createElement('canvas')
+		var c = canvas 
+			|| document.createElement('canvas')
 		c.width = w
 		c.height = h
 		return c },
 
 	// as input takes an HTML Image object...
 	getPixels: function(img, tmp_canvas, w, h){
-		var w = w || img.naturalWidth
-		var h = h || img.naturalHeight
+		var w = w 
+			|| img.naturalWidth
+		var h = h 
+			|| img.naturalHeight
 		var c = this.makeCanvas(w, h, tmp_canvas)
 		var context = c.getContext('2d')
 		if(img == null){
@@ -58,8 +61,10 @@ module.Filters = {
 			context.drawImage(img, 0, 0, w, h) }
 		return context.getImageData(0, 0, c.width, c.height) },
 	setPixels: function(c, data, w, h){
-		w = c.width = w || data.width
-		h = c.height = h || data.height
+		w = c.width = w 
+			|| data.width
+		h = c.height = h 
+			|| data.height
 		var context = c.getContext('2d')
 		context.putImageData(data, 0, 0) },
 
@@ -72,10 +77,13 @@ module.Filters = {
 	// 			focusImage: 2
 	// 			showMetadata
 	getNormalizedPixels: function(img, tmp_canvas, s, rotate, flip){
-		s = s || Math.max(img.naturalWidth, img.naturalHeight)
-		rotate = rotate || 0
+		s = s 
+			|| Math.max(img.naturalWidth, img.naturalHeight)
+		rotate = rotate 
+			|| 0
 
-		;(rotate == 90 || rotate == 270)
+		;(rotate == 90 
+				|| rotate == 270)
 			&& (flip = flip == 'horizontal' ?
 					'vertical'
 				: flip == 'vertical' ?
@@ -116,13 +124,17 @@ module.Filters = {
 			var b = d[i+2]
 			// CIE luminance for the RGB
 			// The human eye is bad at seeing red and blue, so we de-emphasize them.
-			var v = 0.2126*r + 0.7152*g + 0.0722*b
+			var v = 0.2126*r 
+				+ 0.7152*g 
+				+ 0.0722*b
 			d[i] = d[i+1] = d[i+2] = v }
 		return pixels },
 	// XXX need to resize this...
 	histogram: function(pixels, mode, color){
-		color = color || 'fill'
-		mode = mode || 'luminance'
+		color = color 
+			|| 'fill'
+		mode = mode 
+			|| 'luminance'
 
 		var size = 255
 		var w = size 
@@ -148,11 +160,14 @@ module.Filters = {
 				count[v] = count[v+1] = count[v+2] = (count[v] || 0) + 1
 
 			} else {
-				if(mode == 'color' || mode == 'R'){
+				if(mode == 'color' 
+						|| mode == 'R'){
 					count[r*4] = (count[r*4] || 0) + 1 }
-				if(mode == 'color' || mode == 'G'){
+				if(mode == 'color' 
+						|| mode == 'G'){
 					count[g*4+1] = (count[g*4+1] || 0) + 1 }
-				if(mode == 'color' || mode == 'B'){
+				if(mode == 'color' 
+						|| mode == 'B'){
 					count[b*4+2] = (count[b*4+2] || 0) + 1 } } }
 
 		var m = size / Math.max(...count.filter(function(){ return true }))
@@ -179,8 +194,10 @@ module.Filters = {
 
 		return out },
 	waveform: function(pixels, mode, color){
-		mode = mode || 'luminance'
-		color = color || 'normalized'
+		mode = mode 
+			|| 'luminance'
+		color = color 
+			|| 'normalized'
 
 		var w = pixels.width
 		var h = pixels.height
@@ -225,12 +242,10 @@ module.Filters = {
 		var Bl = 0.0722
 
 		for(var i=0; i<d.length; i+=4){
-
 			var r = d[i]
 			var g = d[i+1]
 			var b = d[i+2]
 			var c, j, f, x, y
-
 
 			if(mode === 'luminance'){
 				var v = Rl*r + Gl*g + Bl*b
@@ -238,7 +253,6 @@ module.Filters = {
 				od[j] = od[j+1] = od[j+2] = c * gain
 
 			} else {
-
 				if(mode === 'color' || mode === 'R'){
 					f = Rl
 					x = 1
@@ -246,7 +260,6 @@ module.Filters = {
 					j = pos(i, r)
 					c = count[j] = (count[j] || 0) + 1
 					od[j] = c * gain }
-
 				if(mode === 'color' || mode === 'G'){
 					f = Gl
 					x = -1
@@ -254,7 +267,6 @@ module.Filters = {
 					j = pos(i, g) + 1
 					c = count[j] = (count[j] || 0) + 1
 					od[j] = c * gain }
-
 				if(mode === 'color' || mode === 'B'){
 					f = Bl
 					x = -2
@@ -443,7 +455,8 @@ object.Constructor('igImageGraph', HTMLElement, {
 				(img.src = value)
 				: img.src) },
 	get mode(){
-		return this.getAttribute('mode') || 'color' },
+		return this.getAttribute('mode') 
+			|| 'color' },
 	set mode(value){
 		this.modes.includes(value)	
 			&& this.setAttribute('mode', value) 
@@ -452,7 +465,8 @@ object.Constructor('igImageGraph', HTMLElement, {
 		this.update_controls()
 		this.update() },
 	get color(){
-		return this.getAttribute('color') || 'normalized' },
+		return this.getAttribute('color') 
+			|| 'normalized' },
 	set color(value){
 		this.color_modes.includes(value)	
 			&& this.setAttribute('color', value) 
@@ -461,7 +475,8 @@ object.Constructor('igImageGraph', HTMLElement, {
 		this.update() },
 
 	get orientation(){
-		return this.getAttribute('orientation') || 0 },
+		return this.getAttribute('orientation') 
+			|| 0 },
 	set orientation(value){
 		;(['top', 'left', 'bottom', 'right'].includes(value)
 				|| typeof(value) == typeof(123))
@@ -566,7 +581,10 @@ object.Constructor('igImageGraph', HTMLElement, {
 					.map(function(m){
 						var button = document.createElement('button')
 						button.innerText = m
-						button.classList.add(m, ...(m == mode ? ['current'] : []))
+						button.classList.add(m, 
+							...(m == mode ? 
+								['current'] 
+								: []))
 						button.onclick = function(){ 
 							that.mode = m }
 						return button }),
