@@ -354,22 +354,15 @@ BUILD_INFO = $(BUILD_DIR)/INFO
 PROJECT_FILES = package.json
 HTML_FILES := $(wildcard *.html)
 
-# NOTE: these must be explicitly included in all other categories as they
-# 	will not be matched by wildcard if they are not generated yet 
-# 	resulting in them not being copied to the build...
-GENERATED_CSS_FILES := \
-	$(patsubst %.less,%.css,$(wildcard css/*.less))
 # XXX should this be a wildcard???
 GENERATED_JS_FILES := \
 	version.js
 GENERATED_FILES := \
 	$(GENERATED_JS_FILES) \
-	$(GENERATED_CSS_FILES) \
 	$(APP_NAME).desktop
 
 CSS_FILES := \
-	$(wildcard css/*.css) \
-	$(GENERATED_CSS_FILES)
+	$(wildcard css/*.css)
 ROOT_JS_FILES := \
 	$(wildcard *.js) \
 	version.js
@@ -514,11 +507,11 @@ doc: $(DOC_FILES)
 
 .PHONY: dev
 dev: ## Build the development environment
-dev: $(JS_FILES) $(NODE_DIR) $(PATCHES) css
+dev: $(JS_FILES) $(NODE_DIR) $(PATCHES)
 
 .PHONY: dev-npm
 dev-npm: ## Install the npm global dev package (might need sudo)
-dev-npm: $(JS_FILES) $(PATCHES) css
+dev-npm: $(JS_FILES) $(PATCHES)
 	npm install -g .
 
 .PHONY: dist
@@ -584,11 +577,6 @@ clean-all: clean clean-dist
 
 
 ##---------------------------------------------- Generic components ---
-
-.PHONY: css
-css: ## Build CSS
-css: $(GENERATED_CSS_FILES)
-
 
 .PHONY: js
 js: ## Build JS modules
@@ -740,10 +728,6 @@ $(BUILD_INFO): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 			-e 's#\$$ICON_PATH#$(ICON_PATH)#' \
 			-e 's#\$$LAUNCHER#$(INSTALL_PATH)/$(APP_LAUNCHER)#' \
 		> $@
-
-
-%.css: %.less
-	$(LESSC) $< > $@
 
 
 $(APP_NAME).desktop: App.desktop

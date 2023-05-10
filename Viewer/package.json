@@ -61,7 +61,6 @@
   "devDependencies": {
     "asar": "^3.0.1",
     "electron-rebuild": "*",
-    "less": "*",
     "rcedit": "^3.0.0"
   },
   "-devDependencies": {},
