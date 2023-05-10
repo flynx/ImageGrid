@@ -5,7 +5,7 @@
 *
 * Example:
 *	<script>
-*		require('nib/object')
+*		require('lib/object')
 *		require('ig-image-graph')
 *		...
 *	</script>
@@ -18,7 +18,10 @@
 *		style="width: 600px; height: 300px"></ig-image-graph>
 * 
 *
-* XXX add docs and examples -- canvas-waveform.html is out outdated...
+* XXX add docs and examples -- canvas-waveform.html is outdated...
+* XXX might be a good idea to add interactive feedback -- show on image 
+* 		the denseties under the ursor for histogram or the slice/density 
+* 		for the waveform...
 * XXX add worker support...
 *
 **********************************************************************/
