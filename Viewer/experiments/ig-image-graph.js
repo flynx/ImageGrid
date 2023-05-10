@@ -11,8 +11,7 @@ var Filters = {
 		var c = document.createElement('canvas')
 		c.width = w
 		c.height = h
-		return c
-	},
+		return c },
 
 	// as input takes an HTML Image object...
 	getPixels: function(img, w, h){
@@ -25,24 +24,20 @@ var Filters = {
 			context.fillStyle = "black"
 			context.fill()
 		} else {
-			context.drawImage(img, 0, 0, w, h)
-		}
-		return context.getImageData(0,0,c.width,c.height)
-	},
+			context.drawImage(img, 0, 0, w, h) }
+		return context.getImageData(0,0,c.width,c.height) },
 	setPixels: function(c, data, w, h){
 		c.width = data.width
 		c.height = data.height
 		var context = c.getContext('2d')
-		context.putImageData(data, 0, 0)
-	},
+		context.putImageData(data, 0, 0) },
 
 	filterImage: function(filter, image, var_args){
 		var args = [this.getPixels(image)]
 		for(var i=2; i<arguments.length; i++){
 			args.push(arguments[i])
 		}
-		return filter.apply(null, args)
-	},
+		return filter.apply(null, args) },
 
 	grayscale: function(pixels, args){
 		var d = pixels.data
@@ -53,10 +48,8 @@ var Filters = {
 			// CIE luminance for the RGB
 			// The human eye is bad at seeing red and blue, so we de-emphasize them.
 			var v = 0.2126*r + 0.7152*g + 0.0722*b
-			d[i] = d[i+1] = d[i+2] = v
-		}
-		return pixels
-	},
+			d[i] = d[i+1] = d[i+2] = v }
+		return pixels },
 	// XXX need to resize this...
 	histogram: function(pixels, mode, color){
 		color = color || 'fill'
@@ -90,8 +83,7 @@ var Filters = {
 				if(mode == 'color' || mode == 'G'){
 					count[g*4+1] = (count[g*4+1] || 0) + 1 }
 				if(mode == 'color' || mode == 'B'){
-					count[b*4+2] = (count[b*4+2] || 0) + 1 } }
-		}
+					count[b*4+2] = (count[b*4+2] || 0) + 1 } } }
 
 		var m = 255 / Math.max(...count.filter(function(){ return true }))
 
@@ -115,8 +107,7 @@ var Filters = {
 						&& (od[j-1] = od[j-2] = 180) 
 					break } } })
 
-		return out
-	},
+		return out },
 	waveform: function(pixels, mode, color){
 		mode = mode || 'luminance'
 		color = color || 'normalized'
@@ -166,33 +157,27 @@ var Filters = {
 				od[j] = od[j+1] = od[j+2] = c * gain
 
 			} else {
-
 				if(mode == 'color' || mode == 'R'){
 					f = 0.2126
 					x = 1
 					y = 2
 					j = pos(i, r)
 					c = count[j] = (count[j] || 0) + m
-					od[j] = c * gain
-				}
-
+					od[j] = c * gain }
 				if(mode == 'color' || mode == 'G'){
 					f = 0.7152
 					x = -1
 					y = 1
 					j = pos(i, g) + 1
 					c = count[j] = (count[j] || 0) + m
-					od[j] = c * gain
-				}
-
+					od[j] = c * gain }
 				if(mode == 'color' || mode == 'B'){
 					f = 0.0722
 					x = -2
 					y = -1
 					j = pos(i, b) + 2
 					c = count[j] = (count[j] || 0) + m
-					od[j] = c * gain
-				}
+					od[j] = c * gain }
 
 				// normalize...
 				mode != 'color'
@@ -200,12 +185,8 @@ var Filters = {
 							(od[j+x] = od[j+y] = c * gain)
 						: color == 'normalized' ?
 							(od[j+x] = od[j+y] = c * gain/2 * (1-f))
-						: null)
-			}
-		}
-
-		return out
-	},
+						: null) } }
+		return out },
 }
 
 
@@ -340,8 +321,7 @@ class igImageGraph extends HTMLElement {
 		this.setAttribute('src', 
 			url ? 
 				(img.src = value)
-				: img.src)
-	}
+				: img.src) }
 	get mode(){
 		return this.getAttribute('mode') || 'color' }
 	set mode(value){
@@ -425,8 +405,7 @@ class igImageGraph extends HTMLElement {
 			.reverse()
 			.forEach(function(button){
 				controls.appendChild(button) })
-		return this
-	}
+		return this }
 	update(){
 		var that = this
 		var mode = this.mode
@@ -438,8 +417,7 @@ class igImageGraph extends HTMLElement {
 			// current button state...
 			var button = controls.querySelector('button.'+this.mode) 
 			button 
-				&& button.classList.add('current')
-		}
+				&& button.classList.add('current') }
 
 		// XXX configurable...
 		var type = this.graph
@@ -451,11 +429,9 @@ class igImageGraph extends HTMLElement {
 			graph(this.image, canvas, this.mode, this.color)
 
 		} else if(this.src){
-			this.src = this.src
-		}
+			this.src = this.src }
 
-		return this
-	}
+		return this }
 }
 window.customElements.define('ig-image-graph', igImageGraph)
 
