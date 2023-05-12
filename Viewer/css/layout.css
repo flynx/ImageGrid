@@ -20,6 +20,28 @@
 }
 
 
+/******************************************************** theaming ***/
+
+.viewer,
+.viewer.gray {
+	--text-color: white;
+	--background-color: #333;
+	--dialog-background-color: #555;
+}
+
+.viewer.dark {
+	--text-color: white;
+	--background-color: #0a0a0a;
+	--dialog-background-color: #333;
+}
+
+.viewer.light {
+	--text-color: black;
+	--background-color: white;
+}
+
+
+
 /********************************************************* utility ***/
 .expanding-text .hidden {
 	display: none;
@@ -144,7 +166,7 @@
 	to { 
 		opacity: 0; 
 	}
-};
+}
 
 
 
@@ -2116,10 +2138,10 @@ progress:not(value)::-webkit-progress-bar {
 
 .gray.viewer,
 .gray.viewer .overlay-block .background {
-	background: #333;
+	background: var(--background-color);
 }
 .gray.viewer .overlay-block .dialog {
-	background: #555;
+	background: var(--dialog-background-color);
 }
 .gray.viewer .overlay-block:hover .background:after {
 	color: silver;
@@ -2131,10 +2153,10 @@ progress:not(value)::-webkit-progress-bar {
 
 .dark.viewer,
 .dark.viewer .overlay-block .background {
-	background: #0a0a0a;
+	background: var(--background-color);
 }
 .dark.viewer .overlay-block .dialog {
-	background: #333;
+	background: var(--dialog-background-color);
 }
 .dark.viewer .overlay-block:hover .background:after {
 	color: gray;
