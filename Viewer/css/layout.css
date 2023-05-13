@@ -42,6 +42,10 @@
 	--background-color: white;
 }
 
+.viewer.single-image-mode {
+	--ribbon-background-color: none;
+}
+
 
 
 /********************************************************* utility ***/

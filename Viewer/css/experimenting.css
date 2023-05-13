@@ -570,6 +570,23 @@ body {
 }
 
 
+/* image gaps */
+.image:not(:first-of-type) {
+	margin-left: var(--image-gap-size);
+}
+/* image gap indicator */
+.image:before {
+	content: var(--image-gap-text);
+	display: block;
+	position: absolute;
+	bottom: 0.5em;
+	left: 0px;
+	background:gray;
+	border-radius: 1em;
+	padding: 0.2em 0.5em;
+	transform: translate(-50%);
+} 
+
 
 /* DEBUG stuff... */
 .container-center {
