@@ -575,6 +575,7 @@ body {
 	margin-left: var(--image-gap-size);
 }
 /* image gap indicator */
+/* XXX not sure we need this yet...
 .image:before {
 	content: var(--image-gap-text);
 	display: block;
@@ -586,6 +587,7 @@ body {
 	padding: 0.2em 0.5em;
 	transform: translate(-50%);
 } 
+*/
 
 
 /* DEBUG stuff... */
