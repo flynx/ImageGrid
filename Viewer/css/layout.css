@@ -26,6 +26,8 @@
 .viewer.gray {
 	--text-color: white;
 	--background-color: #333;
+	--image-background-color: black;
+	--ribbon-background-color: none;
 	--dialog-background-color: #555;
 }
 
@@ -614,7 +616,7 @@ stretching in width... */
 	float: left;
 	clear: both;
 
-	background: black;
+	background: var(--ribbon-background-color);
 
 	margin-top: var(--ribbon-margin);
 	margin-bottom: var(--ribbon-margin);
@@ -717,7 +719,12 @@ stretching in width... */
 
 .image {
 	padding: var(--single-image-indicator-size);
+	background-color: var(--image-background-color);
 }
+.single-image-mode .image {
+	background-color: none;
+}
+
 .image div {
 	display: block;
 	position: absolute;
