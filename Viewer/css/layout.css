@@ -43,7 +43,10 @@
 }
 
 .viewer.single-image-mode {
-	--ribbon-background-color: none;
+	/* XXX should these be transparent??? */
+	/* XXX should these be !important??? */
+	--image-background-color: none !important;
+	--ribbon-background-color: none !important;
 }
 
 
