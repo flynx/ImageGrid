@@ -2,6 +2,9 @@
 * 
 * XXX extract all theming and ui config to vars...
 * XXX experiment: rewrite the css via flexbox... (???)
+* XXX should we also add sizing here???
+* 	...everything should be relatively sized, but do we need to 
+* 	explicitly control the base size???
 *
 *
 ********************************************************* Settings ***/
