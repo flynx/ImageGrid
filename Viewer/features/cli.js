@@ -513,6 +513,9 @@ var CLIActions = actions.Actions({
 							// 		it is already running after .loadImages(..)
 							// XXX for some reason this reports making previews 
 							// 		but does not actually make them...
+							// XXX calling .makePreviews(..) from devtools
+							// 		actually creates previews while here it
+							// 		does nothing...
 							index.makePreviews('all') ])} })
 				.then(function(){
 					return index
