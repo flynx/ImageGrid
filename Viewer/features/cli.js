@@ -511,7 +511,7 @@ var CLIActions = actions.Actions({
 						return Promise.all([
 							// NOTE: no need to call .cacheMetadata(..) as 
 							// 		it is already running after .loadImages(..)
-							// XXX for some reason this reports making previews 
+							// XXX BUG: for some reason this reports making previews 
 							// 		but does not actually make them...
 							// XXX calling .makePreviews(..) from devtools
 							// 		actually creates previews while here it
