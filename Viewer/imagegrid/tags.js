@@ -107,10 +107,12 @@ var util = require('lib/util')
 // 		-> list
 //
 var normalizeSplit = function(args){
-	return ((args.length == 1 && args[0] instanceof Array) ? 
+	return ((args.length == 1 
+				&& args[0] instanceof Array) ? 
 			args.pop()
 			: args)
 		.slice() }
+
 // Normalize return value from Object.processor.run(..)...
 //
 // 	Create processor...
@@ -128,10 +130,13 @@ var normalizeSplit = function(args){
 // NOTE: for an example see normalizeSplit(..) docs above.
 var normalizeRes = function(args){
 	return function(value){
-		value = value || this
-		return (args.length == 1 && !(args[0] instanceof Array)) ? 
+		value = value 
+			|| this
+		return (args.length == 1 
+				&& !(args[0] instanceof Array)) ? 
 			value[0]
 			: value } }
+
 // Normalize return value...
 //
 // 	normalizeResValue(value, args)
@@ -157,17 +162,21 @@ var makeSplitter = function(separator, unique){
 				return tag.split(SP) })
 			.flat()
    			.run(function(){
-				return unique ? this.unique() : this }) } }
+				return unique ? 
+					this.unique() 
+					: this }) } }
 var makeJoiner = function(separator){
 	return function(...items){
-		return normalizeSplit(items).join(this[separator]) } }
+		return normalizeSplit(items)
+			.join(this[separator]) } }
 // Make iterator/reducer methods a-la Array.prototype.map(..) and friends
 // and Array.prototype.reduce(..)....
 var makeIter = function(name, lister){
 	return function(tag, func){
 		var args = [...arguments]
 		func = args.pop()
-		tag = args.pop() || '*'
+		tag = args.pop() 
+			|| '*'
 		var res = this[lister || 'directMatch'](tag)[name](func.bind(this)) 
 		return res == null ? 
 			this 
@@ -177,8 +186,10 @@ var makeReducer = function(lister){
 		var args = [...arguments]
 		initial = args.pop()
 		func = args.pop()
-		tag = args.pop() || '*'
-		return this[lister || 'directMatch'](tag).reduce(func.bind(this), initial) } }
+		tag = args.pop() 
+			|| '*'
+		return this[lister || 'directMatch'](tag)
+			.reduce(func.bind(this), initial) } }
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -304,7 +315,9 @@ var BaseTagsClassPrototype = {
 					.join(PS) }) },
 	// get all the single tags that make up a compound tag...
 	subTags: function(...tags){
-		return this.splitTag(...tags).flat(Infinity) },
+		return this
+			.splitTag(...tags)
+			.flat(Infinity) },
 
 	normalizeTagStr: function(...tags){
 		var ILLEGAL_CHARS = this.TAG_ILLEGAL_CHARS
@@ -406,7 +419,8 @@ var BaseTagsClassPrototype = {
 			query 
 			: query
 				// split by strings whitespace and block comments...
-				.split(this.__query_lexer || this.constructor.__query_lexer)
+				.split(this.__query_lexer 
+					|| this.constructor.__query_lexer)
 				// parse numbers...
 				// XXX do we need number parsing???
 				.map(function(e){ 
@@ -414,25 +428,30 @@ var BaseTagsClassPrototype = {
 					if(/^[-+]?[0-9]+\.[0-9]+$/.test(e)){
 						e = parseFloat(e)
 					} else if(/^[-+]?[0-9]+$/.test(e)){
-						e = parseInt(e)
-					}
-					return e
-				})
+						e = parseInt(e) }
+					return e })
 				// remove undefined groups...
 				.filter(function(e){ 
 					// NOTE: in JS 0 == '' is true ;)
-					return e !== undefined && e !== '' })
+					return e !== undefined 
+						&& e !== '' })
 
 		var brace = function(code, b){
 			var res = []
 			while(code.length > 0){
 				var c = code.shift()
 				if(c == '[' || c == '('){
-					res.push( brace(code, c == '[' ? ']' : ')') )
+					res.push( 
+						brace(
+							code, 
+							c == '[' 
+								? ']' 
+								: ')') )
 				} else if(c == b){
 					return res
 				} else if(c == ']' || c == ')'){
-					throw new SyntaxError(`.parseQuery(..): Unexpected "${c}".`)
+					throw new SyntaxError(
+						`.parseQuery(..): Unexpected "${c}".`)
 				} else {
 					res.push(c) } }
 			if(b != null){
@@ -510,7 +529,8 @@ var BaseTagsPrototype = {
 	//
 	// This will combine .persistent and .definitionPaths()
 	get persistentAll(){
-		return (this.__persistent || new Set())
+		return (this.__persistent 
+				|| new Set())
 			.unite(this.definitionPaths()) },
 
 
@@ -641,7 +661,9 @@ var BaseTagsPrototype = {
 		} else if(typeof(cmp) == typeof(true)){
 			no_definitions = cmp
 			cmp = null }
-		b = b instanceof Set ? [...b] : b
+		b = b instanceof Set ? 
+			[...b] 
+			: b
 
 		// no given tags or multiple tags -> filter...
 		if(b == null || b instanceof Array){
@@ -689,7 +711,8 @@ var BaseTagsPrototype = {
 			// NOTE: this does the same job as adding .definitions to 
 			// 		.persistent but much much faster...
 			var expand = function(tags, res){
-				res = (res || new Set()).unite(tags)
+				res = (res || new Set())
+					.unite(tags)
 
 				tags = tags
 					.map(function(tag){
@@ -835,7 +858,9 @@ var BaseTagsPrototype = {
 									: search(target, tag, seen.add(tag)) }, false) }, false) }
 
 		var seen = new Set()
-		var res = (quoted || root || base 
+		var res = (quoted 
+				|| root 
+				|| base 
 				|| b instanceof Array 
 				|| b instanceof Set 
 				|| typeof(b) == typeof('str')) ?
@@ -950,9 +975,12 @@ var BaseTagsPrototype = {
 				this.paths() 
 				: this.normalize(normalizeSplit(tags)))
 			// sort by number of path elements (longest first)...
-			.map(function(tag){ return that.splitPath(tag) })
-				.sort(function(a, b){ return b.length - a.length })
-				.map(function(p){ return p.join(PS) })
+			.map(function(tag){ 
+				return that.splitPath(tag) })
+			.sort(function(a, b){ 
+				return b.length - a.length })
+			.map(function(p){ 
+				return p.join(PS) })
 			// remove all paths in tail that match the current...
 			.map(function(p, i, tags){
 				// skip []...
@@ -1028,8 +1056,10 @@ var BaseTagsPrototype = {
 		// get tags of specific value...
 		} else if(value){
 			return Object.entries(this.__index || {})
-				.filter(function(e){ return e[1].has(value) })
-				.map(function(e){ return e[0] })
+				.filter(function(e){ 
+					return e[1].has(value) })
+				.map(function(e){ 
+					return e[0] })
 				.flat()
 				.unique()
 
@@ -1041,7 +1071,9 @@ var BaseTagsPrototype = {
 				.unique() } },
 	// Same as .tags(..) but returns a list of single tags...
 	singleTags: function(value, ...tags){
-		return this.subTags(this.tags(...arguments)).unique() },
+		return this
+			.subTags(this.tags(...arguments))
+			.unique() },
 	paths: function(value){
 		var PP = this.PATH_SEPARATOR_PATTERN
 		return this.tags(value)
@@ -1067,7 +1099,8 @@ var BaseTagsPrototype = {
 				.filter(function(e){ 
 					return tag == '*' 
 						|| that.match(tag, e[0]) })
-				.map(function(s){ return [...s[1]] })
+				.map(function(s){ 
+					return [...s[1]] })
 				.flat()
    				.unique() },
 
@@ -1185,7 +1218,10 @@ var BaseTagsPrototype = {
 				return that.isPattern(tag) ? 
 					// resolve tag patterns...
 					// XXX is .match(..) to broad here???
-					that.match(tag, local ? tags : null) 
+					that.match(tag, 
+						local ? 
+							tags 
+							: null) 
 					: tag })
 			.flat(Infinity)
 
@@ -1195,12 +1231,12 @@ var BaseTagsPrototype = {
 				// do the untagging...
 				.forEach(function(tag){
 					if(!(tag in index)){
-						return
-					}
+						return }
 
 					var s = value == '*' ?
 						new Set()
-						: (index[tag] || new Set()).subtract(value)
+						: (index[tag] 
+							|| new Set()).subtract(value)
 
 					// remove empty sets...
 					if(s.size == 0){
@@ -1208,8 +1244,7 @@ var BaseTagsPrototype = {
 
 					// update...
 					} else {
-						index[tag] = s
-					}
+						index[tag] = s }
 				}), this) },
 	//
 	//	Toggle tag for each values...
@@ -1252,7 +1287,10 @@ var BaseTagsPrototype = {
 		// NOTE: this is cheating -- if tag is a list it will get 
 		// 		stringified before the test...
 		var pattern = this.isPattern(tag)
-		var ntag = this.normalize(tag instanceof Array ? tag : [tag])
+		var ntag = this.normalize(
+			tag instanceof Array ? 
+				tag 
+				: [tag])
 
 		// can't set pattern as tag...
 		if(pattern && action == 'on'){
@@ -1280,7 +1318,10 @@ var BaseTagsPrototype = {
 				.reduce(function(res, v){
 					var state = that.tags(v, tag)
 
-					res.res.push(state ? 'off' : 'on')
+					res.res.push(
+						state ? 
+							'off' 
+							: 'on')
 					state ?
 						res.untag.push(v)
 						: res.tag.push(v)
@@ -1633,11 +1674,14 @@ var BaseTagsPrototype = {
 	//
 	//
 	togglePersistent: function(...tags){
-		action = ['on', 'off', 'toggle', '?'].includes(tags[tags.length-1]) ?
-			tags.pop()
-			: 'toggle'
+		action = ['on', 'off', 'toggle', '?']
+			.includes(tags[tags.length-1]) ?
+				tags.pop()
+				: 'toggle'
 		tags = normalizeSplit(tags)
-		var persistent = this.persistent = this.persistent || new Set()
+		var persistent = this.persistent = 
+			this.persistent 
+				|| new Set()
 		return this.normalize(tags)
 			.map(function(tag){
 				return action == 'on' ?
@@ -1917,10 +1961,15 @@ var BaseTagsPrototype = {
 			return prefix == null ?
 				list
 				: list
-					.reduce(function(res, e){
-						return res[res.length-1] == prefix ?
-							res.slice(0, -1).concat(e instanceof Array ? e : [e])
-							: res.concat([e]) }, [])
+					.reduce(
+						function(res, e){
+							return res[res.length-1] == prefix ?
+								res.slice(0, -1).concat(
+									e instanceof Array ? 
+										e 
+										: [e])
+								: res.concat([e]) }, 
+						[])
 					.filter(function(e){
 						return e != prefix }) }
 		// Query Language pre-processor...
