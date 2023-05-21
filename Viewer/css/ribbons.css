@@ -1,0 +1,432 @@
+/**********************************************************************
+*
+* Modern experimental ribbon layout...
+*
+*
+********************************************************* Settings ***/
+
+
+
+/********************************************************** Viewer ***/
+.viewer {
+	position: relative;
+	width: 100vw;
+	height: 100vh;
+	overflow: hidden;
+
+	/*border: solid blue 1px;*/
+	box-sizing: border-box;
+
+	user-select: none;
+}
+
+/* XXX this is a stub for printing help/docs... */
+@media print {
+
+.viewer {
+	display: none;
+}
+
+}
+
+
+/****************************************** Ribbon set and locator ***/
+.ribbon-set {
+	position: absolute;
+	display: block;
+
+	top: 50%;
+	left: 50%;
+
+	/* NOTE: this needs for scaling/zooming to behave correctly and not 
+		shift the element, when its dimensions change... 
+		...this is because .ribbon-set will both be used for scaling 
+		and aligning... */
+	transform-origin: top  left;
+
+	will-change: transform;
+}
+.ribbon-locator {
+	position: relative;
+
+	top: 0;
+	left: 0;
+
+	will-change: transform;
+}
+
+
+/********************************************************** Ribbon ***/
+/* XXX for some reason setting image size in vmin stops this from 
+stretching in width... */
+.shadow,
+.ribbon {
+	position: relative;
+	display: block;
+	/* XXX BUG: setting this will mess up new ribbon creation....
+	display: inline-block;*/
+	height: auto;
+	/*min-width: 0px;*/
+	width: auto;
+	overflow: visible;
+	white-space: nowrap;
+	font-size: 0;
+
+	float: left;
+	clear: both;
+
+	background: var(--ribbon-background-color);
+
+	margin-top: var(--ribbon-margin);
+	margin-bottom: var(--ribbon-margin);
+
+	will-change: transform;
+}
+.ribbon:empty {
+	display: none;
+}
+
+/* XXX would be good to make this sticky -- always visible... */
+.ribbon[title]:before {
+	display: block;
+	position: absolute;
+	content: attr(title);
+
+	font-size: 52pt;
+	font-style: italic;
+	font-weight: bold;
+	
+	color: white;
+	text-shadow: black 2px 2px 15px;
+	
+	top: -2pt;
+	right: 100%;
+	margin-right: 20pt;
+}
+.single-image-mode .ribbon[title]:before {
+	display: none;
+}
+
+.base-ribbon-marker {
+	position: absolute;
+	height: 100%;
+
+	color: transparent;
+	font-size: 20pt;
+	font-weight: bold;
+}
+.base-ribbon-marker:after {
+	content: "base ribbon";
+
+	display: block;
+
+	position: absolute;
+	width: var(--image-tile-size);
+	bottom: 0px;
+	left: 0px;
+	padding: 5px;
+	box-sizing: border-box;
+
+	z-index: 1000;
+
+	color: white;
+	background: black;
+	opacity: 0.2;
+
+	font-size: 20pt;
+	font-weight: bold;
+
+	transform-origin: bottom left;
+	transform: rotate(-90deg);
+}
+.single-image-mode.viewer .base-ribbon-marker {
+	display: none;
+}
+
+
+
+/*********************************************************** Image ***/
+.marker,
+.current-marker,
+.mark,
+.image {
+	position: relative;
+	display: inline-block;
+	vertical-align: middle;
+	text-align:left;
+	width: var(--image-tile-size);
+	height: var(--image-tile-size);
+	font-size: 12pt;
+	overflow: hidden;
+
+	box-sizing: border-box;
+	color: white;
+	/* XXX do we need this???
+	text-shadow: 
+		black 0.1em 0.1em 0.4em, 
+		black 0.1em 0.1em; */
+
+	/* NOTE: we can't set the bg color here because it will get 
+	 	affected by filters... */
+	background: no-repeat 50% transparent;
+	background-size: contain;
+	border: solid var(--image-border) transparent;
+
+	/* XXX we are taking care of this in code -- see if we can use this */
+	image-orientation: none;
+}
+
+.image {
+	padding: var(--single-image-indicator-size);
+	background-color: var(--image-background-color);
+}
+.single-image-mode .image {
+	background-color: none;
+}
+
+.image div {
+	display: block;
+	position: absolute;
+
+	max-width: var(--image-tile-size);
+	width: auto;
+	max-height: var(--image-tile-size);
+	height: auto;
+
+	left: 50%;
+	top: 50%;
+	transform: translate(-50%,-50%);
+
+	white-space: normal;
+	text-align: center;
+	text-overflow: ellipsis;
+	/*font-size: 2vh;*/
+
+	pointer-events: none;
+}
+
+.crisp-resize .image {
+	image-rendering: -webkit-optimize-contrast;
+	image-rendering: crisp-edges;
+}
+
+
+
+/*
+.current.image {
+	border: solid 5px red;
+}
+*/
+
+/* NOTE: this is essentially a ribbon... */
+.shadow {
+	position: absolute;
+	overflow: visible;
+
+	width: auto;
+	height: auto;
+	margin: 0px;
+
+	background: black;
+
+	-webkit-transition: all 0.1s ease-in;
+	-moz-transition: all 0.1s ease-in;
+	-ms-transition: all 0.1s ease-in;
+	-o-transition: all 0.1s ease-in;
+	transition: all 0.1s ease-in;
+}
+.shadow {
+	-webkit-transform-origin: 0 0;
+	-moz-transform-origin: 0 0;
+	-ms-transform-origin: 0 0;
+	-o-transform-origin: 0 0;
+	transform-origin: 0 0;
+}
+.image.moving {
+	visibility: hidden;
+}
+
+
+.current-marker {
+	display: none;
+	position: absolute;
+	border: solid 5px red;
+	background: none;
+	z-index: 100;
+
+	top: 0;
+	left: 0;
+	margin-top: calc(-1 * var(--image-tile-size) / 2);
+	margin-left: calc(-1 * var(--image-tile-size) / 2);
+
+	/* pass events through... (do we need IE10-?) */
+	pointer-events: none;
+}
+
+.marker {
+	width: 50px;
+	border: none;
+	background: no-repeat 50% transparent;
+	background-color: transparent;
+	color: white;
+}
+.marker:after {
+	display: block;
+	position: absolute;
+	content: "marker";
+	font-size: 32px;
+	font-weight: bold;
+	text-align: center;
+	overflow: visible;
+
+	width: 200px;
+	height: 32px;
+	top: 50%;
+	margin-top: -16px;
+	left: 50%;
+	margin-left: -100px;
+
+	transform-origin: center  center;
+	transform: rotate(270deg) scaleY(1) scaleX(1);
+
+	opacity: 0.5;
+}
+.single-image-mode.viewer .marker {
+	display: none;
+}
+
+
+/* single image mode transitions */
+/* XXX still buggy and not too needed...
+.single-image-mode.viewer .image {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+
+	opacity: 0;
+
+	.transition(opacity);
+}
+.single-image-mode.viewer .current.image {
+	opacity: 1;
+}
+*/
+
+
+/* image turning... */
+/* NOTE: need to account for proportions after turning... */
+.image[orientation="90"] {
+	transform: rotate(90deg) scaleY(1) scaleX(1);
+}
+.image[orientation="180"] {
+	transform: rotate(180deg) scaleY(1) scaleX(1);
+}
+.image[orientation="270"] {
+	transform: rotate(270deg) scaleY(1) scaleX(1);
+}
+
+
+/* Flipped vertically only... */
+/* NOTE: wee need to do all possible combinations here as we can't 
+ 	combine different parts of a transform attr from different 
+ 	classes */
+.image[flipped*="vertical"] {
+	transform: rotate(0deg) scaleY(1) scaleX(-1);
+}
+.image[orientation="90"][flipped="vertical"] {
+	transform: rotate(90deg) scaleY(1) scaleX(-1)
+}
+.image[orientation="180"][flipped="vertical"] {
+	transform: rotate(180deg) scaleY(1) scaleX(-1)
+}
+.image[orientation="270"][flipped="vertical"] {
+	transform: rotate(270deg) scaleY(1) scaleX(-1)
+}
+
+
+/* Flipped horizontally only... */
+.image[flipped*="horizontal"] {
+	transform: rotate(0deg) scaleY(-1) scaleX(1);
+}
+.image[orientation="90"][flipped="horizontal"] {
+	.transform(90deg, -1)
+}
+.image[orientation="180"][flipped="horizontal"] {
+	.transform(180deg, -1)
+}
+.image[orientation="270"][flipped="horizontal"] {
+	.transform(270deg, -1)
+}
+
+/* Flipped vertically and horizontally... */
+.image[flipped*="vertical"][flipped*="horizontal"] {
+	transform: rotate(0deg) scaleY(-1) scaleX(-1)
+}
+.image[orientation="90"][flipped*="vertical"][flipped*="horizontal"] {
+	transform: rotate(90deg) scaleY(-1) scaleX(-1)
+}
+.image[orientation="180"][flipped*="vertical"][flipped*="horizontal"] {
+	transform: rotate(180deg) scaleY(-1) scaleX(-1)
+}
+.image[orientation="270"][flipped*="vertical"][flipped*="horizontal"] {
+	transform: rotate(270deg) scaleY(-1) scaleX(-1)
+}
+
+
+
+/* image separators... */
+.ribbon-image-separators.viewer .image {
+	box-shadow: 
+		9px 4px 0 -8px rgba(128,128,128,0.2), 
+		-9px 4px 0 -8px rgba(128,128,128,0.2);
+}
+.ribbon-image-separators.viewer .image[orientation="90"],
+.ribbon-image-separators.viewer .image[orientation="270"] {
+	box-shadow: 
+		4px 9px 0 -8px rgba(128,128,128,0.2), 
+		4px -9px 0 -8px rgba(128,128,128,0.2);
+}
+.ribbon-image-separators.single-image-mode.viewer .image {
+	box-shadow: none;
+}
+
+
+
+/* default backgrounds */
+/* XXX not sure if we need these... 
+.image {
+	background-image: url(images/loading.gif);
+}
+.image[orientation="90"] {
+	background-image: url(images/loading-90deg.gif);
+}
+.image[orientation="180"] {
+	background-image: url(images/loading-180deg.gif);
+}
+.image[orientation="270"] {
+	background-image: url(images/loading-270deg.gif);
+}
+*/
+
+
+/* separator test */
+/*
+.image.red+.image:not(.red):before {
+	display: inline-block;
+	position: relative;
+	content: "";
+	top:0px;
+	left: -50px;
+	width: 100px;
+	height: 100%;
+
+	background-color: yellow;
+}
+*/
+
+
+
+
+
+/**********************************************************************
+* vim:set spell ft=css :                                             */

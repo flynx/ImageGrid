@@ -511,6 +511,8 @@ var CLIActions = actions.Actions({
 						return Promise.all([
 							// NOTE: no need to call .cacheMetadata(..) as 
 							// 		it is already running after .loadImages(..)
+							// XXX for some reason this reports making previews 
+							// 		but does not actually make them...
 							index.makePreviews('all') ])} })
 				.then(function(){
 					return index

@@ -616,7 +616,9 @@ var SharpActions = actions.Actions({
 						.sort()
 						.reverse()
 					if(sizes){
-						sizes = sizes instanceof Array ? sizes : [sizes]
+						sizes = sizes instanceof Array ? 
+							sizes 
+							: [sizes]
 						// normalize to preview size...
 						sizes = 
 							(this.config['preview-normalized'] ? 
@@ -632,7 +634,8 @@ var SharpActions = actions.Actions({
 						sizes = cfg_sizes }
 
 					// XXX we should cache this on a previous stage...
-					var index_dir = this.config['index-dir'] || '.ImageGrid'
+					var index_dir = this.config['index-dir'] 
+						|| '.ImageGrid'
 
 					// get/normalize images...
 					return [
@@ -653,6 +656,9 @@ var SharpActions = actions.Actions({
 						...args,
 					] },
 				// generate image paths...
+				// XXX BUG: for some reason base_path here gets the first argument to .makePreviews)(..)
+				// 				.makePreviews('all')
+				//			will create previews in ./all/.ImageGrid/...
 				function(gid, sizes, path_tpl, index_dir, base_path){
 					var that = this
 					var img = this.images[gid]
