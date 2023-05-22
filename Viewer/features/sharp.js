@@ -608,8 +608,6 @@ var SharpActions = actions.Actions({
 					// sync mode...
 					var args = [...arguments].slice(2)
 					if(queue == 'sync'){
-						//args.unshift(_)
-						//var [images, sizes, ...args] = args }
 						args.unshift(_) }
 					var [images, sizes, ...args] = args
 					// get/normalize sizes....
