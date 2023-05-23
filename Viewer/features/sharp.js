@@ -712,8 +712,10 @@ var SharpActions = actions.Actions({
 							// 		this is a small list and in this way we can take 
 							// 		advantage of OS file caching, and removing the queue
 							// 		overhead, though small makes this noticeably faster...
+							// XXX seems that we have a stray global 'name' variable 
+							// 		in gui mode...
 							return that.makeResizedImage('sync', [[source, target]], size, null, { 
-									name, 
+									//name: target, 
 									skipSmaller: true,
 									transform: false,
 									overwrite: false,
@@ -735,7 +737,7 @@ var SharpActions = actions.Actions({
 											that.markChanged
 												&& that.markChanged('images', [gid]) }
 										//*/
-										return [gid, size, name] },
+										return [gid, size, target] },
 									function(err){
 										logger 
 											&& logger.emit('skipped', `${gid} / ${size}`) }) })) })],

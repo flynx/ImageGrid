@@ -182,7 +182,8 @@ var CLIActions = actions.Actions({
 	handleLogItem: ['- System/',
 		function(logger, path, status, ...rest){
 			var msg = path.join(': ')
-			var l = (rest.length == 1 && rest[0] instanceof Array) ?
+			var l = (rest.length == 1 
+					&& rest[0] instanceof Array) ?
 				rest[0].length
 				: rest.length
 
@@ -515,16 +516,7 @@ var CLIActions = actions.Actions({
 						return Promise.all([
 							// NOTE: no need to call .cacheMetadata(..) as 
 							// 		it is already running after .loadImages(..)
-							// XXX BUG: for some reason this reports making previews 
-							// 		but does not actually make them...
-							// XXX .makePreviews(..) called from cli reports 
-							// 		creating images but does not...
-							// 		...we seem to be reacing .makeResizedImage(..)
-							// 		but them something odd happens -- nether of 
-							// 		the .then(..) callbacks is called...
-							// 		...even weirder, code before the call executes
-							// 		while wrapping the call in a console.log(..)
-							// 		produces nothing, not even a syntax error...
+							// XXX we seem not to be reporting errors here (cli)...
 							index.makePreviews('all') ])} })
 				.then(function(){
 					return index
