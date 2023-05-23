@@ -446,6 +446,10 @@ var CLIActions = actions.Actions({
 					for(var p of paths){
 						console.log(p) } }) }],
 
+	// XXX check if index exists:
+	// 			yes: warn + stup
+	// 			no: create
+	// 		...add -f/-force flag...
 	// XXX metadata caching and preview creation are not in sync, can 
 	// 		this be a problem???
 	// 		...if not, add a note...
@@ -513,13 +517,14 @@ var CLIActions = actions.Actions({
 							// 		it is already running after .loadImages(..)
 							// XXX BUG: for some reason this reports making previews 
 							// 		but does not actually make them...
-							// XXX calling .makePreviews(..) from devtools
-							// 		actually creates previews while here it
-							// 		does nothing...
-							// XXX ...we seem to to be reaching .makeResizedImage(...) 
-							// 		from .makePreviews(..) from cli...
-							// 		...is this a wait issue -- exiting before 
-							// 		promise is done???
+							// XXX .makePreviews(..) called from cli reports 
+							// 		creating images but does not...
+							// 		...we seem to be reacing .makeResizedImage(..)
+							// 		but them something odd happens -- nether of 
+							// 		the .then(..) callbacks is called...
+							// 		...even weirder, code before the call executes
+							// 		while wrapping the call in a console.log(..)
+							// 		produces nothing, not even a syntax error...
 							index.makePreviews('all') ])} })
 				.then(function(){
 					return index
