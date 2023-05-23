@@ -516,6 +516,10 @@ var CLIActions = actions.Actions({
 							// XXX calling .makePreviews(..) from devtools
 							// 		actually creates previews while here it
 							// 		does nothing...
+							// XXX ...we seem to to be reaching .makeResizedImage(...) 
+							// 		from .makePreviews(..) from cli...
+							// 		...is this a wait issue -- exiting before 
+							// 		promise is done???
 							index.makePreviews('all') ])} })
 				.then(function(){
 					return index
