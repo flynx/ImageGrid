@@ -44,6 +44,16 @@ function scopeDiff(cur=window, base=__window){
 
 <!-- DevTools fail-safe for electron/nw... -->
 <script>
+// used to track stray globals...
+var trackGlobal = function(name){
+	Object.defineProperty(window, name, {
+		get: function(){
+			return this['__tracked_'+name] },
+		set: function(value){
+			this['__tracked_'+name] = value
+			debugger },
+	}) }
+
 if(window.require){
 	Object.defineProperty(window, 'STARTUP_DEVTOOLS_TIMEOUT', {
 		get: function(){
