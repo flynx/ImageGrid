@@ -487,7 +487,6 @@ var CLIActions = actions.Actions({
 			//valueRequired: true,
 		}},
 		function(path, options){
-			// XXX SETUP
 			this.setupFeatures()
 
 			// get mode...
@@ -516,7 +515,6 @@ var CLIActions = actions.Actions({
 						return Promise.all([
 							// NOTE: no need to call .cacheMetadata(..) as 
 							// 		it is already running after .loadImages(..)
-							// XXX we seem not to be reporting errors here (cli)...
 							index.makePreviews('all') ])} })
 				.then(function(){
 					return index
