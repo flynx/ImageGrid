@@ -455,9 +455,9 @@ var CLIActions = actions.Actions({
 	// 		this be a problem???
 	// 		...if not, add a note...
 	// XXX should we support creating multiple indexes at the same time???
-	// XXX this is reletively generic, might be useful globally...
+	// XXX this is relatively generic, might be useful globally...
 	// XXX should we use a clean index or do this in-place???
-	// XXX add ability to disable sort...
+	// XXX add ability to disable sort... (???)
 	cliInitIndex: ['- System/CLI/make index',
 		core.doc`
 
@@ -484,7 +484,6 @@ var CLIActions = actions.Actions({
 		{cli: {
 			name: '@init',
 			arg: 'PATH',
-			//valueRequired: true,
 		}},
 		function(path, options){
 			this.setupFeatures()
