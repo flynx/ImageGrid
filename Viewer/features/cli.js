@@ -521,6 +521,7 @@ var CLIActions = actions.Actions({
 						.sortImages()
 						.saveIndex() }) }],
 	// XXX does not work yet...
+	// 		... -h breaks things...
 	cliUpdateIndex: ['- System/CLI/update index',
 		{cli: {
 			name: '@update',
