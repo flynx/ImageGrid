@@ -54,6 +54,7 @@ global.START_GUI = false
 //
 // XXX might be nice to show load progress on splash...
 var SPLASH
+var SPLASH_TIMEOUT = 20 * 1000
 function createSplash(force=false){
 	// singleton window...
 	if(!force && SPLASH){
@@ -109,6 +110,14 @@ function createSplash(force=false){
 	// handle main window state...
 	WIN
 		&& WIN.webContents.executeJavaScript('document.appSplashScreen = true')
+
+	// auto-close splash...
+	SPLASH_TIMEOUT
+		&& setTimeout(
+			function(){
+				SPLASH 
+					&& SPLASH.destroy() }, 
+			SPLASH_TIMEOUT)
 
 	return SPLASH }
 
@@ -238,12 +247,16 @@ ipcMain.on('exitFullScreen',
 
 // Splash screen...
 ipcMain.on('openSplashScreen', 
-	function(){ SPLASH || createSplash() })
+	function(){ 
+		SPLASH 
+			|| createSplash() })
 ipcMain.on('closeSplashScreen', 
 	function(){ 
 		// force this to run after this frame avoiding races...
 		setTimeout(
-			function(){ SPLASH && SPLASH.destroy() }, 
+			function(){ 
+				SPLASH 
+					&& SPLASH.destroy() }, 
 			10) })
 
 // DevTools...
