@@ -608,7 +608,8 @@ var CLIActions = actions.Actions({
 	cliCloneIndex: ['- System/CLI/clone index',
 		function(){
 		}],
-	// XXX report that can't find an index...
+	// XXX report that we can't find an index...
+	// 		...or should we treat the target as an image dir???
 	// XXX move options to generic object for re-use...
 	// XXX how do we handle errors???
 	cliExportImages: ['- System/CLI/export images',
