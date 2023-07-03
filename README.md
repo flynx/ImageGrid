@@ -1,18 +1,15 @@
+# ImageGrid
+The core idea of this app is to allow users to manage their photo archive quickly and interactively. Its most unique feature is the process of selecting the best images by lifting them up and down. In the end, you'll have a kind of tower with the best pictures taking the highest place and vice versa.
 
-20220125:
+<video src='ImageGrid.mp4'/>
 
-About a year ago the project reached a stable state for most of my use-cases
-this development stagnated a bit and went into "if something goes wrong 
-write it down and continue on" mode. 
-During this period the we've accumulated:
-	- quite a list of known bugs
-	- quite a backlog of breaking updates of upstream software (electron)
+# Installation and development
+use npm or yarn for install dependencies
 
-In addition to this and a couple of other events I had trouble finding 
-motivation to dig in.
+```
+make run
+```
 
-It is about time to schedule a big revision run to fix the accumulated 
-set of issues and implement several planned features.
-
-
+# Basic usage
+use `shift up` and `shift down` to move image to upper and lower line
 
