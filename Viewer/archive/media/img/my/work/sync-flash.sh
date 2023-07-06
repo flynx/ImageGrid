@@ -139,7 +139,7 @@ while true ; do
 		else
 			echo "3) quit."
 		fi
-		read -p ": " RES
+		read -ep ": " RES
 	
 		case $RES in
 			# toggle multi mode...
@@ -148,7 +148,7 @@ while true ; do
 				continue
 				;;
 			1)
-				read -p "new description: " TITLE
+				read -i "${TITLE# - }" -ep "new description: " TITLE
 				TITLE=" - $TITLE"
 				continue
 				;;
