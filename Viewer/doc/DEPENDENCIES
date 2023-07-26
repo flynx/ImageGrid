@@ -40,6 +40,8 @@ Electron / node app:
 - electron		- GUI app wrapper
 - sharp			- image processing (previews / basic fast metadata)
 - exif-reader		- metadata parser
+			  NOTE: that exif-reader is currently used but 
+			  	migration to exifreader is planned.
 - exiftool		- metadata reader (full metadata reader)
 - app-module-path	- add to node's require search path
 - v8-compile-cache	- v8 require optimization
