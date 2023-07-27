@@ -3,21 +3,23 @@
 Initial build
 =============
 
-The `Makefile` handles all the dependencies in all cases but the first run
-on a clean system can take a while because `make` uses `npx` to bootstrap 
-the required apps/libs.
+The `Makefile` handles all the dependencies in all cases but the first 
+run on a clean system can take a while because `make` uses `npx` to 
+bootstrap the required apps/libs.
 
 It is recommended for a clean setup to either run make twice or run an
-`npm install` first, this needs to be done to avoid version leaking from
-the bootstrapped or global node packages to the build as defined by `package.json`
+`npm install` first, this needs to be done to avoid version leaking 
+from the bootstrapped or global node packages to the build as defined by 
+`package.json`
 
 
 
 Version numbers
 ===============
 
-The app version number is automatically synced between package.json (primary)
-and version.js, all version changes should be made in the former.
+The app version number is automatically synced between package.json 
+(primary) and version.js, all version changes should be made in the 
+former.
 
 
 
@@ -52,8 +54,9 @@ node-enabled RequireJS instance or node require.
 
 The ideal solution would be to use one require that sees both the browser
 and node contexts, the problem is exactly in this, the browser requirejs
-does not see either node or node modules while the node require loads code
-that is not visible to devtools unless it is running at that exact moment.
+does not see either node or node modules while the node require loads 
+code that is not visible to devtools unless it is running at that exact 
+moment.
 
 Thus we are forced to use both mode requirejs loaders which may be 
 confusing at times.
@@ -91,8 +94,9 @@ arguments combining it with ig.js would make things much-much slower...
 
 	- index.html			- Browser
 	- electron e.js				- electron
-		<-> ig.js		- parse args if given and optionally 
-					  return control back to e.js...
+		<-> ig.js		- parse args if given and 
+					  optionally return control back 
+					  to e.js...
 	- ig.js				- node
 		-> e.js			- node can spawn an electron app
 
