@@ -46,8 +46,7 @@ module.DragAndDrop = core.ImageGridFeatures.Feature({
 				for (var i = 0, f; f = files[i]; i++) {
 					// only images...
 					if (!f.type.match('image.*')) {
-						continue
-					}
+						continue }
 
 					if(f.path){
 						paths.push(f.path)
@@ -66,9 +65,7 @@ module.DragAndDrop = core.ImageGridFeatures.Feature({
 								that.ribbons.updateImage(gid)
 							} })(f)
 
-						reader.readAsDataURL(f)
-					}
-				}
+						reader.readAsDataURL(f) } }
 
 				if(paths.length > 0){
 					that.loadURLs(paths)
@@ -78,26 +75,24 @@ module.DragAndDrop = core.ImageGridFeatures.Feature({
 
 					// add the generated stuff to the list -- this will help us id the 
 					// images when they are loaded later...
-					that.images.forEach(function(gid, img){
-						lst[img.path].gid = gid
-						img.name = img.path.split('.').slice(0, -1).join('.')
-					})
-				}
-			}
+					that.images
+						.forEach(function(gid, img){
+							lst[img.path].gid = gid
+							img.name = img.path
+								.split('.')
+								.slice(0, -1)
+								.join('.') }) } }
 			function handleDragOver(evt) {
 				evt.stopPropagation()
 				evt.preventDefault()
 				// Explicitly show this is a copy...
-				evt.dataTransfer.dropEffect = 'copy'
-			}
+				evt.dataTransfer.dropEffect = 'copy' }
 
 			// handle drop events...
 			this.ribbons.viewer[0]
 				.addEventListener('dragover', handleDragOver, false);
 			this.ribbons.viewer[0]
-				.addEventListener('drop', handleDrop, false)
-		}]
-	],
+				.addEventListener('drop', handleDrop, false) }] ],
 })
 
 
