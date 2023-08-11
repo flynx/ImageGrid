@@ -629,15 +629,13 @@ var FileSystemLoaderActions = actions.Actions({
 		function(path, direction, logger){
 			var that = this
 			if(path == null){
-				return
-			}
+				return }
 
 			if(logger === undefined 
 					&& direction 
 					&& typeof(direction) != typeof('str')){
 				logger = direction
-				direction = null
-			}
+				direction = null }
 
 			direction = direction || 'below'
 
@@ -675,9 +673,7 @@ var FileSystemLoaderActions = actions.Actions({
 					// join images...
 					that.images.join(imgs)
 
-					that.reload(true)
-				})
-		}],
+					that.reload(true) }) }],
 
 	// XXX revise logger...
 	// XXX revise alignment...
@@ -1077,8 +1073,7 @@ var makeBrowseProxy = function(action, callback){
 			function(path){ 
 				var res = that[action](path, logger) 
 				callback && callback.call(that, path)
-				return res
-			}) }) }
+				return res }) }) }
 
 
 // XXX show list of indexes when more than one are found....
@@ -1112,6 +1107,10 @@ var FileSystemLoaderUIActions = actions.Actions({
 			'loadIndex: "$PATH"',
 			'loadImages: "$PATH"',
 			//'loadPath: "$PATH"',
+
+			// XXX add option to build and load index...
+			//loadNewIndex: "$PATH",
+
 			'---',
 			'loadImagesAsRibbon: "$PATH" "above" -- Load images to new ribbon above',
 			'loadImagesAsRibbon: "$PATH" "below" -- Load images to new ribbon below',
@@ -1181,12 +1180,8 @@ var FileSystemLoaderUIActions = actions.Actions({
 								// close self and parent...
 								.open(function(){
 									so.close()
-									o.close() 
-								})
-
-							return so
-						}
-					})
+									o.close() })
+							return so } })
 					// we closed the browser -- save settings to .config...
 					.on('close', function(){
 						var config = 
@@ -1197,11 +1192,11 @@ var FileSystemLoaderUIActions = actions.Actions({
 						config.showDisabled = o.options.showDisabled
 						config.showNonTraversable = o.options.showNonTraversable
 						// normalize...
-						config.disableDotFiles = o.options.disableDotFiles ? 'on' : 'off'
-					})
-					
-			return o
-		})],
+						config.disableDotFiles = 
+							o.options.disableDotFiles ?
+								'on' 
+								: 'off' })
+			return o })],
 
 	// Browse indexes/images...
 	//
