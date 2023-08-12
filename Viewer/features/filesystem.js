@@ -1867,9 +1867,8 @@ var FileSystemWriterActions = actions.Actions({
 			var gid = data.gid
 			if(!gid && name in this.images){
 				gid = name
-				name = null
-			}
-			gid = gid || this.current
+				name = null }
+			gid = gid || this.current || ''
 			var ribbon = this.data.getRibbon(gid)
 			data = Object.assign({}, 
 				this.images[gid] || {}, 
@@ -1877,20 +1876,26 @@ var FileSystemWriterActions = actions.Actions({
 
 			name = name 
 				|| pathlib.basename(
-					data.path || ((data.name || '') + (data.ext || '')))
+					data.path 
+						|| ((data.name || '') + (data.ext || '')))
 			name = name == '' ? 
-				gid 
+				gid || '' 
 				: name
-			var ext = pathlib.extname(name)
+			var ext = name == '' ?
+				pathlib.extname(name)
+				: ''
 			var to_ext = data.ext 
 				|| ext
 
 			var tags = data.tags || this.data.getTags(gid)
 
 			// XXX revise defaults...
-			var len = data.len || this.data.ribbons[ribbon].len
-			var total_len = data.total_len || this.data.length
-			var r_len = data.r_len || Object.keys(this.data.ribbons).length
+			var len = data.len 
+				|| (this.data.ribbons[ribbon] || []).len
+			var total_len = data.total_len 
+				|| this.data.length
+			var r_len = data.r_len 
+				|| Object.keys(this.data.ribbons).length
 
 			var i = data.i || this.data.getImageOrder('ribbon', gid)
 			var I = data.I || this.data.getImageOrder('loaded', gid)
@@ -1969,8 +1974,7 @@ var FileSystemWriterActions = actions.Actions({
 							+(new Array(r_len - r*1 - 1)).fill(level).join('/')
 							+(match.length + offset == str.length ? '' : '/') })
 
-				+ to_ext
-		}],
+				+ to_ext }],
 	
 
 	// XXX should this be sync???
@@ -2673,21 +2677,31 @@ var FileSystemWriterUIActions = actions.Actions({
 		// XXX should this api be accessible from outside the ui???
 		'export-presets': [
 			{
-				'name': './select (ribbons to "./fav/..")',
 				'mode': 'Images only',
-				'path': './select',
+				'path': 'select',
 				'include-virtual': true,
 				'clean-target': true,
 				'preview-name-pattern': '%(fav)l%n%(-%c)c',
-				'preview-size': 1000,
+				'preview-size': '3000',
 				'preview-size-limit': 'no limit',
+				'export-mode': 'copy best match',
 			},
 			{
 				'mode': 'Images only',
-				'path': 'L:/tmp/test/export-test/images-only/',
+				'path': 'numbered ribbons',
 				'include-virtual': true,
 				'clean-target': true,
-				'preview-name-pattern': '%n%(-b)b%(-%c)c',
+				'preview-name-pattern': '%r/%i-%n',
+				'preview-size': 1000,
+				'preview-size-limit': 'no limit',
+				'export-mode': 'copy best match',
+			},
+			{
+				'mode': 'Current state as index',
+				'path': './state as index',
+				'include-virtual': true,
+				'clean-target': true,
+				'preview-name-pattern': '%(fav)l%n%(-%c)c',
 				'preview-size': 1000,
 				'preview-size-limit': 'no limit',
 			},
