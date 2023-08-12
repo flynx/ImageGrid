@@ -749,7 +749,10 @@ $(APP_NAME).desktop: App.desktop
 
 
 $(NODE_DIR): package.json
-	npm install
+	npm install \
+		--platform=$(TARGET_OS) \
+		--arch=$(ARCH)
+#	npm install
 #	# patch requirejs (see: NOTES)
 #	make patched-requirejs
 	# NOTE: this may break on some systems due to a dependency issue...
