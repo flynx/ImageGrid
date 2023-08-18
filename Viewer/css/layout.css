@@ -1434,7 +1434,7 @@ stretching in width... */
 .overlay-info.minimal {
 	display: block;
 	/* XXX is this correct??? */
-	z-index: 1000,
+	z-index: 1000;
 }
 .overlay-info.hidden {
 	background: transparent;
