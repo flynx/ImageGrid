@@ -944,9 +944,14 @@ $(DIST_DIR)/$(APP_NAME)-%.zip: $(BUILD_DIR)/$(APP_NAME)-%.$(BUILD_MODE).zip
 
 
 
-#----------------------------------------------------------------------
+##------------------------------------------------------------- CLI ---
 # cli... 
-# XXX
+
+devel-cli: dev ## Install CLI interface as a link to this tree.
+	npm link
+
+cli: dev ## install CLI interface as independent package.
+	npm install -g .
 
 
 
