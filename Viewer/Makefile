@@ -642,19 +642,13 @@ electron-run: dev
 
 
 
-##----------------------------------------------- Windows installer ---
+#------------------------------------------------ Windows installer ---
 
 # XXX
 
 
 
-##----------------------------------------------------- Deb package ---
-
-# XXX
-
-
-
-##----------------------------------------------------- CLI package ---
+#------------------------------------------------------ CLI package ---
 
 # XXX
 
@@ -945,7 +939,6 @@ $(DIST_DIR)/$(APP_NAME)-%.zip: $(BUILD_DIR)/$(APP_NAME)-%.$(BUILD_MODE).zip
 
 
 ##------------------------------------------------------------- CLI ---
-# cli... 
 
 .PHONY: devel-cli
 devel-cli: ## Install CLI interface as a link to this tree.
