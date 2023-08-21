@@ -35,6 +35,11 @@
 #	- iOS
 # 	- Android
 # 	- web
+# 	- Cross compilation / cross builds
+# 		a working cross compilation target for npm / node-gyp
+# 		to use, see the respective docs for the build system's
+# 		compiler chain used by node.
+#
 #
 #
 ## To check for buld/development dependencies that make can't install itself:
