@@ -946,12 +946,12 @@ $(DIST_DIR)/$(APP_NAME)-%.zip: $(BUILD_DIR)/$(APP_NAME)-%.$(BUILD_MODE).zip
 ##------------------------------------------------------------- CLI ---
 
 .PHONY: devel-cli
-devel-cli: ## Install CLI interface as a link to this tree.
+devel-cli: ## Install CLI interface as a link to this tree
 devel-cli: dev 
 	npm link
 
 .PHONY: cli
-cli: ## install CLI interface as independent package.
+cli: ## install CLI interface as independent package
 cli: dev 
 	npm install -g .
 
