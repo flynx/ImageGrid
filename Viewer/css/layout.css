@@ -1447,6 +1447,7 @@ stretching in width... */
 
 .overlay-info.minimal {
 	background: transparent;
+	backdrop-filter: none;
 	/*
 	//background: -moz-linear-gradient(top, rgba(0,0,0,0) 0%, rgba(0,0,0,0.3) 100%);
 	//background: -webkit-linear-gradient(top, rgba(0,0,0,0) 0%, rgba(0,0,0,0.3) 100%);
