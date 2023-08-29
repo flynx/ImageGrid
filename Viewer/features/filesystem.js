@@ -1874,6 +1874,7 @@ var FileSystemWriterActions = actions.Actions({
 				this.images[gid] || {}, 
 				data)
 
+
 			name = name 
 				|| pathlib.basename(
 					data.path 
@@ -1881,7 +1882,7 @@ var FileSystemWriterActions = actions.Actions({
 			name = name == '' ? 
 				gid || '' 
 				: name
-			var ext = name == '' ?
+			var ext = name != '' ?
 				pathlib.extname(name)
 				: ''
 			var to_ext = data.ext 
