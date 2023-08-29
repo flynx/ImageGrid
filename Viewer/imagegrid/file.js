@@ -341,7 +341,7 @@ function(path, index_dir, logger){
 						&& logger.emit('error', err)
 					console.error(err) })
 				.on('data', function(path){
-					paths.push(path) })
+					files.push(path) })
 				.on('end', function(){
 					var data = groupByDate(files)
 					// XXX should we mark the root timestamp in any way???
