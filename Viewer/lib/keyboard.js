@@ -156,7 +156,10 @@ for(var k in SPECIAL_KEYS){
 var doc =
 module.doc =
 function doc(text, func){
-	func = !func ? function(){return true}: func
+	func = !func ? 
+		function(){
+			return true }
+		: func
 	func.doc = text
 	return func }
 
@@ -460,7 +463,7 @@ function shifted(key){
 //			// .drop to '*' (drop all) and explicitly setting the keys to
 //			// be propagated to 'NEXT'.
 //			//
-//			// NOTE: his takes precedence over .drop 
+//			// NOTE: this takes precedence over .drop 
 //			<key>: 'NEXT',
 //
 //			...
