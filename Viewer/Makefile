@@ -251,7 +251,10 @@ LESSC := $(NPX) lessc
 # 		   procs to access their paths (as is done below)
 # 		2) set path and launch a child make -- not sure how to 
 # 		   do this...
-ELECTRON := $(NPX) electron
+# NOTE: on NixOS change this to electron or run make as:
+# 		$ ELECTRON=electron make run 
+#ELECTRON ?= electron
+ELECTRON ?= $(NPX) electron
 ELECTRON_REBUILD := $(NPX) electron-rebuild
 ASAR := $(NPX) asar
 ELECTRON_VERSION := $(strip $(shell $(ELECTRON) -v 2> /dev/null))
@@ -479,9 +482,9 @@ require(%):
 
 .PHONY: check-message
 check-message:
-	@echo "NOTE: simplified versions of utils like grep or sed may"
-	@echo "	misbihave, if this happens please install the full"
-	@echo "	version..."
+	@echo "NOTE: simplified versions of utils like grep or sed provided"
+	@echo " by busybox maymisbehave, if this happens please install the"
+	@echo " full version..."
 
 .PHONY: check
 check: ## Run all dependency checks
