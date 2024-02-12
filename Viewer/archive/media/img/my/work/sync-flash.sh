@@ -120,27 +120,33 @@ fi
 
 DRIVE=${1}
 
+__BASE=$BASE
 while true ; do
+	BASE=$__BASE
 	if [[ $INTERACTIVE || ! $DRIVE ]] ; then
 		INTERACTIVE=1
 		echo "Select/toggle an option:"
 		echo "0) Multi flash card mode is `[[ $MULTI ]] && echo "on" || echo "off"`"
 		echo "1) Directoy description is: \"$TITLE\"."
 		if [[ ! $DRIVE ]] ; then
-			echo "a-z|name) type a drive letter or mount name in $BASE and start."
+			echo "a-z|name) Type a drive letter, mount name in $BASE or path and start."
+			echo "          (paths must start with \"/\", \"./\" or \"[A-Z]:\")"
 		else
-			echo "a-z|name) type a drive letter or mount name in $BASE and start."
-			echo "Enter) copy drive ${DRIVE}"
+			echo "a-z|name) Type a drive letter, mount name in $BASE or path and start."
+			echo "          (paths must start with \"/\", \"./\" or \"[A-Z]:\")"
+			echo "Enter) Copy drive ${DRIVE}"
 		fi
-		echo "2) build."
+		echo "2) Build."
 		if ! [ -z $COMPRESSOR ] ; then
-			echo "3) compresion is `[[ $COMPRESS ]] && echo "on" || echo "off"`"
-			echo "4) quit."
+			echo "3) Compresion is `[[ $COMPRESS ]] && echo "on" || echo "off"`"
+			echo "4) Quit."
 		else
-			echo "3) quit."
+			echo "3) Quit."
 		fi
 		read -ep ": " RES
 	
+		# NOTE: we can't use letters here as they will shadow 
+		# 	with drive letters...
 		case $RES in
 			# toggle multi mode...
 			0)
@@ -179,6 +185,13 @@ while true ; do
 
 			# new drive letter...
 			*)
+				# explicit path given...
+				if [[ "${RES::1}" == "/" ]] \
+						|| [[ "${RES::2}" == "./" ]] \
+						|| [[ "${RES::2}" =~ [a-zA-Z]: ]] \
+						&& [ -e "$RES" ] ; then
+					BASE=
+				fi
 				DRIVE=$RES
 				;;
 		esac
