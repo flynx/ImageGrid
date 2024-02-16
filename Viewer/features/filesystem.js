@@ -488,7 +488,6 @@ var FileSystemLoaderActions = actions.Actions({
 			path = util.normalizePath(path)
 
 			// progress...
-			// XXX this does not appear to run while glob(..) is running...
 			var found = []
 			var update_interval
 			if(logger){
@@ -497,7 +496,7 @@ var FileSystemLoaderActions = actions.Actions({
 				update_interval = setInterval(function(){
 					found.length > 0
 						&& logger.emit('found', found) 
-						&& (found = []) }, 150) }
+						&& (found = []) }, 50) }
 
 			// get the image list...
 			return new Promise(function(resolve, reject){
@@ -519,13 +518,13 @@ var FileSystemLoaderActions = actions.Actions({
 						console.error(err)
 						reject(err) })
 					.on('end', function(){ 
-						// XXX do we need to have two copies of the list???
-						var lst = found.slice()
 						update_interval
 							&& clearInterval(update_interval)
 						logger && found.length > 0
 							&& logger.emit('found', found)
 							&& (found = [])
+
+						var lst = Object.keys(files)
 
 						// XXX might be a good idea to make image paths relative to path...
 						//lst = lst.map(function(p){ return pathlib.relative(base, p) })
