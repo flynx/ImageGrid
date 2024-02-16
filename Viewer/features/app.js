@@ -63,8 +63,15 @@ function({url, orientation, flipped}, callback){
 
 	var img = new Image
 	img.onload = function(){
-		var width = this.naturalWidth
-		var height = this.naturalHeight
+		// XXX .naturalWidth/.naturalHeight seem to ignore .imageOrientation 
+		// 		setting and orient the image via exif while .width/.height
+		// 		seem to respect it but only when atached to DOM...
+		// XXX for some reason noticed this on Linux, need to test under 
+		// 		Windows if this is a platform-specific thing...
+		//var width = this.naturalWidth
+		//var height = this.naturalHeight
+		var width = this.width
+		var height = this.height
 
 		var c = document.createElement('canvas')
 		c.style.imageOrientation = 'none'
@@ -76,12 +83,12 @@ function({url, orientation, flipped}, callback){
 		// prepare for rotate...
 		// 90 / 270
 		if(orientation == 90 || orientation == 270){
-			var w = c.width = this.naturalHeight
-			var h = c.height = this.naturalWidth
+			var w = c.width = height
+			var h = c.height = width
 		// 0 / 180
 		} else {
-			var w = c.width = this.naturalWidth
-			var h = c.height = this.naturalHeight }
+			var w = c.width = width
+			var h = c.height = height }
 		// prepare for flip...
 		var x = flipped && flipped.includes('horizontal') ? 
 			-1 
