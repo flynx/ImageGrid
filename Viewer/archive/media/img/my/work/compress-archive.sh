@@ -78,14 +78,16 @@ if [ "$1" ] ; then
 	BASE_PATH=$1
 fi
 
+# check if archiver exists...
+if ! which ${ARCH/ *} > /dev/null 2>&1 ; then
+	echo "$0: ${ARCH/ *}: command not found." >&2
+	exit 1
+fi
 
 
 # do the work...
-find "$BASE_PATH" -name \*.${EXT} -exec ${ARCH} \;
-
-
-
-echo done.
+find "$BASE_PATH" -name \*.${EXT} -exec ${ARCH} \; \
+	&& echo done.
 
 
 
