@@ -28,6 +28,9 @@ done
 
 
 
+# XXX add support for getting exif from raw...
+#	...this can lead to multiple hits, need a way to decide which 
+#	one to use...
 exifup(){
 	PREVIEW_DIR=$1
 	if [ -e "$PREVIEW_DIR" ] ; then
