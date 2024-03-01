@@ -11,6 +11,8 @@ printhelp(){
 	echo
 	echo "Arguments:"
 	echo "	-h --help	- print this help and exit."
+	#echo "	-p --psd	- source metadad from psd file (default)."
+	#echo "	-r --raw	- source metadad from raw file."
 	echo
 }
 
@@ -19,6 +21,16 @@ while true ; do
 		-h|--help)
 			printhelp
 			exit
+			;;
+		# XXX
+		-r|--raw)
+			shift
+			break
+			;;
+		# XXX
+		-p|--psd)
+			shift
+			break
 			;;
 		*)
 			break
@@ -70,3 +82,4 @@ else
 		cd "$DIR"
 	done
 fi
+
