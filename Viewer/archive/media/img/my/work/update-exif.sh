@@ -39,12 +39,20 @@ while true ; do
 done
 
 
+_exifup(){
+	local PREVIEW_DIR=$1
+	if ! [ -e "$PREVIEW_DIR" ] ; then
+		return 1
+	fi
+	local imgs=(${PREVIEW_DIR}/*)
+	# XXX
+}
 
 # XXX add support for getting exif from raw...
 #	...this can lead to multiple hits, need a way to decide which 
 #	one to use...
 exifup(){
-	PREVIEW_DIR=$1
+	local PREVIEW_DIR=$1
 	if [ -e "$PREVIEW_DIR" ] ; then
 		echo doing: `pwd`
 		exiv2 ex *.psd
