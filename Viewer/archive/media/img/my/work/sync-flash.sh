@@ -237,7 +237,8 @@ while true ; do
 	mkdir -vp "$DIR"
 
 	echo "Copying files from ${BASE}/${DRIVE} (~`du -hs "${BASE}/${DRIVE}" | cut -f 1`)..."
-	$COPY $COPYFLAGS ${BASE}/${DRIVE}/* "$DIR"
+	$COPY $COPYFLAGS ${BASE}/${DRIVE}/* "$DIR" \
+		2> >(tee "${DIR}"/copy-err.log)
 	echo "Copying files: done."
 
 
