@@ -9,11 +9,16 @@ BASE_PATH=.
 ARCH_BZIP2='bzip2 -v {}'
 ARCH_GZIP='gzip -v {}'
 # XXX should we cygpath -w all the inputs???
-ARCH_NTFS='compact /c /exe:lzx {}'
 
+OS="$(uname -s)"
+if [[ "$OS" =~ Linux.* ]] ; then
+	ARCH_FS='btrfs filesystem defragment -czstd -vf {}'
+else
+	ARCH_FS='compact /c /exe:lzx {}'
+fi
 
 # default...
-ARCH=$ARCH_NTFS
+ARCH=$ARCH_FS
 
 
 EXT=ARW
@@ -31,7 +36,7 @@ printhelp(){
 	echo
 	echo "	-bz -bzip2	- use bzip2 to compress`[[ $ARCH == $ARCH_BZIP2 ]] && echo " (default)" || echo ""`."
 	echo "	-gz -gzip	- use gzip to compress`[[ $ARCH == $ARCH_GZIP ]] && echo " (default)" || echo ""`."
-	echo "	-c -compact	- use ntfs compression`[[ $ARCH == $ARCH_NTFS ]] && echo " (default)" || echo ""`."
+	echo "	-fs		- use filesystem compression`[[ $ARCH == $ARCH_FS ]] && echo " (default)" || echo ""`."
 	echo
 	echo "	-ext EXT	- set file extension to compress (default: ${EXT})"
 	echo "			  NOTE: only one -ext is supported now".
@@ -55,8 +60,8 @@ while true ; do
 			ARCH=$ARCH_GZIP
 			shift
 			;;
-		-c|--compact)
-			ARCH=$ARCH_NTFS
+		-fs)
+			ARCH=$ARCH_FS
 			shift
 			;;
 
