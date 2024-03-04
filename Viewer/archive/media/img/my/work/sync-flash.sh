@@ -239,6 +239,10 @@ while true ; do
 	echo "Copying files from ${BASE}/${DRIVE} (~`du -hs "${BASE}/${DRIVE}" | cut -f 1`)..."
 	$COPY $COPYFLAGS ${BASE}/${DRIVE}/* "$DIR" \
 		2> >(tee "${DIR}"/copy-err.log)
+	# no errors -> remove log...
+	if ! [ -s "${DIR}/copy-err.log"] ; then
+		rm -f "${DIR}"/copy-err.log
+	fi
 	echo "Copying files: done."
 
 
