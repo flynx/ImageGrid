@@ -127,22 +127,30 @@ while true ; do
 	if [[ $INTERACTIVE || ! $DRIVE ]] ; then
 		INTERACTIVE=1
 		echo "Select/toggle an option:"
-		echo "0) Multi flash card mode is `[[ $MULTI ]] && echo "on" || echo "off"`"
-		echo "1) Directoy description is: \"$TITLE\"."
+		if [ -z $MULTI_STARTED ] ; then
+			if [[ $MULTI ]] ; then
+				echo "0) Multiple flash cards"
+			else
+				echo "0) Single flash card"
+			fi
+		else
+			echo "0) Build after this flash card: `[[ $LAST ]] && echo "yes" || echo "no"`"
+		fi
+		echo "1) Directoy description is: \"$TITLE\""
 		if [[ ! $DRIVE ]] ; then
-			echo "a-z|name) Type a drive letter, mount name in $BASE or path and start."
+			echo "a-z|name) Type a drive letter, mount name in $BASE or path and start"
 			echo "          (paths must start with \"/\", \"./\" or \"[A-Z]:\")"
 		else
-			echo "a-z|name) Type a drive letter, mount name in $BASE or path and start."
+			echo "a-z|name) Type a drive letter, mount name in $BASE or path and start"
 			echo "          (paths must start with \"/\", \"./\" or \"[A-Z]:\")"
 			echo "Enter) Copy drive ${DRIVE}"
 		fi
-		echo "2) Build."
+		echo "2) Build"
 		if ! [ -z $COMPRESSOR ] ; then
 			echo "3) Compresion is `[[ $COMPRESS ]] && echo "on" || echo "off"`"
-			echo "4) Quit."
+			echo "4) Quit"
 		else
-			echo "3) Quit."
+			echo "3) Quit"
 		fi
 		read -ep ": " RES
 	
@@ -151,7 +159,11 @@ while true ; do
 		case $RES in
 			# toggle multi mode...
 			0)
-				MULTI=`[[ ! $MULTI ]] && echo 1 || echo ""`
+				if [ -z $MULTI_STARTED ] ; then
+					MULTI=`[[ ! $MULTI ]] && echo 1 || echo ""`
+				else
+					LAST=`[[ ! $LAST ]] && echo 1 || echo ""`
+				fi
 				continue
 				;;
 			1)
@@ -186,16 +198,17 @@ while true ; do
 
 			# new drive letter...
 			*)
-				# explicit path given...
-				if [[ "${RES::1}" == "/" ]] \
-						|| [[ "${RES::2}" == "./" ]] \
-						|| [[ "${RES::2}" =~ [a-zA-Z]: ]] \
-						&& [ -e "$RES" ] ; then
-					BASE=
-				fi
 				DRIVE=$RES
 				;;
 		esac
+	fi
+
+	# explicit path given...
+	if [[ "${DRIVE::1}" == "/" ]] \
+			|| [[ "${DRIVE::2}" == "./" ]] \
+			|| [[ "${DRIVE::2}" =~ [a-zA-Z]: ]] \
+			&& [ -e "$DRIVE" ] ; then
+		BASE=
 	fi
 
 	# sanity check...
@@ -225,12 +238,16 @@ while true ; do
 	else
 		BASE_DIR="${DATE}${TITLE}/"
 		DIR="${BASE_DIR}/${DATE}.${SCOUNT}"
+		# get next dir index...
 		while [ -e *"$DIR"* ] ; do
 			COUNT=$((COUNT+1))
 			SCOUNT=`printf "%03d" $COUNT`
 			DIR="${BASE_DIR}/${DATE}.${SCOUNT}"
 		done
 	fi
+
+	MULTI_STARTED=1
+
 	# normalize paths...
 	BASE_DIR="./- ${BASE_DIR}/"
 	DIR="./- $DIR/"
