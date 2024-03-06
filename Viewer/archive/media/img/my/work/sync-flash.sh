@@ -281,21 +281,19 @@ while true ; do
 				echo "	(see: "${DIR}"/verification-err.log)"
 				echo
 				while true; do
-					read -ep "[R]etry, [C]ontinue, or Ctrl-C to cancel: " ACTION
+					read -ep "[R]etry, [c]ontinue, or Ctrl-C to cancel: " ACTION
 					ACTION=`echo ${ACTION,,} | xargs`
-					if [[ $ACTION =~ [rc] ]] ; then
+					if [[ $ACTION =~ [rc] ]] \
+							|| [ -z  $ACTION ] ; then
 						break
 					fi
 					echo "Unknown input: \"$ACTION\""
 				done
-				case ${ACTION} in
-					r)
-						continue
-						;;
-					c)
-						break
-						;;
-				esac
+				if [[ $ACTION == "c" ]] ; then
+					break
+				else
+					continue
+				fi
 			fi
 			echo "Verifification: done."
 			break
