@@ -118,6 +118,7 @@ if ! [ -z "$2" ] ; then
 	TITLE=" - $2"
 fi
 
+BASE=${BASE%/}/
 DRIVE=${1}
 
 __BASE=$BASE
@@ -198,9 +199,9 @@ while true ; do
 	fi
 
 	# sanity check...
-	if ! [ -e "${BASE}/${DRIVE}" ] ; then
+	if ! [ -e "${BASE}${DRIVE}" ] ; then
 		echo
-		echo "ERR: ${BASE}/${DRIVE}: does not exist, nothing to copy."
+		echo "ERR: ${BASE}${DRIVE}: does not exist, nothing to copy."
 		echo
 		if [[ $INTERACTIVE || ! $DRIVE ]] ; then
 			continue
@@ -236,8 +237,8 @@ while true ; do
 
 	mkdir -vp "$DIR"
 
-	echo "Copying files from ${BASE}/${DRIVE} (~`du -hs "${BASE}/${DRIVE}" | cut -f 1`)..."
-	$COPY $COPYFLAGS ${BASE}/${DRIVE}/* "$DIR" \
+	echo "Copying files from ${BASE}${DRIVE} (~`du -hs "${BASE}${DRIVE}" | cut -f 1`)..."
+	$COPY $COPYFLAGS ${BASE}${DRIVE}/* "$DIR" \
 		2> >(tee "${DIR}"/copy-err.log)
 	# no errors -> remove log...
 	if ! [ -s "${DIR}/copy-err.log" ] ; then
