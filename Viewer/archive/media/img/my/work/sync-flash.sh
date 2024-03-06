@@ -16,6 +16,9 @@ CPFLAGS=-Rpfv
 # override default...
 COPY=$RSYNC
 COPYFLAGS=$RSYNCFLAGS
+VERIFY=$RSYNC
+VERIFYFLAGS=-n $RSYNCFLAGS
+
 
 COMPRESSOR=./compress-archive.sh
 COMPRESS=1
@@ -254,15 +257,53 @@ while true ; do
 
 	mkdir -vp "$DIR"
 
-	echo "Copying files from ${BASE}${DRIVE} (~`du -hs "${BASE}${DRIVE}" | cut -f 1`)..."
-	$COPY $COPYFLAGS ${BASE}${DRIVE}/* "$DIR" \
-		2> >(tee "${DIR}"/copy-err.log)
-	# no errors -> remove log...
-	if ! [ -s "${DIR}/copy-err.log" ] ; then
-		rm -f "${DIR}"/copy-err.log
-	fi
-	echo "Copying files: done."
+	while true ; do
+		echo "Copying files from ${BASE}${DRIVE} (~`du -hs "${BASE}${DRIVE}" | cut -f 1`)..."
+		$COPY $COPYFLAGS ${BASE}${DRIVE}/* "$DIR" \
+			2> >(tee "${DIR}"/copy-err.log)
+		# no errors -> remove log...
+		if ! [ -s "${DIR}/copy-err.log" ] ; then
+			rm -f "${DIR}"/copy-err.log
+		fi
+		echo "Copying files: done."
 
+		# verify copy...
+		# XXX make this more generic...
+		if ! [ -z $VERIFY ] ; then
+			echo "Verifying copied files..."
+			$VERIFY $VERIFYFLAGS ${BASE}${DRIVE}/* "$DIR" \
+				> >(tee "${DIR}"/verification-err.log)
+			if ! [ -s "${DIR}/verification-err.log" ] ; then
+				rm -f "${DIR}"/verification-err.log
+			else
+				echo
+				echo "WARNING: found mismatching files"
+				echo "	(see: "${DIR}"/verification-err.log)"
+				echo
+				while true; do
+					read -ep "[R]etry, [C]ontinue, or Ctrl-C to cancel: " ACTION
+					ACTION=`echo ${ACTION,,} | xargs`
+					if [[ $ACTION =~ [rc] ]] ; then
+						break
+					fi
+					echo "Unknown input: \"$ACTION\""
+				done
+				case ${ACTION} in
+					r)
+						continue
+						;;
+					c)
+						break
+						;;
+				esac
+			fi
+			echo "Verifification: done."
+			break
+		# no verification defined...
+		else
+			break
+		fi
+	done
 
 	# exit interactive mode...
 	if [[ ! $MULTI || ! $INTERACTIVE || $LAST ]] ; then
