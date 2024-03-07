@@ -16,8 +16,10 @@ CPFLAGS=-Rpfv
 # override default...
 COPY=$RSYNC
 COPYFLAGS=$RSYNCFLAGS
-VERIFY=$RSYNC
-VERIFYFLAGS=-n $RSYNCFLAGS
+
+# NOTE: jdupes reports progress to stderr and output to stdout...
+VERIFY=jdupes
+VERIFYFLAGS="-r -u -I"
 
 
 COMPRESSOR=./compress-archive.sh
@@ -325,6 +327,8 @@ if [[ $COMPRESS ]] ; then
 	echo "Compressing archive: done."
 fi
 
+# XXX add report...
+# XXX
 
 echo "`basename "$0"`: done."
 
