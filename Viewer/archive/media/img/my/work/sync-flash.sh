@@ -18,12 +18,14 @@ COPY=$RSYNC
 COPYFLAGS=$RSYNCFLAGS
 
 # NOTE: jdupes reports progress to stderr and output to stdout...
+# XXX need to test if this exists...
 VERIFY=jdupes
 VERIFYFLAGS="-r -u -I"
+DO_VERIFY=1
 
 
-COMPRESSOR=./compress-archive.sh
-COMPRESS=1
+COMPRESS=./compress-archive.sh
+DO_COMPRESS=1
 
 
 # Config file to contain all the default settings...
@@ -68,15 +70,15 @@ while true ; do
 			echo "	--cp		use cp"
 			if ! [ -z $VERIFY ] ; then
 				echo "	--verify	toggle copy verification"
-				echo "			default: `[[ $SKIP_VERIFY ]] && echo "off" || echo "on"`"
+				echo "			default: `[[ $DO_VERIFY ]] && echo "on" || echo "off"`"
 			fi
-			if ! [ -z $COMPRESSOR ] ; then
+			if ! [ -z $COMPRESS ] ; then
 				echo "	--compress	toggle archive compression"
-				echo "			default: `[[ $COMPRESS ]] && echo "on" || echo "off"`"
+				echo "			default: `[[ $DO_COMPRESS ]] && echo "on" || echo "off"`"
 			fi
 			# notes...
 			echo
-			if ! [ -z $COMPRESSOR ] ; then
+			if ! [ -z $COMPRESS ] ; then
 				echo "NOTE: the index is fully usable during the compression stage"
 			fi
 			echo "NOTE: cp under Cygwin may messup permissions, use rsync."
@@ -113,12 +115,12 @@ while true ; do
 			break
 			;;
 		-verify|--verify)
-			SKIP_VERIFY=`[[ $SKIP_VERIFY ]] && echo "" || echo 1`
+			DO_VERIFY=`[[ $DO_VERIFY ]] && echo "" || echo 1`
 			shift
 			break
 			;;
 		-compress|--compress)
-			COMPRESS=`[[ $COMPRESS ]] && echo "" || echo 1`
+			DO_COMPRESS=`[[ $DO_COMPRESS ]] && echo "" || echo 1`
 			shift
 			break
 			;;
@@ -162,14 +164,14 @@ while true ; do
 		i=3
 		OPTION_VERIFICATION=
 		if ! [ -z $VERIFY ] ; then
-			echo "$i) Verification is `[[ $SKIP_VERIFY ]] && echo "off" || echo "on"`"
+			echo "$i) Verification is `[[ $DO_VERIFY ]] && echo "on" || echo "off"`"
 			OPTION_VERIFICATION=$i
 			i=$(( i + 1 ))
 		fi
 
 		OPTION_COMPRESSION=
-		if ! [ -z $COMPRESSOR ] ; then
-			echo "$i) Compresion is `[[ $COMPRESS ]] && echo "on" || echo "off"`"
+		if ! [ -z $COMPRESS ] ; then
+			echo "$i) Compresion is `[[ $DO_COMPRESS ]] && echo "on" || echo "off"`"
 			OPTION_COMPRESSION=$i
 			i=$(( i + 1 ))
 		fi
@@ -211,11 +213,11 @@ while true ; do
 
 			# dynamic option handlers...
 			"$OPTION_VERIFICATION")
-				SKIP_VERIFY=`[[ ! $SKIP_VERIFY ]] && echo 1 || echo ""`
+				DO_VERIFY=`[[ ! $DO_VERIFY ]] && echo 1 || echo ""`
 				continue
 				;;
 			"$OPTION_COMPRESSION")
-				COMPRESS=`[[ ! $COMPRESS ]] && echo 1 || echo ""`
+				DO_COMPRESS=`[[ ! $DO_COMPRESS ]] && echo 1 || echo ""`
 				continue
 				;;
 			"$OPTION_QUIT")
@@ -292,7 +294,7 @@ while true ; do
 
 		# verify copy...
 		# XXX make this more generic...
-		if ! [ $SKIP_VERIFY ] && ! [ -z $VERIFY ] ; then
+		if [ $DO_VERIFY ] && ! [ -z $VERIFY ] ; then
 			echo "Verifying copied files..."
 			$VERIFY $VERIFYFLAGS ${BASE}${DRIVE}/* "$DIR" \
 				> >(tee "${DIR}"/verification-err.log)
@@ -342,9 +344,9 @@ if [[ ! $MULTI || $LAST ]] ; then
 	echo "Building archive: done."
 fi
 
-if [[ $COMPRESS ]] ; then
+if [[ $DO_COMPRESS ]] ; then
 	echo "Compressing archive..."
-	${COMPRESSOR} "$BASE_DIR"
+	${COMPRESS} "$BASE_DIR"
 	echo "Compressing archive: done."
 fi
 
