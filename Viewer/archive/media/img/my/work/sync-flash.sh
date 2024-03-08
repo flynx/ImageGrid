@@ -66,6 +66,7 @@ while true ; do
 			echo "			default: $BASE"
 			echo "	--rsync		use rsync (default)"
 			echo "	--cp		use cp"
+			echo "	--no-verify	skip copy verification"
 			if ! [ -z $COMPRESSOR ] ; then
 				echo "	--compress	toggle archive compression"
 				echo "			default: `[[ $COMPRESS ]] && echo "on" || echo "off"`"
@@ -108,6 +109,11 @@ while true ; do
 			shift
 			break
 			;;
+		-no-verify|--no-verify)
+			SKIP_VERIFY=1
+			shift
+			break
+			;;
 		-compress|--compress)
 			COMPRESS=`[[ $COMPRESS ]] && echo "" || echo 1`
 			shift
@@ -142,21 +148,31 @@ while true ; do
 			echo "0) Build after this flash card: `[[ $LAST ]] && echo "yes" || echo "no"`"
 		fi
 		echo "1) Directoy description is: \"$TITLE\""
-		if [[ ! $DRIVE ]] ; then
-			echo "a-z|name) Type a drive letter, mount name in $BASE or path and start"
-			echo "          (paths must start with \"/\", \"./\" or \"[A-Z]:\")"
-		else
-			echo "a-z|name) Type a drive letter, mount name in $BASE or path and start"
-			echo "          (paths must start with \"/\", \"./\" or \"[A-Z]:\")"
+		echo "a-z|name) Type a drive letter, mount name in $BASE or path and start"
+		echo "          (paths must start with \"/\", \"./\" or \"[A-Z]:\")"
+		if [[ $DRIVE ]] ; then
 			echo "Enter) Copy drive ${DRIVE}"
 		fi
 		echo "2) Build"
-		if ! [ -z $COMPRESSOR ] ; then
-			echo "3) Compresion is `[[ $COMPRESS ]] && echo "on" || echo "off"`"
-			echo "4) Quit"
-		else
-			echo "3) Quit"
+
+		# dynamic options...
+		i=3
+		OPTION_VERIFICATION=
+		if ! [ -z $VERIFY ] ; then
+			echo "$i) Verification is `[[ $SKIP_VERIFY ]] && echo "off" || echo "on"`"
+			OPTION_VERIFICATION=$i
+			i=$(( i + 1 ))
 		fi
+
+		OPTION_COMPRESSION=
+		if ! [ -z $COMPRESSOR ] ; then
+			echo "$i) Compresion is `[[ $COMPRESS ]] && echo "on" || echo "off"`"
+			OPTION_COMPRESSION=$i
+			i=$(( i + 1 ))
+		fi
+
+		echo "$i) Quit"
+		OPTION_QUIT=$i
 		read -ep ": " RES
 	
 		# NOTE: we can't use letters here as they will shadow 
@@ -189,15 +205,17 @@ while true ; do
 				LAST=1
 				break
 				;;
-			3)
-				if ! [ -z $COMPRESSOR ] ; then
-					COMPRESS=`[[ ! $COMPRESS ]] && echo 1 || echo ""`
-				else
-					exit
-				fi
+
+			# dynamic option handlers...
+			"$OPTION_VERIFICATION")
+				SKIP_VERIFY=`[[ ! $SKIP_VERIFY ]] && echo 1 || echo ""`
 				continue
 				;;
-			4)
+			"$OPTION_COMPRESSION")
+				COMPRESS=`[[ ! $COMPRESS ]] && echo 1 || echo ""`
+				continue
+				;;
+			"$OPTION_QUIT")
 				exit
 				;;
 
@@ -271,7 +289,7 @@ while true ; do
 
 		# verify copy...
 		# XXX make this more generic...
-		if ! [ -z $VERIFY ] ; then
+		if ! [ $SKIP_VERIFY ] && ! [ -z $VERIFY ] ; then
 			echo "Verifying copied files..."
 			$VERIFY $VERIFYFLAGS ${BASE}${DRIVE}/* "$DIR" \
 				> >(tee "${DIR}"/verification-err.log)
