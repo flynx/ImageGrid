@@ -66,7 +66,10 @@ while true ; do
 			echo "			default: $BASE"
 			echo "	--rsync		use rsync (default)"
 			echo "	--cp		use cp"
-			echo "	--no-verify	skip copy verification"
+			if ! [ -z $VERIFY ] ; then
+				echo "	--verify	toggle copy verification"
+				echo "			default: `[[ $SKIP_VERIFY ]] && echo "off" || echo "on"`"
+			fi
 			if ! [ -z $COMPRESSOR ] ; then
 				echo "	--compress	toggle archive compression"
 				echo "			default: `[[ $COMPRESS ]] && echo "on" || echo "off"`"
@@ -109,8 +112,8 @@ while true ; do
 			shift
 			break
 			;;
-		-no-verify|--no-verify)
-			SKIP_VERIFY=1
+		-verify|--verify)
+			SKIP_VERIFY=`[[ $SKIP_VERIFY ]] && echo "" || echo 1`
 			shift
 			break
 			;;
