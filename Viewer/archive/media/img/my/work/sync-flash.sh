@@ -142,6 +142,7 @@ while true ; do
 	BASE=$__BASE
 	if [[ $INTERACTIVE || ! $DRIVE ]] ; then
 		INTERACTIVE=1
+		echo
 		echo "Select/toggle an option:"
 		if [ -z $MULTI_STARTED ] ; then
 			if [[ $MULTI ]] ; then
@@ -229,6 +230,7 @@ while true ; do
 				DRIVE=$RES
 				;;
 		esac
+		echo
 	fi
 
 	# explicit path given...
