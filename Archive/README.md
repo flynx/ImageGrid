@@ -66,6 +66,11 @@ $ ./update-exif.sh [FLAGS] PATH
 
 ### `tree.sh`
 
+Generte and check arcive file list.
+
+This provides a basic and fast way to check high level tree consistency
+against mostly humn-error.
+
 
 
 ## Archive directory structure
