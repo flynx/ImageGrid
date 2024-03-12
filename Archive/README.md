@@ -59,6 +59,8 @@ $ ./compress-archive.sh [FLAGS] PATH
 
 ### `update-exif.sh`
 
+Update EXIF of output previews from corresponding .psd / RAW files.
+
 ```shell
 $ ./update-exif.sh [FLAGS] PATH
 ```
