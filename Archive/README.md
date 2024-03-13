@@ -59,12 +59,19 @@ $ ./compress-archive.sh [FLAGS] PATH
 
 ### `update-exif.sh`
 
+Update EXIF of output previews from corresponding .psd / RAW files.
+
 ```shell
 $ ./update-exif.sh [FLAGS] PATH
 ```
 
 
 ### `tree.sh`
+
+Generte and check arcive file list.
+
+This provides a basic and fast way to check high level tree consistency
+against mostly humn-error.
 
 
 
