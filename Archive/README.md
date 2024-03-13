@@ -36,7 +36,7 @@ $ ./sync-archive.sh
 
 This will:
 - Create the necessary directory structure
-  (see: [Archive directory structure](#arcive-direcotry-structure))
+  (see: [Archive directory structure](#archive-direcotry-structure))
 - Copy and verify the contents of 1 or more external media
   to the archive directory
 - Prepare the archive for further work via `process-archive.sh`
