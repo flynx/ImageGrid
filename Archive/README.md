@@ -97,11 +97,7 @@ media
 │   │       │   └── preview (RAW)
 │   │       ├── 20240310 - shoot directory (fully sorted)
 │   │       │   └── ...
-│   │       ├── ...
-│   │       ├── sync-flash.sh
-│   │       ├── process-archive.sh
-│   │       ├── compress-archive.sh
-│   │       └── update-exif.sh
+│   │       └── ...
 │   └── others
 │       └── ...
 ├── video
@@ -109,3 +105,14 @@ media
 ├── ...
 └── tree.sh
 ```
+
+```
+<date> - <info>
+```
+
+Leading `"-"` indicated a not fully sorted shoot.
+```
+- <date> - <info>
+```
+
+
