@@ -107,12 +107,12 @@ media
 ```
 
 ```
-<date> - <info>
+<date> - <info>/
 ```
 
-Leading `"-"` indicated a not fully sorted shoot.
+Leading `"-"` indicates a not fully sorted shoot.
 ```
-- <date> - <info>
+- <date> - <info>/
 ```
 
 
