@@ -35,7 +35,7 @@ $ ./sync-archive.sh
 ```
 
 This will:
-- Create the necessary directory structure
+- Create directory structure
   (see: [Archive directory structure](#archive-direcotry-structure))
 - Copy and verify the contents of 1 or more external media
   to the archive directory
