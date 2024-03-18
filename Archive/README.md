@@ -35,7 +35,7 @@ $ ./sync-archive.sh
 ```
 
 This will:
-- Create directory structure
+- Create the directory structure
   (see: [Archive directory structure](#archive-direcotry-structure))
 - Copy and verify the contents of 1 or more external media
   to the archive directory
@@ -45,9 +45,18 @@ This will:
 
 ### `process-archive.sh`
 
+Process the syncronized data for use with [ImageGrid.Viewer]()
+
 ```shell
 $ ./process-archive.sh [FLAGS] PATH
 ```
+
+This will:
+- Extract previews from RAW files
+- Extract metadata
+- Build index
+
+
 
 
 ### `compress-archive.sh`
