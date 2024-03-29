@@ -61,9 +61,16 @@ This will:
 
 ### `compress-archive.sh`
 
+Compress archived files.
+
 ```shell
 $ ./compress-archive.sh [FLAGS] PATH
 ```
+
+This is designed to selectively compress uncompressed raw files (Sony) achiving +/- 2x compression factor.
+
+By default this uses filesystem compression, supporting ntfs (on windows) and btrfs transparent native compression, but can be configured to use various archiving formats.
+
 
 
 ### `update-exif.sh`
