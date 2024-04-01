@@ -39,13 +39,32 @@ while true ; do
 done
 
 
+# XXX TODO:
+# 	- add support for multiple raw formats...
+# 	- handle multiple hits -- preferably automatically...
+# 	- 
 _exifup(){
 	local PREVIEW_DIR=$1
 	if ! [ -e "$PREVIEW_DIR" ] ; then
 		return 1
 	fi
-	local imgs=(${PREVIEW_DIR}/*)
+	cd "${PREVIEW_DIR}"
+	# XXX only jpg???
+	local imgs=(*.jpg)
 	# XXX
+	for img in "${imgs[@]}" ; do
+		local name="${img%.jpg}"
+		local targets=($(find . -name "${name}.ARW"))
+		if [[ ${#targets[@]} > 1 ]] ; then
+			# XXX multiple candidates -> select one... 
+			# XXX
+		fi
+		# XXX
+		exiv2 ex ${target[0]} 
+		mv "${target[0]%.ARW}.exv" .
+		exiv2 -k in "${img}"
+		rm -f *.exv
+	done
 }
 
 # XXX add support for getting exif from raw...
