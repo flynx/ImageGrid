@@ -54,13 +54,13 @@ _exifup(){
 	# XXX
 	for img in "${imgs[@]}" ; do
 		local name="${img%.jpg}"
-		local targets=($(find . -name "${name}.ARW"))
+		local targets=("$(find . -name "${name}.ARW")")
 		if [[ ${#targets[@]} > 1 ]] ; then
 			# XXX multiple candidates -> select one... 
 			# XXX
 		fi
 		# XXX
-		exiv2 ex ${target[0]} 
+		exiv2 ex "${target[0]}"
 		mv "${target[0]%.ARW}.exv" .
 		exiv2 -k in "${img}"
 		rm -f *.exv
