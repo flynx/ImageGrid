@@ -122,9 +122,23 @@ media
 └── tree.sh
 ```
 
+Index root directory (single source media)
+```
+<date>.<index> - <info>/
+```
+
+Index root (multiple source media)
 ```
 <date> - <info>/
 ```
+
+Each synchronised media is stored in:
+```
+<date> - <info>/<date>.<index>/
+```
+
+
+
 
 Leading `"-"` indicates a not fully sorted shoot.
 ```
