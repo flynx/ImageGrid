@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # TODO make this runnable from anywhere...
 #	- prepend paths with './' only if local/relative

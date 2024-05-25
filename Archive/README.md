@@ -146,6 +146,6 @@ Leading `"-"` indicates a not fully sorted shoot.
 - <date> - <info>/
 ```
 
-This is the defailt as creatrd by `sync-flash.sh`, renaming (removing the leading `"- "`) should be done by the user.
+This is the default as created by `sync-flash.sh`, renaming (removing the leading `"- "`) should be done by the user.
 
 
