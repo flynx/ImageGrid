@@ -21,8 +21,16 @@ media
 │           ├── process-archive.sh
 │           ├── compress-archive.sh
 │           └── update-exif.sh
+├── README.md
 └── tree.sh
 ```
+
+### `README.md`
+
+A basic introductory description. This is here to introduce a new user
+to the archive structure and basics.
+
+
 
 ### `sync-archive.sh`
 
