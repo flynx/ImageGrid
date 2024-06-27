@@ -113,6 +113,9 @@ var MetadataReaderActions = actions.Actions({
 			- force is true
 
 
+		NOTE: this will read metadata from both the image file as well as sidecar 
+			(xmp) files, if available
+		NOTE: sidecar metadata fields take precedence over image metadata.
 		NOTE: also see: .cacheMetadata(..)
 		`,
 		core.sessionQueueHandler('Read image metadata', 
@@ -142,29 +145,8 @@ var MetadataReaderActions = actions.Actions({
 				//var full_path = path.normalize(img.base_path +'/'+ img.path)
 				var full_path = this.getImagePath(gid)
 
-				var readers = []
 
-				// XMP sidecar files...
-				for(var ext of ['xmp', 'XMP']){
-					var xmp_path = full_path.replace(/\.[a-zA-Z0-9]*$/, '.'+ ext)
-					if(fs.existsSync(xmp_path)){
-						console.log("@@@@", xmp_path)
-						readers.push(new Promise(function(resolve, reject){
-							fs.readFile(xmp_path, function(err, file){
-								if(err){
-									// XXX log error...
-									resolve({}) }
-								exiftool.metadata(file, function(err, data){
-									if(err){
-										// XXX log error...
-										resolve({})
-									} else if(data.error){
-										// XXX log error...
-										resolve({})
-									} else {
-										console.log("@@@@", data)
-										resolve(data) } }) }) }))
-						break } }
+				var readers = []
 				// main image...
 				readers.push(new Promise(function(resolve, reject){
 					fs.readFile(full_path, function(err, file){
@@ -191,6 +173,27 @@ var MetadataReaderActions = actions.Actions({
 								reject(data)
 							} else {
 								resolve(data) } }) }) }) ) 
+				// XMP sidecar files...
+				// NOTE: sidecar files take precedence over image metadata...
+				for(var ext of ['xmp', 'XMP']){
+					var xmp_path = full_path.replace(/\.[a-zA-Z0-9]*$/, '.'+ ext)
+					if(fs.existsSync(xmp_path)){
+						readers.push(new Promise(function(resolve, reject){
+							fs.readFile(xmp_path, function(err, file){
+								if(err){
+									// XXX log error...
+									resolve({}) }
+								exiftool.metadata(file, function(err, data){
+									if(err){
+										// XXX log error...
+										resolve({})
+									} else if(data.error){
+										// XXX log error...
+										resolve({})
+									} else {
+										console.log("@@@@", data)
+										resolve(data) } }) }) }))
+						break } }
 
 			// merge the data...
 			return Promise.all(readers)
