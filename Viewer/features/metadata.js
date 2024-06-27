@@ -135,14 +135,38 @@ var MetadataReaderActions = actions.Actions({
 				if(!image && !img){
 					return false }
 
+				if(!force 
+						&& (img.metadata || {}).ImageGridMetadata == 'full'){
+					return Promise.resolve(img.metadata) }
+
 				//var full_path = path.normalize(img.base_path +'/'+ img.path)
 				var full_path = this.getImagePath(gid)
 
-				return new Promise(function(resolve, reject){
-					if(!force 
-							&& (img.metadata || {}).ImageGridMetadata == 'full'){
-						return resolve(img.metadata) }
+				var readers = []
 
+				// XMP sidecar files...
+				for(var ext of ['xmp', 'XMP']){
+					var xmp_path = full_path.replace(/\.[a-zA-Z0-9]*$/, '.'+ ext)
+					if(fs.existsSync(xmp_path)){
+						console.log("@@@@", xmp_path)
+						readers.push(new Promise(function(resolve, reject){
+							fs.readFile(xmp_path, function(err, file){
+								if(err){
+									// XXX log error...
+									resolve({}) }
+								exiftool.metadata(file, function(err, data){
+									if(err){
+										// XXX log error...
+										resolve({})
+									} else if(data.error){
+										// XXX log error...
+										resolve({})
+									} else {
+										console.log("@@@@", data)
+										resolve(data) } }) }) }))
+						break } }
+				// main image...
+				readers.push(new Promise(function(resolve, reject){
 					fs.readFile(full_path, function(err, file){
 						if(err){
 							return reject(err) }
@@ -157,36 +181,36 @@ var MetadataReaderActions = actions.Actions({
 							img.ctime = stat.ctime
 							img.birthtime = stat.birthtime
 
-							img.size = stat.size
-						}
+							img.size = stat.size }
 
 						// read image metadata...
 						exiftool.metadata(file, function(err, data){
 							if(err){
 								reject(err)
-
 							} else if(data.error){
 								reject(data)
-
 							} else {
-								// convert to a real dict...
-								// NOTE: exiftool appears to return an array 
-								// 		object rather than an actual dict/object
-								// 		and that is not JSON compatible....
-								that.images[gid].metadata =
-									Object.assign(
-										// XXX do we need to update or overwrite??
-										that.images[gid].metadata || {},
-										data,
-										{
-											ImageGridMetadataReader: 'exiftool/ImageGrid',
-											// mark metadata as full read...
-											ImageGridMetadata: 'full',
-										})
-								that.markChanged 
-									&& that.markChanged('images', [gid]) }
+								resolve(data) } }) }) }) ) 
 
-							resolve(data) }) }) }) })],
+			// merge the data...
+			return Promise.all(readers)
+				.then(function(data){
+					// convert to a real dict...
+					// NOTE: exiftool appears to return an array 
+					// 		object rather than an actual dict/object
+					// 		and that is not JSON compatible....
+					that.images[gid].metadata =
+						Object.assign(
+							// XXX do we need to update or overwrite??
+							that.images[gid].metadata || {},
+							...data,
+							{
+								ImageGridMetadataReader: 'exiftool/ImageGrid',
+								// mark metadata as full read...
+								ImageGridMetadata: 'full',
+							})
+					that.markChanged 
+						&& that.markChanged('images', [gid]) }) })],
 	// XXX Q: should this be a linked task???
 	// 		...on one hand yes, on the other, saving after this may 
 	// 		unintentionally save other state from the main object...
