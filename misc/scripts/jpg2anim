@@ -1,24 +1,54 @@
 #!/usr/bin/env bash
 
 
-# gif palette...
-ffmpeg \
-	-pattern_type glob -i '*.jpg' \
-	-vf palettegen \
-	palette.png
-# gif...
-ffmpeg \
-	-r 8 \
-	-pattern_type glob \
-	-i '*.jpg' \
-	-i palette.png \
-	-filter_complex paletteuse=dither=none \
-	animation.gif
+# XXX add help...
+# XXX add better options...
 
-# mkv...
-ffmpeg \
-	-r 8 \
-	-pattern_type glob \
-	-i '*.jpg' \
-	animation.mkv
+
+FPS=${FPS:-8}
+if [ $1 == "-r" ] ; then
+	FPS=$2
+	shift 2
+fi
+
+PATTERN=${PATTERN:-'*.jpg'}
+
+# generate name...
+LST=($PATTERN)
+A=${LST[0]}
+A=${A%.jpg}
+B=${LST[$(( ${#LST[@]} - 1 ))]}
+B=${B%.jpg}
+
+NAME=${NAME:-${A}-${B}}
+
+PALETTE=${PALETTE:-.palette.png}
+
+
+# generate...
+{
+	set -o noglob
+	# gif palette...
+	ffmpeg \
+		-pattern_type glob \
+			-i $PATTERN \
+		-vf palettegen \
+		"$PALETTE"
+	# gif...
+	ffmpeg \
+		-r $FPS \
+		-pattern_type glob \
+			-i $PATTERN \
+		-i "$PALETTE" \
+		-filter_complex paletteuse=dither=none \
+		"${NAME}".gif
+
+	# mkv...
+	ffmpeg \
+		-r $FPS \
+		-pattern_type glob \
+			-i $PATTERN \
+		"${NAME}".mkv
+	#set +o noglob
+}
 
