@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+
+# gif palette...
+ffmpeg \
+	-pattern_type glob -i '*.jpg' \
+	-vf palettegen \
+	palette.png
+# gif...
+ffmpeg \
+	-r 8 \
+	-pattern_type glob \
+	-i '*.jpg' \
+	-i palette.png \
+	-filter_complex paletteuse=dither=none \
+	animation.gif
+
+# mkv...
+ffmpeg \
+	-r 8 \
+	-pattern_type glob \
+	-i '*.jpg' \
+	animation.mkv
+

@@ -1,0 +1,90 @@
+#!/bin/bash
+
+# config...
+MNT_PATH=/run/media/f_lynx/
+ARCHIVE_PATTERN=*-P-*
+EXT=psd
+# this is here to avoid using windows find in some contexts...
+FIND=/bin/find
+
+printhelp () {
+	echo "Find source images"
+	echo "format:"
+	echo "	$1 [ARGS] JPGS"
+	echo
+	echo "supported commands:"
+	echo "  -h|--help		- print this message."
+	echo "  -e|--ext EXT	- target extension (Default: $EXT)."
+}
+
+if [[ $1 == "" ]] ; then
+	echo Error: need a list of files to process...
+	exit 1
+fi
+
+# handle args...
+while true; do
+	if [ -z $1 ]; then
+		break
+	fi
+	case $1 in
+
+		-h|--help)
+			printhelp
+			exit
+			;;
+
+		-e|--ext)
+			shift
+			EXT=$1
+			shift
+			;;
+
+		*)
+			break
+			;;
+	esac
+done
+
+# build pattern...
+# clear the duplicate suffix...
+PATTERN="${1//n/n?}"
+PATTERN="${PATTERN/.jpg/}"
+shift
+while [[ "$1" != "" ]] ; do
+	# clear the duplicate suffix...
+	P="${1//n/n?}"
+	P="${1/-[0-9]/}"
+	P="${P/.jpg/}"
+	# grow the pattern...
+	PATTERN="$PATTERN\|$P"
+	shift
+done
+PATTERN=".*/\($PATTERN\)\.$EXT"
+
+#echo $PATTERN 1>&2
+#echo $PATTERN > .pattern
+
+# do the actual find...
+cd "$MNT_PATH"
+
+for a in $ARCHIVE_PATTERN ; do
+	cd "$a"
+	if [[ $? != 0 ]] ; then
+		# can't cd -- unmounted dir...
+		echo Skipping unmounted: $a... 1>&2
+		continue
+	fi
+	echo Searching: $a... 1>&2
+	# find the files...
+	$FIND . -iregex "$PATTERN" \
+		-exec realpath \{\} \;
+
+	##for i in `$FIND . -iregex "$PATTERN"` ; do
+	##	echo Found: `basename "$i"` 1>&2
+	##	echo `cygpath -aw "$i"`
+	##done
+	cd ..
+done
+
+# vim:set sw=4 ts=4 :
