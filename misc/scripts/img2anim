@@ -42,6 +42,8 @@ PALETTE=${PALETTE:-.palette.png}
 		-i "$PALETTE" \
 		-filter_complex paletteuse=dither=none \
 		"${NAME}".gif
+	# cleanup...
+	rm "$PALETTE"
 
 	# mkv...
 	ffmpeg \
