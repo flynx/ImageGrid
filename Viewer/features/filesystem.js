@@ -239,14 +239,24 @@ var FileSystemLoaderActions = actions.Actions({
 		// NOTE: this will not match "dot filenames", this is done 
 		// 		intentionally to avoid the previews MAC computers 
 		// 		generate all over the place...
-		// XXX make this case-agnostic...
-		'image-file-pattern': '*.@(jpg|jpeg|png|svg|gif|JPG|JPEG|PNG|SVG|GIF)',
+		// XXX make the pattern case-agnostic (see .imageFilePattern)
+		'image-file-pattern': '*.@(jpg|jpeg|png|svg|gif)',
 
 		'image-file-read-stat': true,
 		'image-file-skip-previews': false,
 
 		'default-load-method': 'loadIndex',
 	},
+
+	// NOTE: this is not called too often thus there is not need to cache...
+	get imageFilePattern(){
+		return this.config['image-file-pattern']
+			.replace(/([a-z]+)/g, 
+				function(e){ 
+					return e +'|'+ e.toUpperCase() }) },
+	set imageFilePattern(value){
+		this.config['image-file-pattern'] = value },
+
 
 	// XXX is this a hack???
 	// XXX need a more generic form...
@@ -502,7 +512,7 @@ var FileSystemLoaderActions = actions.Actions({
 			// get the image list...
 			return new Promise(function(resolve, reject){
 				var files = {}
-				glob.globStream(path + '/'+ that.config['image-file-pattern'], {
+				glob.globStream(path +'/'+ that.imageFilePattern, {
 						stat: !!read_stat,
 						withFileTypes: true,
 						strict: false,
@@ -1154,7 +1164,7 @@ var FileSystemLoaderUIActions = actions.Actions({
 
 			var o = browseWalk.makeWalk(null, 
 						base, 
-						this.config['image-file-pattern'],
+						this.imageFilePattern,
 						cfg)
 					// path selected...
 					.open(function(evt, path){ 
