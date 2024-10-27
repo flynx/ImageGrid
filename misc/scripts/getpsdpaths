@@ -77,8 +77,10 @@ for a in $ARCHIVE_PATTERN ; do
 	fi
 	echo Searching: $a... 1>&2
 	# find the files...
-	$FIND . -iregex "$PATTERN" \
-		-exec realpath \{\} \;
+	$FIND . \
+		-iregex "$PATTERN" \
+		-exec realpath \{\} \; \
+		| tee /dev/stderr
 
 	##for i in `$FIND . -iregex "$PATTERN"` ; do
 	##	echo Found: `basename "$i"` 1>&2
