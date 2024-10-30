@@ -250,8 +250,9 @@ var ImageMarkActions = actions.Actions({
 		gids = gids instanceof Array ?
 			gids
 			: [gids]
-		this.untag('marked', this.data.getImages('loaded'))
-		this.tag('marked', gids) },
+		this
+			.untag('marked', this.data.getImages('loaded'))
+			.tag('marked', gids) },
 
 	markedInRibbon: ['- Mark|Ribbon/',
 		function(ribbon){
@@ -534,8 +535,9 @@ var ImageBookmarkActions = actions.Actions({
 		gids = gids instanceof Array ?
 			gids
 			: [gids]
-		this.untag('bookmarked', this.data.getImages('loaded'))
-		this.tag('bookmarked', gids) },
+		this
+			.untag('bookmarked', this.data.getImages('loaded'))
+			.tag('bookmarked', gids) },
 
 	prevBookmarked: ['Bookmark|Navigate/Previous bookmarked image',
 		{mode: function(target){ 

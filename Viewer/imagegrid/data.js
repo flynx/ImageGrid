@@ -226,15 +226,17 @@ var DataPrototype = {
 
 	//__current: null,
 	get current(){
-		return this.__current = this.__current 
-			|| this.getImages(this.ribbon_order[0])[0]
-			|| this.order[0] },
+		return this.__current = 
+			this.__current 
+				|| this.getImages(this.ribbon_order[0])[0]
+				|| this.order[0] },
 	set current(value){
 		this.focusImage(value) },
 
 	//__base: null,
 	get base(){
-		return this.__base || this.ribbon_order[0] },
+		return this.__base 
+			|| this.ribbon_order[0] },
 	set base(value){
 		this.__base = value in this.ribbons ?
 			this.getRibbon(value)
@@ -251,7 +253,8 @@ var DataPrototype = {
 	//__order_index: null,
 	get order_index(){
 		return this.__order_index = 
-			this.__order_index || this.order.toKeys() },
+			this.__order_index 
+				|| this.order.toKeys() },
 
 
 
@@ -281,14 +284,20 @@ var DataPrototype = {
 	normalizeGIDs: function(gids){
 		var that = this
 		// direct keywords...
-		if(gids == 'all' || gids == 'loaded'){
+		if(gids == 'all' 
+				|| gids == 'loaded'){
 			return this.getImages(gids) }
 
-		gids = arguments.length > 1 ? [...arguments] : gids
-		gids = gids instanceof Array ? gids : [gids]
+		gids = arguments.length > 1 ? 
+			[...arguments] 
+			: gids
+		gids = gids instanceof Array ? 
+			gids 
+			: [gids]
 
 		return gids
-			.map(function(gid){ return that.getImage(gid) }) },
+			.map(function(gid){ 
+				return that.getImage(gid) }) },
 
 	// Sort images via .order...
 	//
@@ -360,19 +369,25 @@ var DataPrototype = {
 	// 		before using it as a target.
 	// NOTE: keep_target_items has no effect if target is not given...
 	makeSparseImages: function(gids, target, keep_target_items, drop_non_order_gids){
-		if(arguments.length == 2 && target === true){
+		if(arguments.length == 2 
+				&& target === true){
 			drop_non_order_gids = true
 			target = null }
 		// avoid mutating gids...
-		gids = gids === target || keep_target_items ? 
+		gids = gids === target 
+				|| keep_target_items ? 
 			gids.slice() 
 			: gids
-		target = target == null ? [] : target
+		target = target == null ? 
+			[] 
+			: target
 
 		var order = this.order
 		//var order_idx = order.toKeys()
 		// XXX to cache order index we need to update it every time we change order...
-		var order_idx = this.order_index || order.toKeys()
+		var order_idx = 
+			this.order_index 
+				|| order.toKeys()
 
 		var rest = []
 
@@ -382,7 +397,8 @@ var DataPrototype = {
 			// skip undefined...
 			if(e === undefined 
 					// if the element is in its place alredy do nothing...
-					|| (e == order[i] && e == target[i])){
+					|| (e == order[i] 
+						&& e == target[i])){
 				continue }
 
 			var j = order_idx[e]
@@ -413,7 +429,8 @@ var DataPrototype = {
 		var target_idx = new Set(target)
 		rest = rest
 			//.filter(function(e){ return e in target_idx })
-			.filter(function(e){ return target_idx.has(e) })
+			.filter(function(e){ 
+				return target_idx.has(e) })
 
 		if(rest.length > 0){
 			target.length = Math.max(order.length, target.length)
@@ -441,12 +458,14 @@ var DataPrototype = {
 	// NOTE: only the first occurrence is kept...
 	// NOTE: this is slow-ish...
 	removeDuplicates: function(lst, skip_undefined){
-		skip_undefined = skip_undefined == null ? 
-			true 
-			: skip_undefined
+		skip_undefined = 
+			skip_undefined == null ? 
+				true 
+				: skip_undefined
 		var lst_idx = lst.toKeys()
 		for(var i=0; i < lst.length; i++){
-			if(skip_undefined && lst[i] == null){
+			if(skip_undefined 
+					&& lst[i] == null){
 				continue }
 			if(lst_idx[lst[i]] != i){
 				lst.splice(i, 1)
@@ -490,19 +509,20 @@ var DataPrototype = {
 	// 		might a good idea just to drop it...
 	eachImageList: function(func){
 		var that = this
-		this.__gid_lists.forEach(function(k){
-			var lst = that[k]
-			if(lst == null){
-				return }
-			var keys = (that[k + '_order'] 
-					|| that[k.replace(/s$/, '') + '_order'] 
-					|| [])
-				.concat(Object.keys(lst))
-				.unique()
-			//Object.keys(lst)
-			keys
-				.forEach(function(l){
-					func.call(that, lst[l], l, k) }) })
+		this.__gid_lists
+			.forEach(function(k){
+				var lst = that[k]
+				if(lst == null){
+					return }
+				var keys = (that[k + '_order'] 
+						|| that[k.replace(/s$/, '') + '_order'] 
+						|| [])
+					.concat(Object.keys(lst))
+					.unique()
+				//Object.keys(lst)
+				keys
+					.forEach(function(l){
+						func.call(that, lst[l], l, k) }) })
 		return this },
 
 	// Generate a GID...
@@ -517,7 +537,9 @@ var DataPrototype = {
 		// 		consecutive calls...
 		var t = module.__gid_ticker = (module.__gid_ticker || 0) + 1
 
-		var p = typeof(location) != 'undefined' ? location.hostname : ''
+		var p = typeof(location) != 'undefined' ? 
+			location.hostname 
+			: ''
 
 		// if we are on node.js add process pid
 		if(typeof(process) != 'undefined'){
@@ -525,10 +547,13 @@ var DataPrototype = {
 
 		// return string as-is...
 		if(nohash){
-			return str || p+'-'+t+'-'+Date.now() }
+			return str 
+				|| p+'-'+t+'-'+Date.now() }
 
 		// make a hash...
-		var gid = hash(str || (p+'-'+t+'-'+Date.now()))
+		var gid = hash(
+			str 
+				|| (p+'-'+t+'-'+Date.now()))
 
 		// for explicit string return the hash as-is...
 		if(str != null){
@@ -595,7 +620,8 @@ var DataPrototype = {
 		clear_empty = clear_empty == null ? true : false 
 
 		// clear all data...
-		if(gids == '*' || gids == 'all'){
+		if(gids == '*' 
+				|| gids == 'all'){
 			this._reset()
 
 		// clear empty ribbons only...
@@ -604,7 +630,8 @@ var DataPrototype = {
 			this.updateImagePositions('remove')
 
 		// clear duplicates...
-		} else if(gids == 'dup' || gids == 'duplicates'){
+		} else if(gids == 'dup' 
+				|| gids == 'duplicates'){
 			// horizontal...
 			this.removeDuplicates(this.order)
 			this.updateImagePositions()
@@ -635,7 +662,9 @@ var DataPrototype = {
 		// clear gids...
 		} else {
 			var ribbons = []
-			gids = gids instanceof Array ? gids : [gids]
+			gids = gids instanceof Array ? 
+				gids 
+				: [gids]
 			// split ribbon and image gids...
 			gids = gids
 				.filter(function(gid){
@@ -669,12 +698,14 @@ var DataPrototype = {
 
 			// remove images...
 			var order = this.order
-				.filter(function(g){ return gids.indexOf(g) < 0 })
+				.filter(function(g){ 
+					return gids.indexOf(g) < 0 })
 
 			// handle current image...
 			if(gids.indexOf(this.current) >= 0){
 				var r = this.getImages('current')
-					.filter(function(g){ return order.indexOf(g) >= 0 })
+					.filter(function(g){ 
+						return order.indexOf(g) >= 0 })
 
 				// attempt to first get next/prev within the current ribbon...
 				r = r.length > 0 ? r : order
@@ -717,7 +748,10 @@ var DataPrototype = {
 			this.ribbon_order.splice(this.ribbon_order.indexOf(from), 1, to)
 
 			// base ribbon...
-			this.__base = this.__base == from ? to : this.__base
+			this.__base = 
+				this.__base == from ? 
+					to 
+					: this.__base
 
 		} else {
 			from = this.getImage(from)
@@ -726,19 +760,18 @@ var DataPrototype = {
 			var t = this.getImage(to)
 
 			if(t != -1 && t != null){
-				return
-			}
+				return }
 
 			// current...
 			if(from == this.current){
-				this.current = to
-			}
+				this.current = to }
 			// order...
 			this.order[i] = to
 			// image lists...
-			this.eachImageList(function(list){
-				list[i] != null
-					&& (list[i] = to) })
+			this.eachImageList(
+				function(list){
+					list[i] != null
+						&& (list[i] = to) })
 			// XXX EXPERIMENTAL: order_index
 			delete this.order_index[from]
 			this.order_index[to] = i }
@@ -867,10 +900,14 @@ var DataPrototype = {
 	// XXX doc needs revision....
 	getImage: function(target, mode, list){
 		// empty data...
-		if(this.order == null || (this.order && this.order.length == 0)){
+		if(this.order == null 
+				|| (this.order 
+					&& this.order.length == 0)){
 			return null }
 		// no args...
-		if(target == null && mode == null && list == null){
+		if(target == null 
+				&& mode == null 
+				&& list == null){
 			return this.current }
 
 		target = target == 'current' ?
@@ -887,13 +924,19 @@ var DataPrototype = {
 		// first/last special case...
 		// XXX need to get first loaded...
 		if(target == 'first'){
-			mode = mode == 'before' || mode == 'after' ? null : mode
+			mode = mode == 'before' 
+					|| mode == 'after' ? 
+				null 
+				: mode
 			list = this.ribbons[this.getRibbon(mode)]
 			for(var res in list){
 				return list[res] }
 			return null }
 		if(target == 'last'){
-			mode = mode == 'before' || mode == 'after' ? null : mode
+			mode = mode == 'before' 
+					|| mode == 'after' ? 
+				null 
+				: mode
 			list = this.ribbons[this.getRibbon(mode)]
 			for(var i=list.length; i >= 0; i--){
 				if(list[i] != null){
@@ -901,7 +944,8 @@ var DataPrototype = {
 			return null }
 
 		// normalize target...
-		if(target in this.ribbons || target instanceof Array){
+		if(target in this.ribbons 
+				|| target instanceof Array){
 			list = target
 			target = this.current
 
@@ -910,10 +954,13 @@ var DataPrototype = {
 			mode = target
 			target = this.current }
 
-		var offset = list == 'before' ? -1
-			: list == 'after' ? 1 
+		var offset = list == 'before' ? 
+				-1
+			: list == 'after' ? 
+				1 
 			: 0
-		if(list == 'before' || list == 'after'){
+		if(list == 'before' 
+				|| list == 'after'){
 			list = null }
 
 		// normalize mode...
@@ -925,11 +972,14 @@ var DataPrototype = {
 		// relative mode and offset...
 		if(typeof(mode) == typeof(123)){
 			offset += mode
-			mode = offset < 0 ? 'before'
-				: offset > 0 ? 'after'
+			mode = offset < 0 ? 
+					'before'
+				: offset > 0 ? 
+					'after'
 				: mode
 			offset = Math.abs(offset)
-		} else if(mode == 'global' || mode == 'loaded'){
+		} else if(mode == 'global' 
+				|| mode == 'loaded'){
 			list = mode
 			mode = 'before'
 		} else if(mode == 'next'){
@@ -941,7 +991,8 @@ var DataPrototype = {
 			// NOTE: this will set the default mode to 'before' but only
 			// 		when we are looking withing a specific set of images
 			// 		...otherwise it will be left as is, i.e. strict mode.
-			mode = (mode == null && list != null) ?
+			mode = (mode == null 
+					&& list != null) ?
 				'before' 
 				: mode }
 
@@ -963,7 +1014,8 @@ var DataPrototype = {
 			: this.ribbons[this.getRibbon(list)]
 
 		// special case: nothing to chose from...
-		if(list == null || list.length == 0){
+		if(list == null 
+				|| list.length == 0){
 			return null }
 
 		// order -> gid special case...
@@ -984,16 +1036,23 @@ var DataPrototype = {
 				return undefined } }
 
 		// normalize i...
-		i = i >= 0 ? i : list.length+i
+		i = i >= 0 ? 
+			i 
+			: list.length+i
 
 		var res = list[i]
 		// we have a direct hit...
-		if(res != null && offset == 0){
+		if(res != null 
+				&& offset == 0){
 			return res }
 
 		// prepare for the search...
-		var step = (mode == 'before' || mode == 'prev') ? -1
-			: (mode == 'after' || mode == 'next') ? 1
+		var step = (mode == 'before' 
+					|| mode == 'prev') ? 
+				-1
+			: (mode == 'after' 
+					|| mode == 'next') ? 
+				1
 			: null
 
 		// strict -- no hit means there is no point in searching...
@@ -1010,7 +1069,8 @@ var DataPrototype = {
 		for(; i >= 0 && i < this.order.length; i+=step){
 			var cur = list[i]
 			// skip undefined or unloaded images...
-			if(cur == null || this.getRibbon(cur) == null){
+			if(cur == null 
+					|| this.getRibbon(cur) == null){
 				continue }
 			offset -= 1
 			if(offset <= 0){
@@ -1035,17 +1095,25 @@ var DataPrototype = {
 	// 		appropriate before/after image in that ribbon and get it's 
 	// 		order.
 	getImageOrder: function(context, target, mode, list){
-		if(context == 'loaded' || context == 'global'){
-			return this.getImages('loaded').lastIndexOf(this.getImage(target, mode, list))
+		if(context == 'loaded' 
+				|| context == 'global'){
+			return this
+				.getImages('loaded')
+				.lastIndexOf(
+					this.getImage(target, mode, list))
 
 		} else if(context == 'ribbon'){
 			var gid = this.getImage(target, mode, list)
-			return this.getImages(gid).lastIndexOf(gid)
+			return this
+				.getImages(gid)
+				.lastIndexOf(gid)
 
 		} else if(context == 'all'){
-			return this.order.lastIndexOf(this.getImage(target, mode, list)) } 
+			return this.order.lastIndexOf(
+				this.getImage(target, mode, list)) } 
 
-		return this.order.lastIndexOf(this.getImage(context, target, mode)) },	
+		return this.order.lastIndexOf(
+			this.getImage(context, target, mode)) },	
 
 	// Get a list of image gids...
 	//
@@ -1123,8 +1191,13 @@ var DataPrototype = {
 	// 		possible and restricting it to as small a subset as possible
 	getImages: function(target, count, mode){
 		var that = this
-		target = (target == null && count == null) ? 'loaded' : target
-		mode = mode == null ? 'around' : mode
+		target = (target == null 
+				&& count == null) ? 
+			'loaded' 
+			: target
+		mode = mode == null ? 
+			'around' 
+			: mode
 		var list
 
 		// normalize target and build the source list...
@@ -1136,12 +1209,12 @@ var DataPrototype = {
 			: target
 
 		// get all gids...
-		if(target === 'all'){
+		if(target == 'all'){
 			list = this.order
 			target = null
 
 		// get loaded only gids...
-		} else if(target === 'loaded'){
+		} else if(target == 'loaded'){
 			list = this
 				.mergeSparseImages(...Object.values(this.ribbons))
 				.compact()
@@ -1151,7 +1224,8 @@ var DataPrototype = {
 		} else if(target instanceof Array){
 			var loaded = new Set(count == 'current' ? 
 						this.getImages('current')
-					: count == 'all' || count == 'global' ? 
+					: (count == 'all' 
+							|| count == 'global') ? 
 						this.getImages('all')
 					: count in this.ribbons ? 
 						this.ribbons[count].compact()
@@ -1168,7 +1242,8 @@ var DataPrototype = {
 
 					// in case we are not dealing with a gid...
 					// NOTE: this is a less likely path so it is secondary...
-					e = count == 'all' || count == 'global' ?
+					e = count == 'all' 
+							|| count == 'global' ?
 						that.getImage(e, 'global')
 						: that.getImage(e)
 
@@ -1197,7 +1272,8 @@ var DataPrototype = {
 			|| this.getImage(target, 'after')
 
 		// prepare to slice the list...
-		if(mode == 'around' || mode == 'total'){
+		if(mode == 'around' 
+				|| mode == 'total'){
 			var pre = Math.floor(count/2)
 			var post = Math.ceil(count/2) - 1
 
@@ -1231,7 +1307,9 @@ var DataPrototype = {
 
 		// post...
 		// NOTE: this will also pad the tail if needed if mode is 'total'
-		post = mode == 'total' ? post + pre : post
+		post = mode == 'total' ? 
+			post + pre 
+			: post
 		for(var n = i+1; n < list.length && post > 0; n++){
 			n in list
 				&& res.push(list[n])
@@ -1240,7 +1318,8 @@ var DataPrototype = {
 		// pad to total...
 		// NOTE: we only need to pad the head here as the tail is padded
 		// 		in the post section...
-		if(mode == 'total' && post > 0){
+		if(mode == 'total' 
+				&& post > 0){
 			var pad = count - res.length
 			//var i = list.indexOf(res[0])
 			//var i = list.index(res[0])
@@ -1283,8 +1362,11 @@ var DataPrototype = {
 	getImagePositions: function(gids){
 		gids = arguments.length > 1 ? 
 			[...arguments] 
-			: (gids || this.current)
-		gids = (gids instanceof Array ? gids.slice() : [gids])
+			: (gids 
+				|| this.current)
+		gids = gids instanceof Array ? 
+			gids.slice() 
+			: [gids]
 		// sort ribbon gids to .ribbon_order
 		gids = gids
 			.concat(this.ribbon_order
@@ -1367,16 +1449,29 @@ var DataPrototype = {
 		} else if(target == 'last'){
 			return this.ribbon_order.slice(-1)[0] }
 
-		target = target == 'next' || target == 'below' ? 'after' : target
-		target = target == 'prev' || target == 'above' ? 'before' : target
+		target = target == 'next' 
+				|| target == 'below' ? 
+			'after' 
+			: target
+		target = target == 'prev' 
+				|| target == 'above' ? 
+			'before' 
+			: target
 
-		if(target == 'before' || target == 'after'){
+		if(target == 'before' 
+				|| target == 'after'){
 			offset = target
 			target = 'current' }
 
-		offset = offset == null ? 0 : offset
-		offset = offset == 'before' ? -1 : offset
-		offset = offset == 'after' ? 1 : offset
+		offset = offset == null ? 
+			0 
+			: offset
+		offset = offset == 'before' ? 
+			-1 
+			: offset
+		offset = offset == 'after' ? 
+			1 
+			: offset
 
 		// special keywords...
 		if(target == 'base'){
@@ -1400,12 +1495,13 @@ var DataPrototype = {
 		} else {
 			// get the loaded group gid...
 			var x = this.getLoadedInGroup(target)
-			target = x != null ? x : target
+			target = x != null ? 
+				x 
+				: target
 
 			var i = this.order_index[target]
 			if(i == -1){
-				return null
-			}
+				return null }
 			var k
 			for(k in ribbons){
 				if(ribbons[k][i] != null){
@@ -1414,12 +1510,15 @@ var DataPrototype = {
 
 		if(o != null){
 			// negative indexes are relative to list tail...
-			o = o < 0 ? o + this.ribbon_order.length : o
+			o = o < 0 ? 
+				o + this.ribbon_order.length 
+				: o
 
 			o += offset
 
 
-			if(o < 0 || o > this.ribbon_order.length){
+			if(o < 0 
+					|| o > this.ribbon_order.length){
 				// ERROR: offset out of bounds...
 				return null }
 			return this.ribbon_order[o] }
@@ -1428,7 +1527,8 @@ var DataPrototype = {
 		return null },
 	// same as .getRibbon(..) but returns ribbon order...
 	getRibbonOrder: function(target, offset){
-		return this.ribbon_order.indexOf(this.getRibbon(target, offset)) },
+		return this.ribbon_order.indexOf(
+			this.getRibbon(target, offset)) },
 
 
 
@@ -1441,12 +1541,13 @@ var DataPrototype = {
 	focusImage: function(target, mode, list){
 		var current = this.getImage(target, mode, list)
 		// in case no args are given other than target...
-		if(target && current == null && mode == null && list == null){
-			current = this.getImage(target, 'after')
-		}
+		if(target 
+				&& current == null 
+				&& mode == null 
+				&& list == null){
+			current = this.getImage(target, 'after') }
 		if(this.order_index[current] >= 0){
-			this.__current = current
-		}
+			this.__current = current }
 		return this },	
 
 	// Focus a ribbon -- focus an image in that ribbon
@@ -1457,20 +1558,23 @@ var DataPrototype = {
 		var ribbon = this.getRibbon(target)
 
 		// nothing to do...
-		if(target == null || ribbon == null){
+		if(target == null 
+				|| ribbon == null){
 			return this }
 
 		var t = this.getRibbonOrder(ribbon)
 
 		// XXX revise this...
-		var direction = t < cur ? 'before' : 'after'
+		var direction = t < cur ? 
+			'before' 
+			: 'after'
 
 		var img = this.getImage(ribbon, direction)
 
 		// first/last image...
 		if(img == null){
-			img = direction == 'before' 
-				? this.getImage('first', ribbon) 
+			img = direction == 'before' ? 
+				this.getImage('first', ribbon) 
 				: this.getImage('last', ribbon) }
 
 		return this.focusImage(img) },
@@ -1479,9 +1583,12 @@ var DataPrototype = {
 	// Shorthand methods...
 	//
 	// XXX should these be here???
-	focusBaseRibbon: function(){ return this.focusImage(this.base) },
+	focusBaseRibbon: function(){ 
+		return this.focusImage(this.base) },
 	focusImageOffset: function(offset){
-		offset = offset == null ? 0 : offset
+		offset = offset == null ? 
+			0 
+			: offset
 
 		var min = -this.getImageOrder('ribbon')
 		var max = this.getImages('current').length-1
@@ -1489,10 +1596,15 @@ var DataPrototype = {
 		offset = Math.max(min, Math.min(max, offset))
 
 		return this.focusImage('current', offset) },
-	nextImage: function(){ return this.focusImageOffset(1) }, // Gen2
-	prevImage: function(){ return this.focusImageOffset(-1) }, // Gen2
-	firstImage: function(){ return this.focusImage('first') }, // Gen2
-	lastImage: function(){ return this.focusImage('last') }, // Gen2
+	// shorthands...
+	nextImage: function(){ 
+		return this.focusImageOffset(1) },
+	prevImage: function(){ 
+		return this.focusImageOffset(-1) },
+	firstImage: function(){ 
+		return this.focusImage('first') },
+	lastImage: function(){ 
+		return this.focusImage('last') },
 	focusRibbonOffset: function(offset){
 		var c = this.getRibbonOrder()
 		var t = c+offset
@@ -1501,8 +1613,11 @@ var DataPrototype = {
 		// NOTE: the modes here are different for directions to balance
 		// 		up/down navigation...
 		return this.focusImage('current', (t < c ? 'after' : 'before'), t) },
-	nextRibbon: function(){ return this.focusRibbonOffset(1) }, // Gen2
-	prevRibbon: function(){ return this.focusRibbonOffset(-1) }, // Gen2
+	// shorthands...
+	nextRibbon: function(){ 
+		return this.focusRibbonOffset(1) },
+	prevRibbon: function(){ 
+		return this.focusRibbonOffset(-1) },
 
 	// Set base ribbon...
 	//
@@ -1520,7 +1635,8 @@ var DataPrototype = {
 		var gid = this.newGID()
 		var i = this.getRibbonOrder(target)
 
-		i = mode == 'below' ? i+1 : i
+		mode == 'below' 
+			&& i++
 
 		this.ribbon_order.splice(i, 0, gid)
 		this.ribbons[gid] = []
@@ -1599,7 +1715,10 @@ var DataPrototype = {
 		if(['keep', 'hide', 'remove'].indexOf(from) >= 0){
 			mode = from
 			from = null }
-		from = from == null || from instanceof Array ? from : [from]
+		from = from == null 
+				|| from instanceof Array ? 
+			from 
+			: [from]
 
 		var r = this.getRibbon('current')
 
@@ -1617,7 +1736,8 @@ var DataPrototype = {
 					: this.makeSparseImages(cur)
 
 			// remove/hide elements...
-			} else if(mode == 'remove' || mode == 'hide'){
+			} else if(mode == 'remove' 
+					|| mode == 'hide'){
 				from.forEach(function(g){
 					delete cur[cur.indexOf(g)] })
 				// if we are removing we'll also need to resort...
@@ -1653,9 +1773,10 @@ var DataPrototype = {
 		var l = order.length
 
 		var that = this
-		this.eachImageList(function(lst){
-			lst.length = l
-			lst.reverse() })
+		this.eachImageList(
+			function(lst){
+				lst.length = l
+				lst.reverse() })
 		return this },
 
 	// Sort images in ribbons via .order...
@@ -1665,7 +1786,6 @@ var DataPrototype = {
 	sortImages: function(cmp){
 		// sort the order...
 		this.order.sort(cmp)
-		
 		return this.updateImagePositions() },
 
 	reverseRibbons: function(){
@@ -1717,10 +1837,12 @@ var DataPrototype = {
 	// 		images contain all of the images of one or more ribbons...
 	placeImage: function(images, ribbon, reference, mode){
 		var that = this
-		mode = mode || 'before'
+		mode = mode 
+			|| 'before'
 
 		// XXX how do we complain and fail here??
-		if(mode != 'before' && mode != 'after'){
+		if(mode != 'before' 
+				&& mode != 'after'){
 			console.error('invalid mode:', mode)
 			return this }
 
@@ -1729,8 +1851,12 @@ var DataPrototype = {
 		// vertical shift -- gather images to the target ribbon...
 		if(ribbon != 'keep'){
 			// handle [ribbon, order] format...
-			var i = ribbon instanceof Array ? ribbon[1] : null
-			ribbon = ribbon instanceof Array ? ribbon[0] : ribbon
+			var i = ribbon instanceof Array ? 
+				ribbon[1] 
+				: null
+			ribbon = ribbon instanceof Array ? 
+				ribbon[0] 
+				: ribbon
 
 			var to = this.getRibbon(ribbon)
 
@@ -1772,7 +1898,9 @@ var DataPrototype = {
 					// NOTE: we are moving left to right, thus the final order
 					// 		of images will stay the same.
 					if(f < ri){
-						var i = mode == 'after' ? l : ri-1
+						var i = mode == 'after' ? 
+							l 
+							: ri-1
 						order.splice(i, 0, order.splice(f, 1)[0])
 
 					// target is right of the reference -- place each new image
@@ -1829,46 +1957,67 @@ var DataPrototype = {
 	//
 	// XXX should we use .placeImage(..) instead???
 	shiftImage: function(from, target, mode){
-		from = from == null || from == 'current' ? this.current : from
+		from = from == null 
+				|| from == 'current' ? 
+			this.current 
+			: from
 		if(from == null){
 			return }
-		from = from instanceof Array ? from : [from]
+		from = from instanceof Array ? 
+			from 
+			: [from]
 
 		// target is an offset...
 		if(mode == 'offset'){
 			if(target > 0){
 				var t = this.getImage(from.slice(-1)[0], target)
 					|| this.getImage('last', from.slice(-1)[0])
-				var direction = from.indexOf(t) >= 0 ? null : 'after'
+				var direction = from.indexOf(t) >= 0 ? 
+					null 
+					: 'after'
 
 			} else {
 				var t = this.getImage(from[0], target) 
 					|| this.getImage('first', from[0])
-				var direction = from.indexOf(t) >= 0 ? null : 'before' }
+				var direction = from.indexOf(t) >= 0 ? 
+					null 
+					: 'before' }
 
 		// target is ribbon index...
 		} else if(typeof(target) == typeof(123)){
 			var t = this.getImage(this.getRibbon(target))
 				// in case of an empty ribbon...
 				|| this.getRibbon(target)
-			var direction = mode == 'before' || mode == 'after' ? mode : 'after'
+			var direction = mode == 'before' 
+					|| mode == 'after' ? 
+				mode 
+				: 'after'
 
 		// target is an image...
 		} else {
 			var t = this.getImage(target)
-			var direction = mode == 'before' || mode == 'after' ? mode : 'after' }
+			var direction = mode == 'before' 
+					|| mode == 'after' ? 
+				mode 
+				: 'after' }
 
 		return this.placeImage(
 			from, 
-			mode == 'horizontal' ? 'keep' : t, 
-			mode == 'vertical' ? 'keep' : t, 
+			mode == 'horizontal' ? 
+				'keep' 
+				: t, 
+			mode == 'vertical' ? 
+				'keep' 
+				: t, 
 			direction) },
 
 	// Shorthand actions...
 	//
 	// NOTE: none of these change .current
-	shiftImageLeft: function(gid){ return this.shiftImage(gid, -1, 'offset') },
-	shiftImageRight: function(gid){ return this.shiftImage(gid, 1, 'offset') },
+	shiftImageLeft: function(gid){ 
+		return this.shiftImage(gid, -1, 'offset') },
+	shiftImageRight: function(gid){ 
+		return this.shiftImage(gid, 1, 'offset') },
 	// NOTE: these will not affect ribbon order.
 	// NOTE: these will create new ribbons when shifting from first/last
 	// 		ribbons respectively.
@@ -1877,8 +2026,11 @@ var DataPrototype = {
 	// NOTE: if base ribbon is removed this will try and reset it to the
 	// 		ribbon above or the top ribbon...
 	shiftImageUp: function(gid){ 
-		gid = gid || this.current
-		var g = gid && gid instanceof Array ? gid[0] : gid
+		gid = gid 
+			|| this.current
+		var g = gid && gid instanceof Array ? 
+			gid[0] 
+			: gid
 		var r = this.getRibbonOrder(g)
 		// check if we need to create a ribbon here...
 		if(r == 0){
@@ -1889,8 +2041,11 @@ var DataPrototype = {
 			return }
 		return res },
 	shiftImageDown: function(gid){ 
-		gid = gid || this.current
-		var g = gid && gid instanceof Array ? gid[0] : gid
+		gid = gid 
+			|| this.current
+		var g = gid && gid instanceof Array ? 
+			gid[0] 
+			: gid
 		var r = this.getRibbonOrder(g)
 		// check if we need to create a ribbon here...
 		r == this.ribbon_order.length-1
@@ -1937,8 +2092,10 @@ var DataPrototype = {
 	// Shorthand actions...
 	//
 	// XXX should these be here??
-	shiftRibbonUp: function(gid){ return this.shiftRibbon(gid, -1, 'offset') },
-	shiftRibbonDown: function(gid){ return this.shiftRibbon(gid, 1, 'offset') },
+	shiftRibbonUp: function(gid){ 
+		return this.shiftRibbon(gid, -1, 'offset') },
+	shiftRibbonDown: function(gid){ 
+		return this.shiftRibbon(gid, 1, 'offset') },
 
 
 	/****************************************************** Groups ***/
@@ -1967,7 +2124,9 @@ var DataPrototype = {
 	// Test if a gid is a group gid...
 	//
 	isGroup: function(gid){
-		gid = gid == null ? this.getImage() : gid
+		gid = gid == null ? 
+			this.getImage() 
+			: gid
 		return this.groups != null ? 
 			gid in this.groups 
 			: false },
@@ -1978,7 +2137,9 @@ var DataPrototype = {
 	// return the group's gid or null if the image is ungrouped.
 	//
 	getGroup: function(gid){
-		gid = gid == null ? this.getImage() : gid
+		gid = gid == null ? 
+			this.getImage() 
+			: gid
 		if(this.isGroup(gid)){
 			return gid }
 		if(this.groups == null){
@@ -2008,7 +2169,9 @@ var DataPrototype = {
 			return null }
 
 		// get the actual image gid...
-		var gids = gid == group ? this.groups[group] : [gid]
+		var gids = gid == group ? 
+			this.groups[group] 
+			: [gid]
 
 		// find either
 		for(var k in this.ribbons){
@@ -2039,21 +2202,32 @@ var DataPrototype = {
 	//
 	// XXX test if generated gid is unique...
 	group: function(gids, group){
-		gids = gids == null ? this.getImage() : gids
-		gids = gids instanceof Array ? gids : [gids]
+		gids = gids == null ? 
+			this.getImage() 
+			: gids
+		gids = gids instanceof Array ? 
+			gids 
+			: [gids]
 		// XXX not safe -- fast enough and one can generate two identical
 		// 		gids...
-		group = group == null ? this.newGID('G' + Date.now()) : group
+		group = group == null ? 
+			this.newGID('G' + Date.now()) 
+			: group
 
-		this.groups = this.groups || {}
+		this.groups = this.groups 
+			|| {}
 
 		// take only images that are not part of a group...
 		if(this.__group_index !== false){
 			var that = this
-			var index = this.__group_index || []
-			Object.keys(this.groups).forEach(function(k){ 
-				that.makeSparseImages(that.groups[k], index) })
-			gids = gids.filter(function(g){ return index.indexOf(g) < 0 })
+			var index = this.__group_index 
+				|| []
+			Object.keys(this.groups)
+				.forEach(function(k){ 
+					that.makeSparseImages(that.groups[k], index) })
+			gids = gids
+				.filter(function(g){ 
+					return index.indexOf(g) < 0 })
 			// update the index...
 			this.__group_index = this.makeSparseImages(gids, index) }
 
@@ -2096,8 +2270,9 @@ var DataPrototype = {
 		// cleanup the index if it exists...
 		if(this.__group_index){
 			var index = this.__group_index
-			this.groups[group].forEach(function(g){
-				delete index[index.indexOf(g)] }) }
+			this.groups[group]
+				.forEach(function(g){
+					delete index[index.indexOf(g)] }) }
 
 		// remove the group...
 		delete this.groups[group]
@@ -2113,10 +2288,13 @@ var DataPrototype = {
 		var that = this
 		groups = groups == null ? 
 				this.getGroup()
-			: groups == 'all' || groups == '*' ? 
+			: groups == 'all' 
+					|| groups == '*' ? 
 				Object.keys(this.groups)
 			: groups
-		groups = groups instanceof Array ? groups : [groups]
+		groups = groups instanceof Array ? 
+			groups 
+			: [groups]
 
 		groups
 			.forEach(function(group){
@@ -2155,11 +2333,15 @@ var DataPrototype = {
 		var that = this
 		groups = groups == null ? 
 				this.getGroup() 
-			: groups == 'all' || groups == '*' ? 
+			: groups == 'all' 
+					|| groups == '*' ? 
 				Object.keys(this.groups)
 			: groups
-		groups = groups instanceof Array ? groups : [groups]
-		safe = safe || false
+		groups = groups instanceof Array ? 
+			groups 
+			: [groups]
+		safe = safe 
+			|| false
 
 		groups
 			.forEach(function(group){
@@ -2279,8 +2461,11 @@ var DataPrototype = {
 	// 		.getImage(..)
 	// NOTE: if no target is given this will assume the current image.
 	split: function(target){
-		target = arguments.length > 1 ? [...arguments]
-			: target == null || target instanceof Array ? target
+		target = arguments.length > 1 ? 
+				[...arguments]
+			: target == null 
+					|| target instanceof Array ? 
+				target
 			: [target]
 
 		var res = []
@@ -2344,11 +2529,15 @@ var DataPrototype = {
 	// XXX do we need to take care of gid conflicts between merged data sets???
 	// 		...now images with matching gids will simply be overwritten.
 	join: function(...args){
-		var align = typeof(args[0]) == typeof('str') || args[0] == null ? 
+		var align = typeof(args[0]) == typeof('str') 
+				|| args[0] == null ? 
 			args.shift() 
 			: 'base'
-		align = align || 'base'
-		args = args[0] instanceof Array ? args[0] : args
+		align = align 
+			|| 'base'
+		args = args[0] instanceof Array ? 
+			args[0] 
+			: args
 
 		var base = this
 
@@ -2453,9 +2642,12 @@ var DataPrototype = {
 	//
 	// XXX test...
 	alignToRibbon: function(ribbon, start, end){
-		ribbon = ribbon == null ? this.base : this.getRibbon(ribbon)
+		ribbon = ribbon == null ? 
+			this.base 
+			: this.getRibbon(ribbon)
 
-		if(start == null || end == null){
+		if(start == null 
+				|| end == null){
 			var r = this.getRibbonOrder(ribbon)
 			// ribbon is top ribbon, nothing to do...
 			if(r <= 0){
@@ -2470,24 +2662,26 @@ var DataPrototype = {
 			return Math[side == 'left' ? 'min' : 'max'].apply(null, 
 				that.ribbon_order
 					.map(function(ribbon, i){ 
-						return i > r-1 
-							?  null
+						return i > r-1 ?
+							null
 							: that.getImageOrder(
-								side == 'left' ? 'first' : 'last', 
+								side == 'left' ? 
+									'first' 
+									: 'last', 
 								ribbon) })
 					// cleanup...
 					.filter(function(i){ 
 						return i != null })) }
 
-		start = start == null 
+		start = start == null ?
 			//? this.getImageOrder('first', above)
-			? _getEdge('left') 
+			_getEdge('left') 
 			: this.getImageOrder(start)
-		end = end == null 
+		end = end == null ?
 			// NOTE: we need to exclude the last image in ribbon from 
 			// 		the next section, this the offset.
 			//? this.getImageOrder('last', above)+1
-			? _getEdge('right')+1
+			_getEdge('right')+1
 			: this.getImageOrder(end)
 
 		// split the data into three sections...
@@ -2495,13 +2689,16 @@ var DataPrototype = {
 
 		// cleanup...
 		// XXX do we actually need this???
-		res.forEach(function(e){ return e.clear('empty') })
+		res.forEach(function(e){ 
+			return e.clear('empty') })
 
 		// set the base ribbon on the middle section...
 		res[1].setBase(0)
 
 		// remove empty sections...
-		res = res.filter(function(e){ return e.length > 0 })
+		res = res
+			.filter(function(e){ 
+				return e.length > 0 })
 
 		// join the resulting data to the base ribbon...
 		// NOTE: if we have only one non-empty section then nothing needs
@@ -2521,7 +2718,8 @@ var DataPrototype = {
 	// NOTE: this will not crop the .order...
 	crop: function(list, flatten){
 		var crop = this.clone()
-		list = list == null || list == '*' ? 
+		list = list == null 
+				|| list == '*' ? 
 			'*' 
 			: crop.makeSparseImages(list)
 
@@ -2532,15 +2730,18 @@ var DataPrototype = {
 			for(var k in crop.ribbons){
 				crop.ribbons[k] = crop.makeSparseImages(
 						crop.ribbons[k]
-							.filter(function(_, i){ return list[i] != null })) }
+							.filter(function(_, i){ 
+								return list[i] != null })) }
 
 		// flatten the crop...
 		} else {
 			list = list == '*' ? 
 				crop.makeSparseImages(
 					crop.ribbon_order
-						.map(function(r){ return crop.ribbons[r] })
-						.reduce(function(a, b){ return a.concat(b) }, []))
+						.map(function(r){ 
+							return crop.ribbons[r] })
+						.reduce(function(a, b){ 
+							return a.concat(b) }, []))
 				: list
 			crop.ribbons = {}
 			crop.ribbon_order = []
@@ -2552,18 +2753,21 @@ var DataPrototype = {
 		// set the current image in the crop...
 		var r = this.getRibbon()
 		// if current ribbon is not empty get the closest image in it...
-		if(r in crop.ribbons && crop.ribbons[r].length > 0){
+		if(r in crop.ribbons 
+				&& crop.ribbons[r].length > 0){
 			// XXX is this the correct way to do this???
 			// 		...should we use direction???
-			var target = crop.getImage(this.current, 'after', this.getRibbon())
-				|| crop.getImage(this.current, 'before', this.getRibbon())
+			var target = 
+				crop.getImage(this.current, 'after', this.getRibbon())
+					|| crop.getImage(this.current, 'before', this.getRibbon())
 
 		// if ribbon got deleted, get the closest loaded image...
 		} else {
 			// XXX is this the correct way to do this???
 			// 		...should we use direction???
-			var target = crop.getImage(this.current, 'after', list)
-				|| crop.getImage(this.current, 'before', list) }
+			var target = 
+				crop.getImage(this.current, 'after', list)
+					|| crop.getImage(this.current, 'before', list) }
 		crop.focusImage(target)
 
 		// XXX ???
@@ -2643,9 +2847,10 @@ var DataPrototype = {
 
 		// get image representations from each ribbon...
 		var that = this
-		var images = this.ribbon_order.map(
-			typeof(mode) == typeof('str') 
-				? function(e){ return that.getImage(mode, e) }
+		var images = this.ribbon_order
+			.map(typeof(mode) == typeof('str') 
+				? function(e){ 
+					return that.getImage(mode, e) }
 				: mode)
 
 		var r = crop.newRibbon()
@@ -2725,7 +2930,9 @@ var DataPrototype = {
 	// XXX should this process defaults for unset values???
 	load: function(data, clean){
 		var that = this
-		data = typeof(data) == typeof('str') ? JSON.parse(data) : data
+		data = typeof(data) == typeof('str') ? 
+			JSON.parse(data) 
+			: data
 		var version = data.version
 		data = formats.updateData(data, DATA_VERSION)
 
@@ -2770,10 +2977,11 @@ var DataPrototype = {
 			ribbons: {},
 		}
 		// compact sets...
-		this.eachImageList(function(lst, k, s){
-			res[s] == null
-				&& (res[s] = {})
-			res[s][k] = lst.compact() })
+		this.eachImageList(
+			function(lst, k, s){
+				res[s] == null
+					&& (res[s] = {})
+				res[s][k] = lst.compact() })
 		return res },
 	
 
@@ -2809,25 +3017,35 @@ var DataWithTagsPrototype = {
 
 	//__tags: null,
 	get tags(){
-		return (this.__tags = this.__tags || new tags.Tags()) },
+		return (this.__tags = 
+			this.__tags 
+				|| new tags.Tags()) },
 	set tags(value){
 		this.__tags = value },
 
 	get untagged(){
 		var v = new Set(this.tags.values())
 		return this.getImages()
-			.filter(function(gid){ return !v.has(gid) }) },
+			.filter(function(gid){ 
+				return !v.has(gid) }) },
 
 	// XXX do we need these???
 	hasTag: function(gid, ...tags){
 		return this.tags.tags(this.getImage(gid), ...tags) },
 	getTags: function(gids){
 		var that = this
-		gids = arguments.length > 1 ? [...arguments] 
-			: gids == null || gids == 'current' ? this.getImage() 
+		gids = arguments.length > 1 ? 
+				[...arguments] 
+			: gids == null 
+					|| gids == 'current' ? 
+				this.getImage() 
 			: gids
-		gids = gids == null ? [] : gids
-		gids = gids instanceof Array ? gids : [gids]
+		gids = gids == null ? 
+			[] 
+			: gids
+		gids = gids instanceof Array ? 
+			gids 
+			: [gids]
 
 		return gids
 			.map(function(gid){
@@ -2839,7 +3057,8 @@ var DataWithTagsPrototype = {
 	// 		or stay optimistic...
 	tag: function(tags, gids){
 		this.tags.tag(tags,
-			gids == null || gids == 'current' ? 
+			gids == null 
+					|| gids == 'current' ? 
 				this.current
 			: gids == 'ribbon' ?
 				this.getImages('current')
@@ -2851,7 +3070,8 @@ var DataWithTagsPrototype = {
 		return this },
 	untag: function(tags, gids){
 		this.tags.untag(tags, 
-			gids == null || gids == 'current' ? 
+			gids == null 
+					|| gids == 'current' ? 
 				this.current
 			: gids == 'ribbon' ?
 				this.getImages('current')
@@ -2864,7 +3084,8 @@ var DataWithTagsPrototype = {
 	toggleTag: function(tag, gids, action){
 		var that = this
 		return this.tags.toggle(tag, 
-				gids == null || gids == 'current' ? 
+				gids == null 
+							|| gids == 'current' ? 
 						this.current
 					: gids == 'ribbon' ?
 						this.getImages('current')
@@ -2930,8 +3151,10 @@ var DataWithTagsPrototype = {
 	// XXX revise how updated is handled... set or list???
 	tagsToImages: function(images, mode, updated){
 		throw Error('.tagsToImages(..): Not implemented.')
-		mode = mode || 'merge'
-		updated = updated || []
+		mode = mode 
+			|| 'merge'
+		updated = updated 
+			|| []
 
 		// mark gid as updated...
 		var _updated = function(gid){
@@ -2970,12 +3193,13 @@ var DataWithTagsPrototype = {
 						.concat(Object.keys(buffer))
 						.unique()){
 					// no tags / remove...
-					if(buffer[gid] == null || buffer[gid].tags.length == 0){
+					if(buffer[gid] == null 
+							|| buffer[gid].tags.length == 0){
 						// the image exists and has tags...
-						if(images[gid] != null && images[gid].tags != null){
+						if(images[gid] != null 
+								&& images[gid].tags != null){
 							delete images[gid].tags
-							_updated(gid)
-						}
+							_updated(gid) }
 
 					// tags / set...
 					} else {
@@ -2986,10 +3210,7 @@ var DataWithTagsPrototype = {
 
 						// check if we actually changed anything...
 						if(!before.setCmp(img.tags)){
-							_updated(gid)
-						}
-					}
-				}
+							_updated(gid) } } }
 
 			// merge mode...
 			} else {
@@ -3004,10 +3225,7 @@ var DataWithTagsPrototype = {
 					// 		thus the length can only increase if changes are
 					// 		made...
 					if(l != img.tags.length){
-						_updated(gid)
-					}
-				}
-			}
+						_updated(gid) } } }
 
 		// unbuffered (brain-dead) mode...
 		// 	+ no extra memory
@@ -3015,18 +3233,14 @@ var DataWithTagsPrototype = {
 		} else {
 			var tagset = this.tags
 			for(var tag in tagset){
-				tagset[tag].forEach(function(gid){
-					var img = _get(images, gid)
+				tagset[tag]
+					.forEach(function(gid){
+						var img = _get(images, gid)
 
-					if(img.tags.indexOf(tag) < 0){
-						img.tags.push(tag)
-						_updated(gid)
-					}
-				})
-			}
-		}
-		return this
-	},
+						if(img.tags.indexOf(tag) < 0){
+							img.tags.push(tag)
+							_updated(gid) } }) } }
+		return this },
 
 
 	// Extended methods...
@@ -3034,12 +3248,14 @@ var DataWithTagsPrototype = {
 	// special case: make the tags mutable...
 	crop: function(){
 		//var crop = DataWithTagsPrototype.__proto__.crop.apply(this, arguments)
-		var crop = object.parentCall(DataWithTags.prototype.crop, this, ...arguments)
+		var crop = object.parentCall(
+			DataWithTags.prototype.crop, this, ...arguments)
 		crop.tags = this.tags
 		return crop },
 	join: function(...others){
 		//var res = DataWithTagsPrototype.__proto__.join.apply(this, arguments)
-		var res = object.parentCall(DataWithTags.prototype.join, this, ...arguments)
+		var res = object.parentCall(
+			DataWithTags.prototype.join, this, ...arguments)
 		// clear out the align mode...
 		!(others[0] instanceof Data)
 			&& others.shift()
@@ -3051,27 +3267,32 @@ var DataWithTagsPrototype = {
 	// XXX test...
 	split: function(){
 		//var res = DataWithTagsPrototype.__proto__.split.apply(this, arguments)
-		var res = object.parentCall(DataWithTags.prototype.split, this, ...arguments)
+		var res = object.parentCall(
+			DataWithTags.prototype.split, this, ...arguments)
 		res.tags = res.tags.keep(res.order)
 		return res },
 	clone: function(){
 		//var res = DataWithTagsPrototype.__proto__.clone.apply(this, arguments)
-		var res = object.parentCall(DataWithTags.prototype.clone, this, ...arguments)
+		var res = object.parentCall(
+			DataWithTags.prototype.clone, this, ...arguments)
 		res.tags = this.tags.clone()
 		return res },
 	_reset: function(){
 		//var res = DataWithTagsPrototype.__proto__._reset.apply(this, arguments)
-		var res = object.parentCall(DataWithTags.prototype._reset, this, ...arguments)
+		var res = object.parentCall(
+			DataWithTags.prototype._reset, this, ...arguments)
 		delete this.__tags
 		return res },
 	json: function(){
 		//var json = DataWithTagsPrototype.__proto__.json.apply(this, arguments)
-		var json = object.parentCall(DataWithTags.prototype.json, this, ...arguments)
+		var json = object.parentCall(
+			DataWithTags.prototype.json, this, ...arguments)
 		json.tags = this.tags.json()
 		return json },
 	load: function(data, clean){
 		//var res = DataWithTagsPrototype.__proto__.load.apply(this, arguments)
-		var res = object.parentCall(DataWithTags.prototype.load, this, ...arguments)
+		var res = object.parentCall(
+			DataWithTags.prototype.load, this, ...arguments)
 		data.tags
 			&& res.tags.load(data.tags)
 		return res },
