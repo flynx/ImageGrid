@@ -245,6 +245,13 @@ var ImageMarkActions = actions.Actions({
 		return this.data == null ?
 			[]
 			: this.data.sortViaOrder(this.data.tagQuery('marked')) },
+	// XXX REVISE...
+	set marked(gids){
+		gids = gids instanceof Array ?
+			gids
+			: [gids]
+		this.untag('marked', this.data.getImages('loaded'))
+		this.tag('marked', gids) },
 
 	markedInRibbon: ['- Mark|Ribbon/',
 		function(ribbon){
@@ -522,6 +529,13 @@ var ImageBookmarkActions = actions.Actions({
 		return this.data == null ?
 			[]
 			: this.data.sortViaOrder(this.data.tagQuery('bookmark')) },
+	// XXX REVISE...
+	set bookmarked(gids){
+		gids = gids instanceof Array ?
+			gids
+			: [gids]
+		this.untag('bookmarked', this.data.getImages('loaded'))
+		this.tag('bookmarked', gids) },
 
 	prevBookmarked: ['Bookmark|Navigate/Previous bookmarked image',
 		{mode: function(target){ 

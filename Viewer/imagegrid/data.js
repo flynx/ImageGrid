@@ -1130,7 +1130,10 @@ var DataPrototype = {
 		// normalize target and build the source list...
 
 		// 'current' ribbon...
-		target = target === 'current' ? this.current : target
+		target = (target == 'current' 
+				|| target == 'ribbon') ? 
+			this.current 
+			: target
 
 		// get all gids...
 		if(target === 'all'){
