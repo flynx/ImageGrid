@@ -127,7 +127,8 @@ module.DATA_VERSION = '3.1'
 // decide to use a hashing function...
 var hash = typeof(sha1) != 'undefined' ?
 	sha1.hash.bind(sha1)
-	: function(g){ return g }
+	: function(g){ 
+		return g }
 
 
 /*********************************************************************/
@@ -1203,7 +1204,9 @@ var DataPrototype = {
 		// normalize target and build the source list...
 
 		// 'current' ribbon...
-		target = (target == 'current' 
+		// NOTE: '===' here is by design i.e. 'current' means the current 
+		// 		ribbon while ['current'] is a list with current image...
+		target = (target === 'current' 
 				|| target == 'ribbon') ? 
 			this.current 
 			: target

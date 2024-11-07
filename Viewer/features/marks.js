@@ -73,13 +73,22 @@ function makeTagTogglerAction(tag){
 	// the action...
 	var action = function(target, action){
 		// gid list attr...
-		target = target in this ?
-			this[target]
-			: target
+		if(target in this){
+			target = this[target]
+			target = target instanceof Array ?
+				target
+				: [target] }
 		// reverse gid list attr...
 		if(typeof(target) == typeof('str') 
 				&& target[0] == '!'){
-			var skip = new Set(this[target.slice(1)])
+			target = target.slice(1)
+			target = target in this ?
+				this[target]
+				: target
+			target = target instanceof Array ?
+				target
+				: [target]
+			var skip = new Set(target)
 			target = this.data.order
 				.filter(function(gid){
 					return !skip.has(gid) }) }
@@ -384,8 +393,7 @@ var ImageMarkEditActions = actions.Actions({
 				i++ }
 
 			// do the marking...
-			return this.toggleMark(block, state ? 'off' : 'on')
-		}],
+			return this.toggleMark(block, state ? 'off' : 'on') }],
 	toggleMarkRibbon: ['Mark/$Invert ribbon marks', 
 		'toggleMark: "ribbon" ...' ],
 	toggleMarkLoaded: ['Mark/Invert marks', 
