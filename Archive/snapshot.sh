@@ -23,6 +23,7 @@ fi
 
 
 # create ./media...
+# XXX check if not a directory...
 if ! [ -e ./media ] ; then
 	btrfs subvolume create ./media
 	# XXX build tree -- ImageGrid
