@@ -1,6 +1,9 @@
 #!/usr/bin/bash
 
 # XXX need:
+# 	- protocol (command) to create archive root
+# 	- protocol to create snapshots
+# 		- sync-flash.sh ???
 # 	- protocol to restore stuff -- simply copy???
 # 	- protocol to fully delete something -- i.e. delete snapshots???
 # 	- a way to list deleted files
