@@ -19,6 +19,9 @@ if ! btrfs filesystem usage . > /dev/null ; then
 fi
 
 
+#SNAPSHOT_COUNT=
+
+
 # create ./media...
 if ! [ -e ./media ] ; then
 	btrfs subvolume create ./media
