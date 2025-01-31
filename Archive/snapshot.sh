@@ -1,5 +1,7 @@
 #!/usr/bin/bash
 
+# XXX this should run in script dir (not cwd)...
+
 # XXX need:
 # 	- protocol (command) to create archive root
 # 	- protocol to create snapshots
@@ -30,13 +32,12 @@ if ! [ -e ./media ] ; then
 
 # convert ./media to a subvolume...
 elif [ "$(stat --format=%i ./media)" == 256 ] ; then
-	btrfs subvolume create ./media_subvolume
-	#mv ./media/{,.}* ./media_subvolume/
+	mkdir bak
+	mv media bak/
+	btrfs subvolume create ./media
 	cp --archive --one-file-system --reflink=always \
-		./media/{,.}* \
-		./media_subvolume/
-	mv ./media{,.bak}
-	mv ./media{_subvolume,}
+		./bak/media/{,.}* \
+		./media/
 fi
 mkdir -p ./.snapshots
 
