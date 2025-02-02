@@ -29,7 +29,7 @@ fi
 
 # check if on btrfs filesystem...
 # XXX also check if btrfs command is available...
-if ! btrfs filesystem usage . > /dev/null ; then
+if ! btrfs filesystem usage . > /dev/null 2>&1 ; then
 	exit
 fi
 
@@ -49,7 +49,7 @@ if ! [ -e "$SUBVOLUME_DIR" ] ; then
 	# XXX build tree -- ImageGrid
 
 # convert ./media to a subvolume...
-elif [ "$(stat --format=%i "$SUBVOLUME_DIR")" == 256 ] ; then
+elif ! [ "$(stat --format=%i "$SUBVOLUME_DIR")" == 256 ] ; then
 	mkdir bak
 	mv "$SUBVOLUME_DIR" bak/
 	btrfs subvolume create "$SUBVOLUME_DIR"
