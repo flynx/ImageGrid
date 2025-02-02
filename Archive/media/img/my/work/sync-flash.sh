@@ -21,11 +21,13 @@ COPYFLAGS=$RSYNCFLAGS
 # XXX need to test if this exists...
 VERIFY=jdupes
 VERIFYFLAGS="-r -u -I"
-DO_VERIFY=1
+DO_VERIFY=
 
 
 COMPRESS=./compress-archive.sh
 DO_COMPRESS=1
+
+SNAPSHOT=../../../../snapshot.sh 
 
 
 # Config file to contain all the default settings...
@@ -351,6 +353,11 @@ if [[ $DO_COMPRESS ]] ; then
 	${COMPRESS} "$BASE_DIR"
 	echo "Compressing archive: done."
 fi
+
+##if ! [ -z "$SNAPSHOT" ] \
+##		&& [ -e "$SNAPSHOT" ] ; then
+##	"$SNAPSHOT"
+##fi
 
 # XXX add report...
 # XXX

@@ -18,6 +18,11 @@ if ! btrfs filesystem usage . > /dev/null ; then
 	exit
 fi
 
+createTree(){
+	mkdir -p ./media/img/my/work/
+	# XXX copy scritps...
+}
+
 
 #SNAPSHOT_COUNT=
 
