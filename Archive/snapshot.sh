@@ -19,6 +19,7 @@
 
 SNAPSHOT_DIR=.snapshots
 SUBVOLUME_DIR=media
+SNAPSHOT_COUNT=5
 
 
 # run in script dir (not cwd)...
@@ -33,13 +34,6 @@ if ! btrfs filesystem usage . > /dev/null 2>&1 ; then
 	exit
 fi
 
-createTree(){
-	mkdir -p ./media/img/my/work/
-	# XXX copy scritps...
-}
-
-
-#SNAPSHOT_COUNT=
 
 
 # create ./media...
@@ -63,12 +57,30 @@ mkdir -p "$SNAPSHOT_DIR"
 # XXX should this be more human readable???
 # 	...a date + number maybe???
 SNAPSHOT=$(( 
-	$( ls "$SNAPSHOT_DIR" \
+	$( ls "$SNAPSHOT_DIR/" \
 		| sort -n \
 		| tail -n 1 ) \
 	+ 1 ))
 
-btrfs subvolume snapshot -r "$SUBVOLUME_DIR" "${SNAPSHOT_DIR}/${SNAPSHOT}"
+#btrfs subvolume snapshot -r "$SUBVOLUME_DIR" "${SNAPSHOT_DIR}/${SNAPSHOT}"
+btrfs subvolume snapshot "$SUBVOLUME_DIR" "${SNAPSHOT_DIR}/${SNAPSHOT}"
+
+
+if [[ $SNAPSHOT_COUNT =~ [0-9]* ]] \
+		&& [ "$SNAPSHOT_COUNT" != 0 ] ; then
+	SNAPSHOTS=($(\
+		ls "$SNAPSHOT_DIR/" \
+			| sort -n ))
+	remove=$(( ${#SNAPSHOTS[@]} - $SNAPSHOT_COUNT - 1 ))
+	while (( $remove >= 0 )) ; do
+		# XXX can we avoid sudo here???
+		# XXX is 'btrfs subvolume delete ...' the same as 'rm -rf ..'
+		#sudo btrfs subvolume delete -c ${SNAPSHOT_DIR}/${SNAPSHOTS[$remove]}
+		echo Removing snapshot: ${SNAPSHOT_DIR}/${SNAPSHOTS[$remove]}
+		rm -rf ${SNAPSHOT_DIR}/${SNAPSHOTS[$remove]}
+		remove=$(( $remove - 1 ))
+	done
+fi
 
 
 
