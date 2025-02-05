@@ -17,6 +17,17 @@
 # 	- a way to maintain a set number of snapshots...
 #
 
+# handle args...
+for arg in "$@" ; do
+	case $arg in
+		-h|--help)
+			# XXX
+			exit
+			;;
+	esac
+done
+
+
 SNAPSHOT_DIR=.snapshots
 SUBVOLUME_DIR=media
 SNAPSHOT_COUNT=5
