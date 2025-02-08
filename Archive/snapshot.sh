@@ -17,11 +17,21 @@
 # 	- a way to maintain a set number of snapshots...
 #
 
+usage(){
+	echo "Usage:"
+	# XXX
+	echo "    $(basename "$0")"
+}
+printHelp(){
+	usage
+	# XXX
+}
+
 # handle args...
 for arg in "$@" ; do
 	case $arg in
 		-h|--help)
-			# XXX
+			printHelp
 			exit
 			;;
 	esac
