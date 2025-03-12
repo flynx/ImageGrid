@@ -91,9 +91,20 @@ fi
 
 
 # do the work...
-find "$BASE_PATH" -name \*.${EXT} -exec ${ARCH} \; \
-	&& echo done.
+#find "$BASE_PATH" -name \*.${EXT} -exec ${ARCH} \; \
+#	&& echo done.
 
+IFS=$'\n'
+ARWs=($(find "$BASE_PATH" -name \*.${EXT}))
+COUNT=${#ARWs[@]}
+DONE=1
+for f in "${ARWs[@]}" ; do
+	echo $f
+	printf 'Doing: %d/%d\r' $DONE $COUNT
+	eval "${ARCH/\{\}/\"$f\"}" > /dev/null
+	DONE=$((DONE + 1))
+done
+echo done.
 
 
 # vim:set nowrap nospell :
