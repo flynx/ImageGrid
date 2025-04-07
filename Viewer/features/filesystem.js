@@ -3507,20 +3507,37 @@ var FileSystemWriterUIActions = actions.Actions({
 
 	exportHistoryPush: ['- File/', 
 		function(settings){
-			settings = settings 
-				|| this.config['export-settings']
+			//settings = settings 
+			//	|| this.config['export-settings']
 			var l = this.config['export-history-length'] || 50
 			var history = 
 				this.config['export-history'] = 
 					this.config['export-history'] || []
 			// add...
-			settings 
-				&& history.push(Object.assign(
+			if(settings){
+				// set .date...
+				settings = Object.assign(
 					JSON.parse(JSON.stringify( settings )), 
-					{
-						date: Date.timeStamp(true),
-					}))
-			// trim the history...
+					{ date: Date.timeStamp(true) })
+				// remove all identical settings from history...
+				var keys_l = Object.keys(settings).length
+				for(var i=history.length-1; i >= 0; i--){
+					var item = history[i]
+					if(keys_l != Object.keys(item).length){
+						continue }
+					var match = true
+					for(var k in settings){
+						// ignore .date...
+						if(k == 'date'){
+							continue }
+						if(item[k] != settings[k]){
+							match = false
+							break } }
+					match
+						&& history.splice(i, 1) }
+				// add...
+				history.push(settings) }
+			// trim the history list to length...
 			history.length > l
 				&& history.splice(0, history.length - l) }],
 	clearExportHistory: ['- File/Clear export history',
