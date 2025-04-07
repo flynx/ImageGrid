@@ -2386,8 +2386,8 @@ var FileSystemWriterActions = actions.Actions({
 	exportImages: ['- File/Export/Export ribbons as directories',
 		core.doc`Export ribbons as directories
 
-			.exportImages(path)
-			.exportImages(settings)
+			.exportImages([images, ]path)
+			.exportImages([images, ]settings)
 
 
 		settings format:
@@ -2416,12 +2416,35 @@ var FileSystemWriterActions = actions.Actions({
 			var that = this
 			var base_dir = this.location.path
 
+			var images
+			if(path == 'current' 
+					|| path instanceof Array){
+				images = path
+				;[path, pattern, level_dir, size, include_virtual, clean_target_dir, logger] 
+					= [...arguments].slice(1) }
+
+			var settings
 			if(path && typeof(path) != typeof('str')){
 				settings = path
 				path = settings.path }
 			settings = settings 
 				|| this.config['export-settings'] 
 				|| {}
+
+			images = (images 
+					?? settings.images) 
+				|| images
+			if(images != null){
+				images = 
+					typeof(images) == 'string' ?
+						(this.data.getImage(images) 
+							?? this.data.getImages(images))
+					: this.data.getImages(images) 
+				images = new Set(
+					images instanceof Array ?
+						images
+						: [images] ) }
+
 			// XXX resolve env variables in path...
 			// 		...also add ImageGrid specifics: $IG_INDEX, ...
 			// XXX
@@ -2489,6 +2512,10 @@ var FileSystemWriterActions = actions.Actions({
 							var total_len = that.data.length
 
 							that.data.ribbons[ribbon].forEach(function(gid){
+								if(images != null
+										&& ! images.has(gid)){
+									return }
+
 								var img = that.images[gid]
 
 								// XXX get/form image name... 
@@ -2554,7 +2581,9 @@ var FileSystemWriterActions = actions.Actions({
 						'/'+level_dir
 						: ''
 
-					return res })) }]
+					return res })) }],
+	exportImage: ['- File/Export/Export current image',
+		'exportImages: "current" ... -- '],
 })
 
 
@@ -2655,6 +2684,22 @@ var FileSystemWriterUIActions = actions.Actions({
 					'clean_target_dir',
 				],
 			},
+			'Current image': {
+				alias: 'image',
+				action: 'exportImage',
+				data: [
+					//'name',
+					'pattern',
+					'size',
+					'export_mode',
+					// XXX do we save virtual images???
+					//'include_virtual',
+					'base_path',
+					'target_dir',
+					//'clean_target_dir',
+				],
+			},
+			//*/
 		},
 
 		//

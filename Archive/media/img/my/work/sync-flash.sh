@@ -288,8 +288,8 @@ while true ; do
 
 	while true ; do
 		echo "Copying files from ${BASE}${DRIVE} (~`du -hs "${BASE}${DRIVE}" | cut -f 1`)..."
-		echo "# $COPY $COPYFLAGS ${BASE}${DRIVE}/* "$DIR""
-		echo "#	2> >(tee "${DIR}"/copy-err.log)"
+		#echo "# $COPY $COPYFLAGS ${BASE}${DRIVE}/* "$DIR""
+		#echo "#	2> >(tee "${DIR}"/copy-err.log)"
 		$COPY $COPYFLAGS ${BASE}${DRIVE}/* "$DIR" \
 			2> >(tee "${DIR}"/copy-err.log)
 		# no errors -> remove log...
@@ -358,7 +358,7 @@ fi
 
 if ! [ -z "$SNAPSHOT" ] \
 		&& [ -e "$SNAPSHOT" ] ; then
-	eval "$SNAPSHOT"
+	"$SNAPSHOT"
 fi
 
 # XXX add report...
