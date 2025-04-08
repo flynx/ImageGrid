@@ -3505,6 +3505,8 @@ var FileSystemWriterUIActions = actions.Actions({
 					|| [])
 				.push(settings) }],
 
+	// XXX the naming for these two is logical but inconsistent -- can
+	// 		we fix this???
 	exportHistoryPush: ['- File/', 
 		function(settings){
 			var l = this.config['export-history-length'] || 50
