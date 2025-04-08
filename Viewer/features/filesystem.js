@@ -3507,8 +3507,6 @@ var FileSystemWriterUIActions = actions.Actions({
 
 	exportHistoryPush: ['- File/', 
 		function(settings){
-			//settings = settings 
-			//	|| this.config['export-settings']
 			var l = this.config['export-history-length'] || 50
 			var history = 
 				this.config['export-history'] = 
