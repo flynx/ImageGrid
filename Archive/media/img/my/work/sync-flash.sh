@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 
+# TODO add option to continue last sync...
+# 	- need to store parsable log
+# 		- settings
+# 		- started/completed operations
+# 	- all operations should be resumable
+
 VERSION=1.0
 
 DATE=`date +%Y%m%d`
