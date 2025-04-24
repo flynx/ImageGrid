@@ -132,6 +132,9 @@ module.GLOBAL_KEYBOARD = {
 
 		Esc: 'toggleSingleImage: "off" -- Exit single image view',
 
+
+		ctrl_shift_S: 'NEXT',
+
 		// ignore sorting and reversing...
 		// XXX not sure about these yet, especially reversing...
 		shift_R: 'DROP',

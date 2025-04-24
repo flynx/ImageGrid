@@ -3563,6 +3563,7 @@ module.FileSystemWriterUI = core.ImageGridFeatures.Feature({
 	handlers: [
 		// update export history...
 		[[
+			'exportImage',
 			'exportIndex',
 			'exportImages',
 		], function(_, settings){
