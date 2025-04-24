@@ -217,7 +217,7 @@ var MetadataReaderActions = actions.Actions({
 	// XXX Q: should this be a linked task???
 	// 		...on one hand yes, on the other, saving after this may 
 	// 		unintentionally save other state from the main object...
-	readAllMetadata: ['File/Read all metadata',
+	readAllMetadata: ['File/$Read all metadata',
 		'readMetadata: "all" ...'],
 
 	// XXX take image Metadata and write it to target...
