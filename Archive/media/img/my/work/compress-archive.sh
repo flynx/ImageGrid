@@ -100,7 +100,7 @@ COUNT=${#ARWs[@]}
 DONE=1
 for f in "${ARWs[@]}" ; do
 	echo $f
-	printf 'Doing: %d/%d\r' $DONE $COUNT
+	printf 'Doing: %d/%d (%d%%)\r' $DONE $COUNT $((100 * $DONE / $COUNT))
 	eval "${ARCH/\{\}/\"$f\"}" > /dev/null
 	DONE=$((DONE + 1))
 done
