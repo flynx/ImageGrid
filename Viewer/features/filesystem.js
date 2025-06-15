@@ -1804,6 +1804,10 @@ var FileSystemWriterActions = actions.Actions({
 		//*/
 	},
 
+	// XXX %c should also be able to handle output collisions, i.e. when 
+	// 		a file already exists...
+	// 		...or should this be a different placeholder handled 
+	// 		externally???
 	// XXX %c should be local to current crop -- now seems to be global...
 	// XXX document data format...
 	// XXX should %T / %I be global or current crop???
