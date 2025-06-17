@@ -1836,15 +1836,20 @@ var FileSystemWriterActions = actions.Actions({
 
 			%(...)m	- add text in braces if image marked
 			%(...)b	- add text in braces if image is bookmark
-
-			%(...)C	- add text in braces if there are name conflicts.
+`/*
+			%(...)C	- add text in braces if there are name conflicts 
+						with other images in current index.
 						NOTE: this will be added to all images.
-			%(...)c	- add text in braces if there are name conflicts 
-						present, but only if the current image has a 
-						conflicting name.
+*/+`			%(...)c	- add text in braces if there are name conflicts 
+						present in current index, but only if the current 
+						image has a conflicting name.
 			%c		- number in set of conflicting names (default: 0).
 						NOTE: this is not stable and can change depending
 							on image order.
+			%(...)f - same as %{...}c but for conflitcs in output directory
+						with pre-existing files.
+			%f 		- same as %c but for conflicts in output directory with
+						pre-existing files.
 
 			%(...)l	- image level path, level depth corresponds to ribbon 
 						number counting from the bottom
@@ -1887,7 +1892,6 @@ var FileSystemWriterActions = actions.Actions({
 			data = Object.assign({}, 
 				this.images[gid] || {}, 
 				data)
-
 
 			name = name 
 				|| pathlib.basename(
@@ -1952,6 +1956,7 @@ var FileSystemWriterActions = actions.Actions({
 				.replace(/%c/, (conflicts && conflicts[gid]) ? 
 					conflicts[gid].indexOf(gid) 
 					: 0)
+				.replace(/%f/, data.number ?? 0)
 
 				// metadata...
 				// XXX
@@ -1969,11 +1974,15 @@ var FileSystemWriterActions = actions.Actions({
 				//.replace(
 				//	/%\(([^)]*)\)k/, tags.indexOf('bookmark') >= 0 ? '$1' : '')
 
-				// conflicts...
-				.replace(
-					/%\(([^)]*)\)C/, conflicts ? '$1' : '')
+				// in conflicts...
+				// XXX do we need the %(..)C here, as it is the same as setting %c?
+				//.replace(
+				//	/%\(([^)]*)\)C/, conflicts ? '$1' : '')
 				.replace(
 					/%\(([^)]*)\)c/, (conflicts || {})[gid] ? '$1' : '')
+				// out conflicts...
+				.replace(
+					/%\(([^)]*)\)f/, data.number > 0 ? '$1' : '')
 
 				// level...
 				.replace(
@@ -1990,6 +1999,17 @@ var FileSystemWriterActions = actions.Actions({
 							+(match.length + offset == str.length ? '' : '/') })
 
 				+ to_ext }],
+	formatImageNameIter: ['- File/Format image filename (iter)',
+		core.doc`Same as .formatImageName(..) but returns an iterator advancing the %f value.`,
+		function*(format, name, data){
+			var n = 0
+			var prev, cur
+			while(true){
+				cur = this.formatImageName(format, name, {__proto__: data, number: n++})
+				if(cur == prev){
+					break }
+				yield cur
+				prev = cur } }],
 	
 
 	// XXX should this be sync???

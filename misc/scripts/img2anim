@@ -6,19 +6,23 @@
 
 
 FPS=${FPS:-8}
-if [ $1 == "-r" ] ; then
-	FPS=$2
+if [ "$1" == "-r" ] ; then
+	FPS="$2"
 	shift 2
 fi
+if ! [ -z "$1" ] ; then
+	PATTERN="$1"
+else
+	PATTERN=${PATTERN:-'*.jpg'}
+fi
 
-PATTERN=${PATTERN:-'*.jpg'}
+LST=($PATTERN)
 
 # generate name...
-LST=($PATTERN)
 A=${LST[0]}
-A=${A%.jpg}
+A=${A%.*}
 B=${LST[$(( ${#LST[@]} - 1 ))]}
-B=${B%.jpg}
+B=${B%.*}
 
 NAME=${NAME:-${A}-${B}}
 
