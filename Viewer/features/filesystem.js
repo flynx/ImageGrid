@@ -2938,9 +2938,9 @@ var FileSystemWriterUIActions = actions.Actions({
 
 			// show example generated names...
 			make(['Filename:', 
-				function(){ return actions.formatImageName(pattern, img) }],
-				{
-					open: function(){ 
+				function(){ 
+					return actions.formatImageName(pattern, img) }],
+				{ open: function(){ 
 						showExaples(settings['preview-name-pattern'] 
 							|| EXPORT_PREVIEW_NAME) }, })
 
