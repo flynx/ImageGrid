@@ -1836,11 +1836,8 @@ var FileSystemWriterActions = actions.Actions({
 
 			%(...)m	- add text in braces if image marked
 			%(...)b	- add text in braces if image is bookmark
-`/*
-			%(...)C	- add text in braces if there are name conflicts 
-						with other images in current index.
-						NOTE: this will be added to all images.
-*/+`			%(...)c	- add text in braces if there are name conflicts 
+
+			%(...)c	- add text in braces if there are name conflicts 
 						present in current index, but only if the current 
 						image has a conflicting name.
 			%c		- number in set of conflicting names (default: 0).
@@ -1975,9 +1972,6 @@ var FileSystemWriterActions = actions.Actions({
 				//	/%\(([^)]*)\)k/, tags.indexOf('bookmark') >= 0 ? '$1' : '')
 
 				// in conflicts...
-				// XXX do we need the %(..)C here, as it is the same as setting %c?
-				//.replace(
-				//	/%\(([^)]*)\)C/, conflicts ? '$1' : '')
 				.replace(
 					/%\(([^)]*)\)c/, (conflicts || {})[gid] ? '$1' : '')
 				// out conflicts...
@@ -2000,9 +1994,14 @@ var FileSystemWriterActions = actions.Actions({
 
 				+ to_ext }],
 	formatImageNameIter: ['- File/Format image filename (iter)',
-		core.doc`Same as .formatImageName(..) but returns an iterator advancing the %f value.`,
+		core.doc`Same as .formatImageName(..) but returns an iterator advancing 
+		the %f value.
+
+			data.number sets the initial count for %f
+
+		`,
 		function*(format, name, data){
-			var n = 0
+			var n = data.number ?? 0
 			var prev, cur
 			while(true){
 				cur = this.formatImageName(format, name, {__proto__: data, number: n++})
