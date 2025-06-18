@@ -1749,12 +1749,14 @@ var FileSystemWriterActions = actions.Actions({
 		// history / presets...
 		'export-paths': [],
 		'export-preview-name-patterns': [
-			'%(fav)l%n%(-bookmarked)b%(-%c)c',
-			'%(fav)l%n%(-bookmarked)b%(-m)m%(-%c)c',
-			'%(fav)l%n%(-%c)c',
-			'%(fav)l%i-%n',
-			'%(fav)l%g-%n',
+			// XXX should we auto-append %C to everything???
+			'%(fav)l%n%(-bookmarked)b%C',
+			'%(fav)l%n%(-bookmarked)b%(-m)m%C',
+			'%(fav)l%n%C',
+			'%(fav)l%i-%n%C',
+			'%(fav)l%g-%n%C',
 		],
+		'export-%C-value': '%(-%c)c%(.%f)f',
 		// XXX add options to indicate:
 		// 		- long side
 		// 		- short side
@@ -1804,6 +1806,7 @@ var FileSystemWriterActions = actions.Actions({
 		//*/
 	},
 
+	
 	// XXX %c should also be able to handle output collisions, i.e. when 
 	// 		a file already exists...
 	// 		...or should this be a different placeholder handled 
@@ -1837,6 +1840,8 @@ var FileSystemWriterActions = actions.Actions({
 			%(...)m	- add text in braces if image marked
 			%(...)b	- add text in braces if image is bookmark
 
+			%C		- shorthand for '%(-%c)c%(.%f)f'.
+						(set in .config['export-%C-value'])
 			%(...)c	- add text in braces if there are name conflicts 
 						present in current index, but only if the current 
 						image has a conflicting name.
@@ -1950,6 +1955,7 @@ var FileSystemWriterActions = actions.Actions({
 				.replace(/%T/, total_len)
 
 				// conflict count...
+				.replace(/%C/, this.config['export-%C-value'] ?? '%(-%c)c%(.%f)f')
 				.replace(/%c/, (conflicts && conflicts[gid]) ? 
 					conflicts[gid].indexOf(gid) 
 					: 0)
@@ -2543,6 +2549,7 @@ var FileSystemWriterActions = actions.Actions({
 
 								// XXX get/form image name... 
 								// XXX might be a good idea to connect this to the info framework...
+								// XXX generate next name if write failed...
 								var name = that.formatImageName(pattern, 
 									gid, 
 									{
@@ -2886,10 +2893,14 @@ var FileSystemWriterUIActions = actions.Actions({
 						actions.formatImageName(pattern, 
 							img, 
 							{tags: ['bookmark']})],
-					['Repeating:', 
+					['Repeating in index:', 
 						actions.formatImageName(pattern, 
 							img, 
 							{conflicts: {[actions.current]: ['', actions.current], }} )],
+					['Repeating in filesystem:', 
+						actions.formatImageName(pattern, 
+							img, 
+							{number: 1})],
 					['All:', 
 						actions.formatImageName(pattern, 
 							img, 
@@ -2900,7 +2911,8 @@ var FileSystemWriterUIActions = actions.Actions({
 								],
 								conflicts: {
 									[img]: ['', img],
-								}
+								},
+								number: 1,
 							} )],
 				], {
 					cls: 'table-view',
