@@ -47,18 +47,25 @@ SNAPSHOT=../../../../snapshot.sh
 
 
 # base mount dir...
-# systems with /mnt
-if [ -d /mnt ] ; then
-	BASE=/mnt
-
-# raw Cygwin
-elif [ -d /cygdrive ] ; then
-	BASE=/cygdrive
-
-# OSX
-elif [ -d /Volumes ] ; then
-	BASE=/Volumes
-fi
+BASES=(
+	/Volumes
+	/cygdrive
+	/run/media/$USER
+	/mnt
+	~/mnt
+)
+i=0
+for d in "${BASES[@]}"; do
+	# normalize...
+	BASES[$i]="${d%/}/"
+	# remove non-existant bases...
+	if ! [ -d "$d" ] ; then
+		unset BASES[$i]
+	elif [ -z $BASE ] ; then
+		BASE=$d
+	fi
+	i=$(( i + 1 ))
+done
 
 
 while true ; do
@@ -249,10 +256,29 @@ while true ; do
 		BASE=
 	fi
 
-	# sanity check...
+	# check path...
+	notfound=()
+	if ! [ -z $BASE ] ; then
+		for d in "${BASES[@]}"; do
+			if [ -e "${d}${DRIVE}" ] ; then
+				BASE=$d
+				break
+			else
+				notfound+=("${d}${DRIVE}")
+			fi
+			i=$(( i + 1 ))
+		done
+	fi
 	if ! [ -e "${BASE}${DRIVE}" ] ; then
+		if [ ${#notfound[@]} == 0 ] ; then
+			notfound=(${BASE}${DRIVE})
+		fi
 		echo
-		echo "ERR: ${BASE}${DRIVE}: does not exist, nothing to copy."
+		echo "ERR: Not found:"
+		for d in "${notfound[@]}" ; do
+			echo "ERR:	${d}" 
+		done
+		echo "ERR: Nothing to copy."
 		echo
 		if [[ $INTERACTIVE || ! $DRIVE ]] ; then
 			continue
