@@ -4,17 +4,50 @@
 # XXX add help...
 # XXX add better options...
 
-
 FPS=${FPS:-8}
-if [ "$1" == "-r" ] ; then
-	FPS="$2"
-	shift 2
-fi
-if ! [ -z "$1" ] ; then
-	PATTERN="$1"
-else
-	PATTERN=${PATTERN:-'*.jpg'}
-fi
+PATTERN=${PATTERN:-'*.@(jpg|jpeg|png)'}
+
+while true ; do
+	case "$1" in
+		-h|--help)
+			echo "Usage: $(basename $0) [OPTIONS] [PATTERN]"
+			echo
+			echo "Options:"
+			echo "	-h --help	- print this message and exit" 
+			echo "	-r --rate FPS	- set framerate (default: $FPS)"
+			echo "	-p --pattern PATTERN"
+			echo "			- image pattern to use (default: '$PATTERN')"
+			echo
+			echo "NOTE: option defaults can bbe overriden by coresponding env variables."
+			echo
+			exit
+			;;
+		-r|--rate)
+			FPS="$2"
+			shift 2
+			continue
+			;;
+		-p|--pattern)
+			PATTERN="%2"
+			shift 2
+			continue
+			;;
+		*)
+			PATTERN="%1"
+			shift
+			exit
+			;;
+	esac
+done
+
+
+##if [ "$1" == "-r" ] ; then
+##	FPS="$2"
+##	shift 2
+##fi
+##if ! [ -z "$1" ] ; then
+##	PATTERN="$1"
+##fi
 
 LST=($PATTERN)
 
