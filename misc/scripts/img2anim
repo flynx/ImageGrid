@@ -1,13 +1,25 @@
 #!/usr/bin/env bash
 
+#shopt -s extglob
+#shopt -s nullglob
+#shopt -s failglob
 
-# XXX add help...
-# XXX add better options...
+
+DEBUG=${DEBUG:-$DRY_RUN}
+function @ () {
+	[ -z $DEBUG ] \
+		|| echo "### $@"
+	[ -z $DRY_RUN ] \
+		&& $@
+}
+
 
 FPS=${FPS:-8}
-PATTERN=${PATTERN:-'*.@(jpg|jpeg|png)'}
+# XXX ffmpeg does not seem to support extglob...
+#PATTERN=${PATTERN:-'*.@(JPG|jpg|JPEG|jpeg|PNG|png)'}
+PATTERN=${PATTERN:-'*.jpeg'}
 
-while true ; do
+while [[ $# != 0 ]] ; do
 	case "$1" in
 		-h|--help)
 			echo "Usage: $(basename $0) [OPTIONS] [PATTERN]"
@@ -28,28 +40,22 @@ while true ; do
 			continue
 			;;
 		-p|--pattern)
-			PATTERN="%2"
+			PATTERN="$2"
 			shift 2
 			continue
 			;;
+
+		# trailing args...
 		*)
-			PATTERN="%1"
+			PATTERN="$1"
 			shift
-			exit
+			continue
 			;;
 	esac
 done
 
-
-##if [ "$1" == "-r" ] ; then
-##	FPS="$2"
-##	shift 2
-##fi
-##if ! [ -z "$1" ] ; then
-##	PATTERN="$1"
-##fi
-
 LST=($PATTERN)
+
 
 # generate name...
 A=${LST[0]}
@@ -66,13 +72,13 @@ PALETTE=${PALETTE:-.palette.png}
 {
 	set -o noglob
 	# gif palette...
-	ffmpeg \
+	@ ffmpeg \
 		-pattern_type glob \
 			-i $PATTERN \
 		-vf palettegen \
 		"$PALETTE"
 	# gif...
-	ffmpeg \
+	@ ffmpeg \
 		-r $FPS \
 		-pattern_type glob \
 			-i $PATTERN \
@@ -80,10 +86,10 @@ PALETTE=${PALETTE:-.palette.png}
 		-filter_complex paletteuse=dither=none \
 		"${NAME}".gif
 	# cleanup...
-	rm "$PALETTE"
+	@ rm "$PALETTE"
 
 	# mkv...
-	ffmpeg \
+	@ ffmpeg \
 		-r $FPS \
 		-pattern_type glob \
 			-i $PATTERN \
