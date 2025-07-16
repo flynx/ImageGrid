@@ -7,10 +7,9 @@
 
 DEBUG=${DEBUG:-$DRY_RUN}
 function @ () {
-	[ -z $DEBUG ] \
-		|| echo "### $@"
+	echo "### $@"
 	[ -z $DRY_RUN ] \
-		&& $@
+		&& "$@"
 }
 
 
