@@ -216,7 +216,7 @@ APP_VERSION := $(strip $(shell \
 		|| echo $(VERSION_FALLBACK)))
 VERSION := $(APP_VERSION)
 DATE := $(strip $(shell date "+%Y%m%d%H%M"))
-COMMIT := $(strip $(shell git rev-parse HEAD))
+COMMIT := $(strip $(shell git rev-parse HEAD 2> /dev/null))
 
 # if node_modules does not exist, set FIRST_RUN to 1...
 FIRST_RUN := $(if $(filter node_modules,$(wildcard *)),,1)
