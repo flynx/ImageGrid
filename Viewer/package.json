@@ -33,7 +33,7 @@
     "fs-extra": "*",
     "glob": "*",
     "wildglob": "*",
-    "electron": "*",
+    "electron": "^37.0.0",
     "sharp": "*",
     "sharp-phash": "^2.0.0",
     "exif-reader": "^1.0.3",
@@ -59,8 +59,8 @@
     "pica": "*"
   },
   "devDependencies": {
-    "@electron/asar": "*",
-    "@electron/rebuild": "*",
+    "asar": "^3.0.1",
+    "electron-rebuild": "*",
     "rcedit": "^3.0.0"
   },
   "-devDependencies": {},
