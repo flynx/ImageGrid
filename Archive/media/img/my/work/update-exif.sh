@@ -1,9 +1,5 @@
 #!/usr/bin/env bash
 
-
-
-
-
 DIR=`pwd`
 
 printhelp(){
@@ -58,6 +54,7 @@ _exifup(){
 		if [[ ${#targets[@]} > 1 ]] ; then
 			# XXX multiple candidates -> select one... 
 			# XXX
+			echo '!!!!!!!!!!!'
 		fi
 		# XXX
 		exiv2 ex "${target[0]}"
@@ -74,39 +71,31 @@ exifup(){
 	local PREVIEW_DIR=$1
 	if [ -e "$PREVIEW_DIR" ] ; then
 		echo doing: `pwd`
-		exiv2 ex *.psd
-		mv *.exv "$PREVIEW_DIR"
+		exiv2 ex *.psd 2> /dev/null
+		mv *.exv "$PREVIEW_DIR" 2> /dev/null
 		cd "$PREVIEW_DIR"
-		exiv2 -k in *.jpg
+		exiv2 -k in *.jpg 2> /dev/null
 		rm -f *.exv
 		cd ..
 	fi
 	true
 }
 
+IFS=$'\n'
 if [[ $1 != "" ]] ; then
 	if ! [ -d "$1" ] ; then
 		echo "\"$1\": is not a directory."
 		exit 1
 	fi
-	if [ -e "$1/DCIM/preview/" ] ; then
-		cd "$1/DCIM/"
-	else
-		cd "$1"
-	fi
+	DIRS=($(find "$1" -name 'preview'))
+else
+	DIRS=($(find . -name 'preview'))
+fi
+for d in "${DIRS[@]}" ; do
+	cd "$d"
+	cd ..
 	exifup ./preview/
 	exifup ./hi-res/
 	cd "$DIR"
-else
-	for d in */DCIM/ ; do
-		if [ -e "$1/DCIM/preview/" ] ; then
-			cd "$d"
-		else
-			cd "$d/../"
-		fi
-		exifup ./preview/
-		exifup ./hi-res/
-		cd "$DIR"
-	done
-fi
+done
 
