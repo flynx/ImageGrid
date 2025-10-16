@@ -27,16 +27,16 @@ jobs:
         sudo apt install -y \
           nodejs npm \
           wget zip 
+        # fixes an issue when running npx sandboxing...
         sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
 
-    - name: Build environment
+    - name: Pre-Build
       run: make clean-all dev
-
-    - name: Check electron version
-      run: npx electron --version
 
     - name: Build
       run: make dist
 
-    - name: Check ./dist/
-      run: ls ./dist/
+    - name: Release
+      run: |
+        gh release create -p -t "TEST" ./dist/*
+
