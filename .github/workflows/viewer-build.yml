@@ -55,13 +55,8 @@ jobs:
       run: |
         ls -la ./build
         echo "---"
-        cd targets
-        zipnote -w electron-*.zip <<<$'@ LICENSE\n@=LICENSE.electron'
-        echo "---"
-        cd ..
-        cd build
         # XXX this fails for some reason...
-        zipnote -w Im*.zip.tmp <<<$'@ LICENSE\n@=LICENSE.electron'
+        #zipnote -w ./build/Im*.zip.tmp <<<$'@ LICENSE\n@=LICENSE.electron'
 
     - name: Release
       env:
