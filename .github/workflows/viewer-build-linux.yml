@@ -24,13 +24,17 @@ jobs:
       run: |
         sudo apt install -y \
           nodejs npm \
-          wget zip
+          wget zip \
+          electron
 
-    - name: Pre build
+    - name: Build environment
       run: make dev
+
+    - name: Check electron version
+      run: electron --version
 
     - name: Build
       run: make dist
 
-    - name: Test
+    - name: Check ./dist/
       run: ls ./dist/
