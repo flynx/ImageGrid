@@ -50,11 +50,12 @@ jobs:
       run: make dist
 
     - name: Check build 
-      if: always() && ${{ matrix.os == 'windows-latest' }}
+      if: always()
       run: |
         ls -la ./build
         zipnote -v
-        zipnote ./build/ImageGrid.Viewer-*.zip.tmp | grep -e '^@ [^(]'
+        [ -e ./build/ImageGrid.Viewer-*.zip.tmp ] \
+          && zipnote ./build/ImageGrid.Viewer-*.zip.tmp | grep -e '^@ [^(]'
 
     - name: Release
       env:
