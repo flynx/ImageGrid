@@ -29,6 +29,13 @@ jobs:
 
     - uses: actions/setup-node@v6
 
+    - name: Verify
+      run: make check
+
+    - if: ${{ matrix.os == 'windows-latest' }}
+      run: |
+        choco install wget
+
     - if: ${{ matrix.os == 'ubuntu-latest' }}
       run: |
         # fixes an issue when running npx sandboxing...
