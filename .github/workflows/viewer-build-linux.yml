@@ -1,0 +1,34 @@
+name: Viewer build linux
+
+on:
+#  push:
+#    branches: [ "master" ]
+#  pull_request:
+#    branches: [ "master" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: ./Viewer
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: |
+        sudo apt install -y \
+          nodejs npm \
+          wget zip
+
+    - name: Pre build
+      run: make dev
+
+    - name: Build
+      run: make dist
+
+    - name: Test
+      run: ls ./dist/
