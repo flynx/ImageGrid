@@ -55,6 +55,9 @@ jobs:
       run: |
         ls -la ./build
         echo "---"
+        zipnote -w ./targets/electron-*.zip <<<$'@ LICENSE\n@=LICENSE.electron'
+        echo "---"
+        # XXX this fails for some reason...
         zipnote -w ./build/Im*.zip.tmp <<<$'@ LICENSE\n@=LICENSE.electron'
 
     - name: Release
