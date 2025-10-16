@@ -27,10 +27,10 @@ jobs:
           wget zip 
 
     - name: Build environment
-      run: make dev
+      run: make clean-all dev
 
     - name: Check electron version
-      run: electron --version
+      run: npx electron --version
 
     - name: Build
       run: make dist
