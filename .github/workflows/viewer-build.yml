@@ -53,7 +53,7 @@ jobs:
       if: always()
       run: |
         ls -la ./build
-        zipnpte -v
+        zipnote -v
         zipnote ./build/ImageGrid.Viewer-*.zip.tmp | grep -e '^@ [^(]'
 
     - name: Release
