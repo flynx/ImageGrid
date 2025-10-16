@@ -11,7 +11,12 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
+
+    runs-on: ${{ matrix.os }}
+
     defaults:
       run:
         shell: bash
@@ -38,4 +43,5 @@ jobs:
         GH_TOKEN: ${{ github.token }}
       run: |
         gh release create release-latest -t "TEST" ./dist/*
+
 
