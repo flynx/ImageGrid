@@ -1,10 +1,12 @@
 name: Viewer build linux
 
+
 on:
-#  push:
-#    branches: [ "master" ]
-#  pull_request:
-#    branches: [ "master" ]
+  workflow_dispatch:
+
+  release:
+    types: [published]
+
 
 jobs:
   build:
