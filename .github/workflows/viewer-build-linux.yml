@@ -24,8 +24,7 @@ jobs:
       run: |
         sudo apt install -y \
           nodejs npm \
-          wget zip \
-          electron
+          wget zip 
 
     - name: Build environment
       run: make dev
