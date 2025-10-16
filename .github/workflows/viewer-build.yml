@@ -50,8 +50,7 @@ jobs:
       run: make dist
 
     - name: Check build 
-      if: always()
-      if: ${{ matrix.os == 'windows-latest' }}
+      if: always() && ${{ matrix.os == 'windows-latest' }}
       run: |
         ls -la ./build
         zipnote -v
