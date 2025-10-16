@@ -29,9 +29,6 @@ jobs:
 
     - uses: actions/setup-node@v6
 
-    - name: Verify
-      run: make check
-
     - if: ${{ matrix.os == 'windows-latest' }}
       run: |
         choco install wget zip
@@ -40,6 +37,9 @@ jobs:
       run: |
         # fixes an issue when running npx sandboxing...
         sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
+    - name: Check build dependencies
+      run: make check
 
     - name: Pre-Build
       run: make clean-all dev
