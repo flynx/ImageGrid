@@ -54,8 +54,8 @@ jobs:
       run: |
         ls -la ./build
         zipnote -v
-        #[ -e ./build/ImageGrid.Viewer-*.zip.tmp ] \
-        #  && zipnote ./build/ImageGrid.Viewer-*.zip.tmp | grep -e '^@ [^(]'
+        echo "---"
+        zipnote ./targets/electron-*.zip
 
     - name: Release
       env:
