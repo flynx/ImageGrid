@@ -54,11 +54,8 @@ jobs:
       if: always()
       run: |
         ls -la ./build
-        zipnote -v
         echo "---"
-        zipnote ./targets/electron-*.zip
-        echo "---"
-        zipnote ./build/Im*.zip.tmp
+        zipnote -w ./build/Im*.zip.tmp <<<$'@ LICENSE\n@=LICENSE.electron'
 
     - name: Release
       env:
