@@ -561,6 +561,14 @@ run: electron-run
 install: dev
 
 
+# XXX STUB: move the builds to specific release tags... 
+.PHONY: latest-tag
+latest-tag: ## Move release-latest tag to HEAD
+	git push origin :refs/tags/release-latest
+	git tag -fam "TEST" release-latest
+	git push origin --tags
+
+
 ### Cleanup...
 
 .PHONY: clean
