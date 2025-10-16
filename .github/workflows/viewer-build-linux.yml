@@ -24,9 +24,10 @@ jobs:
 
     - name: Install dependencies
       run: |
-        sudo apt install -y \
-          nodejs npm \
-          wget zip 
+        #sudo apt install -y \
+        #  nodejs npm \
+        #  wget zip 
+        #sudo apt install -y wget zip 
         # fixes an issue when running npx sandboxing...
         sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
 
@@ -37,6 +38,8 @@ jobs:
       run: make dist
 
     - name: Release
+      env:
+        GH_TOKEN: ${{ github.token }}
       run: |
         gh release create -t "TEST" ./dist/*
 
