@@ -9,6 +9,7 @@ on:
 
 
 jobs:
+
   build:
 
     strategy:
@@ -43,6 +44,8 @@ jobs:
       env:
         GH_TOKEN: ${{ github.token }}
       run: |
-        gh release create release-latest -t "TEST" ./dist/*
+        # XXX need to create if this does not exist...
+        #gh release create release-latest -t "TEST" 
+        gh release upload release-latest ./dist/*
 
 
