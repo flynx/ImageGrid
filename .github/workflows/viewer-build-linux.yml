@@ -27,7 +27,7 @@ jobs:
 
     - uses: actions/setup-node@v6
 
-    - if: ${{ matrix.os == ubuntu-latest }}
+    - if: ${{ matrix.os == "ubuntu-latest" }}
       run: |
         # fixes an issue when running npx sandboxing...
         sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
