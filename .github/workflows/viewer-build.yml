@@ -29,16 +29,19 @@ jobs:
 
     - uses: actions/setup-node@v6
 
-    - name: Windows build dependencies
+    - name: Windows-specific
       if: ${{ matrix.os == 'windows-latest' }}
       run: |
         choco install wget zip
 
-    - name: Ubuntu tweaks
+    - name: Ubuntu-specific
       if: ${{ matrix.os == 'ubuntu-latest' }}
       run: |
         # fixes an issue when running npx sandboxing...
         sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
+    #- name: MacOS-specific
+    #  if: ${{ matrix.os == 'macos-latest' }}
 
     - name: Pre-Build
       run: make clean-all dev
@@ -50,6 +53,8 @@ jobs:
       env:
         GH_TOKEN: ${{ github.token }}
       run: |
+        # XXX STUB
+        make update-release-tag
         # XXX need to create if this does not exist...
         #gh release create release-latest -t "TEST" 
         gh release upload release-latest ./dist/*
