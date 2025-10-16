@@ -913,18 +913,14 @@ $(BUILD_DIR)/$(APP_NAME)-%.in-place.zip: $(TARGET_DIR)/$(ELECTRON_DIST) \
 	# rename electron stuff...
 #	# XXX rename "Electron Helper" on mac builds -- this needs Info.plist changes...
 #		| sed 's/\(^@ \(.*\)Electron Helper\(.*\)\)$$/\1\n@=\2$(APP_NAME) Helper\3/' 
-	zipnote "$@.tmp" \
-		| sed 's/\(^@ LICENSE\)$$/\1\n@=LICENSE.electron/' \
-		| zipnote -w "$@.tmp"
+	zipnote -w "$@.tmp" <<<$$'@ LICENSE\n@=LICENSE.electron'
 	# add app.asar and friends...
 	$(MD) "$(BUILD_DIR)/$(ASAR_PATH)"
 	cp -r $(BUILD_DIR)/app.asar* "$(BUILD_DIR)/$(ASAR_PATH)/"
 	$(call zipFrom,"$(BUILD_DIR)",$@.tmp,"$(ASAR_PATH)" "$(notdir $(BUILD_INFO))" "$(LICENSE)")
 	# rename app...
 #	# XXX also rename MacOS/Electron -> $(APP_NAME) -- this needs Info.plist changes...
-	zipnote "$@.tmp" \
-		| sed 's/\(^@ $(ELECTRON_BIN)$(EXT)\)\(.*$$\)/\1\2\n@=$(APP_BIN)$(EXT)\2/' \
-		| zipnote -w "$@.tmp"
+	zipnote -w "$@.tmp" <<<$$'@ $(ELECTRON_BIN)$(EXT)\n@=$(APP_BIN)$(EXT)'
 	# cleanup...
 	$(RM) $(BUILD_DIR)/$(firstword $(subst /, ,$(ASAR_PATH)))
 	mv "$@.tmp" "$@"
