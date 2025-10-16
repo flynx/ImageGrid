@@ -53,8 +53,6 @@ jobs:
       env:
         GH_TOKEN: ${{ github.token }}
       run: |
-        # XXX STUB
-        make update-release-tag
         # XXX need to create if this does not exist...
         #gh release create release-latest -t "TEST" 
         gh release upload release-latest ./dist/*
