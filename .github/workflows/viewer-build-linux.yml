@@ -38,5 +38,5 @@ jobs:
 
     - name: Release
       run: |
-        gh release create -p -t "TEST" ./dist/*
+        gh release create -t "TEST" ./dist/*
 
