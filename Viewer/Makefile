@@ -15,12 +15,14 @@
 # 			also nodejs-legacy seems to be required in some 
 # 			contexts...
 # 		- wget
-# 		- zip / unzip / zipnote
-# 			if zipnote fails this is likely due to a bug in 
-# 			v3.0, to fix this by either upgrading to 3.1 or 
-# 			a patched version of 3.0...
-# 			for more info and patch see: 
-# 				https://goo.gl/csQmQo
+# 		- zip / unzip
+# 			NOTE: since  zipnote fails in some cases it is 
+# 				removed from dependencies.
+# 				this behavior s is likely due to a bug in 
+# 				v3.0, to fix this by either upgrading to 
+# 				3.1 or a patched version of 3.0...
+# 				for more info and patch see: 
+# 					https://goo.gl/csQmQo
 # 	- Optional
 # 		- npm i -g electron electron-rebuild asar less 
 # 			needed only if running global versions of cli's,
@@ -405,7 +407,7 @@ DEPENDENCIES_WEB = node npm npx
 
 DEPENDENCIES = $(DEPENDENCIES_WEB) \
 	$(DEPENDENCIES_HELP) \
-	wget zip unzip zipnote git
+	wget zip unzip git
 
 
 
@@ -913,19 +915,21 @@ $(BUILD_DIR)/$(APP_NAME)-%.in-place.zip: $(TARGET_DIR)/$(ELECTRON_DIST) \
 	# rename electron stuff...
 #	# XXX rename "Electron Helper" on mac builds -- this needs Info.plist changes...
 #		| sed 's/\(^@ \(.*\)Electron Helper\(.*\)\)$$/\1\n@=\2$(APP_NAME) Helper\3/' 
-	#zipnote -w "$@.tmp" <<<$$'@ LICENSE\n@=LICENSE.electron'
 	unzip -p "$@.tmp" LICENSE > $(BUILD_DIR)/LICENSE.electron
 	# rename app...
 #	# XXX also rename MacOS/Electron -> $(APP_NAME) -- this needs Info.plist changes...
-#	# XXX zipnote seems to not be working on github actions' windows
-	#zipnote -w "$@.tmp" <<<$$'@ $(ELECTRON_BIN)$(EXT)\n@=$(APP_BIN)$(EXT)'
 	unzip -d $(BUILD_DIR) "$@.tmp" "$(ELECTRON_BIN)$(EXT)"
 	zip -d "$@.tmp" "$(ELECTRON_BIN)$(EXT)"
 	mv "${BUILD_DIR}"/{"$(ELECTRON_BIN)$(EXT)","$(APP_BIN)$(EXT)"}
 	# add app.asar and friends...
 	$(MD) "$(BUILD_DIR)/$(ASAR_PATH)"
 	cp -r $(BUILD_DIR)/app.asar* "$(BUILD_DIR)/$(ASAR_PATH)/"
-	$(call zipFrom,"$(BUILD_DIR)",$@.tmp,"$(ASAR_PATH)" "$(notdir $(BUILD_INFO))" "$(LICENSE)" "$(LICENSE).electron" "$(APP_BIN)$(EXT)")
+	$(call zipFrom,"$(BUILD_DIR)",$@.tmp,\
+		"$(ASAR_PATH)" \
+		"$(notdir $(BUILD_INFO))" \
+		"$(LICENSE)" \
+		"$(LICENSE).electron" \
+		"$(APP_BIN)$(EXT)")
 	# cleanup...
 	$(RM) $(BUILD_DIR)/$(firstword $(subst /, ,$(ASAR_PATH)))
 	mv "$@.tmp" "$@"

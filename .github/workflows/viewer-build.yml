@@ -15,8 +15,7 @@ jobs:
     strategy:
       matrix:
         #os: [ ubuntu-latest, windows-latest, macos-latest ]
-        #os: [ ubuntu-latest, windows-latest ]
-        os: [ windows-latest ]
+        os: [ ubuntu-latest, windows-latest ]
 
     runs-on: ${{ matrix.os }}
 
@@ -41,22 +40,11 @@ jobs:
         # fixes an issue when running npx sandboxing...
         sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
 
-    #- name: Check build dependencies
-    #  run: make check
-
     - name: Pre-Build
       run: make clean-all dev
 
     - name: Build
       run: make dist
-
-    - name: Check build 
-      if: always()
-      run: |
-        ls -la ./build
-        echo "---"
-        # XXX this fails for some reason...
-        #zipnote -w ./build/Im*.zip.tmp <<<$'@ LICENSE\n@=LICENSE.electron'
 
     - name: Release
       env:
