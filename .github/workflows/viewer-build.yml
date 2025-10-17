@@ -48,10 +48,11 @@ jobs:
     - name: MacOS-specific
       if: ${{ matrix.os == 'macos-latest' }}
       run: |
-        brew install make gnu-sed zip
+        #brew install make gnu-sed zip
+        brew install gnu-sed zip
 
-        echo 'PATH="$HOMEBREW_PREFIX/opt/make/libexec/gnubin:$PATH"' >> $GITHUB_ENV
-        echo 'PATH="$HOMEBREW_PREFIX/opt/zip/bin:$PATH"' >> $GITHUB_ENV
+        #echo PATH="$HOMEBREW_PREFIX/opt/make/libexec/gnubin:$PATH" >> $GITHUB_ENV
+        echo PATH="$HOMEBREW_PREFIX/opt/zip/bin:$PATH" >> $GITHUB_ENV
 
 
     #- name: Env
