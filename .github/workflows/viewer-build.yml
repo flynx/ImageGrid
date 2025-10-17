@@ -4,9 +4,9 @@ name: Viewer build
 on:
   workflow_dispatch:
 
-  push:
-    branches: [ "master" ]
-    tags: v**  
+  #push:
+  #  branches: [ "master" ]
+  #  tags: v**  
 
   release:
     types: [published]
@@ -18,9 +18,12 @@ jobs:
 
     strategy:
       matrix:
+        # XXX the mac build is broken for now -- running blind as I do 
+        #     not have a mac to test on, but I will at least fix the 
+        #     build...
         #os: [ ubuntu-latest, windows-latest, macos-latest ]
-        #os: [ ubuntu-latest, windows-latest ]
-        os: [ macos-latest ]
+        os: [ ubuntu-latest, windows-latest ]
+        #os: [ macos-latest ]
 
     runs-on: ${{ matrix.os }}
 
@@ -48,9 +51,8 @@ jobs:
     - name: MacOS-specific
       if: ${{ matrix.os == 'macos-latest' }}
       run: |
-        brew install make gnu-sed zip
+        brew install gnu-sed zip
 
-        echo PATH="$HOMEBREW_PREFIX/opt/make/libexec/gnubin:$PATH" >> $GITHUB_ENV
         echo PATH="$HOMEBREW_PREFIX/opt/zip/bin:$PATH" >> $GITHUB_ENV
 
 
