@@ -49,6 +49,7 @@ jobs:
       if: ${{ matrix.os == 'macos-latest' }}
       run: |
         brew install gnu-sed
+        ln -s /usr/local/bin/{g,}sed
         echo "PATH=/usr/local/bin:$PATH" >> $GITHUB_ENV
 
 
