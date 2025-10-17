@@ -45,10 +45,10 @@ jobs:
         # fixes an issue when running npx sandboxing...
         sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
 
-    #- name: MacOS-specific
-    #  if: ${{ matrix.os == 'macos-latest' }}
-    #  run: |
-    #    echo
+    - name: MacOS-specific
+      if: ${{ matrix.os == 'macos-latest' }}
+      run: |
+        echo
 
 
     #- name: Env

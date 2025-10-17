@@ -300,6 +300,9 @@ else
 	ifeq ($(shell uname -m),x86_64)
 		ARCH ?= x64
 	endif
+	ifeq ($(shell uname -m),arm64)
+		ARCH ?= arm64
+	endif
 	ifneq ($(filter %86,$(shell uname -p)),)
 		ARCH ?= ia32
 	endif
