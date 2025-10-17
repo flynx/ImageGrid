@@ -294,6 +294,7 @@ else
 	ifeq ($(shell uname -s),Darwin)
 		TARGET_OS ?= darwin
 		NW_OS ?= osx
+		SED = gsed
 	endif
 
 	# set arch...
@@ -340,6 +341,8 @@ endif
 RM += -r
 
 MD = @mkdir -p
+
+SED ?= sed
 
 
 #**********************************************************************
@@ -405,7 +408,7 @@ PATCHES := $(REQUREJS)
 #**********************************************************************
 # dependencies to check...
 #
-DEPENDENCIES_HELP = sed grep printf 
+DEPENDENCIES_HELP = $(SED) grep printf 
 DEPENDENCIES_WEB = node npm npx
 
 DEPENDENCIES = $(DEPENDENCIES_WEB) \
@@ -432,23 +435,23 @@ help:
 	help_lines=(`grep -Fh "##" $(MAKEFILE_LIST) \
 		| grep -Fv grep \
 		| grep -Fv '"##' \
-		| sed -e 's/\\$$//'`); \
+		| $(SED) -e 's/\\$$//'`); \
 	for help_line in $${help_lines[@]}; do \
 		IFS=$$'#' ; \
 		if [ -z "$${help_line/'#'#[#-]*/}" ] ; then \
 			echo ; \
 			echo "$${help_line}" \
-				| sed -e 's/#\+[- ]*//' \
+				| $(SED) -e 's/#\+[- ]*//' \
 					-e 's/\s*\(...\|---\)\s*$$/:/'; \
 		elif [ -z "$${help_line/'#'*/}" ] ; then \
 			echo "$${help_line}" \
-				| sed 's/#\+[- ]*//' ; \
+				| $(SED) 's/#\+[- ]*//' ; \
 		else \
 			help_split=($$help_line) ; \
 			help_command=`echo $${help_split[0]} \
-				| sed -e 's/^ *//' -e 's/ *$$//'` ; \
+				| $(SED) -e 's/^ *//' -e 's/ *$$//'` ; \
 			help_info=`echo $${help_split[2]} \
-				| sed -e 's/^ *//' -e 's/ *$$//'` ; \
+				| $(SED) -e 's/^ *//' -e 's/ *$$//'` ; \
 			printf "   %-30s %s\n" $$help_command $$help_info ; \
 		fi ; \
 	done
@@ -733,7 +736,7 @@ $(BUILD_INFO): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 # XXX revise $LAUNCHER -- should it be absolute or relative and when???
 %: %.tpl package.json
 	cat $< \
-		| sed -e 's/\$$APP_NAME/$(APP_NAME)/' \
+		| $(SED) -e 's/\$$APP_NAME/$(APP_NAME)/' \
 			-e 's/\$$COMMENT/$(subst \/,\/,$(COMMENT))/' \
 			-e 's/\$$CATEGORIES/$(subst \/,\/,$(CATEGORIES))/' \
 			-e 's/\$$VERSION/$(APP_VERSION)/' \
@@ -824,7 +827,7 @@ $(REQUREJS)$(BACKUP_EXT): $(NODE_DIR)
 	# HACK: for some reason requirejs breaks if we do not do this (see: NOTES)
 	cp -f $(REQUREJS){,$(BACKUP_EXT)}
 	cat $(REQUREJS)$(BACKUP_EXT) \
-		| sed 's/^\(#!\/\)/\/\/\1/' \
+		| $(SED) 's/^\(#!\/\)/\/\/\1/' \
 		> $(REQUREJS)
 
 .PHONY: patched-requirejs
@@ -874,7 +877,7 @@ $(TARGET_DIR)/$(ELECTRON_DIST):
 $(BUILD_DIR)/app.asar: $(PACK_FULL)
 	# update package.json to start electron...
 	cd "$(BUILD_DIR)/$(APP_NAME)/" ; \
-		sed -i 's/"index.html"/"e.js"/g' package.json
+		$(SED) -i 's/"index.html"/"e.js"/g' package.json
 	# remove electron from the dist...
 	rm -rf "$(BUILD_DIR)/$(APP_NAME)/$(NODE_DIR)/electron"
 	cd "$(BUILD_DIR)" ; \
@@ -925,7 +928,7 @@ $(BUILD_DIR)/$(APP_NAME)-%.in-place.zip: $(TARGET_DIR)/$(ELECTRON_DIST) \
 	$(call zipDelFrom,"$(BUILD_DIR)",$@.tmp,"version")
 	# rename electron stuff...
 #	# XXX rename "Electron Helper" on mac builds -- this needs Info.plist changes...
-#		| sed 's/\(^@ \(.*\)Electron Helper\(.*\)\)$$/\1\n@=\2$(APP_NAME) Helper\3/' 
+#		| $(SED) 's/\(^@ \(.*\)Electron Helper\(.*\)\)$$/\1\n@=\2$(APP_NAME) Helper\3/' 
 	unzip -p "$@.tmp" LICENSE > $(BUILD_DIR)/LICENSE.electron
 	# rename app...
 #	# XXX also rename MacOS/Electron -> $(APP_NAME) -- this needs Info.plist changes...
