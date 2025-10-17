@@ -891,11 +891,14 @@ $(BUILD_DIR)/app.asar: $(PACK_FULL)
 # 	rules...
 # XXX need to take nw/el version part into account...
 # XXX need to setup app icons...
-.PRECIOUS: $(BUILD_DIR)/$(APP_NAME)-%/
-$(BUILD_DIR)/$(APP_NAME)-%/: $(TARGET_DIR)/$(ELECTRON_DIST) \
+#.PRECIOUS: $(BUILD_DIR)/$(APP_NAME)-%/
+#$(BUILD_DIR)/$(APP_NAME)-%/: $(TARGET_DIR)/$(ELECTRON_DIST) \
+.PRECIOUS: $(BUILD_DIR)/$(APP_NAME).app/
+$(BUILD_DIR)/$(APP_NAME).app/: $(TARGET_DIR)/$(ELECTRON_DIST) \
 		$(BUILD_DIR)/app.asar $(BUILD_INFO) $(LICENSE)
 	unzip -u "$<" -d "$@" 
 	cp -r $(BUILD_DIR)/app.asar* "$@/$(ASAR_PATH)/"
+	mv "$@/LICENSE{,.electron}"
 	cp -f "$(BUILD_INFO)" "$(LICENSE)" "$@/"
 	# remove default_app.asar...
 	$(RM) "$@/$(ASAR_PATH)/default_app.asar"
