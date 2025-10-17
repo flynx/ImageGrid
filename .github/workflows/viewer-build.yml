@@ -4,6 +4,10 @@ name: Viewer build
 on:
   workflow_dispatch:
 
+  push:
+    branches: [ "master" ]
+    tags: v**  
+
   release:
     types: [published]
 
@@ -26,8 +30,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-
     - uses: actions/setup-node@v6
+
 
     - name: Windows-specific
       if: ${{ matrix.os == 'windows-latest' }}
@@ -42,6 +46,14 @@ jobs:
 
     #- name: MacOS-specific
     #  if: ${{ matrix.os == 'macos-latest' }}
+    #  run: |
+    #    echo
+
+
+    #- name: Env
+    #  run: |
+    #    echo "VERSION=$(make version)" >> $GITHUB_ENV
+
 
     - name: Pre-Build
       run: make clean-all dev
