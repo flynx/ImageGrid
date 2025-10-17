@@ -48,7 +48,7 @@ jobs:
     - name: MacOS-specific
       if: ${{ matrix.os == 'macos-latest' }}
       run: |
-        brew install gnu-sed
+        brew install gnu-sed zip
 
 
     #- name: Env
