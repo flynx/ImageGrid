@@ -4,6 +4,7 @@ name: Viewer build
 on:
   workflow_dispatch:
 
+  # XXX this gets any push -- the pattern does not work???...
   #push:
   #  branches: [ "master" ]
   #  tags: v**  

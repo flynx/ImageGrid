@@ -23,6 +23,10 @@
 *	- auto-single-image
 *	- auto-ribbon
 *
+* XXX FOCUS_EVENT BUG: for some reason focus/blur events both on window 
+* 		and on ig.dom trigger only if anything in the ui is physically 
+* 		focused (e.g. clicked)
+*
 *
 **********************************************************************/
 ((typeof define)[0]=='u'?function(f){module.exports=f(require)}:define)
@@ -499,6 +503,21 @@ module.ViewerActions = actions.Actions({
 			//}, 0)
 		}],
 
+	// XXX FOCUS_EVENT these for some reason work only if the ui is clicked...
+	//windowFocus: ['- Interface/',
+	//	core.doc``,
+	//	core.Event(function(){
+	//		// This is the window focus event...
+	//		//
+	//		// Not for direct use.
+	//	})],
+	//windowBlur: ['- Interface/',
+	//	core.doc``,
+	//	core.Event(function(){
+	//		// This is the window blur event...
+	//		//
+	//		// Not for direct use.
+	//	})],
 
 	// Viewer/window resize event...
 	resizingWindow: ['- Interface/',
@@ -762,7 +781,7 @@ module.Viewer = core.ImageGridFeatures.Feature({
 				}
 			}],
 
-		// workspaces and resizing... 
+		// workspaces, resizing and other events... 
 		['start',
 			function(){
 				var that = this
@@ -776,6 +795,19 @@ module.Viewer = core.ImageGridFeatures.Feature({
 					&& this.toggleRibbonImageSepators(this.config['ribbon-image-separators'])
 				this.config['ribbon-theme'] 
 					&& this.toggleImageRendering(this.config['image-rendering'])
+
+				// XXX FOCUS_EVENT
+				//// focus handling...
+				//// XXX focus/blur events do not seem to trigger unless we 
+				//// 		actually focus something in the window...
+				//this.__window_focus_handler ??= 
+				//	function(){ 
+				//		that.windowFocus() }
+				//this.dom[0].addEventListener('focus', this.__window_focus_handler)
+				//this.__window_blur_handler ??=
+				//	function(){ 
+				//		that.windowBlur() }
+				//this.dom.on('blur', this.__window_blur_handler)
 
 				// center viewer on resize events...
 				if(!this.__viewer_resize){
@@ -802,6 +834,9 @@ module.Viewer = core.ImageGridFeatures.Feature({
 		['stop', 
 			function(){
 				if(this.__viewer_resize){
+					// XXX FOCUS_EVENT
+					//$(window).off('focus', this.__window_focus_handler)
+					//$(window).off('blur', this.__window_blur_handler)
 					$(window).off('resize', this.__viewer_resize) 
 					delete this.__viewer_resize
 				}

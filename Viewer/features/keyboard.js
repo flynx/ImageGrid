@@ -509,6 +509,10 @@ var KeyboardActions = actions.Actions({
 		// The amount of keyboard "quiet" time to wait for when
 		// .pauseKeyboardRepeat(..) is called...
 		'keyboard-repeat-pause-check': 100,
+
+		// Keyboard handling timeout after focus...
+		// XXX FOCUS_EVENT see: features.ui for more details...
+		//'keyboard-pause-post-focus': 100,
 	},
 
 	get keybindings(){
@@ -947,6 +951,20 @@ module.Keyboard = core.ImageGridFeatures.Feature({
 		['stop',
 			function(){
 				this.toggleKeyboardHandling('off') }],
+
+		// XXX FOCUS_EVENT see: features.ui for more details...
+		//['windowBlur',
+		//	function(){
+		//		this.config['keyboard-pause-post-focus'] > 0
+		//			&& this.toggleKeyboardHandling('off') }],
+		//['windowFocus',
+		//	function(){
+		//		var that = this
+		//		this.config['keyboard-pause-post-focus'] > 0
+		//			&& setTimeout(
+		//				function(){
+		//					that.toggleKeyboardHandling('on') }, 
+		//				this.config['keyboard-pause-post-focus']) }],
 
 		// pause keyboard repeat...
 		['shiftImageUp.pre shiftImageDown.pre',
