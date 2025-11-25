@@ -25,7 +25,7 @@ media
 └── tree.sh
 ```
 
-### Prerequesites
+### Prerequisites
 
 For the scripts to function they need the following in path:
 - exiftool
