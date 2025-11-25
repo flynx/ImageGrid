@@ -25,6 +25,28 @@ media
 └── tree.sh
 ```
 
+### Prerequesites
+
+For the scripts to function they need the following in path:
+- exiftool
+- btrfs-utils (for the btrfs filesystem support)
+
+And the ImageGrid Viewer CLI (the `ig` utility) either linked or globally 
+installed, to do this run the following from the `Viewer/` directory:
+```shell
+sudo make devel-cli
+```
+or:
+```shell
+sudo make cli
+```
+
+For additional dependencies run:
+```shell
+make check
+```
+
+
 ### `README.md`
 
 A basic introductory description. This is here to introduce a new user
