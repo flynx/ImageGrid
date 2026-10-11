@@ -458,19 +458,16 @@ var DataPrototype = {
 	//
 	// NOTE: only the first occurrence is kept...
 	// NOTE: this is slow-ish...
-	removeDuplicates: function(lst, skip_undefined){
-		skip_undefined = 
-			skip_undefined == null ? 
-				true 
-				: skip_undefined
-		var lst_idx = lst.toKeys()
-		for(var i=0; i < lst.length; i++){
-			if(skip_undefined 
-					&& lst[i] == null){
-				continue }
-			if(lst_idx[lst[i]] != i){
-				lst.splice(i, 1)
-				i -= 1 } }
+	removeDuplicates: function(lst, skip_undefined=true){
+		if(skip_undefined){
+			var lst_idx = lst.toKeys()
+			for(var i=lst.length-1; i >= 0 ; i--){
+				if(lst[i] == null){
+					continue }
+				if(lst_idx[lst[i]] != i){
+					lst.splice(i, 1) } }
+		} else {
+			lst.splice(0, lst.length, ...(new Set(lst))) }
 		return lst },
 
 	// List of sparse image set names...

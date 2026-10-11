@@ -17,6 +17,7 @@ FPS=${FPS:-8}
 # XXX ffmpeg does not seem to support extglob...
 #PATTERN=${PATTERN:-'*.@(JPG|jpg|JPEG|jpeg|PNG|png)'}
 PATTERN=${PATTERN:-'*.jpeg'}
+ANIM_EXT=.gif
 
 while [[ $# != 0 ]] ; do
 	case "$1" in
@@ -28,6 +29,7 @@ while [[ $# != 0 ]] ; do
 			echo "	-r --rate FPS	- set framerate (default: $FPS)"
 			echo "	-p --pattern PATTERN"
 			echo "			- image pattern to use (default: '$PATTERN')"
+			echo "  --apng          - use .apng instead of .gif (experimental)"
 			echo
 			echo "NOTE: option defaults can bbe overriden by coresponding env variables."
 			echo
@@ -41,6 +43,12 @@ while [[ $# != 0 ]] ; do
 		-p|--pattern)
 			PATTERN="$2"
 			shift 2
+			continue
+			;;
+		--apng)
+			# XXX do we need to do the palette dance here???
+			ANIM_EXT=.apng
+			shift
 			continue
 			;;
 
@@ -83,7 +91,7 @@ PALETTE=${PALETTE:-.palette.png}
 			-i $PATTERN \
 		-i "$PALETTE" \
 		-filter_complex paletteuse=dither=none \
-		"${NAME}".gif
+		"${NAME}${ANIM_EXT}"
 	# cleanup...
 	@ rm "$PALETTE"
 
