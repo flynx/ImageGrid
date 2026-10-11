@@ -27,6 +27,7 @@ var features = require('lib/features')
 var keyboard = require('lib/keyboard')
 
 var core = require('features/core')
+var base = require('features/base')
 var widgets = require('features/ui-widgets')
 
 var overlay = require('lib/widget/overlay')
@@ -366,9 +367,7 @@ var FileSystemLoaderActions = actions.Actions({
 							//console.log('MERGING:', k, part)
 							logger && logger.emit('merge index', k, res)
 
-							// merge...
-							index.data.join(part.data)
-							index.images.join(part.images) }
+							index = that.merge(index, part) }
 
 						loaded.push(k) }
 
@@ -780,14 +779,14 @@ var FileSystemLoaderActions = actions.Actions({
 					var gids = imgs.keys()
 					var new_data = that.data.constructor.fromArray(gids)
 
-					// merge with index...
-					// NOTE: we are prepending new images to the start...
-					// NOTE: all ribbon gids will change here...
+					// prepend to index...
+					var index = that.merge(
+						{ data: new_data, images: imgs }, 
+						that)
 					var cur = that.data.current
-					that.data = new_data.join(that.data)
+					that.images = index.images
+					that.data = index.data
 					that.data.current = cur
-
-					that.images.join(imgs)
 
 					that.reload()
 

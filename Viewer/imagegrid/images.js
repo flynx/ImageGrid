@@ -567,7 +567,7 @@ module.ImagesPrototype = {
 
 	// Replace image gid...
 	//
-	replaceGid: function(from, to){
+	replaceGID: function(from, to){
 		var img = this[from]
 
 		// XXX is the test needed here???

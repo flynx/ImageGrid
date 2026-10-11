@@ -454,18 +454,58 @@ var DataPrototype = {
 				&& (res[i] = e) }
 		return res },
 
+	// Get GID conflits...
+	//
+	conflicts: function(lst){
+		lst ??= this.order
+		var res = {}
+		// NOTE: this keeps the last occurrence...
+		var lst_idx = lst.toKeys()
+		if(Object.keys(lst_idx).length != lst.length){
+			// NOTE: going from the tail to keep the indexes in ascending order...
+			for(var i=lst.length-1; i >= 0; i--){
+				if(lst_idx[lst[i]] != i){
+					res[lst[i]] ??= [lst_idx[lst[i]]]
+					res[lst[i]].unshift(i) } } }
+		return res },
+
+	// Return list of items common between .order and there...
+	//
+	// NOTE: this is optimistic and expects that there are not internal 
+	// 		conflicts in either list.
+	// NOTE: this is mainly a proxy to Set's .intersection(..) method...
+	conflictsWith: function(there){
+		there = new Set(
+			// XXX revise test...
+			there instanceof Array ?
+				there
+			: there.order ?
+				there.order
+			: there)
+		var here = new Set(this.order)
+		return [...here.intersection(there)] },
+
 	// Remove duplicate items from list in-place...
 	//
+	// NOTE: this is a generic array function, to remove duplicates from 
+	// 		data use: .clear('duplicate')
 	// NOTE: only the first occurrence is kept...
-	// NOTE: this is slow-ish...
+	// NOTE: this can be slow-ish...
 	removeDuplicates: function(lst, skip_undefined=true){
+		//lst ??= this.order
 		if(skip_undefined){
-			var lst_idx = lst.toKeys()
-			for(var i=lst.length-1; i >= 0 ; i--){
-				if(lst[i] == null){
+			var conflicts = this.conflicts(lst)
+			// merge conflicting indexes skipping the first from each set...
+			var remove = []
+			for(var k in conflicts){
+				if(k === 'undefined'){
 					continue }
-				if(lst_idx[lst[i]] != i){
-					lst.splice(i, 1) } }
+				remove.splice(remove.length, 0, ...(conflicts[k].slice(1))) }
+			remove
+				.sort()
+				.reverse()
+			for(var i of remove){
+				lst.splice(i, 1) }
 		} else {
 			lst.splice(0, lst.length, ...(new Set(lst))) }
 		return lst },
@@ -558,12 +598,14 @@ var DataPrototype = {
 			return gid }
 
 		// check that the gid is unique...
-		while(this.ribbon_order.includes(gid)
-				|| this.order.includes(gid)){
+		while(this.has(gid)){
 			gid = hash(p+'-'+t+'-'+Date.now()) }
 
 		return gid },
-	
+
+	has: function(gid){
+		return this.ribbon_order.includes(gid)
+			|| this.order.includes(gid) },
 
 	// Clear elements from data...
 	//
@@ -629,6 +671,8 @@ var DataPrototype = {
 
 		// clear duplicates...
 		} else if(gids == 'dup' 
+				|| gids == 'dups'
+				|| gids == 'duplicate'
 				|| gids == 'duplicates'){
 			// horizontal...
 			this.removeDuplicates(this.order)
@@ -736,6 +780,7 @@ var DataPrototype = {
 	//
 	// NOTE: if to exists then it will get overwritten.
 	replaceGID: function(from, to){
+		// ribbon...
 		if(from in this.ribbons){
 			// ribbons...
 			var ribbon = this.ribbons[from]
@@ -751,18 +796,16 @@ var DataPrototype = {
 					to 
 					: this.__base
 
+		// image...
 		} else {
 			from = this.getImage(from)
 			var i = this.getImageOrder(from)
 
 			var t = this.getImage(to)
-
+			
+			// do not override... (XXX)
 			if(t != -1 && t != null){
 				return }
-
-			// current...
-			if(from == this.current){
-				this.current = to }
 			// order...
 			this.order[i] = to
 			// image lists...
@@ -772,7 +815,10 @@ var DataPrototype = {
 						&& (list[i] = to) })
 			// XXX EXPERIMENTAL: order_index
 			delete this.order_index[from]
-			this.order_index[to] = i }
+			this.order_index[to] = i 
+			// current...
+			if(from == this.current){
+				this.current = to } }
 		return this },
 
 
@@ -2524,6 +2570,12 @@ var DataPrototype = {
 	// NOTE: this will merge the items in-place, into the method's object;
 	// 		if it is needed to keep the original intact, just .clone() it...
 	//
+	// If conflicts with merged data are present this will create:
+	// 	 .deconfliction = {
+	// 	 	<conflict-gid>: <new-fid>,
+	// 	 	...
+	// 	 }
+	//
 	// XXX add a 'gid' align mode... (???)
 	// 		...or should this be a .merge(..) action???
 	// XXX do we need to take care of gid conflicts between merged data sets???
@@ -2539,10 +2591,28 @@ var DataPrototype = {
 			args[0] 
 			: args
 
+		// XXX add deconflicting options...
+		//var deconfliction = 'clear'
+		var deconfliction = 'merge'
+
 		var base = this
 
 		args
 			.forEach(function(data){
+				// deconflicting: merge...
+				if(deconfliction == 'merge'){
+					var conflicts = base.conflictsWith(data)
+					data = conflicts.length > 0 ?
+						data.clone()
+						: data
+					for(var c of conflicts){
+						do {
+							var n = base.newGID()
+						} while(data.has(n))
+						data.replaceGID(c, n) 
+						base.deconfliction ??= {}
+						base.deconfliction[c] = n } }
+
 				// calculate align offset...
 				// NOTE: negative d means we push data up while positive 
 				// 		pushes data down by number of ribbons...
@@ -2625,8 +2695,7 @@ var DataPrototype = {
 							s[key] = base.makeSparseImages(s[key].concat(list)) } }) })
 
 		base
-			// XXX this is slow-ish...
-			//.removeDuplicateGIDs()
+			// deconflicting: clear...
 			.clear('duplicates')
 			.clear('empty')
 

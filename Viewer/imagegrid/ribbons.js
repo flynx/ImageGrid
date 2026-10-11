@@ -1379,7 +1379,7 @@ var RibbonsPrototype = {
 	// Replace image gid...
 	//
 	// XXX should this work for ribbon gids???
-	replaceGid: function(from, to){
+	replaceGID: function(from, to){
 		var img = this.getImage(from)
 
 		img && img.length > 0 

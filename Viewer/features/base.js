@@ -35,6 +35,25 @@ var core = require('features/core')
 
 /*********************************************************************/
 
+var merge =
+module.merge = 
+function(base, ...others){
+	// XXX get deconfliction mode...
+	// XXX
+	for(var other of others){
+		base.data.join(other.data)
+		// deconflict...
+		for(var c in base.data.deconfliction ?? {}){
+			var n = base.data.deconfliction[c]
+			other.images.replaceGID(c, n) }
+		delete base.data.deconfliction
+		base.images.join(other.images) } 
+	return base }
+
+
+
+//---------------------------------------------------------------------
+	
 // XXX split this into read and write actions...
 var BaseActions = 
 module.BaseActions = 
@@ -71,7 +90,7 @@ actions.Actions({
 
 	},
 
-	
+
 	get version(){
 		return version.version 
 			|| '4.0.0a' },
@@ -191,6 +210,10 @@ actions.Actions({
 	set direction_change_steps(value){
 		this.config['steps-to-change-direction'] = value },
 
+	// Helpers...
+	//
+	merge: merge,
+
 
 	// Consistency checking...
 	//
@@ -284,6 +307,7 @@ actions.Actions({
 					this.data = d.data instanceof data.Data ? 
 						d.data 
 						: data.Data(d.data) } } }],
+
 	// XXX should this clear or load empty???
 	// XXX should this accept args and clear specific stuff (a-la data.clear(..))???
 	clear: ['File/Clear',
