@@ -35,20 +35,50 @@ var core = require('features/core')
 
 /*********************************************************************/
 
+// Merge indexi into the first/base...
+//
+//	merge(base, ...)
+//		-> res
+//
+// res format:
+// 	{
+// 		base: <index>,
+//
+// 		// sparse array (optional)...
+// 		conflicts: [
+// 			...
+// 			// conflict objects are at positions corresponding to its 
+// 			// input index in the arguments....
+// 			// for format see: Data's .join(..)
+// 			<conflict-object>,
+// 			...
+// 		],
+// 	}
+//
 var merge =
 module.merge = 
 function(base, ...others){
 	// XXX get deconfliction mode...
 	// XXX
+	var res = { base }
+	var i = 0
 	for(var other of others){
+		i++
+		// merge data...
 		base.data.join(other.data)
 		// deconflict...
-		for(var c in base.data.deconfliction ?? {}){
-			var n = base.data.deconfliction[c]
-			other.images.replaceGID(c, n) }
-		delete base.data.deconfliction
+		// NOTE: .data.join(..) deconflicts data internally, we need to keep 
+		// 		the deconflicted GIDs in sync with .images...
+		if(base.data.deconfliction){
+			res.conflicts ??= []
+			res.conflicts[i] = base.data.deconfliction
+			for(var c in base.data.deconfliction ?? {}){
+				var n = base.data.deconfliction[c]
+				other.images.replaceGID(c, n) }
+			delete base.data.deconfliction }
+		// merge images...
 		base.images.join(other.images) } 
-	return base }
+	return res }
 
 
 

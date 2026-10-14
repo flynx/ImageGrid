@@ -367,7 +367,10 @@ var FileSystemLoaderActions = actions.Actions({
 							//console.log('MERGING:', k, part)
 							logger && logger.emit('merge index', k, res)
 
-							index = that.merge(index, part) }
+							var {base, conflicts} = that.merge(index, part) 
+							index = base
+
+							conflicts && logger && logger.emit('GID conflicts', conflicts) }
 
 						loaded.push(k) }
 
@@ -780,9 +783,12 @@ var FileSystemLoaderActions = actions.Actions({
 					var new_data = that.data.constructor.fromArray(gids)
 
 					// prepend to index...
+					// NOTE: we are ignoring conflicts here as we are 
+					// 		generating the index ouselves...
 					var index = that.merge(
-						{ data: new_data, images: imgs }, 
-						that)
+							{ data: new_data, images: imgs }, 
+							that)
+						.base
 					var cur = that.data.current
 					that.images = index.images
 					that.data = index.data

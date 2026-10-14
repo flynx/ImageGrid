@@ -728,6 +728,10 @@ stretching in width... */
 
 	/* XXX we are taking care of this in code -- see if we can use this */
 	image-orientation: none;
+
+	/* XXX does this affect gifs???
+	animation-play-state: paused;
+	*/
 }
 
 .image {
