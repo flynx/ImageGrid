@@ -730,6 +730,12 @@ stretching in width... */
 	image-orientation: none;
 
 	/* XXX does this affect gifs???
+		...one different strategy is to load the gifs into a canvas 
+		show it (first frame) as a data URL and swap in the gif only 
+		when focused.
+		... this could be a memory hog, but will it be better than
+		the current state of hundreds of gifs animated and leaking 
+		at the same time?
 	animation-play-state: paused;
 	*/
 }
